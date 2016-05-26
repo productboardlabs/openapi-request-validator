@@ -45,7 +45,8 @@ public class ValidatedPactProviderRule implements TestRule {
             @Override
             public void evaluate() throws Throwable {
                 final PactVerification pactDef = description.getAnnotation(PactVerification.class);
-                if (pactDef != null) {
+                final IgnoreApiValidation ignore = description.getAnnotation(IgnoreApiValidation.class);
+                if (pactDef != null && ignore == null) {
                     validatePactDef(pactDef);
                 }
                 delegate.apply(base, description);
