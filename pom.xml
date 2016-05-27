@@ -27,6 +27,19 @@
         </developer>
     </developers>
 
+    <distributionManagement>
+        <repository>
+            <id>atlassian-m2-repository</id>
+            <name>Atlassian Public Repository</name>
+            <url>https://maven.atlassian.com/public</url>
+        </repository>
+        <snapshotRepository>
+            <id>atlassian-m2-snapshot-repository</id>
+            <name>Atlassian Public Snapshot Repository</name>
+            <url>https://maven.atlassian.com/public-snapshot</url>
+        </snapshotRepository>
+    </distributionManagement>
+
     <properties>
         <pact-jvm.version>3.2.6</pact-jvm.version>
         <junit.version>4.12</junit.version>
