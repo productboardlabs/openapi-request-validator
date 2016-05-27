@@ -1,37 +1,32 @@
 package com.atlassian.oai.validator.parameter;
 
-import com.atlassian.oai.validator.report.ValidationReport;
-import io.swagger.models.parameters.SerializableParameter;
 import org.junit.Test;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.collection.IsEmptyCollection.empty;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.floatParam;
 
 public class NumberParameterValidatorTest {
 
     private NumberParameterValidator classUnderTest = new NumberParameterValidator();
 
     @Test
-    public void validate_withNullValue_shouldPassWhenNotRequired() {
+    public void validate_withNullValue_shouldPass_whenNotRequired() {
         assertPass(classUnderTest.validate(null, floatParam(false)));
     }
 
     @Test
-    public void validate_withEmptyValue_shouldPassWhenNotRequired() {
+    public void validate_withEmptyValue_shouldPass_whenNotRequired() {
         assertPass(classUnderTest.validate("", floatParam(false)));
     }
 
     @Test
-    public void validate_withNullValue_shouldFailWhenRequired() {
+    public void validate_withNullValue_shouldFail_whenRequired() {
         assertFail(classUnderTest.validate(null, floatParam(true)));
     }
 
     @Test
-    public void validate_withEmptyValue_shouldFailWhenRequired() {
+    public void validate_withEmptyValue_shouldFail_whenRequired() {
         assertFail(classUnderTest.validate("", floatParam(true)));
     }
 
@@ -63,36 +58,5 @@ public class NumberParameterValidatorTest {
     @Test
     public void validate_withValueInRange_shouldPass() {
         assertPass(classUnderTest.validate("1.1", floatParam(1.0, 1.2)));
-    }
-
-    private static void assertFail(ValidationReport report) {
-        assertThat(report.getMessages(), is(not(empty())));
-    }
-
-    private static void assertPass(ValidationReport report) {
-        assertThat(report.getMessages(), is(empty()));
-    }
-
-    private static SerializableParameter floatParam() {
-        return floatParam(true, null, null);
-    }
-
-    private static SerializableParameter floatParam(boolean required) {
-        return floatParam(required, null, null);
-    }
-
-    private static SerializableParameter floatParam(final Double min, final Double max) {
-        return floatParam(true, min, max);
-    }
-
-    private static SerializableParameter floatParam(final boolean required, final Double min, final Double max) {
-        final SerializableParameter result = mock(SerializableParameter.class);
-        when(result.getName()).thenReturn("Test Parameter");
-        when(result.getType()).thenReturn("number");
-        when(result.getFormat()).thenReturn("float");
-        when(result.getRequired()).thenReturn(required);
-        when(result.getMinimum()).thenReturn(min);
-        when(result.getMaximum()).thenReturn(max);
-        return result;
     }
 }

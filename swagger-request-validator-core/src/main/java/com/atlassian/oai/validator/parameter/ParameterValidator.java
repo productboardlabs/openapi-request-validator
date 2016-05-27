@@ -11,10 +11,4 @@ public interface ParameterValidator {
 
     ValidationReport validate(String value, Parameter p);
 
-    class ValidationException extends RuntimeException {
-        public ValidationException(String message) {
-            super(message);
-        }
-    }
-
 }

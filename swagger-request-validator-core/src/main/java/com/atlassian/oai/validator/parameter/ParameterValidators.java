@@ -9,7 +9,9 @@ import java.util.List;
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
 
-public class ParameterValidators {
+public final class ParameterValidators {
+
+    private ParameterValidators(){}
 
     private static final List<ParameterValidator> VALIDATORS = asList(
             StringParameterValidator.INSTANCE,
