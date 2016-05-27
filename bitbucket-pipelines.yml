@@ -4,5 +4,6 @@ pipelines:
   default:
     - step:
         script:
+          - bash configure.sh
           - mvn --version
           - mvn clean install
