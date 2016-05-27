@@ -4,6 +4,8 @@ import au.com.dius.pact.model.OptionalBody;
 import au.com.dius.pact.model.Request;
 import au.com.dius.pact.model.Response;
 import com.atlassian.oai.validator.parameter.ParameterValidators;
+import com.atlassian.oai.validator.report.MutableValidationReport;
+import com.atlassian.oai.validator.report.ValidationReport;
 import io.swagger.models.HttpMethod;
 import io.swagger.models.Operation;
 import io.swagger.models.Path;
@@ -37,12 +39,15 @@ public class SwaggerRequestResponseValidator {
         this.schemaValidator = new SwaggerSchemaValidator(this.api);
     }
 
-    public void validate(final Request request, final Response response) {
+    public ValidationReport validate(final Request request, final Response response) {
+        final MutableValidationReport validationReport = new MutableValidationReport();
+
         final NormalisedPath requestPath = new NormalisedPath(request.getPath());
 
         final Optional<NormalisedPath> maybeApiPath = findMatchingApiPath(requestPath);
         if (!maybeApiPath.isPresent()) {
-            throw new ValidationException("No API path found that matches request " + request.getPath());
+            validationReport.addError("No API path found that matches request " + request.getPath());
+            return validationReport;
         }
 
         final NormalisedPath apiPathString = maybeApiPath.get();
@@ -51,70 +56,74 @@ public class SwaggerRequestResponseValidator {
         final HttpMethod httpMethod = HttpMethod.valueOf(request.getMethod().toUpperCase());
         final Operation operation = apiPath.getOperationMap().get(httpMethod);
         if (operation == null) {
-            throw new ValidationException(format("%s operation not allowed on path '%s'",
+            validationReport.addError(format("%s operation not allowed on path '%s'",
                     request.getMethod(), apiPathString.original()));
+            return validationReport;
         }
 
         final ApiOperation apiOperation = new ApiOperation(apiPathString, apiPath, httpMethod, operation);
 
-        validateRequest(apiOperation, request);
-        validateResponse(apiOperation, response);
+        return validationReport
+                .merge(validateRequest(apiOperation, request))
+                .merge(validateResponse(apiOperation, response));
     }
 
-    private void validateRequest(final ApiOperation apiOperation, final Request request) {
+    private ValidationReport validateRequest(final ApiOperation apiOperation, final Request request) {
 
-        // Check request parameters
         final NormalisedPath requestPath = new NormalisedPath(request.getPath());
-        validateRequestParameters(apiOperation, requestPath);
-
-        // Check request body
-        validateRequestBody(apiOperation, request.getBody());
+        return ValidationReport.empty()
+                .merge(validateRequestParameters(apiOperation, requestPath))
+                .merge(validateRequestBody(apiOperation, request.getBody()));
     }
 
-    private void validateResponse(final ApiOperation apiOperation, final Response response) {
+    private ValidationReport validateResponse(final ApiOperation apiOperation, final Response response) {
 
         final io.swagger.models.Response apiResponse = apiOperation.getOperation().getResponses().get(Integer.toString(response.getStatus()));
         if (apiResponse == null) {
             apiOperation.getOperation().getResponses().get("default"); // try the default response
         }
 
+        final MutableValidationReport validationReport = new MutableValidationReport();
         if (apiResponse == null) {
-            throw new ValidationException(format("Response status %d not defined for path '%s'",
+            validationReport.addError(format("Response status %d not defined for path '%s'",
                     response.getStatus(), apiOperation.getPathString().original()));
+            return validationReport;
         }
 
         if (apiResponse.getSchema() == null) {
-            return;
+            return validationReport;
         }
 
         if (!response.getBody().isPresent()) {
-            throw new ValidationException(
-                    format("%s on path '%s' defines a response schema but no response body found",
-                            apiOperation.getMethod(), apiOperation.getPathString().original())
-            );
+            validationReport.addError(format("%s on path '%s' defines a response schema but no response body found",
+                            apiOperation.getMethod(), apiOperation.getPathString().original()));
         }
 
-        this.schemaValidator.validate(response.getBody().getValue(), apiResponse.getSchema());
+        return validationReport.merge(schemaValidator.validate(response.getBody().getValue(), apiResponse.getSchema()));
     }
 
-    private void validateRequestBody(final ApiOperation apiOperation, final OptionalBody body) {
+    private ValidationReport validateRequestBody(final ApiOperation apiOperation, final OptionalBody body) {
         final Optional<Parameter> bodyParameter = apiOperation.getOperation().getParameters()
                 .stream().filter(p -> p.getIn().equalsIgnoreCase("body")).findFirst();
 
+        final MutableValidationReport validationReport = new MutableValidationReport();
         if (body.isPresent() && !bodyParameter.isPresent()) {
-            throw new ValidationException(format("No request body is expected for %s on path '%s'",
+            validationReport.addError(format("No request body is expected for %s on path '%s'",
                     apiOperation.getMethod(), apiOperation.getPathString().original()));
+            return validationReport;
         }
 
         if (!bodyParameter.isPresent()) {
-            return;
+            return validationReport;
         }
 
-        this.schemaValidator.validate(body.getValue(), ((BodyParameter)bodyParameter.get()).getSchema());
+        return validationReport
+                .merge(schemaValidator.validate(body.getValue(), ((BodyParameter)bodyParameter.get()).getSchema()));
     }
 
-    private void validateRequestParameters(final ApiOperation apiOperation, final NormalisedPath requestPath) {
+    private ValidationReport validateRequestParameters(final ApiOperation apiOperation, final NormalisedPath requestPath) {
 
+        ValidationReport validationReport = ValidationReport.empty();
         for (int i = 0; i < apiOperation.getPathString().parts().size(); i++) {
             final String part = apiOperation.getPathString().part(i);
             if (!isPathParameter(part)) {
@@ -124,16 +133,17 @@ public class SwaggerRequestResponseValidator {
             final String paramName = getParameterName(part);
             final String paramValue = requestPath.part(i);
 
-            final Parameter parameter = apiOperation.getOperation().getParameters()
+            final Optional<Parameter> parameter = apiOperation.getOperation().getParameters()
                     .stream()
                     .filter(p ->
                             p.getIn().equalsIgnoreCase("PATH") && p.getName().equalsIgnoreCase(paramName))
-                    .findFirst()
-                    .orElseThrow(() ->
-                            new ValidationException(format("No path parameter %s found in API spec", paramName)));
+                    .findFirst();
 
-            ParameterValidators.validate(paramValue, parameter);
+            if (parameter.isPresent()) {
+                validationReport = validationReport.merge(ParameterValidators.validate(paramValue, parameter.get()));
+            }
         }
+        return validationReport;
     }
 
     private Optional<NormalisedPath> findMatchingApiPath(final NormalisedPath requestPath) {
@@ -233,12 +243,6 @@ public class SwaggerRequestResponseValidator {
 
         Operation getOperation() {
             return operation;
-        }
-    }
-
-    static class ValidationException extends RuntimeException {
-        ValidationException(String message) {
-            super(message);
         }
     }
 

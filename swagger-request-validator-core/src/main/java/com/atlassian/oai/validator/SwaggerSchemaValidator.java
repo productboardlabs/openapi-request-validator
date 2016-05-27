@@ -1,5 +1,7 @@
 package com.atlassian.oai.validator;
 
+import com.atlassian.oai.validator.report.MutableValidationReport;
+import com.atlassian.oai.validator.report.ValidationReport;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.jsonschema.core.report.ListProcessingReport;
@@ -19,16 +21,16 @@ public class SwaggerSchemaValidator {
         this.api = api;
     }
 
-    public void validate(final String value, final Property schema) {
-        doValidate(value, schema);
+    public ValidationReport validate(final String value, final Property schema) {
+        return doValidate(value, schema);
     }
 
-    public void validate(final String value, final Model schema) {
-        doValidate(value, schema);
+    public ValidationReport validate(final String value, final Model schema) {
+        return doValidate(value, schema);
     }
 
-    private void doValidate(final String value, final Object schema) {
-        ListProcessingReport report = null;
+    private ValidationReport doValidate(final String value, final Object schema) {
+        ListProcessingReport processingReport = null;
         try {
             if (this.definitions == null) {
                 this.definitions = Json.mapper().readTree(Json.pretty(api.getDefinitions()));
@@ -40,22 +42,18 @@ public class SwaggerSchemaValidator {
             final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
             final com.github.fge.jsonschema.main.JsonSchema jsonSchema = factory.getJsonSchema(schemaObject);
             final JsonNode content = Json.mapper().readTree(value);
-            report = (ListProcessingReport)jsonSchema.validate(content);
+            processingReport = (ListProcessingReport)jsonSchema.validate(content);
         }
         catch (Exception e) {
+            // TODO
             e.printStackTrace();
         }
 
-        if((report != null) && !report.isSuccess()) {
-            throw new SchemaValidationException(
-                    format("Value does not match schema:\nValue: \n%s\n\nValidation report:\n%s",
-                            value, Json.pretty(report.asJson())));
+        final MutableValidationReport validationReport = new MutableValidationReport();
+        if((processingReport != null) && !processingReport.isSuccess()) {
+            validationReport.addError(format("Value does not match schema:\nValue:\n\t%s\n\nValidation report:\n\t%s",
+                    value, Json.pretty(processingReport.asJson()).replace("\n", "\n\t")));
         }
-    }
-
-    static class SchemaValidationException extends RuntimeException {
-        public SchemaValidationException(String message) {
-            super(message);
-        }
+        return validationReport;
     }
 }

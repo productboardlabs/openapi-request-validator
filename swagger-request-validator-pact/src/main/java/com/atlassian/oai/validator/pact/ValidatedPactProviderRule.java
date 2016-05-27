@@ -8,6 +8,8 @@ import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
 import au.com.dius.pact.model.MockProviderConfig;
 import au.com.dius.pact.model.PactFragment;
 import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
+import com.atlassian.oai.validator.report.ValidationReport;
+import com.atlassian.oai.validator.report.ValidationReportFormatter;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -60,9 +62,15 @@ public class ValidatedPactProviderRule implements TestRule {
             return;
         }
 
-        pactFragment.get().toPact().getInteractions().forEach(i -> {
-            validator.validate(i.getRequest(), i.getResponse());
-        });
+        final ValidationReport report = pactFragment.get().toPact()
+                .getInteractions()
+                .stream()
+                .map(i -> validator.validate(i.getRequest(), i.getResponse()))
+                .reduce(ValidationReport.empty(), ValidationReport::merge);
+
+        if (report.hasErrors()) {
+            throw new PactValidationError(ValidationReportFormatter.toString(report));
+        }
     }
 
     private Optional<PactFragment> getPactFragment(final PactVerification pactVerification) {
@@ -101,5 +109,11 @@ public class ValidatedPactProviderRule implements TestRule {
             }
         }
         return Optional.empty();
+    }
+
+    static class PactValidationError extends RuntimeException {
+        public PactValidationError(String message) {
+            super(message);
+        }
     }
 }
