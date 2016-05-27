@@ -2,7 +2,7 @@
 
 MAVEN_SETTINGS=$MAVEN_HOME/conf/settings.xml
 
-echo "Messing up with Maven settings:"
+echo "Updating Maven settings:"
 echo $MAVEN_SETTINGS
 
 sed -i'back' '/<servers>/ a\
