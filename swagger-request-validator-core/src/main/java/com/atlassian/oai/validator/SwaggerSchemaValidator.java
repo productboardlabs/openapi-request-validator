@@ -12,25 +12,60 @@ import io.swagger.models.Swagger;
 import io.swagger.models.properties.Property;
 import io.swagger.util.Json;
 
-import static java.lang.String.format;
+import javax.annotation.Nonnull;
 
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
+
+/**
+ * Validate a value against the schema defined in a Swagger/OpenAPI specification.
+ * <p>
+ * Supports validation of properties and request/response bodies, and supports schema references.
+ */
 public class SwaggerSchemaValidator {
     private final Swagger api;
     private JsonNode definitions;
 
-    public SwaggerSchemaValidator(Swagger api) {
-        this.api = api;
+    /**
+     * Build a new validator for the given API specification.
+     *
+     * @param api The API to build the validator for. Used to retrieve schema definitions for use in references. (required)
+     */
+    public SwaggerSchemaValidator(@Nonnull final Swagger api) {
+        this.api = requireNonNull(api, "An API is required");
     }
 
-    public ValidationReport validate(final String value, final Property schema) {
+    /**
+     * Validate the given value against the given property schema.
+     *
+     * @param value The value to validate
+     * @param schema The property schema to validate the value against
+     *
+     * @return A validation report containing accumulated validation errors
+     */
+    @Nonnull
+    public ValidationReport validate(@Nonnull final String value, @Nonnull final Property schema) {
         return doValidate(value, schema);
     }
 
-    public ValidationReport validate(final String value, final Model schema) {
+    /**
+     * Validate the given value against the given model schema.
+     *
+     * @param value The value to validate
+     * @param schema The model schema to validate the value against
+     *
+     * @return A validation report containing accumulated validation errors
+     */
+    @Nonnull
+    public ValidationReport validate(@Nonnull final String value, @Nonnull final Model schema) {
         return doValidate(value, schema);
     }
 
-    private ValidationReport doValidate(final String value, final Object schema) {
+    @Nonnull
+    private ValidationReport doValidate(@Nonnull final String value, @Nonnull final Object schema) {
+        requireNonNull(value, "A value is required");
+        requireNonNull(schema, "A schema is required");
+
         final MutableValidationReport validationReport = new MutableValidationReport();
         ListProcessingReport processingReport = null;
         try {
