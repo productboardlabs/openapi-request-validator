@@ -65,7 +65,7 @@ public class ValidatedPactProviderRule implements TestRule {
         final ValidationReport report = pactFragment.get().toPact()
                 .getInteractions()
                 .stream()
-                .map(i -> validator.validate(i.getRequest(), i.getResponse()))
+                .map(i -> validator.validate(new PactRequest(i.getRequest()), new PactResponse(i.getResponse())))
                 .reduce(ValidationReport.empty(), ValidationReport::merge);
 
         if (report.hasErrors()) {

@@ -1,8 +1,7 @@
 package com.atlassian.oai.validator;
 
-import au.com.dius.pact.model.OptionalBody;
-import au.com.dius.pact.model.Request;
-import au.com.dius.pact.model.Response;
+import com.atlassian.oai.validator.model.Request;
+import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.parameter.ParameterValidators;
 import com.atlassian.oai.validator.report.MutableValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport;
@@ -22,6 +21,28 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 
+/**
+ * Validates a HTTP request/response pair with a Swagger/OpenAPI specification.
+ * <p>
+ * Validation errors are provided in a @{@link ValidationReport} that can be used to inspect the failures.
+ * <p>
+ * Currently supports the following validation checks:
+ * <p>
+ * <b>Request</b>:
+ * <ul>
+ *     <li>Path existence - does the request path exist in the API spec</li>
+ *     <li>Path parameter format - do the provided path parameters match the schema specified in the spec</li>
+ *     <li>Request body existence - has a body been supplied where needed</li>
+ *     <li>Request body schema - does the request body adhere to the schema defined in the spec</li>
+ * </ul>
+ * <p>
+ * <b>Response</b>:
+ * <ul>
+ *     <li>Status code - does the response status match one defined in the spec</li>
+ *     <li>Response body schema - does the response body adhere to the schema defined in the spec</li>
+ * </ul>
+ *
+ */
 public class SwaggerRequestResponseValidator {
 
     private final Swagger api;
@@ -53,7 +74,7 @@ public class SwaggerRequestResponseValidator {
         final NormalisedPath apiPathString = maybeApiPath.get();
         final Path apiPath = api.getPath(apiPathString.original());
 
-        final HttpMethod httpMethod = HttpMethod.valueOf(request.getMethod().toUpperCase());
+        final HttpMethod httpMethod = HttpMethod.valueOf(request.getMethod().name());
         final Operation operation = apiPath.getOperationMap().get(httpMethod);
         if (operation == null) {
             validationReport.addError(format("%s operation not allowed on path '%s'",
@@ -99,10 +120,10 @@ public class SwaggerRequestResponseValidator {
                             apiOperation.getMethod(), apiOperation.getPathString().original()));
         }
 
-        return validationReport.merge(schemaValidator.validate(response.getBody().getValue(), apiResponse.getSchema()));
+        return validationReport.merge(schemaValidator.validate(response.getBody().get(), apiResponse.getSchema()));
     }
 
-    private ValidationReport validateRequestBody(final ApiOperation apiOperation, final OptionalBody body) {
+    private ValidationReport validateRequestBody(final ApiOperation apiOperation, final Optional<String> body) {
         final Optional<Parameter> bodyParameter = apiOperation.getOperation().getParameters()
                 .stream().filter(p -> p.getIn().equalsIgnoreCase("body")).findFirst();
 
@@ -118,7 +139,7 @@ public class SwaggerRequestResponseValidator {
         }
 
         return validationReport
-                .merge(schemaValidator.validate(body.getValue(), ((BodyParameter)bodyParameter.get()).getSchema()));
+                .merge(schemaValidator.validate(body.get(), ((BodyParameter)bodyParameter.get()).getSchema()));
     }
 
     private ValidationReport validateRequestParameters(final ApiOperation apiOperation, final NormalisedPath requestPath) {
