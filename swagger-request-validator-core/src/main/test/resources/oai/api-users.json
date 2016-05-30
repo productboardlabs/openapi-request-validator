@@ -1,0 +1,133 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Users",
+    "version": "1.0.0"
+  },
+  "tags": [{
+    "name": "user",
+    "description": "Operations related to Users"
+  }],
+  "paths": {
+    "/users": {
+      "get": {
+        "tags": ["user"],
+        "summary": "Get all users",
+        "operationId": "get all users",
+        "produces": [
+          "application/json"
+        ],
+        "security": [{
+          "basic": ["read_users"]
+        }],
+        "responses": {
+          "200": {
+            "description": "Users response",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/User"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "tags": ["user"],
+        "summary": "Get a single user",
+        "operationId": "get user by ID",
+        "produces": [
+          "application/json"
+        ],
+        "security": [{
+          "basic": ["read_users"]
+        }],
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "description": "The ID of the user to get",
+          "required": true,
+          "type": "integer",
+          "format": "int32"
+        }],
+        "responses": {
+          "200": {
+            "description": "User response",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          },
+          "400": {
+            "description": "Invalid ID format",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "401": {
+            "description": "Unauthenticated access",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "No user with the given ID",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "basic": {
+      "x-authorize": "auth.js",
+      "type": "basic",
+      "scopes": {
+        "read_users": "Read users"
+      }
+    }
+  },
+  "definitions": {
+    "User": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email"
+      ]
+    },
+    "Error": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "message"
+      ]
+    }
+  }
+}

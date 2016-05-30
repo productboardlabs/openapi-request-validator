@@ -14,12 +14,14 @@ import io.swagger.models.parameters.Parameter;
 import io.swagger.parser.SwaggerParser;
 import io.swagger.parser.util.SwaggerDeserializationResult;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Optional;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Validates a HTTP request/response pair with a Swagger/OpenAPI specification.
@@ -54,13 +56,28 @@ public class SwaggerRequestResponseValidator {
         final SwaggerDeserializationResult swaggerParseResult = new SwaggerParser().readWithInfo(swaggerJsonUrl, null, true);
         this.api = swaggerParseResult.getSwagger();
         if (api == null) {
-            throw new IllegalArgumentException("Unable to load API descriptor from " + swaggerJsonUrl);
+            throw new IllegalArgumentException(
+                    format("Unable to load API descriptor from %s:\n\t%s",
+                            swaggerJsonUrl, swaggerParseResult.getMessages().toString().replace("\n", "\n\t")));
         }
         this.basePathOverride = Optional.ofNullable(basePathOverride);
         this.schemaValidator = new SwaggerSchemaValidator(this.api);
     }
 
-    public ValidationReport validate(final Request request, final Response response) {
+    /**
+     * Validate the given request/response against the API.
+     *
+     * See class docs for more information on the validation performed.
+     *
+     * @param request The request to validate (required)
+     * @param response The response to validate (required)
+     *
+     * @return The outcome of the validation
+     */
+    public ValidationReport validate(@Nonnull final Request request, @Nonnull final Response response) {
+        requireNonNull(request, "A request is required");
+        requireNonNull(response, "A response is required");
+
         final MutableValidationReport validationReport = new MutableValidationReport();
 
         final NormalisedPath requestPath = new NormalisedPath(request.getPath());
