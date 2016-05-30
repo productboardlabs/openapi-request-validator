@@ -2,6 +2,7 @@ package com.atlassian.oai.validator;
 
 import com.atlassian.oai.validator.report.MutableValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.jsonschema.core.report.ListProcessingReport;
@@ -30,6 +31,7 @@ public class SwaggerSchemaValidator {
     }
 
     private ValidationReport doValidate(final String value, final Object schema) {
+        final MutableValidationReport validationReport = new MutableValidationReport();
         ListProcessingReport processingReport = null;
         try {
             if (this.definitions == null) {
@@ -44,12 +46,15 @@ public class SwaggerSchemaValidator {
             final JsonNode content = Json.mapper().readTree(value);
             processingReport = (ListProcessingReport)jsonSchema.validate(content);
         }
+        catch (JsonParseException e) {
+            validationReport.addError("Unable to parse JSON - " + e.getMessage());
+            return validationReport;
+        }
         catch (Exception e) {
-            // TODO
             e.printStackTrace();
         }
 
-        final MutableValidationReport validationReport = new MutableValidationReport();
+
         if((processingReport != null) && !processingReport.isSuccess()) {
             validationReport.addError(format("Value does not match schema:\nValue:\n\t%s\n\nValidation report:\n\t%s",
                     value, Json.pretty(processingReport.asJson()).replace("\n", "\n\t")));

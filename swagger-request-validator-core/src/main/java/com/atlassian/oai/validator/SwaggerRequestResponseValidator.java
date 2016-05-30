@@ -135,17 +135,18 @@ public class SwaggerRequestResponseValidator {
         if (!response.getBody().isPresent()) {
             validationReport.addError(format("%s on path '%s' defines a response schema but no response body found",
                             apiOperation.getMethod(), apiOperation.getPathString().original()));
+            return validationReport;
         }
 
         return validationReport.merge(schemaValidator.validate(response.getBody().get(), apiResponse.getSchema()));
     }
 
-    private ValidationReport validateRequestBody(final ApiOperation apiOperation, final Optional<String> body) {
+    private ValidationReport validateRequestBody(final ApiOperation apiOperation, final Optional<String> requestBody) {
         final Optional<Parameter> bodyParameter = apiOperation.getOperation().getParameters()
                 .stream().filter(p -> p.getIn().equalsIgnoreCase("body")).findFirst();
 
         final MutableValidationReport validationReport = new MutableValidationReport();
-        if (body.isPresent() && !bodyParameter.isPresent()) {
+        if (requestBody.isPresent() && !bodyParameter.isPresent()) {
             validationReport.addError(format("No request body is expected for %s on path '%s'",
                     apiOperation.getMethod(), apiOperation.getPathString().original()));
             return validationReport;
@@ -156,7 +157,7 @@ public class SwaggerRequestResponseValidator {
         }
 
         return validationReport
-                .merge(schemaValidator.validate(body.get(), ((BodyParameter)bodyParameter.get()).getSchema()));
+                .merge(schemaValidator.validate(requestBody.get(), ((BodyParameter)bodyParameter.get()).getSchema()));
     }
 
     private ValidationReport validateRequestParameters(final ApiOperation apiOperation, final NormalisedPath requestPath) {

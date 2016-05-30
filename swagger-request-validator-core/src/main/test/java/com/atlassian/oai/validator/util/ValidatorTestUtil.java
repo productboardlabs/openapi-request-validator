@@ -1,7 +1,14 @@
 package com.atlassian.oai.validator.util;
 
 import com.atlassian.oai.validator.report.ValidationReport;
+import com.atlassian.oai.validator.report.ValidationReportFormatter;
 import io.swagger.models.parameters.SerializableParameter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -12,18 +19,44 @@ import static org.mockito.Mockito.when;
 
 public class ValidatorTestUtil {
 
+    private static final Logger log = LoggerFactory.getLogger(ValidatorTestUtil.class);
+
     /**
-     * Assert that validation has failed
+     * Assert that validation has failed.
      */
     public static void assertFail(ValidationReport report) {
+        log.trace(ValidationReportFormatter.toString(report));
         assertThat(report.getMessages(), is(not(empty())));
     }
 
     /**
-     * Assert that validation has passed
+     * Assert that validation has passed.
      */
     public static void assertPass(ValidationReport report) {
         assertThat(report.getMessages(), is(empty()));
+    }
+
+    /**
+     * Load a response JSON file with the given name.
+     *
+     * @param responseName The name of the response to load
+     *
+     * @return The response JSON as a String, or <code>null</code> if it cannot be loaded
+     */
+    public static String loadResponse(final String responseName) {
+        try {
+            final InputStream stream = ValidatorTestUtil.class.getResourceAsStream("/responses/" + responseName + ".json");
+            final BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+            final StringBuilder builder = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                builder.append(line).append('\n');
+            }
+            return builder.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     // Int parameters
