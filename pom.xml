@@ -32,17 +32,18 @@
         <junit.version>4.12</junit.version>
         <swagger-parser.version>1.0.19</swagger-parser.version>
         <json-schema-validator.version>2.2.6</json-schema-validator.version>
-        <jackson.version>2.4.6</jackson.version>
         <jdk.version>1.8</jdk.version>
         <mockito.version>1.10.19</mockito.version>
         <hamcrest.version>1.3</hamcrest.version>
         <slf4j.version>1.7.20</slf4j.version>
         <logback.version>1.0.13</logback.version>
+        <rest-assured.version>2.9.0</rest-assured.version>
     </properties>
 
     <modules>
         <module>swagger-request-validator-core</module>
         <module>swagger-request-validator-pact</module>
+        <module>swagger-request-validator-examples</module>
     </modules>
 
     <dependencyManagement>
@@ -50,6 +51,11 @@
             <dependency>
                 <groupId>com.atlassian.oai</groupId>
                 <artifactId>swagger-request-validator-core</artifactId>
+                <version>${version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.atlassian.oai</groupId>
+                <artifactId>swagger-request-validator-pact</artifactId>
                 <version>${version}</version>
             </dependency>
 
@@ -64,11 +70,6 @@
                 <version>${json-schema-validator.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.fasterxml.jackson.module</groupId>
-                <artifactId>jackson-module-jaxb-annotations</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>au.com.dius</groupId>
                 <artifactId>pact-jvm-model_2.11</artifactId>
                 <version>${pact-jvm.version}</version>
@@ -81,6 +82,11 @@
             <dependency>
                 <groupId>au.com.dius</groupId>
                 <artifactId>pact-jvm-consumer-junit_2.11</artifactId>
+                <version>${pact-jvm.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>au.com.dius</groupId>
+                <artifactId>pact-jvm-consumer_2.11</artifactId>
                 <version>${pact-jvm.version}</version>
             </dependency>
             <dependency>
@@ -102,6 +108,11 @@
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
                 <version>${logback.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jayway.restassured</groupId>
+                <artifactId>rest-assured</artifactId>
+                <version>${rest-assured.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -51,12 +51,12 @@ public class ValidatedPactProviderRule implements TestRule {
                 if (pactDef != null && ignore == null) {
                     validatePactDef(pactDef);
                 }
-                delegate.apply(base, description);
+                delegate.apply(base, description).evaluate();
             }
         };
     }
 
-    private void validatePactDef(final PactVerification pactVerification) {
+    private void validatePactDef(final PactVerification pactVerification) throws Exception {
         final Optional<PactFragment> pactFragment = getPactFragment(pactVerification);
         if (!pactFragment.isPresent()) {
             return;
@@ -73,7 +73,7 @@ public class ValidatedPactProviderRule implements TestRule {
         }
     }
 
-    private Optional<PactFragment> getPactFragment(final PactVerification pactVerification) {
+    private Optional<PactFragment> getPactFragment(final PactVerification pactVerification) throws Exception {
         final Optional<Method> possiblePactMethod = findPactMethod(pactVerification);
         if (!possiblePactMethod.isPresent()) {
             // Fail silently and let the delegate Pact rule do error reporting
@@ -86,7 +86,7 @@ public class ValidatedPactProviderRule implements TestRule {
         try {
             return Optional.of((PactFragment) method.invoke(target, dslBuilder));
         } catch (Exception e) {
-            return Optional.empty();
+            throw e;
         }
     }
 
@@ -111,7 +111,7 @@ public class ValidatedPactProviderRule implements TestRule {
         return Optional.empty();
     }
 
-    static class PactValidationError extends RuntimeException {
+    public static class PactValidationError extends RuntimeException {
         public PactValidationError(String message) {
             super(message);
         }
