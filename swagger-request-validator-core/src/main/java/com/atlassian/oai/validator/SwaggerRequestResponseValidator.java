@@ -156,6 +156,14 @@ public class SwaggerRequestResponseValidator {
             return validationReport;
         }
 
+        if (!requestBody.isPresent()) {
+            if (bodyParameter.get().getRequired()) {
+                validationReport.addError(format("%s on path '%s' requires a request body. None found.",
+                        apiOperation.getMethod(), apiOperation.getPathString().original()));
+            }
+            return validationReport;
+        }
+
         return validationReport
                 .merge(schemaValidator.validate(requestBody.get(), ((BodyParameter)bodyParameter.get()).getSchema()));
     }

@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadRequest;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadResponse;
 
 public class SwaggerRequestResponseValidatorTest {
@@ -43,6 +44,38 @@ public class SwaggerRequestResponseValidatorTest {
     public void validate_withInvalidPathParam_shouldFail() {
         final Request request = SimpleRequest.Builder.get("/users/a").build();
         final Response response = SimpleResponse.Builder.badRequest().build();
+
+        assertFail(classUnderTest.validate(request, response));
+    }
+
+    @Test
+    public void validate_withInvalidRequestMethod_shouldFail() {
+        final Request request = SimpleRequest.Builder.patch("/users/1").build();
+        final Response response = SimpleResponse.Builder.ok().build();
+
+        assertFail(classUnderTest.validate(request, response));
+    }
+
+    @Test
+    public void validate_withRequestMissingRequiredBody_shouldFail() {
+        final Request request = SimpleRequest.Builder.post("/users").build();
+        final Response response = SimpleResponse.Builder.ok().build();
+
+        assertFail(classUnderTest.validate(request, response));
+    }
+
+    @Test
+    public void validate_withValidRequestBody_shouldPass() {
+        final Request request = SimpleRequest.Builder.post("/users").withBody(loadRequest("newuser-valid")).build();
+        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
+
+        assertPass(classUnderTest.validate(request, response));
+    }
+
+    @Test
+    public void validate_withInvalidRequestBody_shouldFail() {
+        final Request request = SimpleRequest.Builder.post("/users").withBody(loadRequest("newuser-invalid-missingrequired")).build();
+        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
 
         assertFail(classUnderTest.validate(request, response));
     }

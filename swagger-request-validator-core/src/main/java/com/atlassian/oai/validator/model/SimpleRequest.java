@@ -55,6 +55,22 @@ public class SimpleRequest implements Request {
             return new Builder(Method.GET, path);
         }
 
+        public static Builder put(final String path) {
+            return new Builder(Method.PUT, path);
+        }
+
+        public static Builder post(final String path) {
+            return new Builder(Method.POST, path);
+        }
+
+        public static Builder delete(final String path) {
+            return new Builder(Method.DELETE, path);
+        }
+
+        public static Builder patch(final String path) {
+            return new Builder(Method.POST, path);
+        }
+
         public Builder(final Method method, final String path) {
             this.method = requireNonNull(method, "A method is required");
             this.path = requireNonNull(path, "A path is required");

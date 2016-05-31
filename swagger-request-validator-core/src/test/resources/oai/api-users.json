@@ -34,6 +34,37 @@
             "description": "Unauthenticated"
           }
         }
+      },
+      "post": {
+        "tags": ["user"],
+        "summary": "Create a new user",
+        "operationId": "create new user",
+        "produces": [
+          "application/json"
+        ],
+        "consumes": [
+          "application/json"
+        ],
+        "security": [{
+          "basic": ["create_user"]
+        }],
+        "parameters": [{
+          "name": "user",
+          "in": "body",
+          "description": "The new user details to create",
+          "required": true,
+          "schema": {
+            "$ref": "#/definitions/NewUser"
+          }
+        }],
+        "responses": {
+          "200": {
+            "description": "User response",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          }
+        }
       }
     },
     "/users/{id}": {
@@ -89,7 +120,8 @@
       "x-authorize": "auth.js",
       "type": "basic",
       "scopes": {
-        "read_users": "Read users"
+        "read_users": "Read users",
+        "create_user": "Create user"
       }
     }
   },
@@ -110,6 +142,21 @@
       },
       "required": [
         "id",
+        "name",
+        "email"
+      ]
+    },
+    "NewUser": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        }
+      },
+      "required": [
         "name",
         "email"
       ]
