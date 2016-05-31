@@ -116,9 +116,9 @@ public class SwaggerRequestResponseValidator {
 
     private ValidationReport validateResponse(final ApiOperation apiOperation, final Response response) {
 
-        final io.swagger.models.Response apiResponse = apiOperation.getOperation().getResponses().get(Integer.toString(response.getStatus()));
+        io.swagger.models.Response apiResponse = apiOperation.getOperation().getResponses().get(Integer.toString(response.getStatus()));
         if (apiResponse == null) {
-            apiOperation.getOperation().getResponses().get("default"); // try the default response
+            apiResponse = apiOperation.getOperation().getResponses().get("default"); // try the default response
         }
 
         final MutableValidationReport validationReport = new MutableValidationReport();

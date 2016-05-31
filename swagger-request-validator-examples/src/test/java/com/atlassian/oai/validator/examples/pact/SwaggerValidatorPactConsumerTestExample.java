@@ -51,7 +51,7 @@ public class SwaggerValidatorPactConsumerTestExample {
                 .toFragment();
     }
 
-    @Pact(provider = PROVIDER_ID, consumer = "ExampleConsumer")
+    @Pact(provider = PROVIDER_ID, consumer = CONSUMER_ID)
     public PactFragment getInvalidPet(PactDslWithProvider builder) {
         return builder
                 .uponReceiving("GET invalid pet")
@@ -63,7 +63,7 @@ public class SwaggerValidatorPactConsumerTestExample {
                 .toFragment();
     }
 
-    @Pact(provider = PROVIDER_ID, consumer = "ExampleConsumer")
+    @Pact(provider = PROVIDER_ID, consumer = CONSUMER_ID)
     public PactFragment getPetWithInvalidId(PactDslWithProvider builder) {
         return builder
                 .uponReceiving("GET pet with invalid ID")

@@ -32,6 +32,12 @@
           },
           "401": {
             "description": "Unauthenticated"
+          },
+          "default": {
+            "description": "Error response",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           }
         }
       },

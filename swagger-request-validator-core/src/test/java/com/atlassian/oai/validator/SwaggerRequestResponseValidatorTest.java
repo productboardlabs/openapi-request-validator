@@ -120,4 +120,20 @@ public class SwaggerRequestResponseValidatorTest {
         assertFail(classUnderTest.validate(request, response));
     }
 
+    @Test
+    public void validate_withResponseContainingUnknownStatusCode_shouldFail_whenNoDefaultResponseDefined() {
+        final Request request = SimpleRequest.Builder.get("/users/1").build();
+        final Response response = SimpleResponse.Builder.status(666).build();
+
+        assertFail(classUnderTest.validate(request, response));
+    }
+
+    @Test
+    public void validate_withResponseContainingUnknownStatusCode_shouldPass_whenDefaultResponseDefined() {
+        final Request request = SimpleRequest.Builder.get("/users").build();
+        final Response response = SimpleResponse.Builder.status(666).withBody(loadResponse("error-valid")).build();
+
+        assertPass(classUnderTest.validate(request, response));
+    }
+
 }
