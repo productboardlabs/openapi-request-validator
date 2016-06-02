@@ -1,4 +1,4 @@
-package com.atlassian.oai.validator;
+package com.atlassian.oai.validator.schema;
 
 import com.atlassian.oai.validator.report.MutableValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport;
@@ -22,7 +22,7 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * Supports validation of properties and request/response bodies, and supports schema references.
  */
-public class SwaggerSchemaValidator {
+public class SchemaValidator {
     private final Swagger api;
     private JsonNode definitions;
 
@@ -31,7 +31,7 @@ public class SwaggerSchemaValidator {
      *
      * @param api The API to build the validator for. Used to retrieve schema definitions for use in references. (required)
      */
-    public SwaggerSchemaValidator(@Nonnull final Swagger api) {
+    public SchemaValidator(@Nonnull final Swagger api) {
         this.api = requireNonNull(api, "An API is required");
     }
 

@@ -1,0 +1,52 @@
+package com.atlassian.oai.validator.interaction;
+
+import com.atlassian.oai.validator.model.ApiOperation;
+import com.atlassian.oai.validator.model.Response;
+import com.atlassian.oai.validator.report.MutableValidationReport;
+import com.atlassian.oai.validator.report.ValidationReport;
+import com.atlassian.oai.validator.schema.SchemaValidator;
+
+import javax.annotation.Nonnull;
+
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
+
+/**
+ */
+public class ResponseValidator {
+
+    private final SchemaValidator schemaValidator;
+
+    public ResponseValidator(SchemaValidator schemaValidator) {
+        this.schemaValidator = schemaValidator;
+    }
+
+    public ValidationReport validateResponse(@Nonnull final Response response, @Nonnull final ApiOperation apiOperation) {
+        requireNonNull(response, "A response is required");
+        requireNonNull(apiOperation, "An API operation is required");
+
+        io.swagger.models.Response apiResponse = apiOperation.getOperation().getResponses().get(Integer.toString(response.getStatus()));
+        if (apiResponse == null) {
+            apiResponse = apiOperation.getOperation().getResponses().get("default"); // try the default response
+        }
+
+        final MutableValidationReport validationReport = new MutableValidationReport();
+        if (apiResponse == null) {
+            validationReport.addError(format("Response status %d not defined for path '%s'",
+                    response.getStatus(), apiOperation.getPathString().original()));
+            return validationReport;
+        }
+
+        if (apiResponse.getSchema() == null) {
+            return validationReport;
+        }
+
+        if (!response.getBody().isPresent()) {
+            validationReport.addError(format("%s on path '%s' defines a response schema but no response body found",
+                    apiOperation.getMethod(), apiOperation.getPathString().original()));
+            return validationReport;
+        }
+
+        return validationReport.merge(schemaValidator.validate(response.getBody().get(), apiResponse.getSchema()));
+    }
+}

@@ -1,5 +1,6 @@
-package com.atlassian.oai.validator;
+package com.atlassian.oai.validator.schema;
 
+import com.atlassian.oai.validator.schema.SchemaValidator;
 import io.swagger.models.Model;
 import io.swagger.models.ModelImpl;
 import io.swagger.models.RefModel;
@@ -12,10 +13,10 @@ import org.junit.Test;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 
-public class SwaggerSchemaValidatorTest {
+public class SchemaValidatorTest {
 
-    private SwaggerSchemaValidator classUnderTest =
-            new SwaggerSchemaValidator(new SwaggerParser().read("/oai/api-users.json"));
+    private SchemaValidator classUnderTest =
+            new SchemaValidator(new SwaggerParser().read("/oai/api-users.json"));
 
     @Test(expected = NullPointerException.class)
     public void validate_withNullValue_shouldThrowNPE() {

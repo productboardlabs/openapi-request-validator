@@ -1,16 +1,18 @@
 package com.atlassian.oai.validator;
 
+import com.atlassian.oai.validator.interaction.RequestValidator;
+import com.atlassian.oai.validator.interaction.ResponseValidator;
+import com.atlassian.oai.validator.model.ApiOperation;
+import com.atlassian.oai.validator.model.NormalisedPath;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
-import com.atlassian.oai.validator.parameter.ParameterValidators;
 import com.atlassian.oai.validator.report.MutableValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport;
+import com.atlassian.oai.validator.schema.SchemaValidator;
 import io.swagger.models.HttpMethod;
 import io.swagger.models.Operation;
 import io.swagger.models.Path;
 import io.swagger.models.Swagger;
-import io.swagger.models.parameters.BodyParameter;
-import io.swagger.models.parameters.Parameter;
 import io.swagger.parser.SwaggerParser;
 import io.swagger.parser.util.SwaggerDeserializationResult;
 
@@ -49,8 +51,9 @@ public class SwaggerRequestResponseValidator {
 
     private final Swagger api;
     private final Optional<String> basePathOverride;
-    private final SwaggerSchemaValidator schemaValidator;
 
+    private final RequestValidator requestValidator;
+    private final ResponseValidator responseValidator;
 
     public SwaggerRequestResponseValidator(final String swaggerJsonUrl, final String basePathOverride) {
         final SwaggerDeserializationResult swaggerParseResult = new SwaggerParser().readWithInfo(swaggerJsonUrl, null, true);
@@ -61,7 +64,10 @@ public class SwaggerRequestResponseValidator {
                             swaggerJsonUrl, swaggerParseResult.getMessages().toString().replace("\n", "\n\t")));
         }
         this.basePathOverride = Optional.ofNullable(basePathOverride);
-        this.schemaValidator = new SwaggerSchemaValidator(this.api);
+
+        final SchemaValidator schemaValidator = new SchemaValidator(api);
+        this.requestValidator = new RequestValidator(schemaValidator);
+        this.responseValidator = new ResponseValidator(schemaValidator);
     }
 
     /**
@@ -80,7 +86,7 @@ public class SwaggerRequestResponseValidator {
 
         final MutableValidationReport validationReport = new MutableValidationReport();
 
-        final NormalisedPath requestPath = new NormalisedPath(request.getPath());
+        final NormalisedPath requestPath = new ApiBasedNormalisedPath(request.getPath());
 
         final Optional<NormalisedPath> maybeApiPath = findMatchingApiPath(requestPath);
         if (!maybeApiPath.isPresent()) {
@@ -102,101 +108,14 @@ public class SwaggerRequestResponseValidator {
         final ApiOperation apiOperation = new ApiOperation(apiPathString, apiPath, httpMethod, operation);
 
         return validationReport
-                .merge(validateRequest(apiOperation, request))
-                .merge(validateResponse(apiOperation, response));
-    }
-
-    private ValidationReport validateRequest(final ApiOperation apiOperation, final Request request) {
-
-        final NormalisedPath requestPath = new NormalisedPath(request.getPath());
-        return ValidationReport.empty()
-                .merge(validateRequestParameters(apiOperation, requestPath))
-                .merge(validateRequestBody(apiOperation, request.getBody()));
-    }
-
-    private ValidationReport validateResponse(final ApiOperation apiOperation, final Response response) {
-
-        io.swagger.models.Response apiResponse = apiOperation.getOperation().getResponses().get(Integer.toString(response.getStatus()));
-        if (apiResponse == null) {
-            apiResponse = apiOperation.getOperation().getResponses().get("default"); // try the default response
-        }
-
-        final MutableValidationReport validationReport = new MutableValidationReport();
-        if (apiResponse == null) {
-            validationReport.addError(format("Response status %d not defined for path '%s'",
-                    response.getStatus(), apiOperation.getPathString().original()));
-            return validationReport;
-        }
-
-        if (apiResponse.getSchema() == null) {
-            return validationReport;
-        }
-
-        if (!response.getBody().isPresent()) {
-            validationReport.addError(format("%s on path '%s' defines a response schema but no response body found",
-                            apiOperation.getMethod(), apiOperation.getPathString().original()));
-            return validationReport;
-        }
-
-        return validationReport.merge(schemaValidator.validate(response.getBody().get(), apiResponse.getSchema()));
-    }
-
-    private ValidationReport validateRequestBody(final ApiOperation apiOperation, final Optional<String> requestBody) {
-        final Optional<Parameter> bodyParameter = apiOperation.getOperation().getParameters()
-                .stream().filter(p -> p.getIn().equalsIgnoreCase("body")).findFirst();
-
-        final MutableValidationReport validationReport = new MutableValidationReport();
-        if (requestBody.isPresent() && !bodyParameter.isPresent()) {
-            validationReport.addError(format("No request body is expected for %s on path '%s'",
-                    apiOperation.getMethod(), apiOperation.getPathString().original()));
-            return validationReport;
-        }
-
-        if (!bodyParameter.isPresent()) {
-            return validationReport;
-        }
-
-        if (!requestBody.isPresent()) {
-            if (bodyParameter.get().getRequired()) {
-                validationReport.addError(format("%s on path '%s' requires a request body. None found.",
-                        apiOperation.getMethod(), apiOperation.getPathString().original()));
-            }
-            return validationReport;
-        }
-
-        return validationReport
-                .merge(schemaValidator.validate(requestBody.get(), ((BodyParameter)bodyParameter.get()).getSchema()));
-    }
-
-    private ValidationReport validateRequestParameters(final ApiOperation apiOperation, final NormalisedPath requestPath) {
-
-        ValidationReport validationReport = ValidationReport.empty();
-        for (int i = 0; i < apiOperation.getPathString().parts().size(); i++) {
-            final String part = apiOperation.getPathString().part(i);
-            if (!isPathParameter(part)) {
-                continue;
-            }
-
-            final String paramName = getParameterName(part);
-            final String paramValue = requestPath.part(i);
-
-            final Optional<Parameter> parameter = apiOperation.getOperation().getParameters()
-                    .stream()
-                    .filter(p ->
-                            p.getIn().equalsIgnoreCase("PATH") && p.getName().equalsIgnoreCase(paramName))
-                    .findFirst();
-
-            if (parameter.isPresent()) {
-                validationReport = validationReport.merge(ParameterValidators.validate(paramValue, parameter.get()));
-            }
-        }
-        return validationReport;
+                .merge(requestValidator.validateRequest(requestPath, request, apiOperation))
+                .merge(responseValidator.validateResponse(response, apiOperation));
     }
 
     private Optional<NormalisedPath> findMatchingApiPath(final NormalisedPath requestPath) {
         return api.getPaths().keySet()
                 .stream()
-                .map(NormalisedPath::new)
+                .map(p -> (NormalisedPath) new ApiBasedNormalisedPath(p))
                 .filter(p -> pathMatches(requestPath, p))
                 .findFirst();
     }
@@ -206,8 +125,7 @@ public class SwaggerRequestResponseValidator {
             return false;
         }
         for (int i = 0; i < requestPath.parts().size(); i++) {
-            if (requestPath.part(i).equalsIgnoreCase(apiPath.part(i)) ||
-                    isPathParameter(apiPath.part(i))) {
+            if (requestPath.part(i).equalsIgnoreCase(apiPath.part(i)) || apiPath.isParam(i)) {
                 continue;
             }
             return false;
@@ -215,38 +133,54 @@ public class SwaggerRequestResponseValidator {
         return true;
     }
 
-    private boolean isPathParameter(final String s) {
-        return s.startsWith("{") && s.endsWith("}");
-    }
-
-    private String getParameterName(final String pathParam) {
-        return pathParam.substring(1, pathParam.length() - 1);
-    }
-
-    private class NormalisedPath {
+    private class ApiBasedNormalisedPath implements NormalisedPath {
         private final List<String> pathParts;
         private final String original;
         private final String normalised;
 
-        NormalisedPath(final String path) {
-            this.original = path;
+        ApiBasedNormalisedPath(@Nonnull final String path) {
+            this.original = requireNonNull(path, "A path is required");
             this.normalised = normalise(path);
             this.pathParts = unmodifiableList(asList(normalised.split("/")));
         }
 
-        List<String> parts() {
+        @Override
+        @Nonnull
+        public List<String> parts() {
             return pathParts;
         }
 
-        String part(int index) {
+        @Override
+        @Nonnull
+        public String part(int index) {
             return pathParts.get(index);
         }
 
-        String original() {
+        @Override
+        public boolean isParam(int index) {
+            final String part = part(index);
+            return part.startsWith("{") && part.endsWith("}");
+        }
+
+        @Override
+        @Nonnull
+        public String paramName(int index) {
+            if (!isParam(index)) {
+                return null;
+            }
+            final String part = part(index);
+            return part.substring(1, part.length() - 1);
+        }
+
+        @Override
+        @Nonnull
+        public String original() {
             return original;
         }
 
-        String normalised() {
+        @Override
+        @Nonnull
+        public String normalised() {
             return normalised;
         }
 
@@ -262,35 +196,4 @@ public class SwaggerRequestResponseValidator {
             return requestPath;
         }
     }
-
-    private class ApiOperation {
-        private final NormalisedPath pathString;
-        private final Path pathObject;
-        private final HttpMethod method;
-        private final Operation operation;
-
-        ApiOperation(NormalisedPath pathString, Path pathObject, HttpMethod method, Operation operation) {
-            this.pathString = pathString;
-            this.pathObject = pathObject;
-            this.method = method;
-            this.operation = operation;
-        }
-
-        NormalisedPath getPathString() {
-            return pathString;
-        }
-
-        Path getPathObject() {
-            return pathObject;
-        }
-
-        HttpMethod getMethod() {
-            return method;
-        }
-
-        Operation getOperation() {
-            return operation;
-        }
-    }
-
 }
