@@ -3,6 +3,7 @@ package com.atlassian.oai.validator.pact;
 import com.atlassian.oai.validator.model.Request;
 
 import javax.annotation.Nonnull;
+import java.util.Collection;
 import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
@@ -37,5 +38,17 @@ public class PactRequest implements Request {
     @Override
     public Optional<String> getBody() {
         return internalRequest.getBody().isPresent() ? of(internalRequest.getBody().getValue()) : empty();
+    }
+
+    @Nonnull
+    @Override
+    public Collection<String> getQueryParameters() {
+        return internalRequest.getQuery().keySet();
+    }
+
+    @Nonnull
+    @Override
+    public Collection<String> getQueryParameterValues(String name) {
+        return internalRequest.getQuery().get(name);
     }
 }

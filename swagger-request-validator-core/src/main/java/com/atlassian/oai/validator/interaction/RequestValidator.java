@@ -10,6 +10,7 @@ import com.atlassian.oai.validator.schema.SchemaValidator;
 import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.Parameter;
 
+import java.util.Collection;
 import java.util.Optional;
 
 import static java.lang.String.format;
@@ -39,11 +40,12 @@ public class RequestValidator {
                                             final Request request,
                                             final ApiOperation apiOperation) {
         return ValidationReport.empty()
-                .merge(validateRequestParameters(apiOperation, requestPath))
-                .merge(validateRequestBody(apiOperation, request.getBody()));
+                .merge(validatePathParameters(requestPath, apiOperation))
+                .merge(validateQueryParameters(request, apiOperation))
+                .merge(validateRequestBody(request.getBody(), apiOperation));
     }
 
-    private ValidationReport validateRequestBody(final ApiOperation apiOperation, final Optional<String> requestBody) {
+    private ValidationReport validateRequestBody(final Optional<String> requestBody, final ApiOperation apiOperation) {
         final Optional<Parameter> bodyParameter = apiOperation.getOperation().getParameters()
                 .stream().filter(p -> p.getIn().equalsIgnoreCase("body")).findFirst();
 
@@ -70,11 +72,10 @@ public class RequestValidator {
                 .merge(schemaValidator.validate(requestBody.get(), ((BodyParameter)bodyParameter.get()).getSchema()));
     }
 
-    private ValidationReport validateRequestParameters(final ApiOperation apiOperation, final NormalisedPath requestPath) {
+    private ValidationReport validatePathParameters(final NormalisedPath requestPath, final ApiOperation apiOperation) {
 
         ValidationReport validationReport = ValidationReport.empty();
         for (int i = 0; i < apiOperation.getPathString().parts().size(); i++) {
-            final String part = apiOperation.getPathString().part(i);
             if (!apiOperation.getPathString().isParam(i)) {
                 continue;
             }
@@ -92,6 +93,28 @@ public class RequestValidator {
                 validationReport = validationReport.merge(ParameterValidators.validate(paramValue, parameter.get()));
             }
         }
+        return validationReport;
+    }
+
+    private ValidationReport validateQueryParameters(final Request request, final ApiOperation apiOperation) {
+        final MutableValidationReport validationReport = new MutableValidationReport();
+        apiOperation.getOperation()
+                .getParameters()
+                .stream()
+                .filter(p -> p.getIn().equalsIgnoreCase("QUERY"))
+                .forEach(p -> {
+                    final Collection<String> queryParameterValues = request.getQueryParameterValues(p.getName());
+                    if (queryParameterValues.isEmpty() && p.getRequired()) {
+                        validationReport.addError(
+                                format("Query parameter %s is required on path %s but not found in request.",
+                                        p.getName(), apiOperation.getPathString().original()));
+                        return;
+                    }
+                    queryParameterValues.stream().forEach( v -> {
+                            validationReport.addAll(ParameterValidators.validate(v, p));
+                    });
+                });
+
         return validationReport;
     }
 }

@@ -25,6 +25,10 @@ public class MutableValidationReport implements ValidationReport {
         this.messages.add(new MessageImpl(ERROR, message));
     }
 
+    public void addAll(@Nonnull final ValidationReport other) {
+        this.messages.addAll(other.getMessages());
+    }
+
     @Override
     public ValidationReport merge(@Nonnull final ValidationReport other) {
         requireNonNull(other, "A validation report is required");
