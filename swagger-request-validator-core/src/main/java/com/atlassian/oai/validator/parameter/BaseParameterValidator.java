@@ -6,20 +6,22 @@ import io.swagger.models.parameters.Parameter;
 import io.swagger.models.parameters.SerializableParameter;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import static java.lang.String.format;
 
-public abstract class BaseParameterValidator implements ParameterValidator {
+abstract class BaseParameterValidator implements ParameterValidator {
 
     @Override
-    public boolean supports(Parameter p) {
+    public boolean supports(@Nullable final Parameter p) {
         return p != null &&
                 p instanceof SerializableParameter &&
                 supportedParameterType().equalsIgnoreCase(((SerializableParameter)p).getType());
     }
 
     @Override
-    public ValidationReport validate(final String value, final Parameter p) {
+    @Nonnull
+    public ValidationReport validate(@Nullable final String value, @Nullable final Parameter p) {
         final MutableValidationReport report = new MutableValidationReport();
 
         if (!supports(p)) {
@@ -29,24 +31,26 @@ public abstract class BaseParameterValidator implements ParameterValidator {
         final SerializableParameter parameter = (SerializableParameter)p;
 
         if (parameter.getRequired() && (value == null || value.trim().isEmpty())) {
-            report.addError(format("Parameter '%s' is required but is missing", p.getName()));
-            return report;
+            return report.addError(format("Parameter '%s' is required but is missing", p.getName()));
         }
 
         if (value == null || value.trim().isEmpty()) {
             return report;
         }
 
-        if (parameter.getEnum() != null &&
-                !parameter.getEnum().isEmpty() &&
-                !parameter.getEnum().stream().anyMatch(value::equals)) {
-            report.addError(format("Parameter '%s' does not match allowed values <%s>",
+        if (!matchesEnumIfDefined(value, parameter)) {
+            return report.addError(format("Parameter '%s' does not match allowed values <%s>",
                     parameter.getName(), parameter.getEnum()));
-            return report;
         }
 
         doValidate(value, parameter, report);
         return report;
+    }
+
+    private boolean matchesEnumIfDefined(final String value, final SerializableParameter parameter) {
+        return parameter.getEnum() == null ||
+                parameter.getEnum().isEmpty() ||
+                parameter.getEnum().stream().anyMatch(value::equals);
     }
 
     /**

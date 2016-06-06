@@ -17,6 +17,7 @@ import io.swagger.parser.SwaggerParser;
 import io.swagger.parser.util.SwaggerDeserializationResult;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,8 +56,51 @@ public class SwaggerRequestResponseValidator {
     private final RequestValidator requestValidator;
     private final ResponseValidator responseValidator;
 
-    public SwaggerRequestResponseValidator(final String swaggerJsonUrl, final String basePathOverride) {
-        final SwaggerDeserializationResult swaggerParseResult = new SwaggerParser().readWithInfo(swaggerJsonUrl, null, true);
+    /**
+     * Construct a new validator for the specification at the given URL.
+     * <p>
+     * The URL can be an absolute HTTP/HTTPS URL, a File URL or a classpath location (without the classpath: scheme).
+     *
+     * @param swaggerJsonUrl The location of the Swagger JSON specification to use in this validator
+     *
+     * @see SwaggerRequestResponseValidator#SwaggerRequestResponseValidator(String, String)
+     */
+    public SwaggerRequestResponseValidator(@Nonnull final String swaggerJsonUrl) {
+        this(swaggerJsonUrl, null);
+    }
+
+    /**
+     * Construct a new validator for the specification at the given URL.
+     * <p>
+     * The URL can be an absolute HTTP/HTTPS URL, a File URL or a classpath location (without the classpath: scheme).
+     * <p>
+     * This constructor also takes an optional basepath override to override the one defined in the Swagger spec.
+     * This can be useful if e.g. your Swagger specification has been created for a public URL but you are validating
+     * requests against an internal URL where the URL paths differ.
+     * <p>
+     * Example usage:
+     * <pre>
+     *     // Create from a publicly hosted HTTP location
+     *     new SwaggerRequestResponseValidator("http://api.myservice.com/swagger.json", null);
+     *
+     *     // Create from a file on the local filesystem
+     *     new SwaggerRequestResponseValidator("file://Users/myuser/tmp/swagger.json", null);
+     *
+     *     // Create from a classpath resource in the /api package
+     *     // and override the basepath to "/testapi"
+     *     new SwaggerRequestResponseValidator("/api/swagger.json", "/testapi");
+     * </pre>
+     *
+     * @param swaggerJsonUrl The location of the Swagger JSON specification to use in this validator
+     * @param basePathOverride (Optional) override for the base path defined in the Swagger specification.
+     */
+    public SwaggerRequestResponseValidator(@Nonnull final String swaggerJsonUrl,
+                                           @Nullable final String basePathOverride) {
+
+        requireNonNull(swaggerJsonUrl, "A Swagger URL is required");
+
+        final SwaggerDeserializationResult swaggerParseResult =
+                new SwaggerParser().readWithInfo(swaggerJsonUrl, null, true);
         this.api = swaggerParseResult.getSwagger();
         if (api == null) {
             throw new IllegalArgumentException(
@@ -80,6 +124,7 @@ public class SwaggerRequestResponseValidator {
      *
      * @return The outcome of the validation
      */
+    @Nonnull
     public ValidationReport validate(@Nonnull final Request request, @Nonnull final Response response) {
         requireNonNull(request, "A request is required");
         requireNonNull(response, "A response is required");
@@ -90,8 +135,7 @@ public class SwaggerRequestResponseValidator {
 
         final Optional<NormalisedPath> maybeApiPath = findMatchingApiPath(requestPath);
         if (!maybeApiPath.isPresent()) {
-            validationReport.addError("No API path found that matches request " + request.getPath());
-            return validationReport;
+            return validationReport.addError("No API path found that matches request " + request.getPath());
         }
 
         final NormalisedPath apiPathString = maybeApiPath.get();
@@ -100,9 +144,8 @@ public class SwaggerRequestResponseValidator {
         final HttpMethod httpMethod = HttpMethod.valueOf(request.getMethod().name());
         final Operation operation = apiPath.getOperationMap().get(httpMethod);
         if (operation == null) {
-            validationReport.addError(format("%s operation not allowed on path '%s'",
+            return validationReport.addError(format("%s operation not allowed on path '%s'",
                     request.getMethod(), apiPathString.original()));
-            return validationReport;
         }
 
         final ApiOperation apiOperation = new ApiOperation(apiPathString, apiPath, httpMethod, operation);
@@ -112,7 +155,8 @@ public class SwaggerRequestResponseValidator {
                 .merge(responseValidator.validateResponse(response, apiOperation));
     }
 
-    private Optional<NormalisedPath> findMatchingApiPath(final NormalisedPath requestPath) {
+    @Nonnull
+    private Optional<NormalisedPath> findMatchingApiPath(@Nonnull final NormalisedPath requestPath) {
         return api.getPaths().keySet()
                 .stream()
                 .map(p -> (NormalisedPath) new ApiBasedNormalisedPath(p))
@@ -120,7 +164,7 @@ public class SwaggerRequestResponseValidator {
                 .findFirst();
     }
 
-    private boolean pathMatches(final NormalisedPath requestPath, final NormalisedPath apiPath) {
+    private boolean pathMatches(@Nonnull final NormalisedPath requestPath, @Nonnull final NormalisedPath apiPath) {
         if (requestPath.parts().size() != apiPath.parts().size()) {
             return false;
         }
@@ -163,7 +207,7 @@ public class SwaggerRequestResponseValidator {
         }
 
         @Override
-        @Nonnull
+        @Nullable
         public String paramName(int index) {
             if (!isParam(index)) {
                 return null;

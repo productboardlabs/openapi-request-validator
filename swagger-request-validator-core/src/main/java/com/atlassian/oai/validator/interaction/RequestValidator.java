@@ -10,6 +10,7 @@ import com.atlassian.oai.validator.schema.SchemaValidator;
 import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.Parameter;
 
+import javax.annotation.Nonnull;
 import java.util.Optional;
 
 import static java.lang.String.format;
@@ -22,7 +23,12 @@ public class RequestValidator {
 
     private final SchemaValidator schemaValidator;
 
-    public RequestValidator(final SchemaValidator schemaValidator) {
+    /**
+     * Construct a new request validator with the given schema validator.
+     *
+     * @param schemaValidator The schema validator to use when validating request bodies
+     */
+    public RequestValidator(@Nonnull final SchemaValidator schemaValidator) {
         this.schemaValidator = requireNonNull(schemaValidator, "A schema validator is required");
     }
 
@@ -35,23 +41,27 @@ public class RequestValidator {
      *
      * @return A validation report containing validation errors
      */
-    public ValidationReport validateRequest(final NormalisedPath requestPath,
-                                            final Request request,
-                                            final ApiOperation apiOperation) {
-        return ValidationReport.empty()
-                .merge(validateRequestParameters(apiOperation, requestPath))
+    @Nonnull
+    public ValidationReport validateRequest(@Nonnull final NormalisedPath requestPath,
+                                            @Nonnull final Request request,
+                                            @Nonnull final ApiOperation apiOperation) {
+        requireNonNull(requestPath, "A request path is required");
+        requireNonNull(request, "A request is required");
+        requireNonNull(apiOperation, "An API operation is required");
+
+        return validateRequestParameters(apiOperation, requestPath)
                 .merge(validateRequestBody(apiOperation, request.getBody()));
     }
 
+    @Nonnull
     private ValidationReport validateRequestBody(final ApiOperation apiOperation, final Optional<String> requestBody) {
         final Optional<Parameter> bodyParameter = apiOperation.getOperation().getParameters()
                 .stream().filter(p -> p.getIn().equalsIgnoreCase("body")).findFirst();
 
         final MutableValidationReport validationReport = new MutableValidationReport();
         if (requestBody.isPresent() && !bodyParameter.isPresent()) {
-            validationReport.addError(format("No request body is expected for %s on path '%s'",
+            return validationReport.addError(format("No request body is expected for %s on path '%s'",
                     apiOperation.getMethod(), apiOperation.getPathString().original()));
-            return validationReport;
         }
 
         if (!bodyParameter.isPresent()) {
@@ -70,11 +80,11 @@ public class RequestValidator {
                 .merge(schemaValidator.validate(requestBody.get(), ((BodyParameter)bodyParameter.get()).getSchema()));
     }
 
+    @Nonnull
     private ValidationReport validateRequestParameters(final ApiOperation apiOperation, final NormalisedPath requestPath) {
 
         ValidationReport validationReport = ValidationReport.empty();
         for (int i = 0; i < apiOperation.getPathString().parts().size(); i++) {
-            final String part = apiOperation.getPathString().part(i);
             if (!apiOperation.getPathString().isParam(i)) {
                 continue;
             }
@@ -84,8 +94,8 @@ public class RequestValidator {
 
             final Optional<Parameter> parameter = apiOperation.getOperation().getParameters()
                     .stream()
-                    .filter(p ->
-                            p.getIn().equalsIgnoreCase("PATH") && p.getName().equalsIgnoreCase(paramName))
+                    .filter(p -> p.getIn().equalsIgnoreCase("PATH"))
+                    .filter(p -> p.getName().equalsIgnoreCase(paramName))
                     .findFirst();
 
             if (parameter.isPresent()) {

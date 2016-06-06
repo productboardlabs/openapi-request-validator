@@ -12,12 +12,15 @@ public class NumberParameterValidator extends BaseParameterValidator {
     public static final NumberParameterValidator INSTANCE = new NumberParameterValidator();
 
     @Override
+    @Nonnull
     public String supportedParameterType() {
         return "number";
     }
 
     @Override
-    protected void doValidate(@Nonnull final String value, @Nonnull final SerializableParameter parameter, @Nonnull final MutableValidationReport report) {
+    protected void doValidate(@Nonnull final String value,
+                              @Nonnull final SerializableParameter parameter,
+                              @Nonnull final MutableValidationReport report) {
         if (parameter.getFormat().equalsIgnoreCase("float")) {
             try {
                 Float.parseFloat(value);

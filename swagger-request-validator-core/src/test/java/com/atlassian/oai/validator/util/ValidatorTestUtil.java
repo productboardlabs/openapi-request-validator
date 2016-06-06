@@ -25,7 +25,7 @@ public class ValidatorTestUtil {
      * Assert that validation has failed.
      */
     public static void assertFail(ValidationReport report) {
-        log.trace(ValidationReportFormatter.toString(report));
+        log.trace(ValidationReportFormatter.format(report));
         assertThat(report.getMessages(), is(not(empty())));
     }
 

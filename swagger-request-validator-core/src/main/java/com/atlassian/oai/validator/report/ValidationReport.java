@@ -4,6 +4,12 @@ import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * A report of validation errors that occurred during validation.
+ * <p>
+ * A report consists of a collection of messages with a given level.
+ * Any message with a level of {@link Level#ERROR} indicates a validation failure.
+ */
 public interface ValidationReport {
 
     /**

@@ -12,15 +12,30 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 /**
+ * Validate a response against an API operation
  */
 public class ResponseValidator {
 
     private final SchemaValidator schemaValidator;
 
-    public ResponseValidator(SchemaValidator schemaValidator) {
-        this.schemaValidator = schemaValidator;
+    /**
+     * Construct a new response validator with the given schema validator.
+     *
+     * @param schemaValidator The schema validator to use when validating response bodies
+     */
+    public ResponseValidator(@Nonnull final SchemaValidator schemaValidator) {
+        this.schemaValidator = requireNonNull(schemaValidator, "A schema validator is required");
     }
 
+    /**
+     * Validate the given response against the API operation.
+     *
+     * @param response The response to validate
+     * @param apiOperation The API operation to validate the response against
+     *
+     * @return A validation report containing validation errors
+     */
+    @Nonnull
     public ValidationReport validateResponse(@Nonnull final Response response, @Nonnull final ApiOperation apiOperation) {
         requireNonNull(response, "A response is required");
         requireNonNull(apiOperation, "An API operation is required");
@@ -32,9 +47,8 @@ public class ResponseValidator {
 
         final MutableValidationReport validationReport = new MutableValidationReport();
         if (apiResponse == null) {
-            validationReport.addError(format("Response status %d not defined for path '%s'",
+            return validationReport.addError(format("Response status %d not defined for path '%s'",
                     response.getStatus(), apiOperation.getPathString().original()));
-            return validationReport;
         }
 
         if (apiResponse.getSchema() == null) {
@@ -42,9 +56,8 @@ public class ResponseValidator {
         }
 
         if (!response.getBody().isPresent()) {
-            validationReport.addError(format("%s on path '%s' defines a response schema but no response body found",
+            return validationReport.addError(format("%s on path '%s' defines a response schema but no response body found",
                     apiOperation.getMethod(), apiOperation.getPathString().original()));
-            return validationReport;
         }
 
         return validationReport.merge(schemaValidator.validate(response.getBody().get(), apiResponse.getSchema()));

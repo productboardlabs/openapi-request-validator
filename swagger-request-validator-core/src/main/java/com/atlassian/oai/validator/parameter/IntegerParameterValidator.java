@@ -12,6 +12,7 @@ public class IntegerParameterValidator extends BaseParameterValidator {
     public static final ParameterValidator INSTANCE = new IntegerParameterValidator();
 
     @Override
+    @Nonnull
     public String supportedParameterType() {
         return "integer";
     }

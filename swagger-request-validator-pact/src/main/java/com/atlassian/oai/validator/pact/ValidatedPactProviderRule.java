@@ -69,7 +69,7 @@ public class ValidatedPactProviderRule implements TestRule {
                 .reduce(ValidationReport.empty(), ValidationReport::merge);
 
         if (report.hasErrors()) {
-            throw new PactValidationError(ValidationReportFormatter.toString(report));
+            throw new PactValidationError(ValidationReportFormatter.format(report));
         }
     }
 
