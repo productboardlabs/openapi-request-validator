@@ -1,6 +1,5 @@
 package com.atlassian.oai.validator.schema;
 
-import com.atlassian.oai.validator.schema.SchemaValidator;
 import io.swagger.models.Model;
 import io.swagger.models.ModelImpl;
 import io.swagger.models.RefModel;

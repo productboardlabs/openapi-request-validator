@@ -1,6 +1,7 @@
 package com.atlassian.oai.validator.model;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -35,7 +36,7 @@ public interface NormalisedPath {
      * part is not a parameter.
      * @throws IndexOutOfBoundsException if the provided index is not a valid index
      */
-    @Nonnull
+    @Nullable
     String paramName(int index);
 
     /**

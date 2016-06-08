@@ -19,10 +19,13 @@ public class MutableValidationReport implements ValidationReport {
      * Add a validation error to this report.
      *
      * @param message The validation message to include
+     *
+     * @return This validation report instance
      */
-    public void addError(@Nonnull final String message) {
+    public MutableValidationReport addError(@Nonnull final String message) {
         requireNonNull(message, "A validation message is required");
         this.messages.add(new MessageImpl(ERROR, message));
+        return this;
     }
 
     public void addAll(@Nonnull final ValidationReport other) {
@@ -49,7 +52,7 @@ public class MutableValidationReport implements ValidationReport {
         private final ValidationReport.Level level;
         private final String message;
 
-        public MessageImpl(ValidationReport.Level level, String message) {
+        public MessageImpl(@Nonnull final ValidationReport.Level level, @Nonnull final String message) {
             this.level = level;
             this.message = message;
         }
@@ -66,7 +69,7 @@ public class MutableValidationReport implements ValidationReport {
 
         @Override
         public String toString() {
-            return level + " - " + message;
+            return level + " - " + message.replace("\n", "\n\t");
         }
     }
 

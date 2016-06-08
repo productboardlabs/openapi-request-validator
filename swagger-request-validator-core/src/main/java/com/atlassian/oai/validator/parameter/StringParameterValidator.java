@@ -10,6 +10,7 @@ public class StringParameterValidator extends BaseParameterValidator {
     public static final StringParameterValidator INSTANCE = new StringParameterValidator();
 
     @Override
+    @Nonnull
     public String supportedParameterType() {
         return "string";
     }
