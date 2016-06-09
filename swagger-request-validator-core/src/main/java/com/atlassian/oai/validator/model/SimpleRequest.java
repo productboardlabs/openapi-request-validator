@@ -58,7 +58,7 @@ public class SimpleRequest implements Request {
     @Nonnull
     public Collection<String> getQueryParameterValues(final String name) {
         if (name != null && queryParams.containsKey(name.toLowerCase())) {
-            return Collections.unmodifiableCollection(queryParams.get(name));
+            return Collections.unmodifiableCollection(queryParams.get(name.toLowerCase()));
         }
         return Collections.emptyList();
     }

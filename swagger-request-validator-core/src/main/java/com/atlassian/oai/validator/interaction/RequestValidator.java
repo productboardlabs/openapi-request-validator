@@ -10,8 +10,8 @@ import com.atlassian.oai.validator.schema.SchemaValidator;
 import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.Parameter;
 
-import java.util.Collection;
 import javax.annotation.Nonnull;
+import java.util.Collection;
 import java.util.Optional;
 
 import static java.lang.String.format;
@@ -50,12 +50,14 @@ public class RequestValidator {
         requireNonNull(request, "A request is required");
         requireNonNull(apiOperation, "An API operation is required");
 
-        return validateRequestParameters(apiOperation, requestPath)
-                .merge(validateRequestBody(apiOperation, request.getBody()));
+        return validatePathParameters(requestPath, apiOperation)
+                .merge(validateRequestBody(request.getBody(), apiOperation))
+                .merge(validateQueryParameters(request, apiOperation));
     }
 
     @Nonnull
-    private ValidationReport validateRequestBody(final ApiOperation apiOperation, final Optional<String> requestBody) {
+    private ValidationReport validateRequestBody(@Nonnull final Optional<String> requestBody,
+                                                 @Nonnull final ApiOperation apiOperation) {
         final Optional<Parameter> bodyParameter = apiOperation.getOperation().getParameters()
                 .stream().filter(p -> p.getIn().equalsIgnoreCase("body")).findFirst();
 
@@ -82,7 +84,8 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private ValidationReport validateRequestParameters(final ApiOperation apiOperation, final NormalisedPath requestPath) {
+    private ValidationReport validatePathParameters(@Nonnull final NormalisedPath requestPath,
+                                                    @Nonnull final ApiOperation apiOperation) {
 
         ValidationReport validationReport = ValidationReport.empty();
         for (int i = 0; i < apiOperation.getPathString().parts().size(); i++) {
@@ -106,7 +109,8 @@ public class RequestValidator {
         return validationReport;
     }
 
-    private ValidationReport validateQueryParameters(final Request request, final ApiOperation apiOperation) {
+    private ValidationReport validateQueryParameters(@Nonnull final Request request,
+                                                     @Nonnull final ApiOperation apiOperation) {
         final MutableValidationReport validationReport = new MutableValidationReport();
         apiOperation.getOperation()
                 .getParameters()
@@ -116,7 +120,7 @@ public class RequestValidator {
                     final Collection<String> queryParameterValues = request.getQueryParameterValues(p.getName());
                     if (queryParameterValues.isEmpty() && p.getRequired()) {
                         validationReport.addError(
-                                format("Query parameter %s is required on path %s but not found in request.",
+                                format("Query parameter '%s' is required on path '%s' but not found in request.",
                                         p.getName(), apiOperation.getPathString().original()));
                         return;
                     }
