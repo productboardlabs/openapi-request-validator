@@ -23,6 +23,7 @@ import static java.util.Objects.requireNonNull;
 public class RequestValidator {
 
     private final SchemaValidator schemaValidator;
+    private final ParameterValidators parameterValidators;
 
     /**
      * Construct a new request validator with the given schema validator.
@@ -31,6 +32,7 @@ public class RequestValidator {
      */
     public RequestValidator(@Nonnull final SchemaValidator schemaValidator) {
         this.schemaValidator = requireNonNull(schemaValidator, "A schema validator is required");
+        this.parameterValidators = new ParameterValidators(schemaValidator);
     }
 
     /**
@@ -103,7 +105,7 @@ public class RequestValidator {
                     .findFirst();
 
             if (parameter.isPresent()) {
-                validationReport = validationReport.merge(ParameterValidators.validate(paramValue, parameter.get()));
+                validationReport = validationReport.merge(parameterValidators.validate(paramValue, parameter.get()));
             }
         }
         return validationReport;
@@ -125,7 +127,7 @@ public class RequestValidator {
                         return;
                     }
                     queryParameterValues.stream().forEach( v -> {
-                            validationReport.addAll(ParameterValidators.validate(v, p));
+                            validationReport.addAll(parameterValidators.validate(v, p));
                     });
                 });
 
