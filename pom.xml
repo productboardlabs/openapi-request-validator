@@ -139,6 +139,9 @@
 
     <build>
         <plugins>
+            <!--
+            THIRD-PARTY.txt can be generated with "mvn license:aggregate-add-third-party"
+            -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>license-maven-plugin</artifactId>
