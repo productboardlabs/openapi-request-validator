@@ -13,7 +13,7 @@ See the [examples module](https://bitbucket.org/atlassian/swagger-request-valida
 for examples of how the Pact module can be used.
 
 ### ValidatedPactProviderRule ###
-The simplest way to use the integration is to replace the usage of the `PactProviderRule` with the `ValidatedPactProviderRule`.
+The simplest way to use the integration is to replace the usage of the `PactProviderRule` (from the [pact-jvm-consumer-junit](https://github.com/DiUS/pact-jvm/tree/master/pact-jvm-consumer-junit) library) with the `ValidatedPactProviderRule`.
 
 Replace:
 ```
@@ -27,6 +27,22 @@ With:
 @Rule
 public ValidatedPactProviderRule provider =
         new ValidatedPactProviderRule("http://petstore.swagger.io/v2/swagger.json", null, PROVIDER_ID, this);
+```
+
+*Note*:
+To use the JUnit rule you will need to ensure the following dependencies are added to your project POM
+
+```
+<dependency>
+    <groupId>junit</groupId>
+    <artifactId>junit</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>au.com.dius</groupId>
+    <artifactId>pact-jvm-consumer-junit_2.11</artifactId>
+    <scope>test</scope>
+</dependency>
 ```
 
 ### Manual interaction validation
