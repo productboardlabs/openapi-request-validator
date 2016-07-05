@@ -10,7 +10,7 @@ to enable Swagger validation of consumer expectations.
 ## Usage ##
 
 See the [examples module](https://bitbucket.org/atlassian/swagger-request-validator/src/master/swagger-request-validator-examples/?at=master)
-for examples on how the library is used.
+for examples of how the Pact module can be used.
 
 ### ValidatedPactProviderRule ###
 The simplest way to use the integration is to replace the usage of the `PactProviderRule` with the `ValidatedPactProviderRule`.

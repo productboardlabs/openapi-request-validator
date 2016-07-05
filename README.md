@@ -1,6 +1,6 @@
 # Swagger Request Validator #
 
-A Java library for validating HTTP request/responses against a Swagger/OpenAPI specification.
+A Java library for validating HTTP request/responses against a [Swagger/OpenAPI](https://openapis.org/) specification.
 
 Designed to be used independently of any HTTP library or framework, the library can be used to validate
 request/responses from almost any source (e.g. in a REST client, in unit tests that use mocked responses,
