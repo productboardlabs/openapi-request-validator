@@ -59,7 +59,7 @@ public class RequestValidator {
                 .stream().filter(p -> p.getIn().equalsIgnoreCase("body")).findFirst();
 
         final MutableValidationReport validationReport = new MutableValidationReport();
-        if (requestBody.isPresent() && !bodyParameter.isPresent()) {
+        if (requestBody.isPresent() && !requestBody.get().isEmpty() && !bodyParameter.isPresent()) {
             return validationReport.addError(format("No request body is expected for %s on path '%s'",
                     apiOperation.getMethod(), apiOperation.getPathString().original()));
         }
@@ -68,7 +68,7 @@ public class RequestValidator {
             return validationReport;
         }
 
-        if (!requestBody.isPresent()) {
+        if (!requestBody.isPresent() || requestBody.get().isEmpty()) {
             if (bodyParameter.get().getRequired()) {
                 validationReport.addError(format("%s on path '%s' requires a request body. None found.",
                         apiOperation.getMethod(), apiOperation.getPathString().original()));
