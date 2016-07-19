@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A validator for array parameters.
@@ -20,6 +21,8 @@ import static java.lang.String.format;
  * This is a special-case validator as it needs to handle single and collection types for validation.
  */
 public class ArrayParameterValidator extends BaseParameterValidator {
+
+    public static final String ARRAY_PARAMETER_TYPE = "array";
 
     private final SchemaValidator schemaValidator;
 
@@ -42,7 +45,9 @@ public class ArrayParameterValidator extends BaseParameterValidator {
             return Arrays.asList(value.split(separator));
         }
 
-        static CollectionFormat from(final SerializableParameter parameter) {
+        @Nonnull
+        static CollectionFormat from(@Nonnull final SerializableParameter parameter) {
+            requireNonNull(parameter, "A parameter is required");
             return valueOf(parameter.getCollectionFormat().toUpperCase());
         }
     }
@@ -58,7 +63,7 @@ public class ArrayParameterValidator extends BaseParameterValidator {
     @Nonnull
     @Override
     public String supportedParameterType() {
-        return "array";
+        return ARRAY_PARAMETER_TYPE;
     }
 
     public ValidationReport validate(@Nullable final Collection<String> values, @Nullable final Parameter p) {
