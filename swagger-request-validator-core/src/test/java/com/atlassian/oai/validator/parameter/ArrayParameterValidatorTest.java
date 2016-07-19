@@ -7,6 +7,7 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.arrayParam;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.intArrayParam;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.stringArrayParam;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
@@ -41,7 +42,7 @@ public class ArrayParameterValidatorTest {
 
     @Test
     public void validate_withSingleValue_shouldPass() {
-        assertPass(classUnderTest.validate("1", intArrayParam(true, "csv")));
+        assertPass(classUnderTest.validate("bob", stringArrayParam(true, "csv")));
     }
 
     @Test

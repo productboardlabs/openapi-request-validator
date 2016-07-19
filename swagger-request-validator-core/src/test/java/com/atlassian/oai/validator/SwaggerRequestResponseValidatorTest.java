@@ -105,6 +105,22 @@ public class SwaggerRequestResponseValidatorTest {
     }
 
     @Test
+    public void validate_withArrayQueryParam_shouldPass_whenValid() {
+        final Request request = SimpleRequest.Builder.get("/users").withQueryParam("filter", "1,2,3").build();
+        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
+
+        assertPass(classUnderTest.validate(request, response));
+    }
+
+    @Test
+    public void validate_withArrayQueryParam_shouldFail_whenInvalidFormat() {
+        final Request request = SimpleRequest.Builder.get("/users").withQueryParam("filter", "1,\"bob\",3").build();
+        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
+
+        assertFail(classUnderTest.validate(request, response));
+    }
+
+    @Test
     public void validate_withExtraQueryParams_shouldPass() {
         final Request request = SimpleRequest.Builder.get("/users")
                 .withQueryParam("foo", "bar")

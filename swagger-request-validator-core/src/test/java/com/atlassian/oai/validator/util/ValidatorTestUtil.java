@@ -5,6 +5,7 @@ import com.atlassian.oai.validator.report.ValidationReportFormatter;
 import io.swagger.models.parameters.SerializableParameter;
 import io.swagger.models.properties.IntegerProperty;
 import io.swagger.models.properties.Property;
+import io.swagger.models.properties.StringProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -147,6 +148,12 @@ public class ValidatorTestUtil {
     public static SerializableParameter intArrayParam(final boolean required,
                                                       final String collectionFormat) {
         final IntegerProperty property = new IntegerProperty();
+        return arrayParam(required, collectionFormat, null, null, null, property);
+    }
+
+    public static SerializableParameter stringArrayParam(final boolean required,
+                                                      final String collectionFormat) {
+        final StringProperty property = new StringProperty();
         return arrayParam(required, collectionFormat, null, null, null, property);
     }
 

@@ -10,11 +10,13 @@ import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import io.swagger.models.Model;
 import io.swagger.models.Swagger;
 import io.swagger.models.properties.Property;
+import io.swagger.models.properties.StringProperty;
 import io.swagger.util.Json;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import static com.atlassian.oai.validator.util.StringUtils.quote;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
@@ -86,7 +88,13 @@ public class SchemaValidator {
 
             final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
             final com.github.fge.jsonschema.main.JsonSchema jsonSchema = factory.getJsonSchema(schemaObject);
-            final JsonNode content = Json.mapper().readTree(value);
+
+            String normalisedValue = value;
+            if (schema instanceof StringProperty) {
+                normalisedValue = quote(value);
+            }
+
+            final JsonNode content = Json.mapper().readTree(normalisedValue);
             processingReport = (ListProcessingReport)jsonSchema.validate(content);
         }
         catch (JsonParseException e) {

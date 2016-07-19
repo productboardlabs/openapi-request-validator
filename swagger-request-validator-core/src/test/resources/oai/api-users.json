@@ -28,6 +28,18 @@
           "type": "integer",
           "format": "int32",
           "minimum": 1
+        }, {
+          "name": "filter",
+          "in": "query",
+          "description": "The IDs include in the results",
+          "required": false,
+          "type": "array",
+          "collectionFormat": "csv",
+          "maxItems": 10,
+          "items": {
+            "type": "number",
+            "format": "int32"
+          }
         }],
         "responses": {
           "200": {
