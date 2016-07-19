@@ -41,6 +41,10 @@ public class ArrayParameterValidator extends BaseParameterValidator {
             }
             return Arrays.asList(value.split(separator));
         }
+
+        static CollectionFormat from(final SerializableParameter parameter) {
+            return valueOf(parameter.getCollectionFormat().toUpperCase());
+        }
     }
 
     public ArrayParameterValidator() {
@@ -72,7 +76,7 @@ public class ArrayParameterValidator extends BaseParameterValidator {
             return report;
         }
 
-        if (!parameter.getCollectionFormat().equalsIgnoreCase("multi")) {
+        if (!parameter.getCollectionFormat().equalsIgnoreCase(CollectionFormat.MULTI.name())) {
             return report.addError(
                     format("Parameter '%s' expected collection format of '%s' but '%s' was used instead.",
                     p.getName(), parameter.getCollectionFormat(), "multi")
@@ -88,7 +92,7 @@ public class ArrayParameterValidator extends BaseParameterValidator {
                               @Nonnull final SerializableParameter parameter,
                               @Nonnull final MutableValidationReport validationReport) {
 
-        doValidate(CollectionFormat.valueOf(parameter.getCollectionFormat().toUpperCase()).split(value),
+        doValidate(CollectionFormat.from(parameter).split(value),
                 parameter,
                 validationReport);
 
