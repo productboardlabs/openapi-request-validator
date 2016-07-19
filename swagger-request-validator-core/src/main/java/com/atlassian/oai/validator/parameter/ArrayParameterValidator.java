@@ -24,14 +24,14 @@ public class ArrayParameterValidator extends BaseParameterValidator {
     private final SchemaValidator schemaValidator;
 
     private enum CollectionFormat {
-        CSV(','),
-        SSV(' '),
-        TSV('\t'),
-        PIPES('|'),
+        CSV(","),
+        SSV(" "),
+        TSV("\t"),
+        PIPES("\\|"),
         MULTI(null);
 
-        final Character separator;
-        CollectionFormat(Character separator) {
+        final String separator;
+        CollectionFormat(String separator) {
             this.separator = separator;
         }
 
@@ -39,12 +39,16 @@ public class ArrayParameterValidator extends BaseParameterValidator {
             if (separator == null) {
                 return Collections.singleton(value);
             }
-            return Arrays.asList(value.split("" + separator));
+            return Arrays.asList(value.split(separator));
         }
     }
 
-    public ArrayParameterValidator(SchemaValidator schemaValidator) {
-        this.schemaValidator = schemaValidator;
+    public ArrayParameterValidator() {
+        this(null);
+    }
+
+    public ArrayParameterValidator(@Nullable final SchemaValidator schemaValidator) {
+        this.schemaValidator = schemaValidator == null ? new SchemaValidator() : schemaValidator;
     }
 
     @Nonnull
@@ -69,7 +73,10 @@ public class ArrayParameterValidator extends BaseParameterValidator {
         }
 
         if (!parameter.getCollectionFormat().equalsIgnoreCase("multi")) {
-            return report.addError(format("Incorrect parameter collection format for parameter '%s'", p.getName()));
+            return report.addError(
+                    format("Parameter '%s' expected collection format of '%s' but '%s' was used instead.",
+                    p.getName(), parameter.getCollectionFormat(), "multi")
+            );
         }
 
         doValidate(values, parameter, report);
@@ -90,6 +97,28 @@ public class ArrayParameterValidator extends BaseParameterValidator {
     private void doValidate(@Nonnull final Collection<String> values,
                             @Nonnull final SerializableParameter parameter,
                             @Nonnull final MutableValidationReport validationReport) {
+
+        if (parameter.getMaxItems() != null && values.size() > parameter.getMaxItems()) {
+            validationReport.addError(
+                    format("Parameter '%s' accepts a maximum of %d items. Found %d.",
+                            parameter.getName(), parameter.getMaxItems(), values.size())
+            );
+        }
+
+        if (parameter.getMinItems() != null && values.size() < parameter.getMinItems()) {
+            validationReport.addError(
+                    format("Parameter '%s' accepts a minimum of %d items. Found %d.",
+                            parameter.getName(), parameter.getMinItems(), values.size())
+            );
+        }
+
+        if (Boolean.TRUE.equals(parameter.isUniqueItems()) &&
+                values.stream().distinct().count() != values.size()) {
+            validationReport.addError(
+                    format("Parameter '%s' does not allow duplicate values.", parameter.getName())
+            );
+        }
+
         values.forEach(v ->
                 validationReport.addAll(schemaValidator.validate(v, parameter.getItems())));
     }

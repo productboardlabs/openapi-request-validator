@@ -6,6 +6,7 @@ import io.swagger.models.parameters.Parameter;
 import io.swagger.models.parameters.SerializableParameter;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
 
 import static java.util.Arrays.asList;
@@ -21,7 +22,21 @@ public final class ParameterValidators {
 
     private final ArrayParameterValidator arrayValidator;
 
-    public ParameterValidators(final SchemaValidator schemaValidator) {
+    /**
+     * Create a new validators object with a default (empty) schema validator.
+     * No <code>ref</code> validation will be performed.
+     */
+    public ParameterValidators() {
+        this.arrayValidator = new ArrayParameterValidator();
+    }
+
+    /**
+     * Create a new validators object with the given schema validator. If none is provided a default (empty) schema
+     * validator will be used and no <code>ref</code> validation will be performed.
+     *
+     * @param schemaValidator The schema validator to use. If not provided a default (empty) validator will be used.
+     */
+    public ParameterValidators(@Nullable final SchemaValidator schemaValidator) {
         this.arrayValidator = new ArrayParameterValidator(schemaValidator);
     }
 

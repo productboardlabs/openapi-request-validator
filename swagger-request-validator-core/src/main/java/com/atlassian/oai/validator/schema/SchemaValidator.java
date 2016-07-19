@@ -13,6 +13,7 @@ import io.swagger.models.properties.Property;
 import io.swagger.util.Json;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -26,13 +27,18 @@ public class SchemaValidator {
     private final Swagger api;
     private JsonNode definitions;
 
+    public SchemaValidator() {
+        this(null);
+    }
+
     /**
      * Build a new validator for the given API specification.
      *
-     * @param api The API to build the validator for. Used to retrieve schema definitions for use in references. (required)
+     * @param api The API to build the validator for. If provided, is used to retrieve schema definitions
+     *            for use in references.
      */
-    public SchemaValidator(@Nonnull final Swagger api) {
-        this.api = requireNonNull(api, "An API is required");
+    public SchemaValidator(@Nullable final Swagger api) {
+        this.api = api;
     }
 
     /**
@@ -69,12 +75,14 @@ public class SchemaValidator {
         final MutableValidationReport validationReport = new MutableValidationReport();
         ListProcessingReport processingReport = null;
         try {
-            if (this.definitions == null) {
-                this.definitions = Json.mapper().readTree(Json.pretty(api.getDefinitions()));
-            }
-
             final JsonNode schemaObject = Json.mapper().readTree(Json.pretty(schema));
-            ((ObjectNode)schemaObject).set("definitions", this.definitions);
+
+            if (api != null) {
+                if (this.definitions == null) {
+                    this.definitions = Json.mapper().readTree(Json.pretty(api.getDefinitions()));
+                }
+                ((ObjectNode)schemaObject).set("definitions", this.definitions);
+            }
 
             final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
             final com.github.fge.jsonschema.main.JsonSchema jsonSchema = factory.getJsonSchema(schemaObject);
