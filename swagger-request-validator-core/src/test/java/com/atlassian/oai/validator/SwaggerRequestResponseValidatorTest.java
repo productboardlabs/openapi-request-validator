@@ -81,6 +81,14 @@ public class SwaggerRequestResponseValidatorTest {
     }
 
     @Test
+    public void validate_withRequestBody_shouldFail_whenNoneExpected() {
+        final Request request = SimpleRequest.Builder.get("/users").withBody(loadRequest("newuser-valid")).build();
+        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
+
+        assertFail(classUnderTest.validate(request, response));
+    }
+
+    @Test
     public void validate_withValidQueryParams_shouldPass() {
         final Request request = SimpleRequest.Builder.get("/users").withQueryParam("maxCount", "10").build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
