@@ -10,6 +10,15 @@ import com.github.tomakehurst.wiremock.http.Response;
 /**
  * A WireMock request listener that applies Swagger request/response validation to WireMock interactions.
  * <p>
+ * The listener can be added to a {@link com.github.tomakehurst.wiremock.junit.WireMockRule} or
+ * {@link com.github.tomakehurst.wiremock.WireMockServer} instance
+ * (see <a href="http://wiremock.org/docs/extending-wiremock/">Extending WireMock</a>). The current validation report
+ * can be accessed with {@link #getReport()}, and the convenience method {@link #assertValidationPassed()} can be used
+ * to check for validation errors and throw an exception if any are found.
+ * <p>
+ * <em>Important</em>: The listener will continue accumulating validation errors on each call to the WireMock server.
+ * Call {@link #reset()} before your test to ensure you only get validation errors for the current test execution.
+ * <p>
  * E.g.
  * <pre>
  *  &#64;Rule
