@@ -13,6 +13,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
@@ -152,9 +153,23 @@ public class ValidatorTestUtil {
     }
 
     public static SerializableParameter stringArrayParam(final boolean required,
-                                                      final String collectionFormat) {
+                                                         final String collectionFormat) {
         final StringProperty property = new StringProperty();
         return arrayParam(required, collectionFormat, null, null, null, property);
+    }
+
+    public static SerializableParameter enumeratedArrayParam(final boolean required,
+                                                             final String collectionFormat,
+                                                             final String... enumValues) {
+        final SerializableParameter result = mock(SerializableParameter.class);
+        when(result.getName()).thenReturn("Test Parameter");
+        when(result.getType()).thenReturn("array");
+        when(result.getCollectionFormat()).thenReturn(collectionFormat);
+        when(result.getRequired()).thenReturn(required);
+        when(result.getMaxItems()).thenReturn(null);
+        when(result.getMinItems()).thenReturn(null);
+        when(result.getEnum()).thenReturn(asList(enumValues));
+        return result;
     }
 
     public static SerializableParameter arrayParam(final boolean required,

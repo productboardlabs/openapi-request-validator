@@ -6,6 +6,7 @@ import org.junit.Test;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.arrayParam;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.enumeratedArrayParam;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.intArrayParam;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.stringArrayParam;
 import static java.util.Arrays.asList;
@@ -113,5 +114,15 @@ public class ArrayParameterValidatorTest {
     @Test
     public void validate_withNonUniqueValues_shouldPass_whenUniqueNotSpecified() {
         assertPass(classUnderTest.validate("1,2,1", arrayParam(true, "csv", null, null, false, new IntegerProperty())));
+    }
+
+    @Test
+    public void validate_withEnumValues_whouldPass_whenAllValuesMatchEnum() {
+        assertPass(classUnderTest.validate("1,2,1", enumeratedArrayParam(true, "csv", "1", "2", "3")));
+    }
+
+    @Test
+    public void validate_withEnumValues_whouldFail_whenValueDoesntMatchEnum() {
+        assertFail(classUnderTest.validate("1,2,1,4", enumeratedArrayParam(true, "csv", "1", "2", "bob")));
     }
 }

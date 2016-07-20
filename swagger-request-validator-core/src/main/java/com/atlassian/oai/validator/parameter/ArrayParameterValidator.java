@@ -11,6 +11,8 @@ import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -64,6 +66,29 @@ public class ArrayParameterValidator extends BaseParameterValidator {
     @Override
     public String supportedParameterType() {
         return ARRAY_PARAMETER_TYPE;
+    }
+
+    @Override
+    @Nonnull
+    public ValidationReport validate(@Nullable final String value, @Nullable final Parameter p) {
+        final MutableValidationReport report = new MutableValidationReport();
+
+        if (!supports(p)) {
+            return report;
+        }
+
+        final SerializableParameter parameter = (SerializableParameter)p;
+
+        if (parameter.getRequired() && (value == null || value.trim().isEmpty())) {
+            return report.addError(format("Parameter '%s' is required but is missing", parameter.getName()));
+        }
+
+        if (value == null || value.trim().isEmpty()) {
+            return report;
+        }
+
+        doValidate(value, parameter, report);
+        return report;
     }
 
     public ValidationReport validate(@Nullable final Collection<String> values, @Nullable final Parameter p) {
@@ -126,6 +151,19 @@ public class ArrayParameterValidator extends BaseParameterValidator {
             validationReport.addError(
                     format("Parameter '%s' does not allow duplicate values.", parameter.getName())
             );
+        }
+
+        if (parameter.getEnum() != null && !parameter.getEnum().isEmpty()) {
+            final Set<String> enumValues = new HashSet<>(parameter.getEnum());
+            values.stream()
+                    .filter(v -> !enumValues.contains(v))
+                    .forEach(v -> {
+                        validationReport.addError(
+                                format("Value '%s' for parameter '%s' is not allowed. Allowed values are <%s>.",
+                                        v, parameter.getName(), parameter.getEnum())
+                        );
+                    });
+            return;
         }
 
         values.forEach(v ->
