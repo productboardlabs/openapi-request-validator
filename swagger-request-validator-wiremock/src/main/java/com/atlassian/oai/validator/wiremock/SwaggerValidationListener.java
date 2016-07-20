@@ -35,6 +35,8 @@ import com.github.tomakehurst.wiremock.http.Response;
  *      this.validationListener.assertValidationPassed();
  *  }
  * </pre>
+ *
+ * @see ValidatedWireMockRule
  */
 public class SwaggerValidationListener implements RequestListener {
 
