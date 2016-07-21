@@ -58,6 +58,22 @@ public class SchemaValidatorTest {
     }
 
     @Test
+    public void validate_withUnquotedStringProperty_shouldPass() {
+        final String value = "bob";
+        final Property schema = new StringProperty();
+
+        assertPass(classUnderTest.validate(value, schema));
+    }
+
+    @Test
+    public void validate_withQuotedStringProperty_shouldPass() {
+        final String value = "\"bob\"";
+        final Property schema = new StringProperty();
+
+        assertPass(classUnderTest.validate(value, schema));
+    }
+
+    @Test
     public void validate_withValidModel_shouldPass_whenModelInline() {
         final String value = "{\"foo\":\"bar\"}";
         final Model schema = new ModelImpl().property("foo", new StringProperty()).required("foo");

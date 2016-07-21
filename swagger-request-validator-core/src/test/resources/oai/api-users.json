@@ -20,6 +20,27 @@
         "security": [{
           "basic": ["read_users"]
         }],
+        "parameters": [{
+          "name": "maxCount",
+          "in": "query",
+          "description": "The maximum number of results to return",
+          "required": false,
+          "type": "integer",
+          "format": "int32",
+          "minimum": 1
+        }, {
+          "name": "filter",
+          "in": "query",
+          "description": "The IDs include in the results",
+          "required": false,
+          "type": "array",
+          "collectionFormat": "csv",
+          "maxItems": 10,
+          "items": {
+            "type": "number",
+            "format": "int32"
+          }
+        }],
         "responses": {
           "200": {
             "description": "Users response",
@@ -116,6 +137,31 @@
             "schema": {
               "$ref": "#/definitions/Error"
             }
+          }
+        }
+      }
+    },
+    "/healthcheck": {
+      "get": {
+        "summary": "Healthcheck endpoint for the service",
+        "operationId": "healthcheck",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [{
+          "name": "type",
+          "in": "query",
+          "description": "What type of healthcheck to perform",
+          "required": true,
+          "type": "string",
+          "enum": ["deep", "shallow"]
+        }],
+        "responses": {
+          "200": {
+            "description": "Everything is ok"
+          },
+          "500": {
+            "description": "Healthcheck failed"
           }
         }
       }

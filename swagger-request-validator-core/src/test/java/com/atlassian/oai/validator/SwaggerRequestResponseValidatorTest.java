@@ -81,6 +81,81 @@ public class SwaggerRequestResponseValidatorTest {
     }
 
     @Test
+    public void validate_withRequestBody_shouldFail_whenNoneExpected() {
+        final Request request = SimpleRequest.Builder.get("/users").withBody(loadRequest("newuser-valid")).build();
+        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
+
+        assertFail(classUnderTest.validate(request, response));
+    }
+
+    @Test
+    public void validate_withValidQueryParams_shouldPass() {
+        final Request request = SimpleRequest.Builder.get("/users").withQueryParam("maxCount", "10").build();
+        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
+
+        assertPass(classUnderTest.validate(request, response));
+    }
+
+    @Test
+    public void validate_withInvalidQueryParamFormat_shouldFail() {
+        final Request request = SimpleRequest.Builder.get("/users").withQueryParam("maxCount", "a").build();
+        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
+
+        assertFail(classUnderTest.validate(request, response));
+    }
+
+    @Test
+    public void validate_withMissingQueryParam_shouldPass_whenOptional() {
+        final Request request = SimpleRequest.Builder.get("/users").build();
+        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
+
+        assertPass(classUnderTest.validate(request, response));
+    }
+
+    @Test
+    public void validate_withArrayQueryParam_shouldPass_whenValid() {
+        final Request request = SimpleRequest.Builder.get("/users").withQueryParam("filter", "1,2,3").build();
+        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
+
+        assertPass(classUnderTest.validate(request, response));
+    }
+
+    @Test
+    public void validate_withArrayQueryParam_shouldFail_whenInvalidFormat() {
+        final Request request = SimpleRequest.Builder.get("/users").withQueryParam("filter", "1,\"bob\",3").build();
+        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
+
+        assertFail(classUnderTest.validate(request, response));
+    }
+
+    @Test
+    public void validate_withExtraQueryParams_shouldPass() {
+        final Request request = SimpleRequest.Builder.get("/users")
+                .withQueryParam("foo", "bar")
+                .withQueryParam("something", "else")
+                .build();
+        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
+
+        assertPass(classUnderTest.validate(request, response));
+    }
+
+    @Test
+    public void validate_withMissingQueryParam_shouldFail_whenRequired() {
+        final Request request = SimpleRequest.Builder.get("/healthcheck").build();
+        final Response response = SimpleResponse.Builder.ok().build();
+
+        assertFail(classUnderTest.validate(request, response));
+    }
+
+    @Test
+    public void validate_withValidQueryParam_shouldPass_whenRequired() {
+        final Request request = SimpleRequest.Builder.get("/healthcheck").withQueryParam("type", "deep").build();
+        final Response response = SimpleResponse.Builder.ok().build();
+
+        assertPass(classUnderTest.validate(request, response));
+    }
+
+    @Test
     public void validate_withResponseBodyMissingRequiredField_shouldFail() {
         final Request request = SimpleRequest.Builder.get("/users/1").build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-invalid-missingrequired")).build();

@@ -1,9 +1,12 @@
 package com.atlassian.oai.validator.parameter;
 
 import com.atlassian.oai.validator.report.ValidationReport;
+import com.atlassian.oai.validator.schema.SchemaValidator;
 import io.swagger.models.parameters.Parameter;
+import io.swagger.models.parameters.SerializableParameter;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
 
 import static java.util.Arrays.asList;
@@ -11,16 +14,40 @@ import static java.util.Objects.requireNonNull;
 
 public final class ParameterValidators {
 
-    private ParameterValidators(){}
-
     private static final List<ParameterValidator> VALIDATORS = asList(
             StringParameterValidator.INSTANCE,
             NumberParameterValidator.INSTANCE,
             IntegerParameterValidator.INSTANCE
     );
 
-    public static ValidationReport validate(final String value, @Nonnull final Parameter parameter) {
+    private final ArrayParameterValidator arrayValidator;
+
+    /**
+     * Create a new validators object with a default (empty) schema validator.
+     * No <code>ref</code> validation will be performed.
+     */
+    public ParameterValidators() {
+        this.arrayValidator = new ArrayParameterValidator();
+    }
+
+    /**
+     * Create a new validators object with the given schema validator. If none is provided a default (empty) schema
+     * validator will be used and no <code>ref</code> validation will be performed.
+     *
+     * @param schemaValidator The schema validator to use. If not provided a default (empty) validator will be used.
+     */
+    public ParameterValidators(@Nullable final SchemaValidator schemaValidator) {
+        this.arrayValidator = new ArrayParameterValidator(schemaValidator);
+    }
+
+    public ValidationReport validate(final String value, @Nonnull final Parameter parameter) {
         requireNonNull(parameter);
+
+        if ((parameter instanceof SerializableParameter) &&
+                ((SerializableParameter)parameter).getType().equalsIgnoreCase("array")) {
+            return arrayValidator.validate(value, parameter);
+        }
+
         return VALIDATORS.stream()
                 .filter(v -> v.supports(parameter))
                 .map(v -> v.validate(value, parameter))

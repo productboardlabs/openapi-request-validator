@@ -3,6 +3,9 @@ package com.atlassian.oai.validator.util;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReportFormatter;
 import io.swagger.models.parameters.SerializableParameter;
+import io.swagger.models.properties.IntegerProperty;
+import io.swagger.models.properties.Property;
+import io.swagger.models.properties.StringProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,6 +13,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
@@ -140,4 +144,50 @@ public class ValidatorTestUtil {
         return result;
     }
 
+    // Array parameters
+
+    public static SerializableParameter intArrayParam(final boolean required,
+                                                      final String collectionFormat) {
+        final IntegerProperty property = new IntegerProperty();
+        return arrayParam(required, collectionFormat, null, null, null, property);
+    }
+
+    public static SerializableParameter stringArrayParam(final boolean required,
+                                                         final String collectionFormat) {
+        final StringProperty property = new StringProperty();
+        return arrayParam(required, collectionFormat, null, null, null, property);
+    }
+
+    public static SerializableParameter enumeratedArrayParam(final boolean required,
+                                                             final String collectionFormat,
+                                                             final String... enumValues) {
+        final SerializableParameter result = mock(SerializableParameter.class);
+        when(result.getName()).thenReturn("Test Parameter");
+        when(result.getType()).thenReturn("array");
+        when(result.getCollectionFormat()).thenReturn(collectionFormat);
+        when(result.getRequired()).thenReturn(required);
+        when(result.getMaxItems()).thenReturn(null);
+        when(result.getMinItems()).thenReturn(null);
+        when(result.getEnum()).thenReturn(asList(enumValues));
+        return result;
+    }
+
+    public static SerializableParameter arrayParam(final boolean required,
+                                                   final String collectionFormat,
+                                                   final Integer minItems,
+                                                   final Integer maxItems,
+                                                   final Boolean unique,
+                                                   final Property items) {
+
+        final SerializableParameter result = mock(SerializableParameter.class);
+        when(result.getName()).thenReturn("Test Parameter");
+        when(result.getType()).thenReturn("array");
+        when(result.getCollectionFormat()).thenReturn(collectionFormat);
+        when(result.getRequired()).thenReturn(required);
+        when(result.getMinItems()).thenReturn(minItems);
+        when(result.getMaxItems()).thenReturn(maxItems);
+        when(result.isUniqueItems()).thenReturn(unique);
+        when(result.getItems()).thenReturn(items);
+        return result;
+    }
 }

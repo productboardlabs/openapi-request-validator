@@ -24,8 +24,12 @@ public class MutableValidationReport implements ValidationReport {
      */
     public MutableValidationReport addError(@Nonnull final String message) {
         requireNonNull(message, "A validation message is required");
-        this.messages.add(new MessageImpl(ERROR, message));
+        this.messages.add(new ImmutableMessage(ERROR, message));
         return this;
+    }
+
+    public void addAll(@Nonnull final ValidationReport other) {
+        this.messages.addAll(other.getMessages());
     }
 
     @Override
@@ -42,31 +46,6 @@ public class MutableValidationReport implements ValidationReport {
     @Override
     public List<ValidationReport.Message> getMessages() {
         return unmodifiableList(messages);
-    }
-
-    private static class MessageImpl implements ValidationReport.Message {
-        private final ValidationReport.Level level;
-        private final String message;
-
-        public MessageImpl(@Nonnull final ValidationReport.Level level, @Nonnull final String message) {
-            this.level = level;
-            this.message = message;
-        }
-
-        @Override
-        public Level getLevel() {
-            return level;
-        }
-
-        @Override
-        public String getMessage() {
-            return message;
-        }
-
-        @Override
-        public String toString() {
-            return level + " - " + message.replace("\n", "\n\t");
-        }
     }
 
 }

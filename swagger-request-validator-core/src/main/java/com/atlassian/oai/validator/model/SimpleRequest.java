@@ -1,10 +1,17 @@
 package com.atlassian.oai.validator.model;
 
 
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 
+import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -17,11 +24,16 @@ public class SimpleRequest implements Request {
     private final String path;
     private final Method method;
     private final Optional<String> requestBody;
+    private final Map<String, Collection<String>> queryParams;
 
-    private SimpleRequest(@Nonnull final Method method, @Nonnull final String path, @Nullable final String body) {
+    private SimpleRequest(@Nonnull final Method method,
+                          @Nonnull final String path,
+                          @Nullable final String body,
+                          @Nonnull final Map<String, Collection<String>> queryParams) {
         this.method = requireNonNull(method, "A method is required");
         this.path = requireNonNull(path, "A request path is required");
         this.requestBody = Optional.ofNullable(body);
+        this.queryParams = requireNonNull(queryParams);
     }
 
     @Nonnull
@@ -42,6 +54,21 @@ public class SimpleRequest implements Request {
         return requestBody;
     }
 
+    @Override
+    @Nonnull
+    public Collection<String> getQueryParameterValues(final String name) {
+        if (name != null && queryParams.containsKey(name.toLowerCase())) {
+            return Collections.unmodifiableCollection(queryParams.get(name.toLowerCase()));
+        }
+        return Collections.emptyList();
+    }
+
+    @Override
+    @Nonnull
+    public Collection<String> getQueryParameters() {
+        return Collections.unmodifiableCollection(queryParams.keySet());
+    }
+
     /**
      * A builder for constructing new {@link SimpleRequest} instances.
      */
@@ -50,6 +77,7 @@ public class SimpleRequest implements Request {
         private String path;
         private Method method;
         private String body;
+        private Multimap<String, String> queryParams = MultimapBuilder.hashKeys().arrayListValues().build();
 
         public static Builder get(final String path) {
             return new Builder(Method.GET, path);
@@ -81,8 +109,13 @@ public class SimpleRequest implements Request {
             return this;
         }
 
+        public Builder withQueryParam(final String name, final String... values) {
+            queryParams.putAll(name.toLowerCase(), asList(values));
+            return this;
+        }
+
         public SimpleRequest build() {
-            return new SimpleRequest(method, path, body);
+            return new SimpleRequest(method, path, body, queryParams.asMap());
         }
     }
 }

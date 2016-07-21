@@ -59,6 +59,7 @@
         <rest-assured.version>2.9.0</rest-assured.version>
         <license-maven-plugin.version>1.9</license-maven-plugin.version>
         <wiremock.version>2.1.7</wiremock.version>
+        <guava.version>18.0</guava.version>
     </properties>
 
     <modules>
@@ -145,6 +146,11 @@
                 <groupId>com.github.tomakehurst</groupId>
                 <artifactId>wiremock</artifactId>
                 <version>${wiremock.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
