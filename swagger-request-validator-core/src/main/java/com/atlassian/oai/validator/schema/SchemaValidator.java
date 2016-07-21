@@ -6,6 +6,8 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.jsonschema.core.report.ListProcessingReport;
+import com.github.fge.jsonschema.core.report.ListReportProvider;
+import com.github.fge.jsonschema.core.report.LogLevel;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import io.swagger.models.Model;
 import io.swagger.models.Swagger;
@@ -76,7 +78,11 @@ public class SchemaValidator {
             final JsonNode schemaObject = Json.mapper().readTree(Json.pretty(schema));
             ((ObjectNode)schemaObject).set("definitions", this.definitions);
 
-            final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
+            // Only emit ERROR and above from the JSON schema validation
+            final JsonSchemaFactory factory = JsonSchemaFactory.newBuilder()
+                    .setReportProvider(new ListReportProvider(LogLevel.ERROR, LogLevel.FATAL))
+                    .freeze();
+
             final com.github.fge.jsonschema.main.JsonSchema jsonSchema = factory.getJsonSchema(schemaObject);
             final JsonNode content = Json.mapper().readTree(value);
             processingReport = (ListProcessingReport)jsonSchema.validate(content);

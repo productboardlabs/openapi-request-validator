@@ -10,10 +10,10 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>swagger-request-validator-examples</artifactId>
+    <artifactId>swagger-request-validator-wiremock</artifactId>
 
     <description>
-        Example usages of the Swagger Request Validator and its various integrations and adapters.
+        Integrations between Swagger validation and WireMock HTTP mocks.
     </description>
 
     <dependencies>
@@ -22,12 +22,13 @@
             <artifactId>swagger-request-validator-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.atlassian.oai</groupId>
-            <artifactId>swagger-request-validator-pact</artifactId>
+            <groupId>com.github.tomakehurst</groupId>
+            <artifactId>wiremock</artifactId>
         </dependency>
+
         <dependency>
-            <groupId>com.atlassian.oai</groupId>
-            <artifactId>swagger-request-validator-wiremock</artifactId>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
         </dependency>
 
         <dependency>
@@ -35,20 +36,10 @@
             <artifactId>rest-assured</artifactId>
             <scope>test</scope>
         </dependency>
-
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>au.com.dius</groupId>
-            <artifactId>pact-jvm-consumer-junit_2.11</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>au.com.dius</groupId>
-            <artifactId>pact-jvm-consumer_2.11</artifactId>
         </dependency>
     </dependencies>
 

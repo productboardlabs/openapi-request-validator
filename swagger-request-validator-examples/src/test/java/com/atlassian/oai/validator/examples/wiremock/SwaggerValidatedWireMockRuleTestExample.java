@@ -1,0 +1,76 @@
+package com.atlassian.oai.validator.examples.wiremock;
+
+import com.atlassian.oai.validator.wiremock.ValidatedWireMockRule;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.jayway.restassured.response.Response;
+import org.junit.Rule;
+import org.junit.Test;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.jayway.restassured.RestAssured.get;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+
+/**
+ * An example test that uses the {@link ValidatedWireMockRule} to validate WireMock interactions
+ * against a Swagger API specification.
+ * <p>
+ * The {@link ValidatedWireMockRule} is a near drop-in replacement for the existing
+ * {@link com.github.tomakehurst.wiremock.junit.WireMockRule} that adds validation of the request/response
+ * interactions against the provided Swagger API specification.
+ * <p>
+ * This allows developers to have confidence that the mocks you are setting up in your tests reflect reality. It also
+ * gives early (unit-test level) feedback if a breaking change is made to a provider's API, allowing you to
+ * respond accordingly.
+ *
+ * @see SwaggerValidatedWireMockListenerTestExample
+ * @see <a href="http://wiremock.org/">WireMock</a>
+ */
+public class SwaggerValidatedWireMockRuleTestExample {
+
+    private static final String SWAGGER_JSON_URL = "http://petstore.swagger.io/v2/swagger.json";
+    private static final int PORT = 9999;
+    private static final String WIREMOCK_URL = "http://localhost:" + PORT;
+
+    @Rule
+    public ValidatedWireMockRule wireMockRule = new ValidatedWireMockRule(SWAGGER_JSON_URL, PORT);
+
+    /**
+     * Test a GET with a valid request/response expectation.
+     * <p>
+     * This test will pass both the (contrived) business logic tests and the Swagger validation.
+     */
+    @Test
+    public void testGetValidPet() {
+        wireMockRule.stubFor(
+                WireMock.get(urlEqualTo("/pet/1"))
+                        .willReturn(aResponse()
+                                .withStatus(200)
+                                .withHeader("content-type", "application/json")
+                                .withBody("{\"name\":\"fido\", \"photoUrls\":[]}")));
+
+        final Response response = get(WIREMOCK_URL + "/pet/1");
+        assertThat(response.getStatusCode(), is(200));
+    }
+
+    /**
+     * Test a GET with an invalid request/response expectation.
+     * <p>
+     * This test will pass the business logic tests, but will fail because the expectations encoded
+     * in the WireMock stubs do not match the API specification defined in the Swagger spec.
+     */
+    @Test
+    public void testGetInvalidPet() {
+        wireMockRule.stubFor(
+                WireMock.get(urlEqualTo("/pet/1"))
+                        .willReturn(aResponse()
+                                .withStatus(200)
+                                .withHeader("content-type", "application/json")
+                                .withBody("{\"name\":\"fido\"}"))); // Missing required 'photoUrls' field
+
+        final Response response = get(WIREMOCK_URL + "/pet/1");
+        assertThat(response.getStatusCode(), is(200));
+    }
+
+}
