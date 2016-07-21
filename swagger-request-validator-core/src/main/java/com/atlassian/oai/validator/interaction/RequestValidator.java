@@ -62,7 +62,7 @@ public class RequestValidator {
         final Optional<Parameter> bodyParameter = apiOperation.getOperation().getParameters()
                 .stream().filter(p -> p.getIn().equalsIgnoreCase("body")).findFirst();
 
-        if (requestBody.isPresent() && !bodyParameter.isPresent()) {
+        if (requestBody.isPresent() && !requestBody.get().isEmpty() && !bodyParameter.isPresent()) {
             return ValidationReport.singleton(
                     format("No request body is expected for %s on path '%s'",
                     apiOperation.getMethod(), apiOperation.getPathString().original())
@@ -73,7 +73,7 @@ public class RequestValidator {
             return ValidationReport.empty();
         }
 
-        if (!requestBody.isPresent()) {
+        if (!requestBody.isPresent() || requestBody.get().isEmpty()) {
             if (bodyParameter.get().getRequired()) {
                 return ValidationReport.singleton(
                         format("%s on path '%s' requires a request body. None found.",

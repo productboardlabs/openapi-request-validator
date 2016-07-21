@@ -58,12 +58,14 @@
         <logback.version>1.0.13</logback.version>
         <rest-assured.version>2.9.0</rest-assured.version>
         <license-maven-plugin.version>1.9</license-maven-plugin.version>
+        <wiremock.version>2.1.7</wiremock.version>
         <guava.version>18.0</guava.version>
     </properties>
 
     <modules>
         <module>swagger-request-validator-core</module>
         <module>swagger-request-validator-pact</module>
+        <module>swagger-request-validator-wiremock</module>
         <module>swagger-request-validator-examples</module>
     </modules>
 
@@ -77,6 +79,11 @@
             <dependency>
                 <groupId>com.atlassian.oai</groupId>
                 <artifactId>swagger-request-validator-pact</artifactId>
+                <version>${version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.atlassian.oai</groupId>
+                <artifactId>swagger-request-validator-wiremock</artifactId>
                 <version>${version}</version>
             </dependency>
 
@@ -134,6 +141,11 @@
                 <groupId>com.jayway.restassured</groupId>
                 <artifactId>rest-assured</artifactId>
                 <version>${rest-assured.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.tomakehurst</groupId>
+                <artifactId>wiremock</artifactId>
+                <version>${wiremock.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.guava</groupId>
