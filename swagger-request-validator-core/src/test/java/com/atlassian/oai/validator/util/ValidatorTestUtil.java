@@ -13,6 +13,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -28,9 +29,15 @@ public class ValidatorTestUtil {
     /**
      * Assert that validation has failed.
      */
-    public static void assertFail(ValidationReport report) {
+    public static void assertFail(ValidationReport report, String... expectedKeys) {
         log.trace(ValidationReportFormatter.format(report));
         assertThat(report.getMessages(), is(not(empty())));
+
+        for (String key : expectedKeys) {
+            assertThat(format("Expected message key '%s' but not found.", key),
+                    report.getMessages().stream().anyMatch(m -> m.getKey().equals(key)), is(true));
+        }
+
     }
 
     /**

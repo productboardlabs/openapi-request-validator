@@ -45,7 +45,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/users/a").build();
         final Response response = SimpleResponse.Builder.badRequest().build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.request.parameter.invalidFormat");
     }
 
     @Test
@@ -53,7 +53,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.patch("/users/1").build();
         final Response response = SimpleResponse.Builder.ok().build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.request.operation.notAllowed");
     }
 
     @Test
@@ -61,7 +61,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.post("/users").build();
         final Response response = SimpleResponse.Builder.ok().build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.request.body.missing");
     }
 
     @Test
@@ -77,7 +77,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.post("/users").withBody(loadRequest("newuser-invalid-missingrequired")).build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.schema.validationFailed");
     }
 
     @Test
@@ -85,7 +85,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/users").withBody(loadRequest("newuser-valid")).build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.request.body.unexpected");
     }
 
     @Test
@@ -101,7 +101,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/users").withQueryParam("maxCount", "a").build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.request.parameter.invalidFormat");
     }
 
     @Test
@@ -125,7 +125,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/users").withQueryParam("filter", "1,\"bob\",3").build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.schema.validationFailed");
     }
 
     @Test
@@ -144,7 +144,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/healthcheck").build();
         final Response response = SimpleResponse.Builder.ok().build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.request.parameter.query.missing");
     }
 
     @Test
@@ -160,7 +160,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/users/1").build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-invalid-missingrequired")).build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.schema.validationFailed");
     }
 
     @Test
@@ -168,7 +168,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/users/1").build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-invalid-baddataformat")).build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.schema.validationFailed");
     }
 
     @Test
@@ -176,7 +176,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/users/1").build();
         final Response response = SimpleResponse.Builder.ok().build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.response.body.missing");
     }
 
     @Test
@@ -184,7 +184,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/users/1").build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-invalid-malformedjson")).build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.schema.invalidJson");
     }
 
     @Test
@@ -192,7 +192,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/users/1").build();
         final Response response = SimpleResponse.Builder.notFound().withBody(loadResponse("user-valid")).build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.schema.validationFailed");
     }
 
     @Test
@@ -200,7 +200,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/users/1").build();
         final Response response = SimpleResponse.Builder.status(666).build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.response.status.unknown");
     }
 
     @Test

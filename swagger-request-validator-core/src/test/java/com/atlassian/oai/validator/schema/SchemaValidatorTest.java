@@ -55,7 +55,7 @@ public class SchemaValidatorTest {
         final String value = "1.0";
         final Property schema = new IntegerProperty();
 
-        assertFail(classUnderTest.validate(value, schema));
+        assertFail(classUnderTest.validate(value, schema), "validation.schema.validationFailed");
     }
 
     @Test
@@ -87,7 +87,7 @@ public class SchemaValidatorTest {
         final String value = "{\"foos\":\"bar\"}";
         final Model schema = new ModelImpl().property("foo", new StringProperty()).required("foo");
 
-        assertFail(classUnderTest.validate(value, schema));
+        assertFail(classUnderTest.validate(value, schema), "validation.schema.validationFailed");
     }
 
     @Test
@@ -103,7 +103,7 @@ public class SchemaValidatorTest {
         final String value = "{\"title\":\"bar\"}";
         final Model schema = new RefModel("#/definitions/Error");
 
-        assertFail(classUnderTest.validate(value, schema));
+        assertFail(classUnderTest.validate(value, schema), "validation.schema.validationFailed");
     }
 
 }

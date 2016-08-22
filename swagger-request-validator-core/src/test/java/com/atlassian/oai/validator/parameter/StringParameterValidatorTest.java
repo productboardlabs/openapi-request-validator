@@ -23,12 +23,12 @@ public class StringParameterValidatorTest {
 
     @Test
     public void validate_withNullValue_shouldFail_whenRequired() {
-        assertFail(classUnderTest.validate(null, stringParam(true)));
+        assertFail(classUnderTest.validate(null, stringParam(true)), "validation.request.parameter.missing");
     }
 
     @Test
     public void validate_withEmptyValue_shouldFail_whenRequired() {
-        assertFail(classUnderTest.validate("", stringParam(true)));
+        assertFail(classUnderTest.validate("", stringParam(true)), "validation.request.parameter.missing");
     }
 
 }

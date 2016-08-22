@@ -15,7 +15,7 @@ public class ParameterValidatorsTest {
 
     @Test
     public void validate_withInvalidIntegerParam_shouldFail() {
-        assertFail(parameterValidators.validate("1.0", intParam()));
+        assertFail(parameterValidators.validate("1.0", intParam()), "validation.request.parameter.invalidFormat");
     }
 
     @Test
@@ -25,7 +25,7 @@ public class ParameterValidatorsTest {
 
     @Test
     public void validate_withInvalidNumberParam_shouldFail() {
-        assertFail(parameterValidators.validate("1.0a", floatParam()));
+        assertFail(parameterValidators.validate("1.0a", floatParam()), "validation.request.parameter.invalidFormat");
     }
 
     @Test
@@ -35,7 +35,7 @@ public class ParameterValidatorsTest {
 
     @Test
     public void validate_withInvalidStringParam_shouldFail() {
-        assertFail(parameterValidators.validate("", stringParam()));
+        assertFail(parameterValidators.validate("", stringParam()), "validation.request.parameter.missing");
     }
 
     @Test
