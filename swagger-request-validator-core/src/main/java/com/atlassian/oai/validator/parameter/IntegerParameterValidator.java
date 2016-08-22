@@ -5,8 +5,6 @@ import io.swagger.models.parameters.SerializableParameter;
 
 import javax.annotation.Nonnull;
 
-import static java.lang.String.format;
-
 public class IntegerParameterValidator extends BaseParameterValidator {
 
     public static final ParameterValidator INSTANCE = new IntegerParameterValidator();
@@ -41,16 +39,14 @@ public class IntegerParameterValidator extends BaseParameterValidator {
 
         final Long d = Long.parseLong(value);
         if (parameter.getMinimum() != null && d < parameter.getMinimum()) {
-            report.addError(
-                    format(messages.getString("validation.request.parameter.number.belowMin"),
-                            value, parameter.getName(), parameter.getMinimum())
+            report.add(messages.get("validation.request.parameter.number.belowMin",
+                    value, parameter.getName(), parameter.getMinimum())
             );
         }
 
         if (parameter.getMaximum() != null && d > parameter.getMaximum()) {
-            report.addError(
-                    format(messages.getString("validation.request.parameter.number.aboveMax"),
-                            value, parameter.getName(), parameter.getMaximum())
+            report.add(messages.get("validation.request.parameter.number.aboveMax",
+                    value, parameter.getName(), parameter.getMaximum())
             );
         }
     }
@@ -61,9 +57,8 @@ public class IntegerParameterValidator extends BaseParameterValidator {
             final String format,
             final MutableValidationReport report) {
 
-        report.addError(
-                format(messages.getString("validation.request.parameter.invalidFormat"),
-                        value, parameter.getName(), supportedParameterType(), format)
+        report.add(messages.get("validation.request.parameter.invalidFormat",
+                value, parameter.getName(), supportedParameterType(), format)
         );
     }
 }

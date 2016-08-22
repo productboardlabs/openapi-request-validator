@@ -4,6 +4,7 @@ import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.NormalisedPath;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.parameter.ParameterValidators;
+import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.SchemaValidator;
 import io.swagger.models.parameters.BodyParameter;
@@ -12,9 +13,7 @@ import io.swagger.models.parameters.Parameter;
 import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.ResourceBundle;
 
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -25,7 +24,7 @@ public class RequestValidator {
     private final SchemaValidator schemaValidator;
     private final ParameterValidators parameterValidators;
 
-    private final ResourceBundle messages;
+    private final MessageResolver messages = new MessageResolver();
 
     /**
      * Construct a new request validator with the given schema validator.
@@ -35,7 +34,6 @@ public class RequestValidator {
     public RequestValidator(@Nonnull final SchemaValidator schemaValidator) {
         this.schemaValidator = requireNonNull(schemaValidator, "A schema validator is required");
         this.parameterValidators = new ParameterValidators(schemaValidator);
-        this.messages = ResourceBundle.getBundle("messages");
     }
 
     /**
@@ -68,8 +66,8 @@ public class RequestValidator {
 
         if (requestBody.isPresent() && !requestBody.get().isEmpty() && !bodyParameter.isPresent()) {
             return ValidationReport.singleton(
-                    format(messages.getString("validation.request.body.unexpected"),
-                    apiOperation.getMethod(), apiOperation.getPathString().original())
+                    messages.get("validation.request.body.unexpected",
+                        apiOperation.getMethod(), apiOperation.getPathString().original())
             );
         }
 
@@ -80,8 +78,8 @@ public class RequestValidator {
         if (!requestBody.isPresent() || requestBody.get().isEmpty()) {
             if (bodyParameter.get().getRequired()) {
                 return ValidationReport.singleton(
-                        format(messages.getString("validation.request.body.missing"),
-                        apiOperation.getMethod(), apiOperation.getPathString().original())
+                        messages.get("validation.request.body.missing",
+                            apiOperation.getMethod(), apiOperation.getPathString().original())
                 );
             }
             return ValidationReport.empty();
@@ -135,7 +133,7 @@ public class RequestValidator {
 
         if (queryParameterValues.isEmpty() && queryParameter.getRequired()) {
             return ValidationReport.singleton(
-                    format(messages.getString("validation.request.parameter.query.missing"),
+                    messages.get("validation.request.parameter.query.missing",
                             queryParameter.getName(), apiOperation.getPathString().original())
             );
         }

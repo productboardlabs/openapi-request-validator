@@ -14,7 +14,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -80,9 +79,7 @@ public class ArrayParameterValidator extends BaseParameterValidator {
         final SerializableParameter parameter = (SerializableParameter)p;
 
         if (parameter.getRequired() && (value == null || value.trim().isEmpty())) {
-            return report.addError(
-                    format(messages.getString("validation.request.parameter.missing"), parameter.getName())
-            );
+            return report.add(messages.get("validation.request.parameter.missing", parameter.getName()));
         }
 
         if (value == null || value.trim().isEmpty()) {
@@ -101,9 +98,7 @@ public class ArrayParameterValidator extends BaseParameterValidator {
 
         final SerializableParameter parameter = (SerializableParameter)p;
         if (parameter.getRequired() && (values == null || values.isEmpty())) {
-            return report.addError(
-                    format(messages.getString("validation.request.parameter.missing"), parameter.getName())
-            );
+            return report.add(messages.get("validation.request.parameter.missing", parameter.getName()));
         }
 
         if (values == null) {
@@ -111,9 +106,8 @@ public class ArrayParameterValidator extends BaseParameterValidator {
         }
 
         if (!parameter.getCollectionFormat().equalsIgnoreCase(CollectionFormat.MULTI.name())) {
-            return report.addError(
-                    format(messages.getString("validation.request.parameter.collection.invalidFormat"),
-                            p.getName(), parameter.getCollectionFormat(), "multi")
+            return report.add(messages.get("validation.request.parameter.collection.invalidFormat",
+                    p.getName(), parameter.getCollectionFormat(), "multi")
             );
         }
 
@@ -137,24 +131,21 @@ public class ArrayParameterValidator extends BaseParameterValidator {
                             @Nonnull final MutableValidationReport validationReport) {
 
         if (parameter.getMaxItems() != null && values.size() > parameter.getMaxItems()) {
-            validationReport.addError(
-                    format(messages.getString("validation.request.parameter.collection.tooManyItems"),
-                            parameter.getName(), parameter.getMaxItems(), values.size())
+            validationReport.add(messages.get("validation.request.parameter.collection.tooManyItems",
+                    parameter.getName(), parameter.getMaxItems(), values.size())
             );
         }
 
         if (parameter.getMinItems() != null && values.size() < parameter.getMinItems()) {
-            validationReport.addError(
-                    format(messages.getString("validation.request.parameter.collection.tooFewItems"),
-                            parameter.getName(), parameter.getMinItems(), values.size())
+            validationReport.add(messages.get("validation.request.parameter.collection.tooFewItems",
+                    parameter.getName(), parameter.getMinItems(), values.size())
             );
         }
 
         if (Boolean.TRUE.equals(parameter.isUniqueItems()) &&
                 values.stream().distinct().count() != values.size()) {
-            validationReport.addError(
-                    format(messages.getString("validation.request.parameter.collection.duplicateItems"),
-                            parameter.getName())
+            validationReport.add(messages.get("validation.request.parameter.collection.duplicateItems",
+                    parameter.getName())
             );
         }
 
@@ -163,9 +154,8 @@ public class ArrayParameterValidator extends BaseParameterValidator {
             values.stream()
                     .filter(v -> !enumValues.contains(v))
                     .forEach(v -> {
-                        validationReport.addError(
-                                format(messages.getString("validation.request.parameter.enum.invalid"),
-                                        v, parameter.getName(), parameter.getEnum())
+                        validationReport.add(messages.get("validation.request.parameter.enum.invalid",
+                                v, parameter.getName(), parameter.getEnum())
                         );
                     });
             return;

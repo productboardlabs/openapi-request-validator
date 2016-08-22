@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.schema;
 
+import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.MutableValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -18,10 +19,7 @@ import io.swagger.util.Json;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import java.util.ResourceBundle;
-
 import static com.atlassian.oai.validator.util.StringUtils.quote;
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -33,7 +31,7 @@ public class SchemaValidator {
     private final Swagger api;
     private JsonNode definitions;
 
-    private final ResourceBundle messages = ResourceBundle.getBundle("messages");
+    private final MessageResolver messages = new MessageResolver();
 
     public SchemaValidator() {
         this(null);
@@ -108,7 +106,7 @@ public class SchemaValidator {
             processingReport = (ListProcessingReport)jsonSchema.validate(content);
         }
         catch (JsonParseException e) {
-            validationReport.addError(format(messages.getString("validation.schema.invalidJson"), e.getMessage()));
+            validationReport.add(messages.get("validation.schema.invalidJson", e.getMessage()));
             return validationReport;
         }
         catch (Exception e) {
@@ -117,9 +115,8 @@ public class SchemaValidator {
 
 
         if((processingReport != null) && !processingReport.isSuccess()) {
-            validationReport.addError(
-                    format(messages.getString("validation.schema.validationFailed"),
-                            value, Json.pretty(processingReport.asJson()).replace("\n", "\n\t"))
+            validationReport.add(messages.get("validation.schema.validationFailed",
+                    value, Json.pretty(processingReport.asJson()).replace("\n", "\n\t"))
             );
         }
         return validationReport;

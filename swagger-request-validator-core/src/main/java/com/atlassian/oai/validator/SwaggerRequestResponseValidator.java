@@ -6,6 +6,7 @@ import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.NormalisedPath;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
+import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.MutableValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.SchemaValidator;
@@ -20,7 +21,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
-import java.util.ResourceBundle;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -57,7 +57,7 @@ public class SwaggerRequestResponseValidator {
     private final RequestValidator requestValidator;
     private final ResponseValidator responseValidator;
 
-    private final ResourceBundle messages = ResourceBundle.getBundle("messages");
+    private final MessageResolver messages = new MessageResolver();
 
     /**
      * Construct a new validator for the specification at the given URL.
@@ -138,9 +138,7 @@ public class SwaggerRequestResponseValidator {
 
         final Optional<NormalisedPath> maybeApiPath = findMatchingApiPath(requestPath);
         if (!maybeApiPath.isPresent()) {
-            return validationReport.addError(
-                    format(messages.getString("validation.request.path.missing"), request.getPath())
-            );
+            return validationReport.add(messages.get("validation.request.path.missing", request.getPath()));
         }
 
         final NormalisedPath apiPathString = maybeApiPath.get();
@@ -149,9 +147,8 @@ public class SwaggerRequestResponseValidator {
         final HttpMethod httpMethod = HttpMethod.valueOf(request.getMethod().name());
         final Operation operation = apiPath.getOperationMap().get(httpMethod);
         if (operation == null) {
-            return validationReport.addError(
-                    format(messages.getString("validation.request.operation.notAllowed"),
-                            request.getMethod(), apiPathString.original())
+            return validationReport.add(messages.get("validation.request.operation.notAllowed",
+                    request.getMethod(), apiPathString.original())
             );
         }
 

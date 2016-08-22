@@ -28,6 +28,19 @@ public class MutableValidationReport implements ValidationReport {
         return this;
     }
 
+    /**
+     * Add a validation message to this report.
+     *
+     * @param message The validation message to include
+     *
+     * @return This validation report instance
+     */
+    public MutableValidationReport add(@Nonnull final Message message) {
+        requireNonNull(message, "A validation message is required");
+        this.messages.add(message);
+        return this;
+    }
+
     public void addAll(@Nonnull final ValidationReport other) {
         this.messages.addAll(other.getMessages());
     }

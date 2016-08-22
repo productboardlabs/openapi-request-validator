@@ -2,15 +2,13 @@ package com.atlassian.oai.validator.interaction;
 
 import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.Response;
+import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.MutableValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.SchemaValidator;
 
 import javax.annotation.Nonnull;
 
-import java.util.ResourceBundle;
-
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -19,7 +17,7 @@ import static java.util.Objects.requireNonNull;
 public class ResponseValidator {
 
     private final SchemaValidator schemaValidator;
-    private final ResourceBundle messages;
+    private final MessageResolver messages = new MessageResolver();
 
     /**
      * Construct a new response validator with the given schema validator.
@@ -28,7 +26,6 @@ public class ResponseValidator {
      */
     public ResponseValidator(@Nonnull final SchemaValidator schemaValidator) {
         this.schemaValidator = requireNonNull(schemaValidator, "A schema validator is required");
-        this.messages = ResourceBundle.getBundle("messages");
     }
 
     /**
@@ -51,9 +48,9 @@ public class ResponseValidator {
 
         final MutableValidationReport validationReport = new MutableValidationReport();
         if (apiResponse == null) {
-            return validationReport.addError(
-                    format(messages.getString("validation.response.status.unknown"),
-                    response.getStatus(), apiOperation.getPathString().original())
+            return validationReport.add(
+                    messages.get("validation.response.status.unknown",
+                            response.getStatus(), apiOperation.getPathString().original())
             );
         }
 
@@ -62,9 +59,9 @@ public class ResponseValidator {
         }
 
         if (!response.getBody().isPresent()) {
-            return validationReport.addError(
-                    format(messages.getString("validation.response.body.missing"),
-                    apiOperation.getMethod(), apiOperation.getPathString().original())
+            return validationReport.add(
+                    messages.get("validation.response.body.missing",
+                            apiOperation.getMethod(), apiOperation.getPathString().original())
             );
         }
 

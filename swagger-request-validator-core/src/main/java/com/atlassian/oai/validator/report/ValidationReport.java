@@ -86,6 +86,37 @@ public interface ValidationReport {
     }
 
     /**
+     * Return an unmodifiable report that contains a single message.
+     *
+     * @param message The message to add to the report
+     *
+     * @return An unmodifiable validation report with a single message
+     */
+    static ValidationReport singleton(final Message message) {
+        return new ValidationReport() {
+
+            @Override
+            public boolean hasErrors() {
+                return true;
+            }
+
+            @Nonnull
+            @Override
+            public List<Message> getMessages() {
+                return Collections.singletonList(message);
+            }
+
+            @Override
+            public ValidationReport merge(@Nonnull ValidationReport other) {
+                final MutableValidationReport result = new MutableValidationReport();
+                result.addAll(this);
+                result.addAll(other);
+                return result;
+            }
+        };
+    }
+
+    /**
      * Return if this validation report contains errors.
      *
      * @return <code>true</code> if a validation error exists; <code>false</code> otherwise.
