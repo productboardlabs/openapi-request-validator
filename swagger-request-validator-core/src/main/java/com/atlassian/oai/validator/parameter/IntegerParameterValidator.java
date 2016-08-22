@@ -41,13 +41,17 @@ public class IntegerParameterValidator extends BaseParameterValidator {
 
         final Long d = Long.parseLong(value);
         if (parameter.getMinimum() != null && d < parameter.getMinimum()) {
-            report.addError(format("Value '%s' for parameter '%s' less than allowed min value %f",
-                            value, parameter.getName(), parameter.getMinimum()));
+            report.addError(
+                    format(messages.getString("validation.request.parameter.number.belowMin"),
+                            value, parameter.getName(), parameter.getMinimum())
+            );
         }
 
         if (parameter.getMaximum() != null && d > parameter.getMaximum()) {
-            report.addError(format("Value '%s' for parameter '%s' greater than allowed max value %f",
-                            value, parameter.getName(), parameter.getMaximum()));
+            report.addError(
+                    format(messages.getString("validation.request.parameter.number.aboveMax"),
+                            value, parameter.getName(), parameter.getMaximum())
+            );
         }
     }
 
@@ -57,7 +61,9 @@ public class IntegerParameterValidator extends BaseParameterValidator {
             final String format,
             final MutableValidationReport report) {
 
-        report.addError(format("Value '%s' for parameter '%s' does not match type '%s' with format '%s'",
-                value, parameter.getName(), supportedParameterType(), format));
+        report.addError(
+                format(messages.getString("validation.request.parameter.invalidFormat"),
+                        value, parameter.getName(), supportedParameterType(), format)
+        );
     }
 }

@@ -20,6 +20,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
+import java.util.ResourceBundle;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -55,6 +56,8 @@ public class SwaggerRequestResponseValidator {
 
     private final RequestValidator requestValidator;
     private final ResponseValidator responseValidator;
+
+    private final ResourceBundle messages = ResourceBundle.getBundle("messages");
 
     /**
      * Construct a new validator for the specification at the given URL.
@@ -135,7 +138,9 @@ public class SwaggerRequestResponseValidator {
 
         final Optional<NormalisedPath> maybeApiPath = findMatchingApiPath(requestPath);
         if (!maybeApiPath.isPresent()) {
-            return validationReport.addError("No API path found that matches request " + request.getPath());
+            return validationReport.addError(
+                    format(messages.getString("validation.request.path.missing"), request.getPath())
+            );
         }
 
         final NormalisedPath apiPathString = maybeApiPath.get();
@@ -144,8 +149,10 @@ public class SwaggerRequestResponseValidator {
         final HttpMethod httpMethod = HttpMethod.valueOf(request.getMethod().name());
         final Operation operation = apiPath.getOperationMap().get(httpMethod);
         if (operation == null) {
-            return validationReport.addError(format("%s operation not allowed on path '%s'",
-                    request.getMethod(), apiPathString.original()));
+            return validationReport.addError(
+                    format(messages.getString("validation.request.operation.notAllowed"),
+                            request.getMethod(), apiPathString.original())
+            );
         }
 
         final ApiOperation apiOperation = new ApiOperation(apiPathString, apiPath, httpMethod, operation);

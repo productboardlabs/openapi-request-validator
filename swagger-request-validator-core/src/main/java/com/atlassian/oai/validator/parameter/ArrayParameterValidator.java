@@ -80,7 +80,9 @@ public class ArrayParameterValidator extends BaseParameterValidator {
         final SerializableParameter parameter = (SerializableParameter)p;
 
         if (parameter.getRequired() && (value == null || value.trim().isEmpty())) {
-            return report.addError(format("Parameter '%s' is required but is missing", parameter.getName()));
+            return report.addError(
+                    format(messages.getString("validation.request.parameter.missing"), parameter.getName())
+            );
         }
 
         if (value == null || value.trim().isEmpty()) {
@@ -99,7 +101,9 @@ public class ArrayParameterValidator extends BaseParameterValidator {
 
         final SerializableParameter parameter = (SerializableParameter)p;
         if (parameter.getRequired() && (values == null || values.isEmpty())) {
-            return report.addError(format("Parameter '%s' is required but is missing", p.getName()));
+            return report.addError(
+                    format(messages.getString("validation.request.parameter.missing"), parameter.getName())
+            );
         }
 
         if (values == null) {
@@ -108,8 +112,8 @@ public class ArrayParameterValidator extends BaseParameterValidator {
 
         if (!parameter.getCollectionFormat().equalsIgnoreCase(CollectionFormat.MULTI.name())) {
             return report.addError(
-                    format("Parameter '%s' expected collection format of '%s' but '%s' was used instead.",
-                    p.getName(), parameter.getCollectionFormat(), "multi")
+                    format(messages.getString("validation.request.parameter.collection.invalidFormat"),
+                            p.getName(), parameter.getCollectionFormat(), "multi")
             );
         }
 
@@ -134,14 +138,14 @@ public class ArrayParameterValidator extends BaseParameterValidator {
 
         if (parameter.getMaxItems() != null && values.size() > parameter.getMaxItems()) {
             validationReport.addError(
-                    format("Parameter '%s' accepts a maximum of %d items. Found %d.",
+                    format(messages.getString("validation.request.parameter.collection.tooManyItems"),
                             parameter.getName(), parameter.getMaxItems(), values.size())
             );
         }
 
         if (parameter.getMinItems() != null && values.size() < parameter.getMinItems()) {
             validationReport.addError(
-                    format("Parameter '%s' accepts a minimum of %d items. Found %d.",
+                    format(messages.getString("validation.request.parameter.collection.tooFewItems"),
                             parameter.getName(), parameter.getMinItems(), values.size())
             );
         }
@@ -149,7 +153,8 @@ public class ArrayParameterValidator extends BaseParameterValidator {
         if (Boolean.TRUE.equals(parameter.isUniqueItems()) &&
                 values.stream().distinct().count() != values.size()) {
             validationReport.addError(
-                    format("Parameter '%s' does not allow duplicate values.", parameter.getName())
+                    format(messages.getString("validation.request.parameter.collection.duplicateItems"),
+                            parameter.getName())
             );
         }
 
@@ -159,7 +164,7 @@ public class ArrayParameterValidator extends BaseParameterValidator {
                     .filter(v -> !enumValues.contains(v))
                     .forEach(v -> {
                         validationReport.addError(
-                                format("Value '%s' for parameter '%s' is not allowed. Allowed values are <%s>.",
+                                format(messages.getString("validation.request.parameter.enum.invalid"),
                                         v, parameter.getName(), parameter.getEnum())
                         );
                     });

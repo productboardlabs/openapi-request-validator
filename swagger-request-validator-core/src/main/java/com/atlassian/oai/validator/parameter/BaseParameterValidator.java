@@ -8,9 +8,13 @@ import io.swagger.models.parameters.SerializableParameter;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import java.util.ResourceBundle;
+
 import static java.lang.String.format;
 
 abstract class BaseParameterValidator implements ParameterValidator {
+
+    protected final ResourceBundle messages = ResourceBundle.getBundle("messages");
 
     @Override
     public boolean supports(@Nullable final Parameter p) {
@@ -31,7 +35,7 @@ abstract class BaseParameterValidator implements ParameterValidator {
         final SerializableParameter parameter = (SerializableParameter)p;
 
         if (parameter.getRequired() && (value == null || value.trim().isEmpty())) {
-            return report.addError(format("Parameter '%s' is required but is missing", p.getName()));
+            return report.addError(format(messages.getString("validation.request.parameter.missing"), p.getName()));
         }
 
         if (value == null || value.trim().isEmpty()) {
@@ -39,8 +43,10 @@ abstract class BaseParameterValidator implements ParameterValidator {
         }
 
         if (!matchesEnumIfDefined(value, parameter)) {
-            return report.addError(format("Parameter '%s' does not match allowed values <%s>",
-                    parameter.getName(), parameter.getEnum()));
+            return report.addError(
+                    format(messages.getString("validation.request.parameter.enum.invalid"),
+                    value, parameter.getName(), parameter.getEnum())
+            );
         }
 
         doValidate(value, parameter, report);
