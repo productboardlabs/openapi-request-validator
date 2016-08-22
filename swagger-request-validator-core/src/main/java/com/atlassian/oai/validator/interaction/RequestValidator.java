@@ -23,17 +23,18 @@ public class RequestValidator {
 
     private final SchemaValidator schemaValidator;
     private final ParameterValidators parameterValidators;
-
-    private final MessageResolver messages = new MessageResolver();
+    private final MessageResolver messages;
 
     /**
      * Construct a new request validator with the given schema validator.
      *
      * @param schemaValidator The schema validator to use when validating request bodies
+     * @param messages The message resolver to use
      */
-    public RequestValidator(@Nonnull final SchemaValidator schemaValidator) {
+    public RequestValidator(@Nonnull final SchemaValidator schemaValidator, @Nonnull final MessageResolver messages) {
         this.schemaValidator = requireNonNull(schemaValidator, "A schema validator is required");
-        this.parameterValidators = new ParameterValidators(schemaValidator);
+        this.parameterValidators = new ParameterValidators(schemaValidator, messages);
+        this.messages = requireNonNull(messages, "A message resolver is required");
     }
 
     /**

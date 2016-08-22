@@ -28,13 +28,20 @@ import static java.util.Objects.requireNonNull;
  * Supports validation of properties and request/response bodies, and supports schema references.
  */
 public class SchemaValidator {
+
     private final Swagger api;
     private JsonNode definitions;
+    private final MessageResolver messages;
 
-    private final MessageResolver messages = new MessageResolver();
-
-    public SchemaValidator() {
-        this(null);
+    /**
+     * Build a new validator with no API specification.
+     * <p>
+     * This will not perform any validation of $ref references that reference local definitions.
+     *
+     * @param messages The message resolver to use
+     */
+    public SchemaValidator(@Nonnull final MessageResolver messages) {
+        this(null, messages);
     }
 
     /**
@@ -42,9 +49,11 @@ public class SchemaValidator {
      *
      * @param api The API to build the validator for. If provided, is used to retrieve schema definitions
      *            for use in references.
+     * @param messages The message resolver to use.
      */
-    public SchemaValidator(@Nullable final Swagger api) {
+    public SchemaValidator(@Nullable final Swagger api, @Nonnull final MessageResolver messages) {
         this.api = api;
+        this.messages = requireNonNull(messages, "A message resolver is required");
     }
 
     /**

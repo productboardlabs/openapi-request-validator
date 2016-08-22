@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.parameter;
 
+import com.atlassian.oai.validator.report.MessageResolver;
 import org.junit.Test;
 
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
@@ -10,7 +11,7 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.stringParam;
 
 public class ParameterValidatorsTest {
 
-    private final ParameterValidators parameterValidators = new ParameterValidators(null);
+    private final ParameterValidators parameterValidators = new ParameterValidators(null, new MessageResolver());
 
     @Test
     public void validate_withInvalidIntegerParam_shouldFail() {

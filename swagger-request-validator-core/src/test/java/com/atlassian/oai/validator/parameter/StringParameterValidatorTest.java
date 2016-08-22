@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.parameter;
 
+import com.atlassian.oai.validator.report.MessageResolver;
 import org.junit.Test;
 
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
@@ -8,7 +9,7 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.stringParam;
 
 public class StringParameterValidatorTest {
 
-    private StringParameterValidator classUnderTest = new StringParameterValidator();
+    private StringParameterValidator classUnderTest = new StringParameterValidator(new MessageResolver());
 
     @Test
     public void validate_withNullValue_shouldPass_whenNotRequired() {

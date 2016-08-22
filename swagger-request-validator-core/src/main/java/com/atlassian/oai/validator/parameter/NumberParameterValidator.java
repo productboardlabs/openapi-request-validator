@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.parameter;
 
+import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.MutableValidationReport;
 import io.swagger.models.parameters.SerializableParameter;
 
@@ -7,7 +8,9 @@ import javax.annotation.Nonnull;
 
 public class NumberParameterValidator extends BaseParameterValidator {
 
-    public static final NumberParameterValidator INSTANCE = new NumberParameterValidator();
+    public NumberParameterValidator(final MessageResolver messages) {
+        super(messages);
+    }
 
     @Override
     @Nonnull

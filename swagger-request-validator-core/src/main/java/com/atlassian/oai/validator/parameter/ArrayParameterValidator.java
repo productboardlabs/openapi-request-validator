@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.parameter;
 
+import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.MutableValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.SchemaValidator;
@@ -53,12 +54,10 @@ public class ArrayParameterValidator extends BaseParameterValidator {
         }
     }
 
-    public ArrayParameterValidator() {
-        this(null);
-    }
-
-    public ArrayParameterValidator(@Nullable final SchemaValidator schemaValidator) {
-        this.schemaValidator = schemaValidator == null ? new SchemaValidator() : schemaValidator;
+    public ArrayParameterValidator(@Nullable final SchemaValidator schemaValidator,
+                                   @Nonnull final MessageResolver messages) {
+        super(messages);
+        this.schemaValidator = schemaValidator == null ? new SchemaValidator(messages) : schemaValidator;
     }
 
     @Nonnull

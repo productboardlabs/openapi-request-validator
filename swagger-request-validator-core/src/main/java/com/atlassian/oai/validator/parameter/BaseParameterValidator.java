@@ -9,9 +9,15 @@ import io.swagger.models.parameters.SerializableParameter;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import static java.util.Objects.requireNonNull;
+
 abstract class BaseParameterValidator implements ParameterValidator {
 
-    protected final MessageResolver messages = new MessageResolver();
+    protected final MessageResolver messages;
+
+    protected BaseParameterValidator(@Nonnull final MessageResolver messages) {
+        this.messages = requireNonNull(messages, "A message resolver is required");
+    }
 
     @Override
     public boolean supports(@Nullable final Parameter p) {

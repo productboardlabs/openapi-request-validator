@@ -17,15 +17,17 @@ import static java.util.Objects.requireNonNull;
 public class ResponseValidator {
 
     private final SchemaValidator schemaValidator;
-    private final MessageResolver messages = new MessageResolver();
+    private final MessageResolver messages;
 
     /**
      * Construct a new response validator with the given schema validator.
      *
      * @param schemaValidator The schema validator to use when validating response bodies
+     * @param messages The message resolver to use
      */
-    public ResponseValidator(@Nonnull final SchemaValidator schemaValidator) {
+    public ResponseValidator(@Nonnull final SchemaValidator schemaValidator, @Nonnull final MessageResolver messages) {
         this.schemaValidator = requireNonNull(schemaValidator, "A schema validator is required");
+        this.messages = requireNonNull(messages, "A message resolver is required");
     }
 
     /**

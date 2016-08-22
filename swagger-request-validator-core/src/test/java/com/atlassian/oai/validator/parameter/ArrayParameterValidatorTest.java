@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.parameter;
 
+import com.atlassian.oai.validator.report.MessageResolver;
 import io.swagger.models.properties.IntegerProperty;
 import org.junit.Test;
 
@@ -14,7 +15,7 @@ import static java.util.Collections.emptyList;
 
 public class ArrayParameterValidatorTest {
 
-    private ArrayParameterValidator classUnderTest = new ArrayParameterValidator();
+    private ArrayParameterValidator classUnderTest = new ArrayParameterValidator(null, new MessageResolver());
 
     @Test
     public void validate_withValidCsvFormat_shouldPass() {
