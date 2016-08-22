@@ -23,6 +23,7 @@ public interface ValidationReport {
      * A single message in the validation report
      */
     interface Message {
+        String getKey();
         String getMessage();
         Level getLevel();
     }
