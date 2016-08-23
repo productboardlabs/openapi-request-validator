@@ -19,6 +19,7 @@ import io.swagger.util.Json;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import static com.atlassian.oai.validator.util.StringUtils.capitalise;
 import static com.atlassian.oai.validator.util.StringUtils.quote;
 import static java.util.Objects.requireNonNull;
 
@@ -122,11 +123,11 @@ public class SchemaValidator {
             e.printStackTrace();
         }
 
-
         if((processingReport != null) && !processingReport.isSuccess()) {
-            validationReport.add(messages.get("validation.schema.validationFailed",
-                    value, Json.pretty(processingReport.asJson()).replace("\n", "\n\t"))
-            );
+            processingReport.forEach(pm -> {
+                final String validationKeyword = pm.asJson().get("keyword").textValue();
+                validationReport.add(messages.create("validation.schema." + validationKeyword, capitalise(pm.getMessage())));
+            });
         }
         return validationReport;
     }

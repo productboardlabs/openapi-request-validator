@@ -22,4 +22,18 @@ public class StringUtils {
         return result;
     }
 
+    /**
+     * Capitalise the first letter of the provided string.
+     *
+     * @param value The value to capitalise.
+     * @return The capitalised string.
+     */
+    public static String capitalise(final String value) {
+        if (value == null || value.isEmpty()) {
+            return value;
+        }
+
+        return value.substring(0, 1).toUpperCase() + value.substring(1);
+    }
+
 }

@@ -23,7 +23,7 @@ public class MutableValidationReport implements ValidationReport {
      * @return This validation report instance
      */
     public MutableValidationReport add(@Nullable final Message message) {
-        if (message != null) {
+        if (message != null && message.getLevel() != Level.IGNORE) {
             this.messages.add(message);
         }
         return this;

@@ -78,7 +78,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.post("/users").withBody(loadRequest("newuser-invalid-missingrequired")).build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
 
-        assertFail(classUnderTest.validate(request, response), "validation.schema.validationFailed");
+        assertFail(classUnderTest.validate(request, response), "validation.schema.required");
     }
 
     @Test
@@ -126,7 +126,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/users").withQueryParam("filter", "1,\"bob\",3").build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
 
-        assertFail(classUnderTest.validate(request, response), "validation.schema.validationFailed");
+        assertFail(classUnderTest.validate(request, response), "validation.schema.type");
     }
 
     @Test
@@ -161,7 +161,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/users/1").build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-invalid-missingrequired")).build();
 
-        assertFail(classUnderTest.validate(request, response), "validation.schema.validationFailed");
+        assertFail(classUnderTest.validate(request, response), "validation.schema.required");
     }
 
     @Test
@@ -169,7 +169,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/users/1").build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-invalid-baddataformat")).build();
 
-        assertFail(classUnderTest.validate(request, response), "validation.schema.validationFailed");
+        assertFail(classUnderTest.validate(request, response), "validation.schema.type");
     }
 
     @Test
@@ -193,7 +193,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/users/1").build();
         final Response response = SimpleResponse.Builder.notFound().withBody(loadResponse("user-valid")).build();
 
-        assertFail(classUnderTest.validate(request, response), "validation.schema.validationFailed");
+        assertFail(classUnderTest.validate(request, response), "validation.schema.required");
     }
 
     @Test

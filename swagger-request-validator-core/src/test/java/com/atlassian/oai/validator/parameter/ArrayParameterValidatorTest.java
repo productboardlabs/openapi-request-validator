@@ -50,7 +50,7 @@ public class ArrayParameterValidatorTest {
     @Test
     public void validate_withInvalidParameter_shouldFail() {
         assertFail(classUnderTest.validate("1,2.1,3", intArrayParam(true, "csv")),
-                "validation.schema.validationFailed");
+                "validation.schema.type");
     }
 
     @Test
@@ -89,7 +89,7 @@ public class ArrayParameterValidatorTest {
     @Test
     public void validate_withInvalidCollectionParameter_shouldFail() {
         assertFail(classUnderTest.validate(asList("1", "2.1", "3"), intArrayParam(true, "multi")),
-                "validation.schema.validationFailed");
+                "validation.schema.type");
     }
 
     @Test

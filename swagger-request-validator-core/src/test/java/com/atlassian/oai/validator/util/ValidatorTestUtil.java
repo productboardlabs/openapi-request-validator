@@ -12,9 +12,11 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.List;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
@@ -33,9 +35,11 @@ public class ValidatorTestUtil {
         log.trace(ValidationReportFormatter.format(report));
         assertThat(report.getMessages(), is(not(empty())));
 
+        final List<String> foundKeys = report.getMessages().stream().map(ValidationReport.Message::getKey).collect(toList());
+
         for (String key : expectedKeys) {
-            assertThat(format("Expected message key '%s' but not found.", key),
-                    report.getMessages().stream().anyMatch(m -> m.getKey().equals(key)), is(true));
+            assertThat(format("Expected message key '%s' but not found. Found <%s>.", key, foundKeys.toString()),
+                    foundKeys.contains(key), is(true));
         }
 
     }

@@ -66,6 +66,10 @@ public interface ValidationReport {
      * @return An unmodifiable validation report with a single message
      */
     static ValidationReport singleton(final Message message) {
+        if (message == null || message.getLevel() == Level.IGNORE) {
+            return empty();
+        }
+
         return new ValidationReport() {
 
             @Override
