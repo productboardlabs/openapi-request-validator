@@ -1,18 +1,62 @@
 package com.atlassian.oai.validator.report;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ResourceBundle;
 
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Resolves a message key to a {@link ValidationReport.Message} object.
+ * <p>
+ * Message Strings are resolved from the <code>messages</code> resource bundle.
+ * <p>
+ * Message levels are resolved using a configured {@link LevelResolver}.
+ *
+ * @see LevelResolver
  */
 public class MessageResolver {
 
     private final ResourceBundle messages = ResourceBundle.getBundle("messages");
+    private final LevelResolver levelResolver;
 
-    public ValidationReport.Message get(final String key, final Object... args) {
-        return new ImmutableMessage(key, ValidationReport.Level.ERROR, format(messages.getString(key), args));
+    /**
+     * Create a new instance with the default {@link LevelResolver} (all messages will be emitted at the ERROR level).
+     *
+     * @see LevelResolver#LevelResolver()
+     */
+    public MessageResolver() {
+        this(new LevelResolver());
+    }
+
+    /**
+     * Create a new instance with the provided {{@link LevelResolver}}.
+     */
+    public MessageResolver(final LevelResolver levelResolver) {
+        this.levelResolver = levelResolver == null ? new LevelResolver() : levelResolver;
+    }
+
+    /**
+     * Get the message with the given key.
+     * <p>
+     * If no message is found for the key, or if the configured {@link LevelResolver} returns a level of
+     * {@link ValidationReport.Level#IGNORE} for the key, will return <code>null</code>.
+     *
+     * @param key The key of the message to retrieve.
+     * @param args Arguments to use when resolving the message String.
+     *
+     * @return The message for the given key, or <code>null</code> if no message is found OR the
+     * configured {@link LevelResolver} is configured to ignore the given key.
+     */
+    @Nullable
+    public ValidationReport.Message get(@Nonnull final String key, final Object... args) {
+        requireNonNull(key, "A message key is required.");
+        final ValidationReport.Level level = levelResolver.getLevel(key);
+        if (level == ValidationReport.Level.IGNORE || !messages.containsKey(key)) {
+            return null;
+        }
+        return new ImmutableMessage(key, level, format(messages.getString(key), args));
     }
 
 }

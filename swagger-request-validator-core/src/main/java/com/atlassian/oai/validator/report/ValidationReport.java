@@ -16,7 +16,10 @@ public interface ValidationReport {
      * The validation level
      */
     enum Level {
-        ERROR
+        ERROR,
+        WARN,
+        INFO,
+        IGNORE
     }
 
     /**
