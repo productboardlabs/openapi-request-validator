@@ -34,7 +34,10 @@ public class ValidatedPactProviderRule implements TestRule {
         this.providerId = providerId;
         this.target = target;
 
-        this.validator = new SwaggerRequestResponseValidator(swaggerJsonUrl, basePathOverride);
+        this.validator = SwaggerRequestResponseValidator
+                .createFor(swaggerJsonUrl)
+                .withBasePathOverride(basePathOverride)
+                .build();
     }
 
     public MockProviderConfig getConfig() {

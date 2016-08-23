@@ -49,7 +49,7 @@ To use the JUnit rule you will need to ensure the following dependencies are add
 
 ```
 final RequestResponseInteraction interaction = ...
-final SwaggerRequestResponseValidator validator = new SwaggerRequestResponseValidator(swaggerJsonUrl, basePathOverride);
+final SwaggerRequestResponseValidator validator = SwaggerRequestResponseValidator.createFor(swaggerJsonUrl).build();
 final ValidationReport report = validator.validate(
                 new PactRequest(interaction.getRequest()),
                 new PactResponse(interaction.getResponse()));

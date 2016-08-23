@@ -32,73 +32,54 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * Validation errors are provided in a @{@link ValidationReport} that can be used to inspect the failures.
  * <p>
- * Currently supports the following validation checks:
- * <p>
- * <b>Request</b>:
- * <ul>
- *     <li>Path existence - does the request path exist in the API spec</li>
- *     <li>Path parameter format - do the provided path parameters match the schema specified in the spec</li>
- *     <li>Request body existence - has a body been supplied where needed</li>
- *     <li>Request body schema - does the request body adhere to the schema defined in the spec</li>
- * </ul>
- * <p>
- * <b>Response</b>:
- * <ul>
- *     <li>Status code - does the response status match one defined in the spec</li>
- *     <li>Response body schema - does the response body adhere to the schema defined in the spec</li>
- * </ul>
+ * New instances should be created via the {@link SwaggerRequestResponseValidator#createFor(String)} method.
  *
+ * @see #createFor(String)
  */
 public class SwaggerRequestResponseValidator {
 
     private final Swagger api;
     private final Optional<String> basePathOverride;
+    private final MessageResolver messages;
 
     private final RequestValidator requestValidator;
     private final ResponseValidator responseValidator;
 
-    private final MessageResolver messages = new MessageResolver();
-
     /**
-     * Construct a new validator for the specification at the given URL.
+     * Create a new instance using the Swagger JSON specification at the given location.
      * <p>
      * The URL can be an absolute HTTP/HTTPS URL, a File URL or a classpath location (without the classpath: scheme).
+     * <p>
+     * For example:
+     * <pre>
+     *     // Create from a publicly hosted HTTP location
+     *     .createFor("http://api.myservice.com/swagger.json")
      *
-     * @param swaggerJsonUrl The location of the Swagger JSON specification to use in this validator
+     *     // Create from a file on the local filesystem
+     *     .createFor("file://Users/myuser/tmp/swagger.json");
      *
-     * @see SwaggerRequestResponseValidator#SwaggerRequestResponseValidator(String, String)
+     *     // Create from a classpath resource in the /api package
+     *     .createFor("/api/swagger.json");
+     * </pre>
+     *
+     * @param swaggerJsonUrl The location of the Swagger JSON specification to use in the validator.
+     *
+     * @return A new builder instance to use for creating configuring {@link SwaggerRequestResponseValidator} instances.
      */
-    public SwaggerRequestResponseValidator(@Nonnull final String swaggerJsonUrl) {
-        this(swaggerJsonUrl, null);
+    public static Builder createFor(@Nonnull final String swaggerJsonUrl) {
+        return new Builder().withSwaggerJsonUrl(swaggerJsonUrl);
     }
 
     /**
      * Construct a new validator for the specification at the given URL.
-     * <p>
-     * The URL can be an absolute HTTP/HTTPS URL, a File URL or a classpath location (without the classpath: scheme).
-     * <p>
-     * This constructor also takes an optional basepath override to override the one defined in the Swagger spec.
-     * This can be useful if e.g. your Swagger specification has been created for a public URL but you are validating
-     * requests against an internal URL where the URL paths differ.
-     * <p>
-     * Example usage:
-     * <pre>
-     *     // Create from a publicly hosted HTTP location
-     *     new SwaggerRequestResponseValidator("http://api.myservice.com/swagger.json", null);
      *
-     *     // Create from a file on the local filesystem
-     *     new SwaggerRequestResponseValidator("file://Users/myuser/tmp/swagger.json", null);
-     *
-     *     // Create from a classpath resource in the /api package
-     *     // and override the basepath to "/testapi"
-     *     new SwaggerRequestResponseValidator("/api/swagger.json", "/testapi");
-     * </pre>
-     *
-     * @param swaggerJsonUrl The location of the Swagger JSON specification to use in this validator
+     * @param swaggerJsonUrl The location of the Swagger JSON specification to use in this validator.
      * @param basePathOverride (Optional) override for the base path defined in the Swagger specification.
+     * @param messages The message resolver to use for resolving validation messages.
      */
-    public SwaggerRequestResponseValidator(@Nonnull final String swaggerJsonUrl,
-                                           @Nullable final String basePathOverride) {
+    private SwaggerRequestResponseValidator(@Nonnull final String swaggerJsonUrl,
+                                            @Nullable final String basePathOverride,
+                                            @Nonnull final MessageResolver messages) {
 
         requireNonNull(swaggerJsonUrl, "A Swagger URL is required");
 
@@ -111,7 +92,7 @@ public class SwaggerRequestResponseValidator {
                             swaggerJsonUrl, swaggerParseResult.getMessages().toString().replace("\n", "\n\t")));
         }
         this.basePathOverride = Optional.ofNullable(basePathOverride);
-
+        this.messages = messages;
         final SchemaValidator schemaValidator = new SchemaValidator(api, messages);
         this.requestValidator = new RequestValidator(schemaValidator, messages);
         this.responseValidator = new ResponseValidator(schemaValidator, messages);
@@ -242,6 +223,81 @@ public class SwaggerRequestResponseValidator {
                 return "/" + requestPath;
             }
             return requestPath;
+        }
+    }
+
+    /**
+     * A builder used to createFor configured instances of the {@link SwaggerRequestResponseValidator}.
+     */
+    public static class Builder {
+        private String swaggerJsonUrl;
+        private String basePathOverride;
+        private MessageResolver messages = new MessageResolver();
+
+        /**
+         * The location of the Swagger JSON specification to use in the validator.
+         * <p>
+         * The URL can be an absolute HTTP/HTTPS URL, a File URL or a classpath location (without the classpath: scheme).
+         * <p>
+         * For example:
+         * <pre>
+         *     // Create from a publicly hosted HTTP location
+         *     .withSwaggerJsonUrl("http://api.myservice.com/swagger.json")
+         *
+         *     // Create from a file on the local filesystem
+         *     .withSwaggerJsonUrl("file://Users/myuser/tmp/swagger.json");
+         *
+         *     // Create from a classpath resource in the /api package
+         *     .withSwaggerJsonUrl("/api/swagger.json");
+         * </pre>
+         * @param swaggerJsonUrl The location of the Swagger JSON specification to use in the validator.
+         *
+         * @return this builder instance.
+         */
+        public Builder withSwaggerJsonUrl(final String swaggerJsonUrl) {
+            this.swaggerJsonUrl = swaggerJsonUrl;
+            return this;
+        }
+
+        /**
+         * An optional basepath override to override the one defined in the Swagger spec.
+         * <p>
+         * This can be useful if e.g. your Swagger specification has been created for a public URL but you are validating
+         * requests against an internal URL where the URL paths differ.
+         *
+         * @param basePathOverride An optional basepath override to override the one defined in the Swagger spec.
+         *
+         * @return this builder instance.
+         */
+        public Builder withBasePathOverride(final String basePathOverride) {
+            this.basePathOverride = basePathOverride;
+            return this;
+        }
+
+        /**
+         * The message resolver to use for resolving validation messages.
+         * <p>
+         * This can be used to get fine-grained control over validation behaviour
+         * (e.g. what level to emit message at, which validations to ignore etc.).
+         * <p>
+         * If not provided, a default resolver will be used that resolves all message to ERROR.
+         *
+         * @param messages The message resolver to use for resolving validation messages.
+         *
+         * @return this builder instance.
+         */
+        public Builder withMessages(final MessageResolver messages) {
+            this.messages = messages;
+            return this;
+        }
+
+        /**
+         * Build a configured {@link SwaggerRequestResponseValidator} instance with the values collected in this builder.
+         *
+         * @return The configured {@link SwaggerRequestResponseValidator} instance.
+         */
+        public SwaggerRequestResponseValidator build() {
+            return new SwaggerRequestResponseValidator(swaggerJsonUrl, basePathOverride, messages);
         }
     }
 }

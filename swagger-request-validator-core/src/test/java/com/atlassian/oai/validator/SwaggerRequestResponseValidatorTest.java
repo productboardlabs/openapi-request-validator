@@ -13,8 +13,7 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadResponse;
 
 public class SwaggerRequestResponseValidatorTest {
 
-    private SwaggerRequestResponseValidator classUnderTest =
-            new SwaggerRequestResponseValidator("/oai/api-users.json", null);
+    private SwaggerRequestResponseValidator classUnderTest = SwaggerRequestResponseValidator.createFor("/oai/api-users.json").build();
 
     @Test(expected = NullPointerException.class)
     public void validate_withNullRequest_throwsNPE() {

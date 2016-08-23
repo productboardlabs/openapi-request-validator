@@ -21,7 +21,10 @@ The validator returns a `com.atlassian.oai.validator.report.ValidationReport` wh
 occurred during the validation. These can be used to generate a report for users etc.
 
 ```
-final SwaggerRequestResponseValidator validator = new SwaggerRequestResponseValidator(swaggerJsonUrl, basePathOverride);
+final SwaggerRequestResponseValidator validator = SwaggerRequestResponseValidator
+        .createFor(swaggerJsonUrl)
+        .withBasePathOverride(basePathOverride)
+        .build;
 final ValidationReport report = validator.validate(request, response);
 
 if (report.hasErrors()) {

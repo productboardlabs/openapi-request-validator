@@ -53,7 +53,7 @@ public class SwaggerValidationListener implements RequestListener {
     private ValidationReport report = ValidationReport.empty();
 
     public SwaggerValidationListener(final String swaggerJsonUrl) {
-        this.validator = new SwaggerRequestResponseValidator(swaggerJsonUrl);
+        this.validator = SwaggerRequestResponseValidator.createFor(swaggerJsonUrl).build();
     }
 
     @Override
