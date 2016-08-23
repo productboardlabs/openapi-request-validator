@@ -233,7 +233,7 @@ public class SwaggerRequestResponseValidator {
     public static class Builder {
         private String swaggerJsonUrl;
         private String basePathOverride;
-        private LevelResolver levelResolver = new LevelResolver();
+        private LevelResolver levelResolver = LevelResolver.defaultResolver();
 
         /**
          * The location of the Swagger JSON specification to use in the validator.

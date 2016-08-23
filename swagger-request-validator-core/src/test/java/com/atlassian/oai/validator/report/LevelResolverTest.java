@@ -20,7 +20,11 @@ public class LevelResolverTest {
         levels.put("a.b.c", ValidationReport.Level.WARN);
         levels.put("aa.bb", ValidationReport.Level.INFO);
 
-        classUnderTest = new LevelResolver(levels, ValidationReport.Level.IGNORE);
+        classUnderTest = LevelResolver.create()
+                .withLoader(null)
+                .withLevels(levels)
+                .withDefaultLevel(ValidationReport.Level.IGNORE)
+                .build();
     }
 
     @Test
@@ -40,13 +44,16 @@ public class LevelResolverTest {
 
     @Test
     public void getLevel_withNoMappings_shouldReturnDefaultLevel() {
-        final LevelResolver resolver = new LevelResolver(ValidationReport.Level.IGNORE);
+        final LevelResolver resolver = LevelResolver.create()
+                .withLoader(null)
+                .withDefaultLevel(ValidationReport.Level.IGNORE)
+                .build();
         assertThat(resolver.getLevel("a.b.c"), is(ValidationReport.Level.IGNORE));
     }
 
     @Test
     public void getLevel_returnsError_ifNoOtherConfiguration() {
-        final LevelResolver resolver = new LevelResolver();
+        final LevelResolver resolver = LevelResolver.create().withLoader(null).build();
         assertThat(resolver.getLevel("a.b.c"), is(ValidationReport.Level.ERROR));
     }
 

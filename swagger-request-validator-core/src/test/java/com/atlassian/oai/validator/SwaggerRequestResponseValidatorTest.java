@@ -217,8 +217,12 @@ public class SwaggerRequestResponseValidatorTest {
         final SwaggerRequestResponseValidator classUnderTest =
                 SwaggerRequestResponseValidator
                         .createFor("/oai/api-users.json")
-                        .withLevelResolver(new LevelResolver(ValidationReport.Level.IGNORE))
-                        .build();
+                        .withLevelResolver(LevelResolver
+                                .create()
+                                .withLoader(null)
+                                .withDefaultLevel(ValidationReport.Level.IGNORE)
+                                .build()
+                        ).build();
 
         final Request request = SimpleRequest.Builder.get("/users/1").build();
         final Response response = SimpleResponse.Builder.ok().build();

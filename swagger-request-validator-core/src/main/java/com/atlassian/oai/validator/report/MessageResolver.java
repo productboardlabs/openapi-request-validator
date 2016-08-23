@@ -24,17 +24,17 @@ public class MessageResolver {
     /**
      * Create a new instance with the default {@link LevelResolver} (all messages will be emitted at the ERROR level).
      *
-     * @see LevelResolver#LevelResolver()
+     * @see LevelResolver#defaultResolver()
      */
     public MessageResolver() {
-        this(new LevelResolver());
+        this(LevelResolver.defaultResolver());
     }
 
     /**
      * Create a new instance with the provided {{@link LevelResolver}}.
      */
     public MessageResolver(final LevelResolver levelResolver) {
-        this.levelResolver = levelResolver == null ? new LevelResolver() : levelResolver;
+        this.levelResolver = levelResolver == null ? LevelResolver.defaultResolver() : levelResolver;
     }
 
     /**

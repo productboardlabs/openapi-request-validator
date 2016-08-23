@@ -23,6 +23,8 @@ import static java.lang.Math.max;
  *     getLevel("validation.request.parameter.query.missing") == ERROR
  * </pre>
  *
+ * @see #create()
+ * @see #defaultResolver()
  */
 public class LevelResolver {
 
@@ -30,19 +32,24 @@ public class LevelResolver {
     private final Map<String, ValidationReport.Level> levels = new HashMap<>();
 
     /**
-     * Create a new instance with no key mappings and a default level of {@link ValidationReport.Level#ERROR}.
+     * Create a new {@link LevelResolver} instance using a builder to obtain configuration.
+     *
+     * @return a new builder to use for creating {@link LevelResolver} instances.
      */
-    public LevelResolver() {
-        this(ValidationReport.Level.ERROR);
+    public static Builder create() {
+        return new Builder();
     }
 
     /**
-     * Create a new instance with the given default level applied to all messages.
+     * Create a new default {@link LevelResolver}.
+     * <p>
+     * This resolver will load levels using the {@link LevelLoader#DEFAULT_LOADER_CHAIN} and apply a default
+     * level of {@link ValidationReport.Level#ERROR}.
      *
-     * @param defaultLevel The level to apply to all messages.
+     * @return a new {@link LevelResolver} with default configuration.
      */
-    public LevelResolver(final ValidationReport.Level defaultLevel) {
-        this(null, defaultLevel);
+    public static LevelResolver defaultResolver() {
+        return new Builder().build();
     }
 
     /**
@@ -52,8 +59,9 @@ public class LevelResolver {
      *               If <code>null</code>, no mappings will be applied.
      * @param defaultLevel The default level to apply to message keys for which no mapping is provided.
      *                     If <code>null</code> will default to {@link ValidationReport.Level#ERROR}.
+     *
      */
-    public LevelResolver(@Nullable final Map<String, ValidationReport.Level> levels,
+    private LevelResolver(@Nullable final Map<String, ValidationReport.Level> levels,
                          @Nullable final ValidationReport.Level defaultLevel) {
         if (levels != null) {
             this.levels.putAll(levels);
@@ -95,6 +103,93 @@ public class LevelResolver {
         final ValidationReport.Level result = getLevel(parentKey);
         levels.put(key, result);
         return result;
+    }
+
+    /**
+     * A builder for creating {@link LevelResolver} instances.
+     */
+    public static class Builder {
+
+        private ValidationReport.Level defaultLevel;
+        private Map<String, ValidationReport.Level> levels = new HashMap<>();
+        private LevelLoader loader = LevelLoader.DEFAULT_LOADER_CHAIN;
+
+        /**
+         * Set or override the {@link LevelLoader} strategy used to load message levels.
+         * <p>
+         * By default, the {@link LevelLoader#DEFAULT_LOADER_CHAIN} is used. If this needs to be overridden,
+         * set it to <code>null</code> here to avoid any loading, or replace it with your own implementation.
+         *
+         * @param loader The loader to use to load initial message levels.
+         *
+         * @return this builder instance.
+         */
+        public Builder withLoader(final LevelLoader loader) {
+            this.loader = loader;
+            return this;
+        }
+
+        /**
+         * Set the default level to use for any message which does not have an explicit mapping defined.
+         * <p>
+         * This will override any default level set by the loader configured in {@link #withLoader(LevelLoader)}.
+         *
+         * @param defaultLevel the default level to use for any message which does not have an explicit mapping defined
+         *
+         * @return this builder instance.
+         */
+        public Builder withDefaultLevel(final ValidationReport.Level defaultLevel) {
+            this.defaultLevel = defaultLevel;
+            return this;
+        }
+
+        /**
+         * Set mappings of message key -> level to use in the {@link LevelResolver}.
+         * <p>
+         * Mappings set here will override any loaded from the the loader configured in {@link #withLoader(LevelLoader)}.
+         *
+         * @param levels mappings of message key -> level to use in the {@link LevelResolver}.
+         *
+         * @return this builder instance.
+         */
+        public Builder withLevels(final Map<String, ValidationReport.Level> levels) {
+            this.levels.putAll(levels);
+            return this;
+        }
+
+        /**
+         * Add a mapping of message key -> level to use in the {@link LevelResolver}.
+         * <p>
+         * Mappings set here will override any loaded from the the loader configured in {@link #withLoader(LevelLoader)}.
+         *
+         * @param key The message key
+         * @param level The level to associate with the key
+         *
+         * @return this builder instance.
+         */
+        public Builder withLevel(final String key, final ValidationReport.Level level) {
+            this.levels.put(key, level);
+            return this;
+        }
+
+        /**
+         * Build and return a new {@link LevelResolver} instance created from the configuration collected
+         * in this builder.
+         *
+         * @return The new {@link LevelResolver} instance.
+         */
+        public LevelResolver build() {
+            final Map<String, ValidationReport.Level> levels = new HashMap<>();
+            ValidationReport.Level defaultLevel = null;
+            if (loader != null) {
+                levels.putAll(loader.loadLevels());
+                defaultLevel = loader.defaultLevel().orElse(this.defaultLevel);
+            }
+            levels.putAll(this.levels);
+            defaultLevel = this.defaultLevel == null ? defaultLevel : this.defaultLevel;
+
+            return new LevelResolver(levels, defaultLevel);
+        }
     }
 
 }
