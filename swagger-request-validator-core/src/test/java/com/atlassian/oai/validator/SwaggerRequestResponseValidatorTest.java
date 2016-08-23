@@ -4,6 +4,8 @@ import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.model.SimpleResponse;
+import com.atlassian.oai.validator.report.LevelResolver;
+import com.atlassian.oai.validator.report.ValidationReport;
 import org.junit.Test;
 
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
@@ -206,6 +208,20 @@ public class SwaggerRequestResponseValidatorTest {
     public void validate_withResponseContainingUnknownStatusCode_shouldPass_whenDefaultResponseDefined() {
         final Request request = SimpleRequest.Builder.get("/users").build();
         final Response response = SimpleResponse.Builder.status(666).withBody(loadResponse("error-valid")).build();
+
+        assertPass(classUnderTest.validate(request, response));
+    }
+
+    @Test
+    public void validate_withFailures_shoudPass_whenLevelResolverIgnoresFailures() {
+        final SwaggerRequestResponseValidator classUnderTest =
+                SwaggerRequestResponseValidator
+                        .createFor("/oai/api-users.json")
+                        .withLevelResolver(new LevelResolver(ValidationReport.Level.IGNORE))
+                        .build();
+
+        final Request request = SimpleRequest.Builder.get("/users/1").build();
+        final Response response = SimpleResponse.Builder.ok().build();
 
         assertPass(classUnderTest.validate(request, response));
     }

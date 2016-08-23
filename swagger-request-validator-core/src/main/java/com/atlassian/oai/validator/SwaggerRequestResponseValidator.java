@@ -6,6 +6,7 @@ import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.NormalisedPath;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
+import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.MutableValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport;
@@ -232,7 +233,7 @@ public class SwaggerRequestResponseValidator {
     public static class Builder {
         private String swaggerJsonUrl;
         private String basePathOverride;
-        private MessageResolver messages = new MessageResolver();
+        private LevelResolver levelResolver = new LevelResolver();
 
         /**
          * The location of the Swagger JSON specification to use in the validator.
@@ -275,19 +276,19 @@ public class SwaggerRequestResponseValidator {
         }
 
         /**
-         * The message resolver to use for resolving validation messages.
+         * The resolver to use for resolving the level of validation messages (ERROR, WARN, IGNORE etc.).
          * <p>
          * This can be used to get fine-grained control over validation behaviour
          * (e.g. what level to emit message at, which validations to ignore etc.).
          * <p>
          * If not provided, a default resolver will be used that resolves all message to ERROR.
          *
-         * @param messages The message resolver to use for resolving validation messages.
+         * @param levelResolver The resolver to use for resolving validation message levels.
          *
          * @return this builder instance.
          */
-        public Builder withMessages(final MessageResolver messages) {
-            this.messages = messages;
+        public Builder withLevelResolver(final LevelResolver levelResolver) {
+            this.levelResolver = levelResolver;
             return this;
         }
 
@@ -297,7 +298,7 @@ public class SwaggerRequestResponseValidator {
          * @return The configured {@link SwaggerRequestResponseValidator} instance.
          */
         public SwaggerRequestResponseValidator build() {
-            return new SwaggerRequestResponseValidator(swaggerJsonUrl, basePathOverride, messages);
+            return new SwaggerRequestResponseValidator(swaggerJsonUrl, basePathOverride, new MessageResolver(levelResolver));
         }
     }
 }
