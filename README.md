@@ -1,5 +1,7 @@
 # Swagger Request Validator #
 
+![build-status](https://bitbucket-badges.atlassian.io/badge/atlassian/swagger-request-validator.svg)
+
 A Java library for validating HTTP request/responses against a [Swagger/OpenAPI](https://openapis.org/) specification.
 
 Designed to be used independently of any HTTP library or framework, the library can be used to validate
