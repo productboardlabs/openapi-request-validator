@@ -113,7 +113,7 @@ public class SchemaValidator {
             }
 
             final JsonNode content = Json.mapper().readTree(normalisedValue);
-            processingReport = (ListProcessingReport)jsonSchema.validate(content);
+            processingReport = (ListProcessingReport)jsonSchema.validate(content, true);
         }
         catch (JsonParseException e) {
             validationReport.add(messages.get("validation.schema.invalidJson", e.getMessage()));
@@ -125,8 +125,11 @@ public class SchemaValidator {
 
         if((processingReport != null) && !processingReport.isSuccess()) {
             processingReport.forEach(pm -> {
-                final String validationKeyword = pm.asJson().get("keyword").textValue();
-                validationReport.add(messages.create("validation.schema." + validationKeyword, capitalise(pm.getMessage())));
+                final JsonNode processingMessage = pm.asJson();
+                final String validationKeyword = processingMessage.get("keyword").textValue();
+                final String pointer = processingMessage.get("instance").get("pointer").textValue();
+                final String message = (pointer.isEmpty() ? "" : "[Path '" + pointer + "'] ") + capitalise(pm.getMessage());
+                validationReport.add(messages.create("validation.schema." + validationKeyword, message));
             });
         }
         return validationReport;
