@@ -57,4 +57,17 @@ public class LevelResolverTest {
         assertThat(resolver.getLevel("a.b.c"), is(ValidationReport.Level.ERROR));
     }
 
+    @Test
+    public void builder_appliesLoadedLevels_afterProgrammaticLevels() {
+        final LevelResolver resolver = LevelResolver.create()
+                // The swagger-validator.properties file will be loaded and override any programmatic levels
+                .withLoader(LevelLoader.classpathLoader())
+                .withLevel("validation.test.warn", ValidationReport.Level.IGNORE)
+                .withDefaultLevel(ValidationReport.Level.IGNORE)
+                .build();
+
+        assertThat(resolver.getLevel("validation.test.warn"), is(ValidationReport.Level.WARN));
+        assertThat(resolver.getLevel("foo"), is(ValidationReport.Level.ERROR));
+    }
+
 }

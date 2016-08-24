@@ -112,12 +112,13 @@ public class LevelResolver {
 
         private ValidationReport.Level defaultLevel;
         private Map<String, ValidationReport.Level> levels = new HashMap<>();
-        private LevelLoader loader = LevelLoader.DEFAULT_LOADER_CHAIN;
+        private LevelLoader loader;
+        private boolean useDefaultLoader = true;
 
         /**
          * Set or override the {@link LevelLoader} strategy used to load message levels.
          * <p>
-         * By default, the {@link LevelLoader#DEFAULT_LOADER_CHAIN} is used. If this needs to be overridden,
+         * By default, the {@link LevelLoader#defaultLoaderChain()} is used. If this needs to be overridden,
          * set it to <code>null</code> here to avoid any loading, or replace it with your own implementation.
          *
          * @param loader The loader to use to load initial message levels.
@@ -126,13 +127,15 @@ public class LevelResolver {
          */
         public Builder withLoader(final LevelLoader loader) {
             this.loader = loader;
+            this.useDefaultLoader = false;
             return this;
         }
 
         /**
          * Set the default level to use for any message which does not have an explicit mapping defined.
          * <p>
-         * This will override any default level set by the loader configured in {@link #withLoader(LevelLoader)}.
+         * Note that any default level set by the loader configured in {@link #withLoader(LevelLoader)}
+         * will override this value.
          *
          * @param defaultLevel the default level to use for any message which does not have an explicit mapping defined
          *
@@ -146,7 +149,8 @@ public class LevelResolver {
         /**
          * Set mappings of message key -> level to use in the {@link LevelResolver}.
          * <p>
-         * Mappings set here will override any loaded from the the loader configured in {@link #withLoader(LevelLoader)}.
+         * Note that any mappings loaded from the the loader configured in {@link #withLoader(LevelLoader)}
+         * will override those set with this method.
          *
          * @param levels mappings of message key -> level to use in the {@link LevelResolver}.
          *
@@ -160,7 +164,8 @@ public class LevelResolver {
         /**
          * Add a mapping of message key -> level to use in the {@link LevelResolver}.
          * <p>
-         * Mappings set here will override any loaded from the the loader configured in {@link #withLoader(LevelLoader)}.
+         * Note that any mappings loaded from the the loader configured in {@link #withLoader(LevelLoader)}
+         * will override those set with this method.
          *
          * @param key The message key
          * @param level The level to associate with the key
@@ -180,13 +185,15 @@ public class LevelResolver {
          */
         public LevelResolver build() {
             final Map<String, ValidationReport.Level> levels = new HashMap<>();
-            ValidationReport.Level defaultLevel = null;
+            if (useDefaultLoader) {
+                this.loader = LevelLoader.defaultLoaderChain();
+            }
+            ValidationReport.Level defaultLevel = this.defaultLevel;
+            levels.putAll(this.levels);
             if (loader != null) {
                 levels.putAll(loader.loadLevels());
                 defaultLevel = loader.defaultLevel().orElse(this.defaultLevel);
             }
-            levels.putAll(this.levels);
-            defaultLevel = this.defaultLevel == null ? defaultLevel : this.defaultLevel;
 
             return new LevelResolver(levels, defaultLevel);
         }

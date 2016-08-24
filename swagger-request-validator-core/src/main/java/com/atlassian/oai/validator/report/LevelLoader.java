@@ -26,17 +26,33 @@ public interface LevelLoader {
      * </pre>
      * To set the default level, use the property <code>swagger.defaultLevel</code>
      */
-    LevelLoader SYSTEM_PROPERTY_LOADER = new PropertiesLoader(System.getProperties(), "swagger.");
+    static LevelLoader systemPropertyLoader() {
+        return new PropertiesLoader(System.getProperties(), "swagger.");
+    }
 
     /**
      * Loads levels from a properties file ".swagger-validator" in the user's current directory.
+     * <p>
+     * Properties should be of the form <code>{key}={LEVEL}</code>, e.g.
+     * <code>validation.response.body.missing=WARN</code>.
+     * <p>
+     * The default level can be set with the property <code>defaultLevel</code>.
      */
-    LevelLoader CURRENT_DIRECTORY_LOADER = new PropertiesLoader(new File(System.getProperty("user.dir"), ".swagger-validator"), null);
+    static LevelLoader currentDirectoryLoader() {
+        return new PropertiesLoader(new File(System.getProperty("user.dir"), ".swagger-validator"), null);
+    }
 
     /**
-     * Loads levels from a properties file "/swagger-validator.properties" in the project's classloader.
+     * Loads levels from a properties file "/swagger-validator.properties" in the project's classpath.
+     * <p>
+     * Properties should be of the form <code>{key}={LEVEL}</code>, e.g.
+     * <code>validation.response.body.missing=WARN</code>.
+     * <p>
+     * The default level can be set with the property <code>defaultLevel</code>.
      */
-    LevelLoader PROJECT_RESOURCES_LOADER = new PropertiesLoader(LevelLoader.class.getClassLoader().getResource("swagger-validator.properties"), null);
+    static LevelLoader classpathLoader() {
+        return new PropertiesLoader(LevelLoader.class.getClassLoader().getResource("swagger-validator.properties"), null);
+    }
 
     /**
      * The default loader chain used when no other loader is specified.
@@ -47,11 +63,13 @@ public interface LevelLoader {
      *     <li>From a properties file ".swagger-validator" in the user's current directory</li>
      *     <li>From system properties of the form "swagger.{key}={LEVEL}"</li>
      * </ol>
+     * @see #classpathLoader()
+     * @see #currentDirectoryLoader()
+     * @see #systemPropertyLoader()
      */
-    LevelLoader DEFAULT_LOADER_CHAIN = new ChainingLoader(
-            LevelLoader.PROJECT_RESOURCES_LOADER,
-            LevelLoader.CURRENT_DIRECTORY_LOADER,
-            LevelLoader.SYSTEM_PROPERTY_LOADER);
+    static LevelLoader defaultLoaderChain() {
+        return new ChainingLoader(classpathLoader(), currentDirectoryLoader(), systemPropertyLoader());
+    }
 
     /**
      * Load message levels from this loader.
@@ -99,6 +117,7 @@ public interface LevelLoader {
             this.props = new Properties();
             if (!source.exists()) {
                 log.debug("Levels file {} does not exist. Skipping.", source);
+                return;
             }
             try {
                 props.load(new FileReader(source));
@@ -129,15 +148,15 @@ public interface LevelLoader {
         public Map<String, ValidationReport.Level> loadLevels() {
             final Map<String, ValidationReport.Level> result = new HashMap<>();
             props.stringPropertyNames().forEach(n -> {
-                if (!n.startsWith(prefix + VALIDATION_KEY_PREFIX)) {
+                if (!n.startsWith(toPropertyName(VALIDATION_KEY_PREFIX))) {
                     return;
                 }
-                final String key = n.replace(prefix, "");
-                final String value = System.getProperty(n);
+                final String key = fromPropertyName(n);
+                final String value = props.getProperty(n).toUpperCase();
                 try {
                     result.put(key, ValidationReport.Level.valueOf(value));
                 } catch (Exception e) {
-                    log.warn("Unable to load level {} from system property with value '{}'.", key, value);
+                    log.warn("Unable to load level {} from property with value '{}'.", key, value);
                 }
             });
             return result;
@@ -145,16 +164,30 @@ public interface LevelLoader {
 
         @Override
         public Optional<ValidationReport.Level> defaultLevel() {
-            if (!props.containsKey(prefix + DEFAULT_LEVEL_KEY)) {
+            if (!props.containsKey(toPropertyName(DEFAULT_LEVEL_KEY))) {
                 return Optional.empty();
             }
-            final String value = props.getProperty(prefix + DEFAULT_LEVEL_KEY);
+            final String value = props.getProperty(toPropertyName(DEFAULT_LEVEL_KEY));
             try {
                 return Optional.of(ValidationReport.Level.valueOf(value.toUpperCase()));
             } catch (Exception e) {
-                log.warn("Unable to load the default level from system property '{}'.", value);
+                log.warn("Unable to load the default level from property '{}'.", value);
                 return Optional.empty();
             }
+        }
+
+        private String toPropertyName(final String keyName) {
+            if (prefix == null || prefix.isEmpty()) {
+                return keyName;
+            }
+            return prefix + keyName;
+        }
+
+        private String fromPropertyName(final String propertyName) {
+            if (prefix == null || prefix.isEmpty()) {
+                return propertyName;
+            }
+            return propertyName.replace(prefix, "");
         }
     }
 
