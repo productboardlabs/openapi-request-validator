@@ -40,8 +40,7 @@ public class MessageResolver {
     /**
      * Get the message with the given key.
      * <p>
-     * If no message is found for the key, or if the configured {@link LevelResolver} returns a level of
-     * {@link ValidationReport.Level#IGNORE} for the key, will return <code>null</code>.
+     * If no message is found for the key will return <code>null</code>.
      *
      * @param key The key of the message to retrieve.
      * @param args Arguments to use when resolving the message String.
