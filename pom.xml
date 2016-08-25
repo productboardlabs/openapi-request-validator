@@ -56,7 +56,7 @@
         <hamcrest.version>1.3</hamcrest.version>
         <slf4j.version>1.7.20</slf4j.version>
         <logback.version>1.0.13</logback.version>
-        <rest-assured.version>2.9.0</rest-assured.version>
+        <rest-assured.version>3.0.0</rest-assured.version>
         <license-maven-plugin.version>1.9</license-maven-plugin.version>
         <wiremock.version>2.1.7</wiremock.version>
         <guava.version>18.0</guava.version>
@@ -138,7 +138,7 @@
                 <version>${logback.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.jayway.restassured</groupId>
+                <groupId>io.rest-assured</groupId>
                 <artifactId>rest-assured</artifactId>
                 <version>${rest-assured.version}</version>
             </dependency>

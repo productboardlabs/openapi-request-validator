@@ -11,7 +11,7 @@ import com.atlassian.oai.validator.pact.ValidatedPactProviderRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-import static com.jayway.restassured.RestAssured.get;
+import static io.restassured.RestAssured.get;
 
 /**
  * An example Pact Consumer test that shows use of the {@link ValidatedPactProviderRule} to apply Swagger/OAI
