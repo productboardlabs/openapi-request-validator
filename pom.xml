@@ -66,6 +66,7 @@
         <module>swagger-request-validator-core</module>
         <module>swagger-request-validator-pact</module>
         <module>swagger-request-validator-wiremock</module>
+        <module>swagger-request-validator-restassured</module>
         <module>swagger-request-validator-examples</module>
     </modules>
 
@@ -84,6 +85,11 @@
             <dependency>
                 <groupId>com.atlassian.oai</groupId>
                 <artifactId>swagger-request-validator-wiremock</artifactId>
+                <version>${version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.atlassian.oai</groupId>
+                <artifactId>swagger-request-validator-restassured</artifactId>
                 <version>${version}</version>
             </dependency>
 
