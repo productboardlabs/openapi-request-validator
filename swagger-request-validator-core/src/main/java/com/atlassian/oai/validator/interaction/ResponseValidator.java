@@ -60,7 +60,7 @@ public class ResponseValidator {
             return validationReport;
         }
 
-        if (!response.getBody().isPresent()) {
+        if (!response.getBody().isPresent() || response.getBody().get().isEmpty()) {
             return validationReport.add(
                     messages.get("validation.response.body.missing",
                             apiOperation.getMethod(), apiOperation.getPathString().original())

@@ -18,9 +18,17 @@ public class SchemaValidatorTest {
     private SchemaValidator classUnderTest =
             new SchemaValidator(new SwaggerParser().read("/oai/api-users.json"), new MessageResolver());
 
-    @Test(expected = NullPointerException.class)
-    public void validate_withNullValue_shouldThrowNPE() {
+    @Test(expected = IllegalArgumentException.class)
+    public void validate_withNullValue_shouldThrowException() {
         final String value = null;
+        final Model schema = new ModelImpl();
+
+        classUnderTest.validate(value, schema);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void validate_withEmptyValue_shouldThrowException() {
+        final String value = "";
         final Model schema = new ModelImpl();
 
         classUnderTest.validate(value, schema);

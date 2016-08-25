@@ -21,6 +21,7 @@ import javax.annotation.Nullable;
 
 import static com.atlassian.oai.validator.util.StringUtils.capitalise;
 import static com.atlassian.oai.validator.util.StringUtils.quote;
+import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -85,7 +86,7 @@ public class SchemaValidator {
 
     @Nonnull
     private ValidationReport doValidate(@Nonnull final String value, @Nonnull final Object schema) {
-        requireNonNull(value, "A value is required");
+        requireNonEmpty(value, "A value is required");
         requireNonNull(schema, "A schema is required");
 
         final MutableValidationReport validationReport = new MutableValidationReport();

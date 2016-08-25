@@ -181,6 +181,14 @@ public class SwaggerRequestResponseValidatorTest {
     }
 
     @Test
+    public void validate_withRequiredResponseBodyEmpty_shouldFail() {
+        final Request request = SimpleRequest.Builder.get("/users/1").build();
+        final Response response = SimpleResponse.Builder.ok().withBody("").build();
+
+        assertFail(classUnderTest.validate(request, response), "validation.response.body.missing");
+    }
+
+    @Test
     public void validate_withResponseContainingMalformedJson_shouldFail() {
         final Request request = SimpleRequest.Builder.get("/users/1").build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-invalid-malformedjson")).build();
