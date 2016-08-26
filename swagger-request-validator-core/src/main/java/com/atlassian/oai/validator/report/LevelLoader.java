@@ -74,7 +74,7 @@ public interface LevelLoader {
     /**
      * Load message levels from this loader.
      *
-     * @return The map of key -> level that should be used to control message levels.
+     * @return The map of key -&gt; level that should be used to control message levels.
      */
     Map<String, ValidationReport.Level> loadLevels();
 

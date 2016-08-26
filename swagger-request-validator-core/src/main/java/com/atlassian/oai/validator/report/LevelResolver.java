@@ -43,7 +43,7 @@ public class LevelResolver {
     /**
      * Create a new default {@link LevelResolver}.
      * <p>
-     * This resolver will load levels using the {@link LevelLoader#DEFAULT_LOADER_CHAIN} and apply a default
+     * This resolver will load levels using the {@link LevelLoader#defaultLoaderChain()} and apply a default
      * level of {@link ValidationReport.Level#ERROR}.
      *
      * @return a new {@link LevelResolver} with default configuration.
@@ -147,12 +147,12 @@ public class LevelResolver {
         }
 
         /**
-         * Set mappings of message key -> level to use in the {@link LevelResolver}.
+         * Set mappings of message key -&gt; level to use in the {@link LevelResolver}.
          * <p>
          * Note that any mappings loaded from the the loader configured in {@link #withLoader(LevelLoader)}
          * will override those set with this method.
          *
-         * @param levels mappings of message key -> level to use in the {@link LevelResolver}.
+         * @param levels mappings of message key -&gt; level to use in the {@link LevelResolver}.
          *
          * @return this builder instance.
          */
@@ -162,7 +162,7 @@ public class LevelResolver {
         }
 
         /**
-         * Add a mapping of message key -> level to use in the {@link LevelResolver}.
+         * Add a mapping of message key -&gt; level to use in the {@link LevelResolver}.
          * <p>
          * Note that any mappings loaded from the the loader configured in {@link #withLoader(LevelLoader)}
          * will override those set with this method.
