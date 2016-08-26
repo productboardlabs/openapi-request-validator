@@ -56,6 +56,13 @@ Adapters for validating [WireMock](http://wiremock.org/) HTTP mocks against a Sw
 Includes a drop-in replacement for the `WireMockRule` that adds validation to mocked interactions, giving you 
 confidence that your mocks reflect reality. 
 
+###swagger-request-validator-restassured
+
+Adapters for validating given-when-then interactions from the [REST Assured](http://rest-assured.io/) testing library 
+against a Swagger/OAI specification.
+
+Useful for e.g. ensuring your service implementation matches its API specification.
+
 ###swagger-request-validator-examples
 
 Working code samples that demonstrate the features of the `swagger-request-validator` and its various adapters.
