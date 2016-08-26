@@ -13,30 +13,52 @@ in Pact tests etc.)
 * Standalone - no dependencies on HTTP libraries or frameworks
 * Adapters for commonly used HTTP libraries and testing frameworks
 * JSON Schema validation support - including schema references
+* Fine-grained control over which validations are applied
 
 ## Usage ##
 
 See the [examples module](https://bitbucket.org/atlassian/swagger-request-validator/src/master/swagger-request-validator-examples/?at=master)
 for examples on how the library is used.
 
+Usage details for specific modules can be found in the READMEs for those modules.
+
+```
+<dependency>
+    <groupId>com.atlassian.oai</groupId>
+    <artifactId>swagger-request-validator-core</artifactId>
+    <version>${swagger-request-validator.version}</version>
+</dependency>
+```
+
 ## Project structure ##
 
-See individual module READMEs for more information.
+See individual module READMEs for more information, including how to use use each module.
 
-**swagger-request-validator-core**
+###swagger-request-validator-core
 
 The core validator logic.
 
 Provides a standalone validator and uses an implementation-agnostic abstraction of
 HTTP request/responses that can be adapted to any 3rd party implementation.
 
-**swagger-request-validator-pact**
+###swagger-request-validator-pact
 
-Adapters for validating Pact request/response expectations with the Swagger validator.
+Adapters for validating [Pact](http://docs.pact.io/) request/response expectations with the Swagger validator, 
+shortening the feedback loop when writing Consumer tests.
 
-Includes a JUnit rule that adds Swagger/OAI validation to the Pact-JVM consumer test execution.
+Includes a JUnit rule that adds Swagger/OAI validation to the [Pact-JVM](https://github.com/DiUS/pact-jvm) consumer 
+test execution.
 
-See: https://github.com/DiUS/pact-jvm
+###swagger-request-validator-wiremock
+
+Adapters for validating [WireMock](http://wiremock.org/) HTTP mocks against a Swagger/OAI specification.
+
+Includes a drop-in replacement for the `WireMockRule` that adds validation to mocked interactions, giving you 
+confidence that your mocks reflect reality. 
+
+###swagger-request-validator-examples
+
+Working code samples that demonstrate the features of the `swagger-request-validator` and its various adapters.
 
 ## Building and testing ##
 
