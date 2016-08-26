@@ -16,13 +16,17 @@ public interface ValidationReport {
      * The validation level
      */
     enum Level {
-        ERROR
+        ERROR,
+        WARN,
+        INFO,
+        IGNORE
     }
 
     /**
      * A single message in the validation report
      */
     interface Message {
+        String getKey();
         String getMessage();
         Level getLevel();
     }
@@ -55,13 +59,17 @@ public interface ValidationReport {
     }
 
     /**
-     * Return an unmodifiable report that contains a single error message.
+     * Return an unmodifiable report that contains a single message.
      *
-     * @param message The error message to add to the report
+     * @param message The message to add to the report
      *
-     * @return An unmodifiable validation report with a single error message
+     * @return An unmodifiable validation report with a single message
      */
-    static ValidationReport singleton(final String message) {
+    static ValidationReport singleton(final Message message) {
+        if (message == null || message.getLevel() == Level.IGNORE) {
+            return empty();
+        }
+
         return new ValidationReport() {
 
             @Override
@@ -72,7 +80,7 @@ public interface ValidationReport {
             @Nonnull
             @Override
             public List<Message> getMessages() {
-                return Collections.singletonList(new ImmutableMessage(Level.ERROR, message));
+                return Collections.singletonList(message);
             }
 
             @Override

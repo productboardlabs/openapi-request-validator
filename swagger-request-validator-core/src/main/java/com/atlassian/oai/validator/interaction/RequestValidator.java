@@ -4,6 +4,7 @@ import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.NormalisedPath;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.parameter.ParameterValidators;
+import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.SchemaValidator;
 import io.swagger.models.parameters.BodyParameter;
@@ -13,7 +14,6 @@ import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Optional;
 
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -23,15 +23,18 @@ public class RequestValidator {
 
     private final SchemaValidator schemaValidator;
     private final ParameterValidators parameterValidators;
+    private final MessageResolver messages;
 
     /**
      * Construct a new request validator with the given schema validator.
      *
      * @param schemaValidator The schema validator to use when validating request bodies
+     * @param messages The message resolver to use
      */
-    public RequestValidator(@Nonnull final SchemaValidator schemaValidator) {
+    public RequestValidator(@Nonnull final SchemaValidator schemaValidator, @Nonnull final MessageResolver messages) {
         this.schemaValidator = requireNonNull(schemaValidator, "A schema validator is required");
-        this.parameterValidators = new ParameterValidators(schemaValidator);
+        this.parameterValidators = new ParameterValidators(schemaValidator, messages);
+        this.messages = requireNonNull(messages, "A message resolver is required");
     }
 
     /**
@@ -64,8 +67,8 @@ public class RequestValidator {
 
         if (requestBody.isPresent() && !requestBody.get().isEmpty() && !bodyParameter.isPresent()) {
             return ValidationReport.singleton(
-                    format("No request body is expected for %s on path '%s'",
-                    apiOperation.getMethod(), apiOperation.getPathString().original())
+                    messages.get("validation.request.body.unexpected",
+                        apiOperation.getMethod(), apiOperation.getPathString().original())
             );
         }
 
@@ -76,8 +79,8 @@ public class RequestValidator {
         if (!requestBody.isPresent() || requestBody.get().isEmpty()) {
             if (bodyParameter.get().getRequired()) {
                 return ValidationReport.singleton(
-                        format("%s on path '%s' requires a request body. None found.",
-                        apiOperation.getMethod(), apiOperation.getPathString().original())
+                        messages.get("validation.request.body.missing",
+                            apiOperation.getMethod(), apiOperation.getPathString().original())
                 );
             }
             return ValidationReport.empty();
@@ -131,7 +134,7 @@ public class RequestValidator {
 
         if (queryParameterValues.isEmpty() && queryParameter.getRequired()) {
             return ValidationReport.singleton(
-                    format("Query parameter '%s' is required on path '%s' but not found in request.",
+                    messages.get("validation.request.parameter.query.missing",
                             queryParameter.getName(), apiOperation.getPathString().original())
             );
         }

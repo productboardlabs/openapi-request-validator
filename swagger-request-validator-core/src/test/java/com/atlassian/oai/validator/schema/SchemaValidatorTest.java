@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.schema;
 
+import com.atlassian.oai.validator.report.MessageResolver;
 import io.swagger.models.Model;
 import io.swagger.models.ModelImpl;
 import io.swagger.models.RefModel;
@@ -15,7 +16,7 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 public class SchemaValidatorTest {
 
     private SchemaValidator classUnderTest =
-            new SchemaValidator(new SwaggerParser().read("/oai/api-users.json"));
+            new SchemaValidator(new SwaggerParser().read("/oai/api-users.json"), new MessageResolver());
 
     @Test(expected = NullPointerException.class)
     public void validate_withNullValue_shouldThrowNPE() {
@@ -54,7 +55,7 @@ public class SchemaValidatorTest {
         final String value = "1.0";
         final Property schema = new IntegerProperty();
 
-        assertFail(classUnderTest.validate(value, schema));
+        assertFail(classUnderTest.validate(value, schema), "validation.schema.type");
     }
 
     @Test
@@ -86,7 +87,7 @@ public class SchemaValidatorTest {
         final String value = "{\"foos\":\"bar\"}";
         final Model schema = new ModelImpl().property("foo", new StringProperty()).required("foo");
 
-        assertFail(classUnderTest.validate(value, schema));
+        assertFail(classUnderTest.validate(value, schema), "validation.schema.required");
     }
 
     @Test
@@ -102,7 +103,7 @@ public class SchemaValidatorTest {
         final String value = "{\"title\":\"bar\"}";
         final Model schema = new RefModel("#/definitions/Error");
 
-        assertFail(classUnderTest.validate(value, schema));
+        assertFail(classUnderTest.validate(value, schema), "validation.schema.required");
     }
 
 }

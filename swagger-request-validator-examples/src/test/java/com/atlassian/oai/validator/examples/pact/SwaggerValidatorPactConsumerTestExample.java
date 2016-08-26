@@ -52,14 +52,35 @@ public class SwaggerValidatorPactConsumerTestExample {
     }
 
     @Pact(provider = PROVIDER_ID, consumer = CONSUMER_ID)
-    public PactFragment getInvalidPet(PactDslWithProvider builder) {
+    public PactFragment getPetWithIncompleteResponse(PactDslWithProvider builder) {
         return builder
                 .uponReceiving("GET invalid pet")
                 .method("GET")
                 .path("/pet/2")
                 .willRespondWith()
                 .status(200)
-                .body(new PactDslJsonBody().stringValue("name", "fido")) // Response missing required field "photoUrls"
+                .body(new PactDslJsonBody()
+                        // Response missing required field "photoUrls"
+                        // API validation is lenient to missing fields and will succeed
+                        .stringValue("name", "fido")
+                )
+                .toFragment();
+    }
+
+    @Pact(provider = PROVIDER_ID, consumer = CONSUMER_ID)
+    public PactFragment getPetWithInvalidResponse(PactDslWithProvider builder) {
+        return builder
+                .uponReceiving("GET invalid pet")
+                .method("GET")
+                .path("/pet/3")
+                .willRespondWith()
+                .status(200)
+                .body(new PactDslJsonBody()
+                        .stringValue("name", "fido")
+                        // Response has the incorrect type for a field
+                        // API validation will fail
+                        .stringType("id", "fido01")
+                )
                 .toFragment();
     }
 
@@ -86,15 +107,30 @@ public class SwaggerValidatorPactConsumerTestExample {
     }
 
     /**
-     * Test a GET with an invalid expectation about the response payload.
+     * Test a GET with an expectation that does not specify all the required fields in the response payload.
      * <p>
-     * Without API validation this test would pass, as it is a valid Pact fragment. However, the expected
-     * response payload does not match the schema specified in the API spec, and so the test will fail.
+     * Usually this validation would fail as a required field is missing. However, in keeping with the Pact
+     * philosophy of only specifying things the client cares about, the ValidatedPactProviderRule is lenient
+     * regarding missing fields in the response. This behavior can be overridden using system properties or a
+     * <code>swagger-validator.properties</code> file.
+     * See {@link com.atlassian.oai.validator.report.LevelLoader} for more details.
      */
     @Test
-    @PactVerification(value = PROVIDER_ID, fragment = "getInvalidPet")
-    public void testGetInvalidPet() {
+    @PactVerification(value = PROVIDER_ID, fragment = "getPetWithIncompleteResponse")
+    public void testGetPetWithIncompleteResponse() {
         get(provider.getConfig().url() + "/pet/2");
+    }
+
+    /**
+     * Test a GET with an expectation that specifies an incorrect field type in the response.
+     * <p>
+     * Without API validation this test would pass and the mistake would only be detected during Provider test execution.
+     * However, with the API validation we get feedback immediately that the Consumer expectation is invalid.
+     */
+    @Test
+    @PactVerification(value = PROVIDER_ID, fragment = "getPetWithInvalidResponse")
+    public void testGetPetWithInvalidResponse() {
+        get(provider.getConfig().url() + "/pet/3");
     }
 
     /**

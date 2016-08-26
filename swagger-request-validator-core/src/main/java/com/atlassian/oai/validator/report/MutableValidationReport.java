@@ -1,10 +1,10 @@
 package com.atlassian.oai.validator.report;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.atlassian.oai.validator.report.ValidationReport.Level.ERROR;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
 
@@ -16,15 +16,16 @@ public class MutableValidationReport implements ValidationReport {
     private final List<ValidationReport.Message> messages = new ArrayList<>();
 
     /**
-     * Add a validation error to this report.
+     * Add a validation message to this report.
      *
      * @param message The validation message to include
      *
      * @return This validation report instance
      */
-    public MutableValidationReport addError(@Nonnull final String message) {
-        requireNonNull(message, "A validation message is required");
-        this.messages.add(new ImmutableMessage(ERROR, message));
+    public MutableValidationReport add(@Nullable final Message message) {
+        if (message != null && message.getLevel() != Level.IGNORE) {
+            this.messages.add(message);
+        }
         return this;
     }
 

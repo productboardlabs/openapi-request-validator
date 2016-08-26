@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.parameter;
 
+import com.atlassian.oai.validator.report.MessageResolver;
 import io.swagger.models.properties.IntegerProperty;
 import org.junit.Test;
 
@@ -14,7 +15,7 @@ import static java.util.Collections.emptyList;
 
 public class ArrayParameterValidatorTest {
 
-    private ArrayParameterValidator classUnderTest = new ArrayParameterValidator();
+    private ArrayParameterValidator classUnderTest = new ArrayParameterValidator(null, new MessageResolver());
 
     @Test
     public void validate_withValidCsvFormat_shouldPass() {
@@ -48,17 +49,20 @@ public class ArrayParameterValidatorTest {
 
     @Test
     public void validate_withInvalidParameter_shouldFail() {
-        assertFail(classUnderTest.validate("1,2.1,3", intArrayParam(true, "csv")));
+        assertFail(classUnderTest.validate("1,2.1,3", intArrayParam(true, "csv")),
+                "validation.schema.type");
     }
 
     @Test
     public void validate_withEmptyValue_shouldFail_whenRequired() {
-        assertFail(classUnderTest.validate("", intArrayParam(true, "csv")));
+        assertFail(classUnderTest.validate("", intArrayParam(true, "csv")),
+                "validation.request.parameter.missing");
     }
 
     @Test
     public void validate_withNullValue_shouldFail_whenRequired() {
-        assertFail(classUnderTest.validate((String) null, intArrayParam(true, "csv")));
+        assertFail(classUnderTest.validate((String) null, intArrayParam(true, "csv")),
+                "validation.request.parameter.missing");
     }
 
     @Test
@@ -73,7 +77,8 @@ public class ArrayParameterValidatorTest {
 
     @Test
     public void validate_withCollection_shouldFail_whenNotMultiFormat() {
-        assertFail(classUnderTest.validate(asList("1", "2", "3"), intArrayParam(true, "csv")));
+        assertFail(classUnderTest.validate(asList("1", "2", "3"), intArrayParam(true, "csv")),
+                "validation.request.parameter.collection.invalidFormat");
     }
 
     @Test
@@ -83,12 +88,14 @@ public class ArrayParameterValidatorTest {
 
     @Test
     public void validate_withInvalidCollectionParameter_shouldFail() {
-        assertFail(classUnderTest.validate(asList("1", "2.1", "3"), intArrayParam(true, "multi")));
+        assertFail(classUnderTest.validate(asList("1", "2.1", "3"), intArrayParam(true, "multi")),
+                "validation.schema.type");
     }
 
     @Test
     public void validate_withEmptyCollection_shouldFail_whenRequired() {
-        assertFail(classUnderTest.validate(emptyList(), intArrayParam(true, "multi")));
+        assertFail(classUnderTest.validate(emptyList(), intArrayParam(true, "multi")),
+                "validation.request.parameter.missing");
     }
 
     @Test
@@ -98,17 +105,20 @@ public class ArrayParameterValidatorTest {
 
     @Test
     public void validate_withTooFewValues_shouldFail_whenMinItemsSpecified() {
-        assertFail(classUnderTest.validate("1,2", arrayParam(true, "csv", 3, 5, null, new IntegerProperty())));
+        assertFail(classUnderTest.validate("1,2", arrayParam(true, "csv", 3, 5, null, new IntegerProperty())),
+                "validation.request.parameter.collection.tooFewItems");
     }
 
     @Test
     public void validate_withTooManyValues_shouldFail_whenMaxItemsSpecified() {
-        assertFail(classUnderTest.validate("1,2,3,4,5,6", arrayParam(true, "csv", 3, 5, null, new IntegerProperty())));
+        assertFail(classUnderTest.validate("1,2,3,4,5,6", arrayParam(true, "csv", 3, 5, null, new IntegerProperty())),
+                "validation.request.parameter.collection.tooManyItems");
     }
 
     @Test
     public void validate_withNonUniqueValues_shouldFail_whenUniqueSpecified() {
-        assertFail(classUnderTest.validate("1,2,1", arrayParam(true, "csv", null, null, true, new IntegerProperty())));
+        assertFail(classUnderTest.validate("1,2,1", arrayParam(true, "csv", null, null, true, new IntegerProperty())),
+                "validation.request.parameter.collection.duplicateItems");
     }
 
     @Test
@@ -123,6 +133,7 @@ public class ArrayParameterValidatorTest {
 
     @Test
     public void validate_withEnumValues_whouldFail_whenValueDoesntMatchEnum() {
-        assertFail(classUnderTest.validate("1,2,1,4", enumeratedArrayParam(true, "csv", "1", "2", "bob")));
+        assertFail(classUnderTest.validate("1,2,1,4", enumeratedArrayParam(true, "csv", "1", "2", "bob")),
+                "validation.request.parameter.enum.invalid");
     }
 }

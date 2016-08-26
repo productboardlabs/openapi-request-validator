@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.schema;
 
+import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.MutableValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -18,8 +19,8 @@ import io.swagger.util.Json;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import static com.atlassian.oai.validator.util.StringUtils.capitalise;
 import static com.atlassian.oai.validator.util.StringUtils.quote;
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -28,11 +29,20 @@ import static java.util.Objects.requireNonNull;
  * Supports validation of properties and request/response bodies, and supports schema references.
  */
 public class SchemaValidator {
+
     private final Swagger api;
     private JsonNode definitions;
+    private final MessageResolver messages;
 
-    public SchemaValidator() {
-        this(null);
+    /**
+     * Build a new validator with no API specification.
+     * <p>
+     * This will not perform any validation of $ref references that reference local definitions.
+     *
+     * @param messages The message resolver to use
+     */
+    public SchemaValidator(@Nonnull final MessageResolver messages) {
+        this(null, messages);
     }
 
     /**
@@ -40,9 +50,11 @@ public class SchemaValidator {
      *
      * @param api The API to build the validator for. If provided, is used to retrieve schema definitions
      *            for use in references.
+     * @param messages The message resolver to use.
      */
-    public SchemaValidator(@Nullable final Swagger api) {
+    public SchemaValidator(@Nullable final Swagger api, @Nonnull final MessageResolver messages) {
         this.api = api;
+        this.messages = requireNonNull(messages, "A message resolver is required");
     }
 
     /**
@@ -101,20 +113,24 @@ public class SchemaValidator {
             }
 
             final JsonNode content = Json.mapper().readTree(normalisedValue);
-            processingReport = (ListProcessingReport)jsonSchema.validate(content);
+            processingReport = (ListProcessingReport)jsonSchema.validate(content, true);
         }
         catch (JsonParseException e) {
-            validationReport.addError("Unable to parse JSON - " + e.getMessage());
+            validationReport.add(messages.get("validation.schema.invalidJson", e.getMessage()));
             return validationReport;
         }
         catch (Exception e) {
             e.printStackTrace();
         }
 
-
         if((processingReport != null) && !processingReport.isSuccess()) {
-            validationReport.addError(format("Value does not match schema:\nValue:\n\t%s\n\nValidation report:\n\t%s",
-                    value, Json.pretty(processingReport.asJson()).replace("\n", "\n\t")));
+            processingReport.forEach(pm -> {
+                final JsonNode processingMessage = pm.asJson();
+                final String validationKeyword = processingMessage.get("keyword").textValue();
+                final String pointer = processingMessage.get("instance").get("pointer").textValue();
+                final String message = (pointer.isEmpty() ? "" : "[Path '" + pointer + "'] ") + capitalise(pm.getMessage());
+                validationReport.add(messages.create("validation.schema." + validationKeyword, message));
+            });
         }
         return validationReport;
     }

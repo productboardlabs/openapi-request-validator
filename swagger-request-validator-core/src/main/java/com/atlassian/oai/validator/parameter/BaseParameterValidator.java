@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.parameter;
 
+import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.MutableValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport;
 import io.swagger.models.parameters.Parameter;
@@ -8,9 +9,15 @@ import io.swagger.models.parameters.SerializableParameter;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
 abstract class BaseParameterValidator implements ParameterValidator {
+
+    protected final MessageResolver messages;
+
+    protected BaseParameterValidator(@Nonnull final MessageResolver messages) {
+        this.messages = requireNonNull(messages, "A message resolver is required");
+    }
 
     @Override
     public boolean supports(@Nullable final Parameter p) {
@@ -31,7 +38,7 @@ abstract class BaseParameterValidator implements ParameterValidator {
         final SerializableParameter parameter = (SerializableParameter)p;
 
         if (parameter.getRequired() && (value == null || value.trim().isEmpty())) {
-            return report.addError(format("Parameter '%s' is required but is missing", p.getName()));
+            return report.add(messages.get("validation.request.parameter.missing", p.getName()));
         }
 
         if (value == null || value.trim().isEmpty()) {
@@ -39,8 +46,10 @@ abstract class BaseParameterValidator implements ParameterValidator {
         }
 
         if (!matchesEnumIfDefined(value, parameter)) {
-            return report.addError(format("Parameter '%s' does not match allowed values <%s>",
-                    parameter.getName(), parameter.getEnum()));
+            return report.add(
+                    messages.get("validation.request.parameter.enum.invalid",
+                            value, parameter.getName(), parameter.getEnum())
+            );
         }
 
         doValidate(value, parameter, report);

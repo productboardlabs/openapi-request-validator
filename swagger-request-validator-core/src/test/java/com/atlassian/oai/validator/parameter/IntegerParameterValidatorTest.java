@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.parameter;
 
+import com.atlassian.oai.validator.report.MessageResolver;
 import org.junit.Test;
 
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
@@ -8,7 +9,7 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.intParam;
 
 public class IntegerParameterValidatorTest {
 
-    private IntegerParameterValidator classUnderTest = new IntegerParameterValidator();
+    private IntegerParameterValidator classUnderTest = new IntegerParameterValidator(new MessageResolver());
 
     @Test
     public void validate_withNullValue_shouldPass_whenNotRequired() {
@@ -22,22 +23,22 @@ public class IntegerParameterValidatorTest {
 
     @Test
     public void validate_withNullValue_shouldFail_whenRequired() {
-        assertFail(classUnderTest.validate(null, intParam(true)));
+        assertFail(classUnderTest.validate(null, intParam(true)), "validation.request.parameter.missing");
     }
 
     @Test
     public void validate_withEmptyValue_shouldFail_whenRequired() {
-        assertFail(classUnderTest.validate("", intParam(true)));
+        assertFail(classUnderTest.validate("", intParam(true)), "validation.request.parameter.missing");
     }
 
     @Test
     public void validate_withNonNumericValue_shouldFail() {
-        assertFail(classUnderTest.validate("123a", intParam()));
+        assertFail(classUnderTest.validate("123a", intParam()), "validation.request.parameter.invalidFormat");
     }
 
     @Test
     public void validate_withNonIntegerValue_shouldFail() {
-        assertFail(classUnderTest.validate("123.1", intParam()));
+        assertFail(classUnderTest.validate("123.1", intParam()), "validation.request.parameter.invalidFormat");
     }
 
     @Test
@@ -47,12 +48,12 @@ public class IntegerParameterValidatorTest {
 
     @Test
     public void validate_withValueGreaterThanMax_shouldFail_ifMaxSpecified() {
-        assertFail(classUnderTest.validate("2", intParam(null, 1.0)));
+        assertFail(classUnderTest.validate("2", intParam(null, 1.0)), "validation.request.parameter.number.aboveMax");
     }
 
     @Test
     public void validate_withValueLessThanMin_shouldFail_ifMinSpecified() {
-        assertFail(classUnderTest.validate("0", intParam(1.0, null)));
+        assertFail(classUnderTest.validate("0", intParam(1.0, null)), "validation.request.parameter.number.belowMin");
     }
 
     @Test

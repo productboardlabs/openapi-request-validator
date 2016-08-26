@@ -8,6 +8,7 @@ import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
 import au.com.dius.pact.model.MockProviderConfig;
 import au.com.dius.pact.model.PactFragment;
 import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
+import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReportFormatter;
 import org.junit.rules.TestRule;
@@ -34,7 +35,15 @@ public class ValidatedPactProviderRule implements TestRule {
         this.providerId = providerId;
         this.target = target;
 
-        this.validator = new SwaggerRequestResponseValidator(swaggerJsonUrl, basePathOverride);
+        this.validator = SwaggerRequestResponseValidator
+                .createFor(swaggerJsonUrl)
+                .withLevelResolver(
+                        LevelResolver.create()
+                                .withLevel("validation.schema.required", ValidationReport.Level.INFO)
+                                .withLevel("validation.response.body.missing", ValidationReport.Level.INFO)
+                                .build())
+                .withBasePathOverride(basePathOverride)
+                .build();
     }
 
     public MockProviderConfig getConfig() {

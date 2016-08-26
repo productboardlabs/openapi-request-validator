@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.parameter;
 
+import com.atlassian.oai.validator.report.MessageResolver;
 import org.junit.Test;
 
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
@@ -8,7 +9,7 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.floatParam;
 
 public class NumberParameterValidatorTest {
 
-    private NumberParameterValidator classUnderTest = new NumberParameterValidator();
+    private NumberParameterValidator classUnderTest = new NumberParameterValidator(new MessageResolver());
 
     @Test
     public void validate_withNullValue_shouldPass_whenNotRequired() {
@@ -22,17 +23,17 @@ public class NumberParameterValidatorTest {
 
     @Test
     public void validate_withNullValue_shouldFail_whenRequired() {
-        assertFail(classUnderTest.validate(null, floatParam(true)));
+        assertFail(classUnderTest.validate(null, floatParam(true)), "validation.request.parameter.missing");
     }
 
     @Test
     public void validate_withEmptyValue_shouldFail_whenRequired() {
-        assertFail(classUnderTest.validate("", floatParam(true)));
+        assertFail(classUnderTest.validate("", floatParam(true)), "validation.request.parameter.missing");
     }
 
     @Test
     public void validate_withNonNumericValue_shouldFail() {
-        assertFail(classUnderTest.validate("not-a-Number", floatParam()));
+        assertFail(classUnderTest.validate("not-a-Number", floatParam()), "validation.request.parameter.invalidFormat");
     }
 
     @Test
@@ -47,12 +48,14 @@ public class NumberParameterValidatorTest {
 
     @Test
     public void validate_withValueGreaterThanMax_shouldFail_ifMaxSpecified() {
-        assertFail(classUnderTest.validate("1.1", floatParam(null, 1.0)));
+        assertFail(classUnderTest.validate("1.1", floatParam(null, 1.0)),
+                "validation.request.parameter.number.aboveMax");
     }
 
     @Test
     public void validate_withValueLessThanMin_shouldFail_ifMinSpecified() {
-        assertFail(classUnderTest.validate("0.9", floatParam(1.0, null)));
+        assertFail(classUnderTest.validate("0.9", floatParam(1.0, null)),
+                "validation.request.parameter.number.belowMin");
     }
 
     @Test

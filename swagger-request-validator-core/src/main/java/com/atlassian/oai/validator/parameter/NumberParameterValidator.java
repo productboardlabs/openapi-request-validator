@@ -1,15 +1,16 @@
 package com.atlassian.oai.validator.parameter;
 
+import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.MutableValidationReport;
 import io.swagger.models.parameters.SerializableParameter;
 
 import javax.annotation.Nonnull;
 
-import static java.lang.String.format;
-
 public class NumberParameterValidator extends BaseParameterValidator {
 
-    public static final NumberParameterValidator INSTANCE = new NumberParameterValidator();
+    public NumberParameterValidator(final MessageResolver messages) {
+        super(messages);
+    }
 
     @Override
     @Nonnull
@@ -39,13 +40,15 @@ public class NumberParameterValidator extends BaseParameterValidator {
 
         final Double d = Double.parseDouble(value);
         if (parameter.getMinimum() != null && d < parameter.getMinimum()) {
-            report.addError(format("Value '%s' for parameter '%s' less than allowed min value %f",
-                            value, parameter.getName(), parameter.getMinimum()));
+            report.add(messages.get("validation.request.parameter.number.belowMin",
+                    value, parameter.getName(), parameter.getMinimum())
+            );
         }
 
         if (parameter.getMaximum() != null && d > parameter.getMaximum()) {
-            report.addError(format("Value '%s' for parameter '%s' greater than allowed max value %f",
-                            value, parameter.getName(), parameter.getMaximum()));
+            report.add(messages.get("validation.request.parameter.number.aboveMax",
+                    value, parameter.getName(), parameter.getMaximum())
+            );
         }
     }
 
@@ -54,8 +57,9 @@ public class NumberParameterValidator extends BaseParameterValidator {
             final SerializableParameter parameter,
             final String format,
             final MutableValidationReport report) {
-        report.addError(format("Value '%s' for parameter '%s' does not match type '%s' with format '%s'",
-                        value, parameter.getName(), supportedParameterType(), format));
+        report.add(messages.get("validation.request.parameter.invalidFormat",
+                value, parameter.getName(), supportedParameterType(), format)
+        );
 
     }
 }

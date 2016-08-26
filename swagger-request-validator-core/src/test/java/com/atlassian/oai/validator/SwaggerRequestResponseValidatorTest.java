@@ -4,6 +4,8 @@ import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.model.SimpleResponse;
+import com.atlassian.oai.validator.report.LevelResolver;
+import com.atlassian.oai.validator.report.ValidationReport;
 import org.junit.Test;
 
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
@@ -13,8 +15,7 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadResponse;
 
 public class SwaggerRequestResponseValidatorTest {
 
-    private SwaggerRequestResponseValidator classUnderTest =
-            new SwaggerRequestResponseValidator("/oai/api-users.json", null);
+    private SwaggerRequestResponseValidator classUnderTest = SwaggerRequestResponseValidator.createFor("/oai/api-users.json").build();
 
     @Test(expected = NullPointerException.class)
     public void validate_withNullRequest_throwsNPE() {
@@ -45,7 +46,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/users/a").build();
         final Response response = SimpleResponse.Builder.badRequest().build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.request.parameter.invalidFormat");
     }
 
     @Test
@@ -53,7 +54,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.patch("/users/1").build();
         final Response response = SimpleResponse.Builder.ok().build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.request.operation.notAllowed");
     }
 
     @Test
@@ -61,7 +62,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.post("/users").build();
         final Response response = SimpleResponse.Builder.ok().build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.request.body.missing");
     }
 
     @Test
@@ -77,7 +78,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.post("/users").withBody(loadRequest("newuser-invalid-missingrequired")).build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.schema.required");
     }
 
     @Test
@@ -85,7 +86,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/users").withBody(loadRequest("newuser-valid")).build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.request.body.unexpected");
     }
 
     @Test
@@ -101,7 +102,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/users").withQueryParam("maxCount", "a").build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.request.parameter.invalidFormat");
     }
 
     @Test
@@ -125,7 +126,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/users").withQueryParam("filter", "1,\"bob\",3").build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.schema.type");
     }
 
     @Test
@@ -144,7 +145,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/healthcheck").build();
         final Response response = SimpleResponse.Builder.ok().build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.request.parameter.query.missing");
     }
 
     @Test
@@ -160,7 +161,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/users/1").build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-invalid-missingrequired")).build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.schema.required");
     }
 
     @Test
@@ -168,7 +169,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/users/1").build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-invalid-baddataformat")).build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.schema.type");
     }
 
     @Test
@@ -176,7 +177,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/users/1").build();
         final Response response = SimpleResponse.Builder.ok().build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.response.body.missing");
     }
 
     @Test
@@ -184,7 +185,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/users/1").build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-invalid-malformedjson")).build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.schema.invalidJson");
     }
 
     @Test
@@ -192,7 +193,7 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/users/1").build();
         final Response response = SimpleResponse.Builder.notFound().withBody(loadResponse("user-valid")).build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.schema.required");
     }
 
     @Test
@@ -200,13 +201,31 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.get("/users/1").build();
         final Response response = SimpleResponse.Builder.status(666).build();
 
-        assertFail(classUnderTest.validate(request, response));
+        assertFail(classUnderTest.validate(request, response), "validation.response.status.unknown");
     }
 
     @Test
     public void validate_withResponseContainingUnknownStatusCode_shouldPass_whenDefaultResponseDefined() {
         final Request request = SimpleRequest.Builder.get("/users").build();
         final Response response = SimpleResponse.Builder.status(666).withBody(loadResponse("error-valid")).build();
+
+        assertPass(classUnderTest.validate(request, response));
+    }
+
+    @Test
+    public void validate_withFailures_shoudPass_whenLevelResolverIgnoresFailures() {
+        final SwaggerRequestResponseValidator classUnderTest =
+                SwaggerRequestResponseValidator
+                        .createFor("/oai/api-users.json")
+                        .withLevelResolver(LevelResolver
+                                .create()
+                                .withLoader(null)
+                                .withDefaultLevel(ValidationReport.Level.IGNORE)
+                                .build()
+                        ).build();
+
+        final Request request = SimpleRequest.Builder.get("/users/1").build();
+        final Response response = SimpleResponse.Builder.ok().build();
 
         assertPass(classUnderTest.validate(request, response));
     }

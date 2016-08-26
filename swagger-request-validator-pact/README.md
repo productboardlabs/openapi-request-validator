@@ -9,6 +9,14 @@ to enable Swagger validation of consumer expectations.
 
 ## Usage ##
 
+```
+<dependency>
+    <groupId>com.atlassian.oai</groupId>
+    <artifactId>swagger-request-validator-pact</artifactId>
+    <version>${swagger-request-validator.version}</version>
+</dependency>
+```
+
 See the [examples module](https://bitbucket.org/atlassian/swagger-request-validator/src/master/swagger-request-validator-examples/?at=master)
 for examples of how the Pact module can be used.
 
@@ -47,9 +55,10 @@ To use the JUnit rule you will need to ensure the following dependencies are add
 
 ### Manual interaction validation
 
+Alternatively you can manually validate an interaction.
 ```
 final RequestResponseInteraction interaction = ...
-final SwaggerRequestResponseValidator validator = new SwaggerRequestResponseValidator(swaggerJsonUrl, basePathOverride);
+final SwaggerRequestResponseValidator validator = SwaggerRequestResponseValidator.createFor(swaggerJsonUrl).build();
 final ValidationReport report = validator.validate(
                 new PactRequest(interaction.getRequest()),
                 new PactResponse(interaction.getResponse()));
