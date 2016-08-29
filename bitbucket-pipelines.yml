@@ -6,4 +6,4 @@ pipelines:
         script:
           - bash bin/configure-pipelines.sh
           - mvn --version
-          - mvn clean install
+          - mvn clean verify javadoc:jar
