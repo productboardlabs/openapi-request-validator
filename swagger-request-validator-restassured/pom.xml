@@ -10,10 +10,10 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>swagger-request-validator-examples</artifactId>
+    <artifactId>swagger-request-validator-restassured</artifactId>
 
     <description>
-        Example usages of the Swagger Request Validator and its various integrations and adapters.
+        Integrations between Swagger validation and REST-Assured REST tests.
     </description>
 
     <dependencies>
@@ -22,27 +22,9 @@
             <artifactId>swagger-request-validator-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.atlassian.oai</groupId>
-            <artifactId>swagger-request-validator-pact</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.atlassian.oai</groupId>
-            <artifactId>swagger-request-validator-wiremock</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.atlassian.oai</groupId>
-            <artifactId>swagger-request-validator-restassured</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
-            <scope>test</scope>
+            <version>${rest-assured.version}</version>
         </dependency>
 
         <dependency>
@@ -51,13 +33,13 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>au.com.dius</groupId>
-            <artifactId>pact-jvm-consumer-junit_2.11</artifactId>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>au.com.dius</groupId>
-            <artifactId>pact-jvm-consumer_2.11</artifactId>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
         </dependency>
     </dependencies>
 

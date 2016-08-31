@@ -2,13 +2,13 @@ package com.atlassian.oai.validator.examples.wiremock;
 
 import com.atlassian.oai.validator.wiremock.ValidatedWireMockRule;
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.jayway.restassured.response.Response;
+import io.restassured.response.Response;
 import org.junit.Rule;
 import org.junit.Test;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.jayway.restassured.RestAssured.get;
+import static io.restassured.RestAssured.get;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 

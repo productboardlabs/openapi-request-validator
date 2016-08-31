@@ -8,7 +8,7 @@ import org.junit.runners.model.FrameworkMethod;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.jayway.restassured.RestAssured.get;
+import static io.restassured.RestAssured.get;
 
 public class ValidatedWireMockRuleTest {
 

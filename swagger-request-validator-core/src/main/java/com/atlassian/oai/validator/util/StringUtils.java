@@ -36,4 +36,20 @@ public class StringUtils {
         return value.substring(0, 1).toUpperCase() + value.substring(1);
     }
 
+    /**
+     * Require that the given value is non-empty.
+     *
+     * @param value The value to check
+     * @param msg The message to emit if validation fails
+     *
+     * @return the input value
+     *
+     * @throws IllegalArgumentException If the input value is null or empty
+     */
+    public static String requireNonEmpty(final String value, final String msg) {
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException(msg);
+        }
+        return value;
+    }
 }

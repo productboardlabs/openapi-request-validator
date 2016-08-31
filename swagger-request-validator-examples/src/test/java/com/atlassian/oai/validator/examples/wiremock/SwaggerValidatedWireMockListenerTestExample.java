@@ -3,14 +3,14 @@ package com.atlassian.oai.validator.examples.wiremock;
 import com.atlassian.oai.validator.wiremock.SwaggerValidationListener;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.jayway.restassured.response.Response;
+import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.jayway.restassured.RestAssured.get;
+import static io.restassured.RestAssured.get;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
