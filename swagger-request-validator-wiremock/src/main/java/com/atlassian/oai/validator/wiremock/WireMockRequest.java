@@ -7,6 +7,7 @@ import com.github.tomakehurst.wiremock.http.QueryParameter;
 import javax.annotation.Nonnull;
 import java.net.URI;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
@@ -18,17 +19,21 @@ import static java.util.Objects.requireNonNull;
 public class WireMockRequest implements Request {
 
     private final com.github.tomakehurst.wiremock.http.Request internalRequest;
+    private final String requestPath;
     private final Map<String, QueryParameter> queryParameterMap;
 
     public WireMockRequest(@Nonnull final com.github.tomakehurst.wiremock.http.Request internalRequest) {
         this.internalRequest = requireNonNull(internalRequest, "A WireMock request is required.");
-        this.queryParameterMap = Urls.splitQuery(URI.create(internalRequest.getUrl()));
+
+        final URI uri = URI.create(internalRequest.getUrl());
+        this.queryParameterMap = Urls.splitQuery(uri);
+        this.requestPath = uri.getPath();
     }
 
     @Nonnull
     @Override
     public String getPath() {
-        return internalRequest.getUrl();
+        return requestPath;
     }
 
     @Nonnull
@@ -52,6 +57,9 @@ public class WireMockRequest implements Request {
     @Nonnull
     @Override
     public Collection<String> getQueryParameterValues(String name) {
-        return queryParameterMap.getOrDefault(name, QueryParameter.absent(name)).values();
+        if (queryParameterMap.containsKey(name)) {
+            return queryParameterMap.get(name).values();
+        }
+        return Collections.emptyList();
     }
 }

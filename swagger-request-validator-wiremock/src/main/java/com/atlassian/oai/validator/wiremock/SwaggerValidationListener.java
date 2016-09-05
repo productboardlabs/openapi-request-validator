@@ -6,6 +6,8 @@ import com.atlassian.oai.validator.report.ValidationReportFormatter;
 import com.github.tomakehurst.wiremock.http.Request;
 import com.github.tomakehurst.wiremock.http.RequestListener;
 import com.github.tomakehurst.wiremock.http.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A WireMock request listener that applies Swagger request/response validation to WireMock interactions.
@@ -49,6 +51,8 @@ import com.github.tomakehurst.wiremock.http.Response;
  */
 public class SwaggerValidationListener implements RequestListener {
 
+    private static final Logger log = LoggerFactory.getLogger(SwaggerValidationListener.class);
+
     private final SwaggerRequestResponseValidator validator;
     private ValidationReport report = ValidationReport.empty();
 
@@ -58,7 +62,12 @@ public class SwaggerValidationListener implements RequestListener {
 
     @Override
     public void requestReceived(final Request request, final Response response) {
-        report = report.merge(validator.validate(new WireMockRequest(request), new WireMockResponse(response)));
+        try {
+            report = report.merge(validator.validate(new WireMockRequest(request), new WireMockResponse(response)));
+        } catch (Exception e) {
+            log.error("Exception occurred while validating request", e);
+            throw e;
+        }
     }
 
     /**
