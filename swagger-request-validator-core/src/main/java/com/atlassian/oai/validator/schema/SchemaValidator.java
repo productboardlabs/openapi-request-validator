@@ -32,6 +32,9 @@ import static java.util.Objects.requireNonNull;
  */
 public class SchemaValidator {
 
+    private static final String ADDITIONAL_PROPERTIES_FIELD = "additionalProperties";
+    private static final String DEFINITIONS_FIELD = "definitions";
+
     private final Swagger api;
     private JsonNode definitions;
     private final MessageResolver messages;
@@ -94,6 +97,9 @@ public class SchemaValidator {
         ListProcessingReport processingReport = null;
         try {
             final JsonNode schemaObject = Json.mapper().readTree(Json.pretty(schema));
+            if (schemaObject instanceof ObjectNode) {
+                ((ObjectNode)schemaObject).set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
+            }
 
             if (api != null) {
                 if (this.definitions == null) {
@@ -102,12 +108,12 @@ public class SchemaValidator {
                     // Explicitly disable additionalProperties
                     // Calling code can choose what level to emit this failure at using validation.schema.additionalProperties
                     this.definitions.forEach(n -> {
-                        if (!n.has("additionalProperties")) {
-                            ((ObjectNode)n).set("additionalProperties", BooleanNode.getFalse());
+                        if (!n.has(ADDITIONAL_PROPERTIES_FIELD)) {
+                            ((ObjectNode)n).set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
                         }
                     });
                 }
-                ((ObjectNode)schemaObject).set("definitions", this.definitions);
+                ((ObjectNode)schemaObject).set(DEFINITIONS_FIELD, this.definitions);
             }
 
             // Only emit ERROR and above from the JSON schema validation

@@ -115,9 +115,17 @@ public class SchemaValidatorTest {
     }
 
     @Test
-    public void validate_withExtraFields_shouldFail() {
+    public void validate_withExtraFields_shouldFail_whenModelReferenced() {
         final String value = "{\"title\":\"bar\", \"message\":\"something\", \"extra\":\"value\"}";
         final Model schema = new RefModel("#/definitions/Error");
+
+        assertFail(classUnderTest.validate(value, schema), "validation.schema.additionalProperties");
+    }
+
+    @Test
+    public void validate_withExtraFields_shouldFail_whenModelInline() {
+        final String value = "{\"foo\":\"bar\", \"extra\":\"value\"}";
+        final Model schema = new ModelImpl().property("foo", new StringProperty()).required("foo");
 
         assertFail(classUnderTest.validate(value, schema), "validation.schema.additionalProperties");
     }
