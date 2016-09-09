@@ -114,4 +114,12 @@ public class SchemaValidatorTest {
         assertFail(classUnderTest.validate(value, schema), "validation.schema.required");
     }
 
+    @Test
+    public void validate_withExtraFields_shouldFail() {
+        final String value = "{\"title\":\"bar\", \"message\":\"something\", \"extra\":\"value\"}";
+        final Model schema = new RefModel("#/definitions/Error");
+
+        assertFail(classUnderTest.validate(value, schema), "validation.schema.additionalProperties");
+    }
+
 }

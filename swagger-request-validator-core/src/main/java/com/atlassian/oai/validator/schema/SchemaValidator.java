@@ -5,6 +5,7 @@ import com.atlassian.oai.validator.report.MutableValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.jsonschema.core.report.ListProcessingReport;
 import com.github.fge.jsonschema.core.report.ListReportProvider;
@@ -97,6 +98,14 @@ public class SchemaValidator {
             if (api != null) {
                 if (this.definitions == null) {
                     this.definitions = Json.mapper().readTree(Json.pretty(api.getDefinitions()));
+
+                    // Explicitly disable additionalProperties
+                    // Calling code can choose what level to emit this failure at using validation.schema.additionalProperties
+                    this.definitions.forEach(n -> {
+                        if (!n.has("additionalProperties")) {
+                            ((ObjectNode)n).set("additionalProperties", BooleanNode.getFalse());
+                        }
+                    });
                 }
                 ((ObjectNode)schemaObject).set("definitions", this.definitions);
             }
