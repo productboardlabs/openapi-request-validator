@@ -7,9 +7,11 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.report.ListProcessingReport;
 import com.github.fge.jsonschema.core.report.ListReportProvider;
 import com.github.fge.jsonschema.core.report.LogLevel;
+import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import io.swagger.models.Model;
 import io.swagger.models.Swagger;
@@ -130,24 +132,30 @@ public class SchemaValidator {
 
             final JsonNode content = Json.mapper().readTree(normalisedValue);
             processingReport = (ListProcessingReport)jsonSchema.validate(content, true);
-        }
-        catch (JsonParseException e) {
+        } catch (final JsonParseException e) {
             validationReport.add(messages.get("validation.schema.invalidJson", e.getMessage()));
             return validationReport;
-        }
-        catch (Exception e) {
-            e.printStackTrace();
+        } catch (final ProcessingException e) {
+            addProcessingMessage(validationReport, e.getProcessingMessage(), "processingError");
+            return validationReport;
+        } catch (final Exception e) {
+            validationReport.add(messages.get("validation.schema.unknownError", e.getMessage()));
+            return validationReport;
         }
 
         if((processingReport != null) && !processingReport.isSuccess()) {
-            processingReport.forEach(pm -> {
-                final JsonNode processingMessage = pm.asJson();
-                final String validationKeyword = processingMessage.get("keyword").textValue();
-                final String pointer = processingMessage.get("instance").get("pointer").textValue();
-                final String message = (pointer.isEmpty() ? "" : "[Path '" + pointer + "'] ") + capitalise(pm.getMessage());
-                validationReport.add(messages.create("validation.schema." + validationKeyword, message));
-            });
+            processingReport.forEach(pm -> addProcessingMessage(validationReport, pm, null));
         }
         return validationReport;
+    }
+
+    private void addProcessingMessage(final MutableValidationReport validationReport,
+                                      final ProcessingMessage pm,
+                                      final String keywordOverride) {
+        final JsonNode processingMessage = pm.asJson();
+        final String validationKeyword = keywordOverride != null ? keywordOverride : processingMessage.get("keyword").textValue();
+        final String pointer = processingMessage.has("instance") ? processingMessage.get("instance").get("pointer").textValue() : "";
+        final String message = (pointer.isEmpty() ? "" : "[Path '" + pointer + "'] ") + capitalise(pm.getMessage());
+        validationReport.add(messages.create("validation.schema." + validationKeyword, message));
     }
 }

@@ -4,6 +4,7 @@ import com.atlassian.oai.validator.report.MessageResolver;
 import io.swagger.models.Model;
 import io.swagger.models.ModelImpl;
 import io.swagger.models.RefModel;
+import io.swagger.models.Swagger;
 import io.swagger.models.properties.IntegerProperty;
 import io.swagger.models.properties.Property;
 import io.swagger.models.properties.StringProperty;
@@ -12,6 +13,8 @@ import org.junit.Test;
 
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class SchemaValidatorTest {
 
@@ -130,4 +133,23 @@ public class SchemaValidatorTest {
         assertFail(classUnderTest.validate(value, schema), "validation.schema.additionalProperties");
     }
 
+    @Test
+    public void validate_withInvalidJsonSchema_shouldFail() {
+        final String value = "{\"title\":\"bar\", \"message\":\"something\"}";
+        final Model schema = new RefModel("#/definitions/{\"What\":\"This actually happened!\"}");
+
+        assertFail(classUnderTest.validate(value, schema), "validation.schema.processingError");
+    }
+
+    @Test
+    public void validate_withOtherException_shouldFail() {
+        final String value = "{\"title\":\"bar\", \"message\":\"something\"}";
+        final Model schema = new RefModel("#/definitions/Error}");
+
+        final Swagger mockApi = mock(Swagger.class);
+        when(mockApi.getDefinitions()).thenThrow(new IllegalStateException("Testing exception handling"));
+        final SchemaValidator failingValidator = new SchemaValidator(mockApi, new MessageResolver());
+
+        assertFail(failingValidator.validate(value, schema), "validation.schema.unknownError");
+    }
 }
