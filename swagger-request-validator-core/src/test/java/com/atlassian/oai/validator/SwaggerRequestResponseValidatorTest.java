@@ -165,6 +165,14 @@ public class SwaggerRequestResponseValidatorTest {
     }
 
     @Test
+    public void validate_withResponseBodyWithAdditionalFields_shouldFail() {
+        final Request request = SimpleRequest.Builder.get("/users/1").build();
+        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-invalid-additionalproperties")).build();
+
+        assertFail(classUnderTest.validate(request, response), "validation.schema.additionalProperties");
+    }
+
+    @Test
     public void validate_withResponseBodyBadDataFormat_shouldFail() {
         final Request request = SimpleRequest.Builder.get("/users/1").build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-invalid-baddataformat")).build();

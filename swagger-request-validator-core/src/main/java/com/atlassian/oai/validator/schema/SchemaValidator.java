@@ -5,6 +5,7 @@ import com.atlassian.oai.validator.report.MutableValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.jsonschema.core.report.ListProcessingReport;
 import com.github.fge.jsonschema.core.report.ListReportProvider;
@@ -30,6 +31,9 @@ import static java.util.Objects.requireNonNull;
  * Supports validation of properties and request/response bodies, and supports schema references.
  */
 public class SchemaValidator {
+
+    private static final String ADDITIONAL_PROPERTIES_FIELD = "additionalProperties";
+    private static final String DEFINITIONS_FIELD = "definitions";
 
     private final Swagger api;
     private JsonNode definitions;
@@ -93,12 +97,23 @@ public class SchemaValidator {
         ListProcessingReport processingReport = null;
         try {
             final JsonNode schemaObject = Json.mapper().readTree(Json.pretty(schema));
+            if (schemaObject instanceof ObjectNode) {
+                ((ObjectNode)schemaObject).set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
+            }
 
             if (api != null) {
                 if (this.definitions == null) {
                     this.definitions = Json.mapper().readTree(Json.pretty(api.getDefinitions()));
+
+                    // Explicitly disable additionalProperties
+                    // Calling code can choose what level to emit this failure at using validation.schema.additionalProperties
+                    this.definitions.forEach(n -> {
+                        if (!n.has(ADDITIONAL_PROPERTIES_FIELD)) {
+                            ((ObjectNode)n).set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
+                        }
+                    });
                 }
-                ((ObjectNode)schemaObject).set("definitions", this.definitions);
+                ((ObjectNode)schemaObject).set(DEFINITIONS_FIELD, this.definitions);
             }
 
             // Only emit ERROR and above from the JSON schema validation
