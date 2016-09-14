@@ -95,6 +95,22 @@ public class SwaggerValidatorPactConsumerTestExample {
                 .toFragment();
     }
 
+    @Pact(provider = PROVIDER_ID, consumer = CONSUMER_ID)
+    public PactFragment getPetWithAdditionalProperties(PactDslWithProvider builder) {
+        return builder
+                .uponReceiving("GET pet with additional properties")
+                .method("GET")
+                .path("/pet/4")
+                .willRespondWith()
+                .status(200)
+                .body(new PactDslJsonBody()
+                        .stringValue("name", "fido")
+                        .numberValue("extra", 33)
+                        .array("photoUrls").closeArray()
+                        .asBody())
+                .toFragment();
+    }
+
     /**
      * Test a GET with a valid expectation about the response payload.
      * <p>
@@ -131,6 +147,22 @@ public class SwaggerValidatorPactConsumerTestExample {
     @PactVerification(value = PROVIDER_ID, fragment = "getPetWithInvalidResponse")
     public void testGetPetWithInvalidResponse() {
         get(provider.getConfig().url() + "/pet/3");
+    }
+
+    /**
+     * Test a GET with an expectation that specifies an additional field in the response.
+     * <p>
+     * Without API validation this test would pass and the mistake would only be detected during Provider test execution.
+     * However, with the API validation we get feedback immediately that the Consumer expectation is invalid.
+     * <p>
+     * If this is in fact desired behavior (e.g. the Consumer knows that the field exists but is just not in the
+     * Provider spec) the validation failure can be changed to a warning by setting the message level
+     * <code>validation.schema.additionalProperties=WARN</code>
+     */
+    @Test
+    @PactVerification(value = PROVIDER_ID, fragment = "getPetWithAdditionalProperties")
+    public void testGetPetWithAdditionalPropertiesInResponse() {
+        get(provider.getConfig().url() + "/pet/4");
     }
 
     /**
