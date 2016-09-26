@@ -1,6 +1,6 @@
 # Swagger Request Validator #
 
-![build-status](https://bitbucket-badges.atlassian.io/badge/atlassian/swagger-request-validator.svg) [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator)
+[![build-status](https://bitbucket-badges.atlassian.io/badge/atlassian/swagger-request-validator.svg)](https://bitbucket.org/atlassian/swagger-request-validator/addon/pipelines/home#!/) [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator)
 
 A Java library for validating HTTP request/responses against a [Swagger/OpenAPI](https://openapis.org/) specification.
 
