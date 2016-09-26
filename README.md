@@ -34,14 +34,14 @@ Usage details for specific modules can be found in the READMEs for those modules
 
 See individual module READMEs for more information, including how to use use each module.
 
-###swagger-request-validator-core
+###swagger-request-validator-core [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-core/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-core)
 
 The core validator logic.
 
 Provides a standalone validator and uses an implementation-agnostic abstraction of
 HTTP request/responses that can be adapted to any 3rd party implementation.
 
-###swagger-request-validator-pact
+###swagger-request-validator-pact [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-pact/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-pact)
 
 Adapters for validating [Pact](http://docs.pact.io/) request/response expectations with the Swagger validator, 
 shortening the feedback loop when writing Consumer tests.
@@ -49,14 +49,14 @@ shortening the feedback loop when writing Consumer tests.
 Includes a JUnit rule that adds Swagger/OAI validation to the [Pact-JVM](https://github.com/DiUS/pact-jvm) consumer 
 test execution.
 
-###swagger-request-validator-wiremock
+###swagger-request-validator-wiremock [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-wiremock/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-wiremock)
 
 Adapters for validating [WireMock](http://wiremock.org/) HTTP mocks against a Swagger/OAI specification.
 
 Includes a drop-in replacement for the `WireMockRule` that adds validation to mocked interactions, giving you 
 confidence that your mocks reflect reality. 
 
-###swagger-request-validator-restassured
+###swagger-request-validator-restassured [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-restassured/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-restassured)
 
 Adapters for validating given-when-then interactions from the [REST Assured](http://rest-assured.io/) testing library 
 against a Swagger/OAI specification.

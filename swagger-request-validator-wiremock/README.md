@@ -1,6 +1,8 @@
 # Swagger Request Validator - WireMock #
 
-Integrations of the Swagger Request Validator with the [WireMock HTTP mocking framework](http://wiremock.org/).
+[![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-wiremock/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-wiremock)
+
+Integrations between the Swagger Request Validator with the [WireMock HTTP mocking framework](http://wiremock.org/).
 
 This module includes request/response adaptors that allow validation of WireMock stubs with the Swagger Request
 Validator, and a `ValidatedWireMockRule` that can be used as a drop-in replacement for the standard WireMock

@@ -1,4 +1,5 @@
 # Swagger Request Validator - Core #
+[![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-core/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-core)
 
 The core validator logic in the Swagger Request Validator.
 

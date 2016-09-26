@@ -1,6 +1,8 @@
 # Swagger Request Validator - Pact #
 
-Integrations of the Swagger Request Validator with the [Pact Consumer Driven Contracts framework](http://docs.pact.io/).
+[![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-pact/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-pact)
+
+Integrations between the Swagger Request Validator with the [Pact Consumer Driven Contracts framework](http://docs.pact.io/).
 
 This module includes request/response adaptors that allow validation of Pact interactions with the Swagger Request
 Validator, and a `ValidatedPactProviderRule` that can be used as a drop-in replacement for the standard
