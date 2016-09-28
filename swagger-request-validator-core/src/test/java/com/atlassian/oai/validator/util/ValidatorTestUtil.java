@@ -127,6 +127,8 @@ public class ValidatorTestUtil {
         when(result.getRequired()).thenReturn(required);
         when(result.getMinimum()).thenReturn(null);
         when(result.getMaximum()).thenReturn(null);
+        when(result.getMinLength()).thenReturn(null);
+        when(result.getMaxLength()).thenReturn(null);
         return result;
     }
 

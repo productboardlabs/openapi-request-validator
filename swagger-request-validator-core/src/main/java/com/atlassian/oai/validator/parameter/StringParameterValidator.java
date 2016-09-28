@@ -68,7 +68,5 @@ public class StringParameterValidator extends BaseParameterValidator {
 
             formatValidator.validate(report, value);
         }
-
-
     }
 }
