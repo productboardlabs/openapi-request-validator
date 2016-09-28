@@ -64,7 +64,7 @@ public class StringParameterValidator extends BaseParameterValidator {
 
         if (parameter.getFormat() != null) {
             FormatValidator<String> formatValidator = formatValidators.stream()
-                    .filter(validator -> validator.canValidate(parameter.getFormat()))
+                    .filter(validator -> validator.supports(parameter.getFormat()))
                     .findFirst()
                     .orElse(new NoOpStringFormatValidator());
 

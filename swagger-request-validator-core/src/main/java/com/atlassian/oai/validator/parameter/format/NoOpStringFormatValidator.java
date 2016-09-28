@@ -5,7 +5,7 @@ import com.atlassian.oai.validator.report.MutableValidationReport;
 public class NoOpStringFormatValidator implements FormatValidator<String> {
 
     @Override
-    public boolean canValidate(String format) {
+    public boolean supports(String format) {
         return false;
     }
 

@@ -16,7 +16,7 @@ public class DateTimeFormatValidator extends BaseDateFormatValidator {
     }
 
     @Override
-    public boolean canValidate(String format) {
+    public boolean supports(String format) {
         return format.equals("date-time");
     }
 
