@@ -4,24 +4,24 @@ import com.atlassian.oai.validator.report.MessageResolver;
 
 import java.time.format.DateTimeFormatter;
 
-public class DateFormatValidator extends BaseDateFormatValidator {
+public class DateTimeFormatValidator extends BaseDateFormatValidator {
 
-    public DateFormatValidator(MessageResolver messages) {
+    public DateTimeFormatValidator(MessageResolver messages) {
         super(messages);
     }
 
     @Override
     protected String getMessageKey() {
-        return "date";
+        return "dateTime";
     }
 
     @Override
     public boolean canValidate(String format) {
-        return format.equals("date");
+        return format.equals("date-time");
     }
 
     @Override
     protected DateTimeFormatter getFormatter() {
-        return DateTimeFormatter.ISO_DATE;
+        return DateTimeFormatter.ISO_DATE_TIME;
     }
 }

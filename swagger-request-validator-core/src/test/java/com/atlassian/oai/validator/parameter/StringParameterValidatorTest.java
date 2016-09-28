@@ -89,4 +89,15 @@ public class StringParameterValidatorTest {
         assertPass(classUnderTest.validate("2016-09-28", parameter));
     }
 
+    @Test
+    public void validate_withDateTimeFormat_shouldFail_whenNotAValidISODate() {
+        parameter.setFormat("date-time");
+        assertFail(classUnderTest.validate("2016--5dd-slkdjfl01938", parameter), "validation.request.parameter.string.dateTime.invalid");
+    }
+
+    @Test
+    public void validate_withDateTimeFormat_shouldPass_whenAValidISODate() {
+        parameter.setFormat("date-time");
+        assertPass(classUnderTest.validate("2016-09-28T11:22:33.111Z", parameter));
+    }
 }

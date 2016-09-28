@@ -1,6 +1,7 @@
 package com.atlassian.oai.validator.parameter;
 
 import com.atlassian.oai.validator.parameter.format.DateFormatValidator;
+import com.atlassian.oai.validator.parameter.format.DateTimeFormatValidator;
 import com.atlassian.oai.validator.parameter.format.FormatValidator;
 import com.atlassian.oai.validator.parameter.format.NoOpStringFormatValidator;
 import com.atlassian.oai.validator.report.MessageResolver;
@@ -19,7 +20,8 @@ public class StringParameterValidator extends BaseParameterValidator {
     public StringParameterValidator(final MessageResolver messages) {
         super(messages);
         formatValidators = asList(
-            new DateFormatValidator(messages)
+            new DateFormatValidator(messages),
+            new DateTimeFormatValidator(messages)
         );
     }
 

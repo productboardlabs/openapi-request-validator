@@ -16,20 +16,17 @@ public abstract class BaseDateFormatValidator implements FormatValidator<String>
     }
 
     @Override
-    public boolean canValidate(String format) {
-        return format.equals("date");
-    }
-
-    @Override
     public void validate(@Nonnull final MutableValidationReport report,
                          @Nonnull final String value) {
         DateTimeFormatter dateFormatter = getFormatter();
         try {
             dateFormatter.parse(value);
         } catch (DateTimeParseException e) {
-            report.add(messages.get("validation.request.parameter.string.date.invalid", value));
+            report.add(messages.get("validation.request.parameter.string." + getMessageKey() + ".invalid", value));
         }
     }
+
+    protected abstract String getMessageKey();
 
     protected abstract DateTimeFormatter getFormatter();
 }
