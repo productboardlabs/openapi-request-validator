@@ -7,6 +7,7 @@ import au.com.dius.pact.provider.ConsumerInfo;
 import au.com.dius.pact.provider.broker.PactBrokerClient;
 import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
 import com.atlassian.oai.validator.report.ValidationReport;
+import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,6 +121,11 @@ public class PactProviderValidator {
                         .reduce(ValidationReport.empty(), ValidationReport::merge);
 
         return new AbstractMap.SimpleEntry<>(consumer, report);
+    }
+
+    @VisibleForTesting
+    Collection<ConsumerInfo> getConsumers() {
+        return consumers;
     }
 
     /**
