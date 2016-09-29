@@ -59,6 +59,10 @@
             <groupId>au.com.dius</groupId>
             <artifactId>pact-jvm-consumer_2.11</artifactId>
         </dependency>
+        <dependency>
+            <groupId>au.com.dius</groupId>
+            <artifactId>pact-jvm-provider_2.11</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
