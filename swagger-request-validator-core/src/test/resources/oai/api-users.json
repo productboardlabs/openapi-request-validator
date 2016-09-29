@@ -8,6 +8,7 @@
     "name": "user",
     "description": "Operations related to Users"
   }],
+  "basePath": "/",
   "paths": {
     "/users": {
       "get": {

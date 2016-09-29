@@ -215,15 +215,18 @@ public class SwaggerRequestResponseValidator {
         }
 
         private String normalise(String requestPath) {
-            if (basePathOverride.isPresent()) {
-                requestPath = requestPath.replace(basePathOverride.get(), "");
-            } else if (api.getBasePath() != null) {
-                requestPath = requestPath.replace(api.getBasePath(), "");
-            }
+            requestPath = trimPrefix(requestPath, basePathOverride.isPresent() ? basePathOverride.get() : api.getBasePath());
             if (!requestPath.startsWith("/")) {
                 return "/" + requestPath;
             }
             return requestPath;
+        }
+
+        private String trimPrefix(@Nonnull String requestPath, @Nullable String prefix) {
+            if (prefix == null || !requestPath.startsWith(prefix)) {
+                return requestPath;
+            }
+            return requestPath.substring(prefix.length());
         }
     }
 
