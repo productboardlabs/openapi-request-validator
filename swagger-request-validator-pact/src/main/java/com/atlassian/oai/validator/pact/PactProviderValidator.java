@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.net.URL;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -99,6 +100,11 @@ public class PactProviderValidator {
         }
 
         public Builder withConsumer(final String consumerName, final String pactFileUrl) {
+            this.consumers.add(new ConsumerInfo(consumerName, pactFileUrl));
+            return this;
+        }
+
+        public Builder withConsumer(final String consumerName, final URL pactFileUrl) {
             this.consumers.add(new ConsumerInfo(consumerName, pactFileUrl));
             return this;
         }
