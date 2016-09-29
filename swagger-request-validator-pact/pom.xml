@@ -25,6 +25,24 @@
             <groupId>au.com.dius</groupId>
             <artifactId>pact-jvm-model_2.11</artifactId>
         </dependency>
+        <dependency>
+            <groupId>au.com.dius</groupId>
+            <artifactId>pact-jvm-provider_2.11</artifactId>
+        </dependency>
+
+        <!-- Pin the version of Jackson so we don't have classpath problems -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+        </dependency>
 
         <!-- Optional JUnit dependencies needed to use the provided JUnit rule -->
         <dependency>
@@ -37,6 +55,13 @@
             <artifactId>pact-jvm-consumer-junit_2.11</artifactId>
             <optional>true</optional>
         </dependency>
+
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 </project>
