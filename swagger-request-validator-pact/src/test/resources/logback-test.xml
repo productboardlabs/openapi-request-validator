@@ -5,7 +5,9 @@
         </encoder>
     </appender>
 
-    <root level="debug">
+    <logger name="com.atlassian.oai.validator.pact" level="DEBUG"/>
+
+    <root level="ERROR">
         <appender-ref ref="STDOUT"/>
     </root>
 </configuration>

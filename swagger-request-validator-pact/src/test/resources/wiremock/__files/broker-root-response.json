@@ -1,0 +1,14 @@
+{
+  "_links": {
+    "self": {
+      "href": "http://localhost:9999",
+      "title": "Index",
+      "templated": false
+    },
+    "pb:latest-provider-pacts": {
+      "href": "http://localhost:9999/pacts/provider/{provider}/latest",
+      "title": "Latest pacts by provider",
+      "templated": true
+    }
+  }
+}
