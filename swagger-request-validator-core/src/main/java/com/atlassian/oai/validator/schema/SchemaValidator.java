@@ -171,13 +171,11 @@ public class SchemaValidator {
      * Mutates the argument, use with caution!
      * @param node
      */
-    private void cleanupNullValues(JsonNode node) {
-        if (!node.isObject()) {
-            return;
-        } else {
-            Iterator<Map.Entry<String, JsonNode>> entries = node.fields();
+    private void cleanupNullValues(final JsonNode node) {
+        if (node.isObject()) {
+            final Iterator<Map.Entry<String, JsonNode>> entries = node.fields();
             while (entries.hasNext()) {
-                Map.Entry<String, JsonNode> entry = entries.next();
+                final Map.Entry<String, JsonNode> entry = entries.next();
                 if (entry.getValue().isNull()) {
                     entries.remove();
                 } else {
