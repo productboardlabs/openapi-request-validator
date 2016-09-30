@@ -53,6 +53,18 @@ public class NumberParameterValidatorTest {
     }
 
     @Test
+    public void validate_withValueEqualToMax_shouldFail_ifExclusiveMaxSpecified() {
+        assertFail(classUnderTest.validate("1.0", floatParam(null, 1.0, null, true)),
+            "validation.request.parameter.number.aboveExclusiveMax");
+    }
+
+    @Test
+    public void validate_withValueEqualToMin_shouldFail_ifExclusiveMinSpecified() {
+        assertFail(classUnderTest.validate("1.0", floatParam(1.0, null, true, null)),
+            "validation.request.parameter.number.belowExclusiveMin");
+    }
+
+    @Test
     public void validate_withValueLessThanMin_shouldFail_ifMinSpecified() {
         assertFail(classUnderTest.validate("0.9", floatParam(1.0, null)),
                 "validation.request.parameter.number.belowMin");

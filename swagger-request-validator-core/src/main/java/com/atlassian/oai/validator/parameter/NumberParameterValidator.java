@@ -6,6 +6,8 @@ import io.swagger.models.parameters.SerializableParameter;
 
 import javax.annotation.Nonnull;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
+
 public class NumberParameterValidator extends BaseParameterValidator {
 
     public NumberParameterValidator(final MessageResolver messages) {
@@ -38,17 +40,42 @@ public class NumberParameterValidator extends BaseParameterValidator {
             }
         }
 
-        final Double d = Double.parseDouble(value);
-        if (parameter.getMinimum() != null && d < parameter.getMinimum()) {
-            report.add(messages.get("validation.request.parameter.number.belowMin",
-                    value, parameter.getName(), parameter.getMinimum())
-            );
-        }
+        final Double doubleValue = Double.parseDouble(value);
+        validateMinimum(parameter, report, doubleValue);
+        validateMaximum(parameter, report, doubleValue);
+    }
 
-        if (parameter.getMaximum() != null && d > parameter.getMaximum()) {
-            report.add(messages.get("validation.request.parameter.number.aboveMax",
-                    value, parameter.getName(), parameter.getMaximum())
-            );
+    private void validateMinimum(@Nonnull SerializableParameter parameter, @Nonnull MutableValidationReport report, Double value) {
+        Double minimum = parameter.getMinimum();
+        boolean exclusiveMinimum = firstNonNull(parameter.isExclusiveMinimum(), false);
+
+        if (parameter.getMinimum() != null) {
+            if (exclusiveMinimum && value <= minimum) {
+                report.add(messages.get("validation.request.parameter.number.belowExclusiveMin",
+                    value, parameter.getName(), minimum)
+                );
+            } else if (!exclusiveMinimum && value < minimum) {
+                report.add(messages.get("validation.request.parameter.number.belowMin",
+                    value, parameter.getName(), minimum)
+                );
+            }
+        }
+    }
+
+    private void validateMaximum(@Nonnull SerializableParameter parameter, @Nonnull MutableValidationReport report, Double value) {
+        Double maximum = parameter.getMaximum();
+        boolean exclusiveMaximum = firstNonNull(parameter.isExclusiveMaximum(), false);
+
+        if (parameter.getMaximum() != null) {
+            if (exclusiveMaximum && value >= maximum) {
+                report.add(messages.get("validation.request.parameter.number.aboveExclusiveMax",
+                    value, parameter.getName(), maximum)
+                );
+            } else if (!exclusiveMaximum && value > maximum) {
+                report.add(messages.get("validation.request.parameter.number.aboveMax",
+                    value, parameter.getName(), maximum)
+                );
+            }
         }
     }
 

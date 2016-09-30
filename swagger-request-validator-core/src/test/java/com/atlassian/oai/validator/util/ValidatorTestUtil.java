@@ -2,6 +2,8 @@ package com.atlassian.oai.validator.util;
 
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReportFormatter;
+import io.swagger.models.parameters.AbstractSerializableParameter;
+import io.swagger.models.parameters.Parameter;
 import io.swagger.models.parameters.SerializableParameter;
 import io.swagger.models.properties.IntegerProperty;
 import io.swagger.models.properties.Property;
@@ -154,6 +156,19 @@ public class ValidatorTestUtil {
         when(result.getRequired()).thenReturn(required);
         when(result.getMinimum()).thenReturn(min);
         when(result.getMaximum()).thenReturn(max);
+        return result;
+    }
+
+    public static AbstractSerializableParameter<? extends Parameter> floatParam(final Double min, final Double max, Boolean exclusiveMin, Boolean exclusiveMax) {
+        final AbstractSerializableParameter<? extends Parameter> result = mock(AbstractSerializableParameter.class);
+        when(result.getName()).thenReturn("Test Parameter");
+        when(result.getType()).thenReturn("number");
+        when(result.getFormat()).thenReturn("float");
+        when(result.getRequired()).thenReturn(true);
+        when(result.getMinimum()).thenReturn(min);
+        when(result.getMaximum()).thenReturn(max);
+        when(result.isExclusiveMinimum()).thenReturn(exclusiveMin);
+        when(result.isExclusiveMaximum()).thenReturn(exclusiveMax);
         return result;
     }
 
