@@ -22,6 +22,9 @@ import io.swagger.util.Json;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import java.util.Iterator;
+import java.util.Map;
+
 import static com.atlassian.oai.validator.util.StringUtils.capitalise;
 import static com.atlassian.oai.validator.util.StringUtils.quote;
 import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
@@ -131,7 +134,11 @@ public class SchemaValidator {
             }
 
             final JsonNode content = Json.mapper().readTree(normalisedValue);
-            processingReport = (ListProcessingReport)jsonSchema.validate(content, true);
+            final JsonNode cleanedContent = content.deepCopy();
+
+            cleanupNullValues(cleanedContent);
+
+            processingReport = (ListProcessingReport)jsonSchema.validate(cleanedContent, true);
         } catch (final JsonParseException e) {
             validationReport.add(messages.get("validation.schema.invalidJson", e.getMessage()));
             return validationReport;
@@ -157,5 +164,24 @@ public class SchemaValidator {
         final String pointer = processingMessage.has("instance") ? processingMessage.get("instance").get("pointer").textValue() : "";
         final String message = (pointer.isEmpty() ? "" : "[Path '" + pointer + "'] ") + capitalise(pm.getMessage());
         validationReport.add(messages.create("validation.schema." + validationKeyword, message));
+    }
+
+    /**
+     * Method cleans up null values (except arrays) from given <code>JsonNode</code>.
+     * Mutates the argument, use with caution!
+     * @param node
+     */
+    private void cleanupNullValues(final JsonNode node) {
+        if (node.isObject()) {
+            final Iterator<Map.Entry<String, JsonNode>> entries = node.fields();
+            while (entries.hasNext()) {
+                final Map.Entry<String, JsonNode> entry = entries.next();
+                if (entry.getValue().isNull()) {
+                    entries.remove();
+                } else {
+                    cleanupNullValues(entry.getValue());
+                }
+            }
+        }
     }
 }
