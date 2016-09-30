@@ -215,8 +215,7 @@ public class SwaggerRequestResponseValidator {
         }
 
         private String normalise(final String requestPath) {
-            final String trimmedPath =
-                    trimPrefix(requestPath, basePathOverride.isPresent() ? basePathOverride.get() : api.getBasePath());
+            final String trimmedPath = trimPrefix(requestPath, basePathOverride.orElse(api.getBasePath()));
             if (!trimmedPath.startsWith("/")) {
                 return "/" + requestPath;
             }
