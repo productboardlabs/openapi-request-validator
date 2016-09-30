@@ -1,17 +1,11 @@
 package com.atlassian.oai.validator.examples.pact;
 
-import au.com.dius.pact.provider.ConsumerInfo;
+import com.atlassian.oai.validator.pact.PactProviderValidationResults;
 import com.atlassian.oai.validator.pact.PactProviderValidator;
 import com.atlassian.oai.validator.pact.ValidatedPactProviderRule;
-import com.atlassian.oai.validator.report.ValidationReport;
-import com.atlassian.oai.validator.report.ValidationReportFormatter;
 import org.junit.Test;
 
-import java.util.Map;
-
-import static java.lang.String.format;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 /**
  * An example Pact Provider test that uses the {@link PactProviderValidator} to validate consumer Pacts
@@ -63,12 +57,12 @@ public class SwaggerValidatorPactProviderTestExample {
 
     }
 
-    private void assertNoBreakingChanges(final Map<ConsumerInfo, ValidationReport> results) {
-        results.forEach((consumer, report) -> {
-            assertThat(format("Validation errors found for consumer '%s':\n%s",
-                    consumer.getName(), ValidationReportFormatter.format(report)),
-                    report.hasErrors(), is(false));
-        });
+    private void assertNoBreakingChanges(final PactProviderValidationResults results) {
+        if (results.hasErrors()) {
+            final StringBuilder msg = new StringBuilder("Validation errors found.\n\t");
+            msg.append(results.getValidationFailureReport().replace("\n", "\n\t"));
+            fail(msg.toString());
+        }
     }
 
 }

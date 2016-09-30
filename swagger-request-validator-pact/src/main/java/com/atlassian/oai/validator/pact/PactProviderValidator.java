@@ -14,18 +14,15 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.net.URL;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toList;
 
 /**
  * A validator that can be used on the Provider side to validate Consumer Pacts against the
@@ -90,37 +87,44 @@ public class PactProviderValidator {
     /**
      * Perform the validation of Consumer Pacts against the configured Swagger API specification.
      *
-     * @return A map that contains the {@link ValidationReport} for each Consumer.
+     * @return The results of validation for each Consumer.
      */
-    public Map<ConsumerInfo, ValidationReport> validate() {
+    public PactProviderValidationResults validate() {
         log.debug("Validating {} consumers against API spec", consumers.size());
+
+        final PactProviderValidationResults result = new PactProviderValidationResults();
+
         if (consumers.isEmpty()) {
             log.warn("No consumers supplied. No validation will be performed.");
-            return emptyMap();
+            return result;
         }
-        return consumers
-                .stream()
-                .filter(c -> c != null)
-                .map(this::doValidate)
-                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+        result.addConsumerResults(
+                consumers.stream()
+                        .filter(c -> c != null)
+                        .map(this::doValidate)
+                        .collect(toList())
+        );
+
+        return result;
     }
 
-    private Map.Entry<ConsumerInfo, ValidationReport> doValidate(@Nonnull final ConsumerInfo consumer) {
+    private PactProviderValidationResults.ConsumerResult doValidate(@Nonnull final ConsumerInfo consumer) {
 
         log.debug("Validating consumer '{}' against API spec", consumer.getName());
 
-        final Pact pact = PactReader.loadPact(consumer.getPactFile());
-        final ValidationReport report =
-                pact.getInteractions()
-                        .stream()
-                        .map(i ->
-                                validator.validate(
-                                        new PactRequest(((RequestResponseInteraction) i).getRequest()),
-                                        new PactResponse(((RequestResponseInteraction) i).getResponse()))
-                        )
-                        .reduce(ValidationReport.empty(), ValidationReport::merge);
+        final PactProviderValidationResults.ConsumerResult result =
+                new PactProviderValidationResults.ConsumerResult(consumer.getName(), consumer.getPactFile() + "");
 
-        return new AbstractMap.SimpleEntry<>(consumer, report);
+        final Pact pact = PactReader.loadPact(consumer.getPactFile());
+
+        pact.getInteractions().forEach(i -> {
+            final ValidationReport report = validator.validate(
+                    new PactRequest(((RequestResponseInteraction) i).getRequest()),
+                    new PactResponse(((RequestResponseInteraction) i).getResponse()));
+            result.addInteractionResult(i.getDescription(), report);
+        });
+
+        return result;
     }
 
     @VisibleForTesting
