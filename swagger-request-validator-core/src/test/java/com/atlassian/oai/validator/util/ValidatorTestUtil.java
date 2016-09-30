@@ -116,6 +116,19 @@ public class ValidatorTestUtil {
         return result;
     }
 
+    public static SerializableParameter intParam(final Double min, final Double max, final Boolean exclusiveMin, final Boolean exclusiveMax) {
+        final SerializableParameter result = mock(SerializableParameter.class);
+        when(result.getName()).thenReturn("Test Parameter");
+        when(result.getType()).thenReturn("integer");
+        when(result.getFormat()).thenReturn("int32");
+        when(result.getRequired()).thenReturn(true);
+        when(result.getMinimum()).thenReturn(min);
+        when(result.getMaximum()).thenReturn(max);
+        when(result.isExclusiveMinimum()).thenReturn(exclusiveMin);
+        when(result.isExclusiveMaximum()).thenReturn(exclusiveMax);
+        return result;
+    }
+
     // String parameters
 
     public static SerializableParameter stringParam() {
@@ -159,8 +172,8 @@ public class ValidatorTestUtil {
         return result;
     }
 
-    public static AbstractSerializableParameter<? extends Parameter> floatParam(final Double min, final Double max, Boolean exclusiveMin, Boolean exclusiveMax) {
-        final AbstractSerializableParameter<? extends Parameter> result = mock(AbstractSerializableParameter.class);
+    public static SerializableParameter floatParam(final Double min, final Double max, Boolean exclusiveMin, Boolean exclusiveMax) {
+        final SerializableParameter result = mock(SerializableParameter.class);
         when(result.getName()).thenReturn("Test Parameter");
         when(result.getType()).thenReturn("number");
         when(result.getFormat()).thenReturn("float");

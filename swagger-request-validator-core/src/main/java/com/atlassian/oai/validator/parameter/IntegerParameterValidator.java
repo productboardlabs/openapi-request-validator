@@ -6,7 +6,7 @@ import io.swagger.models.parameters.SerializableParameter;
 
 import javax.annotation.Nonnull;
 
-public class IntegerParameterValidator extends BaseParameterValidator {
+public class IntegerParameterValidator extends BaseNumericParameterValidator {
 
     public IntegerParameterValidator(final MessageResolver messages) {
         super(messages);
@@ -19,49 +19,13 @@ public class IntegerParameterValidator extends BaseParameterValidator {
     }
 
     @Override
-    protected void doValidate(
-            @Nonnull final String value,
-            @Nonnull final SerializableParameter parameter,
-            @Nonnull final MutableValidationReport report) {
-
+    protected Number getNumericValue(String value, SerializableParameter parameter) throws NumberFormatException {
         if (parameter.getFormat().equalsIgnoreCase("int32")) {
-            try {
-                Integer.parseInt(value);
-            } catch (NumberFormatException e) {
-                failFormatValidation(value, parameter, "int32", report);
-                return;
-            }
-        } else if (parameter.getFormat().equalsIgnoreCase("int64")){
-            try {
-                Long.parseLong(value);
-            } catch (NumberFormatException e) {
-                failFormatValidation(value, parameter, "int64", report);
-                return;
-            }
+            return Integer.parseInt(value);
+        } else if (parameter.getFormat().equalsIgnoreCase("int64")) {
+            return Long.parseLong(value);
+        } else {
+            throw new IllegalArgumentException(parameter.getFormat() + " is not a valid integer format");
         }
-
-        final Long d = Long.parseLong(value);
-        if (parameter.getMinimum() != null && d < parameter.getMinimum()) {
-            report.add(messages.get("validation.request.parameter.number.belowMin",
-                    value, parameter.getName(), parameter.getMinimum())
-            );
-        }
-
-        if (parameter.getMaximum() != null && d > parameter.getMaximum()) {
-            report.add(messages.get("validation.request.parameter.number.aboveMax",
-                    value, parameter.getName(), parameter.getMaximum())
-            );
-        }
-    }
-
-    private void failFormatValidation(
-            final String value,
-            final SerializableParameter parameter,
-            final String format,
-            final MutableValidationReport report) {
-
-        report.add(messages.get("validation.request.parameter.invalidFormat",
-                value, parameter.getName(), supportedParameterType(), format)
-        );
     }
 }

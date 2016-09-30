@@ -3,9 +3,8 @@ package com.atlassian.oai.validator.parameter;
 import com.atlassian.oai.validator.report.MessageResolver;
 import org.junit.Test;
 
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.intParam;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.*;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.floatParam;
 
 public class IntegerParameterValidatorTest {
 
@@ -59,6 +58,18 @@ public class IntegerParameterValidatorTest {
     @Test
     public void validate_withValueInRange_shouldPass() {
         assertPass(classUnderTest.validate("2", intParam(1.0, 3.0)));
+    }
+
+    @Test
+    public void validate_withValueEqualToMax_shouldFail_ifExclusiveMaxSpecified() {
+        assertFail(classUnderTest.validate("1", intParam(null, 1.0, null, true)),
+            "validation.request.parameter.number.aboveExclusiveMax");
+    }
+
+    @Test
+    public void validate_withValueEqualToMin_shouldFail_ifExclusiveMinSpecified() {
+        assertFail(classUnderTest.validate("1", intParam(1.0, null, true, null)),
+            "validation.request.parameter.number.belowExclusiveMin");
     }
 
 }
