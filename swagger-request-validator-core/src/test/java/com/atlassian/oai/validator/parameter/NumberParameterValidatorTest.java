@@ -1,11 +1,10 @@
 package com.atlassian.oai.validator.parameter;
 
 import com.atlassian.oai.validator.report.MessageResolver;
+import com.atlassian.oai.validator.util.ValidatorTestUtil;
 import org.junit.Test;
 
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.floatParam;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.*;
 
 public class NumberParameterValidatorTest {
 
@@ -73,5 +72,16 @@ public class NumberParameterValidatorTest {
     @Test
     public void validate_withValueInRange_shouldPass() {
         assertPass(classUnderTest.validate("1.1", floatParam(1.0, 1.2)));
+    }
+
+    @Test
+    public void validate_withValueNotMultipleOf_shouldFail() {
+        assertFail(classUnderTest.validate("1.6", floatParamMultipleOf(0.5f)),
+            "validation.request.parameter.number.multipleOf");
+    }
+
+    @Test
+    public void validate_withValueMultipleOf_shouldPass() {
+        assertPass(classUnderTest.validate("1.5", floatParamMultipleOf(0.5f)));
     }
 }

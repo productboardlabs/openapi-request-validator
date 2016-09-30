@@ -5,6 +5,7 @@ import com.atlassian.oai.validator.report.MutableValidationReport;
 import io.swagger.models.parameters.SerializableParameter;
 
 import javax.annotation.Nonnull;
+import javax.print.Doc;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 
@@ -20,9 +21,10 @@ public abstract class BaseNumericParameterValidator extends BaseParameterValidat
                               @Nonnull MutableValidationReport validationReport) {
 
         try {
-            Number numericValue = getNumericValue(value, parameter);
-            validateMinimum(parameter, validationReport, numericValue.doubleValue());
-            validateMaximum(parameter, validationReport, numericValue.doubleValue());
+            double doubleValue = getNumericValue(value, parameter).doubleValue();
+            validateMinimum(parameter, validationReport, doubleValue);
+            validateMaximum(parameter, validationReport, doubleValue);
+            validateMultipleOf(parameter, validationReport, doubleValue);
         } catch (NumberFormatException e) {
             failFormatValidation(value, parameter, parameter.getFormat(), validationReport);
         }
@@ -39,7 +41,22 @@ public abstract class BaseNumericParameterValidator extends BaseParameterValidat
 
     }
 
-    private void validateMinimum(@Nonnull SerializableParameter parameter, @Nonnull MutableValidationReport report, Double value) {
+    private void validateMultipleOf(SerializableParameter parameter,
+                                    MutableValidationReport report,
+                                    Double value) {
+
+        Number multipleOf = parameter.getMultipleOf();
+        Double doubleMultipleOf = multipleOf != null ?
+            multipleOf.doubleValue() :
+            null;
+        if (doubleMultipleOf != null && (value % doubleMultipleOf != 0d)) {
+            report.add(messages.get("validation.request.parameter.number.multipleOf",
+                value, parameter.getName(), multipleOf)
+            );
+        }
+    }
+
+    private void validateMinimum(SerializableParameter parameter, MutableValidationReport report, Double value) {
         Double minimum = parameter.getMinimum();
         boolean exclusiveMinimum = firstNonNull(parameter.isExclusiveMinimum(), false);
 
@@ -56,7 +73,7 @@ public abstract class BaseNumericParameterValidator extends BaseParameterValidat
         }
     }
 
-    private void validateMaximum(@Nonnull SerializableParameter parameter, @Nonnull MutableValidationReport report, Double value) {
+    private void validateMaximum(SerializableParameter parameter, MutableValidationReport report, Double value) {
         Double maximum = parameter.getMaximum();
         boolean exclusiveMaximum = firstNonNull(parameter.isExclusiveMaximum(), false);
 

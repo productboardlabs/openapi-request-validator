@@ -41,7 +41,7 @@ public class ValidatorTestUtil {
 
         for (String key : expectedKeys) {
             assertThat(format("Expected message key '%s' but not found. Found <%s>.", key, foundKeys.toString()),
-                    foundKeys.contains(key), is(true));
+                foundKeys.contains(key), is(true));
         }
 
     }
@@ -57,7 +57,6 @@ public class ValidatorTestUtil {
      * Load a response JSON file with the given name.
      *
      * @param responseName The name of the response to load
-     *
      * @return The response JSON as a String, or <code>null</code> if it cannot be loaded
      */
     public static String loadResponse(final String responseName) {
@@ -68,7 +67,6 @@ public class ValidatorTestUtil {
      * Load a request JSON file with the given name.
      *
      * @param requestName The name of the request to load
-     *
      * @return The response JSON as a String, or <code>null</code> if it cannot be loaded
      */
     public static String loadRequest(final String requestName) {
@@ -129,6 +127,20 @@ public class ValidatorTestUtil {
         return result;
     }
 
+    public static SerializableParameter intParamMultipleOf(Number multipleOf) {
+        final SerializableParameter result = mock(SerializableParameter.class);
+        when(result.getName()).thenReturn("Test Parameter");
+        when(result.getType()).thenReturn("integer");
+        when(result.getFormat()).thenReturn("int64");
+        when(result.getMultipleOf()).thenReturn(multipleOf);
+        when(result.getRequired()).thenReturn(true);
+        when(result.getMinimum()).thenReturn(null);
+        when(result.getMaximum()).thenReturn(null);
+        when(result.isExclusiveMinimum()).thenReturn(null);
+        when(result.isExclusiveMaximum()).thenReturn(null);
+        return result;
+    }
+
     // String parameters
 
     public static SerializableParameter stringParam() {
@@ -182,6 +194,19 @@ public class ValidatorTestUtil {
         when(result.getMaximum()).thenReturn(max);
         when(result.isExclusiveMinimum()).thenReturn(exclusiveMin);
         when(result.isExclusiveMaximum()).thenReturn(exclusiveMax);
+        return result;
+    }
+
+    public static SerializableParameter floatParamMultipleOf(Number multipleOf) {
+        final SerializableParameter result = mock(SerializableParameter.class);
+        when(result.getName()).thenReturn("Test Parameter");
+        when(result.getType()).thenReturn("number");
+        when(result.getFormat()).thenReturn("float");
+        when(result.getMinimum()).thenReturn(null);
+        when(result.getMaximum()).thenReturn(null);
+        when(result.isExclusiveMinimum()).thenReturn(null);
+        when(result.isExclusiveMaximum()).thenReturn(null);
+        when(result.getMultipleOf()).thenReturn(multipleOf);
         return result;
     }
 

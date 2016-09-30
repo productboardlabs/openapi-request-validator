@@ -72,4 +72,15 @@ public class IntegerParameterValidatorTest {
             "validation.request.parameter.number.belowExclusiveMin");
     }
 
+    @Test
+    public void validate_withValueNotMultipleOf_shouldFail() {
+        assertFail(classUnderTest.validate("17", intParamMultipleOf(5)),
+            "validation.request.parameter.number.multipleOf");
+    }
+
+    @Test
+    public void validate_withValueMultipleOf_shouldPass() {
+        assertPass(classUnderTest.validate("25", intParamMultipleOf(5)));
+    }
+
 }
