@@ -1,0 +1,58 @@
+{
+    "provider": {
+        "name": "Petstore"
+    },
+    "consumer": {
+        "name": "ExampleConsumer"
+    },
+    "interactions": [
+        {
+            "providerState": null,
+            "description": "GET pet",
+            "request": {
+                "method": "GET",
+                "path": "/pet/2",
+                "body": null
+            },
+            "response": {
+                "status": 200,
+                "headers": {
+                    "Content-Type": "application/json; charset=UTF-8"
+                },
+                "body": {
+                    "name": "fido",
+                    "breed": "Small and yappy"
+                }
+            }
+        },
+        {
+            "providerState": null,
+            "description": "GET valid pet",
+            "request": {
+                "method": "GET",
+                "path": "/pet/1",
+                "body": null
+            },
+            "response": {
+                "status": 200,
+                "headers": {
+                    "Content-Type": "application/json; charset=UTF-8"
+                },
+                "body": {
+                    "name": "fido",
+                    "photoUrls": [
+                        
+                    ]
+                }
+            }
+        }
+    ],
+    "metadata": {
+        "pact-specification": {
+            "version": "2.0.0"
+        },
+        "pact-jvm": {
+            "version": "3.2.6"
+        }
+    }
+}

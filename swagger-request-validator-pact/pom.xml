@@ -26,6 +26,20 @@
             <artifactId>pact-jvm-model_2.11</artifactId>
         </dependency>
 
+        <!-- Pin the version of Jackson so we don't have classpath problems -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+        </dependency>
+
         <!-- Optional JUnit dependencies needed to use the provided JUnit rule -->
         <dependency>
             <groupId>junit</groupId>
@@ -37,6 +51,31 @@
             <artifactId>pact-jvm-consumer-junit_2.11</artifactId>
             <optional>true</optional>
         </dependency>
+
+        <!-- Optional Pact Provider dependencies needed to use the PactProviderValidator -->
+        <dependency>
+            <groupId>au.com.dius</groupId>
+            <artifactId>pact-jvm-provider_2.11</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Test dependencies -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-library</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.tomakehurst</groupId>
+            <artifactId>wiremock</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 </project>

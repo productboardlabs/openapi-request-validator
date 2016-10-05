@@ -214,16 +214,19 @@ public class SwaggerRequestResponseValidator {
             return normalised;
         }
 
-        private String normalise(String requestPath) {
-            if (basePathOverride.isPresent()) {
-                requestPath = requestPath.replace(basePathOverride.get(), "");
-            } else if (api.getBasePath() != null) {
-                requestPath = requestPath.replace(api.getBasePath(), "");
-            }
-            if (!requestPath.startsWith("/")) {
+        private String normalise(final String requestPath) {
+            final String trimmedPath = trimPrefix(requestPath, basePathOverride.orElse(api.getBasePath()));
+            if (!trimmedPath.startsWith("/")) {
                 return "/" + requestPath;
             }
-            return requestPath;
+            return trimmedPath;
+        }
+
+        private String trimPrefix(@Nonnull String requestPath, @Nullable String prefix) {
+            if (prefix == null || !requestPath.startsWith(prefix)) {
+                return requestPath;
+            }
+            return requestPath.substring(prefix.length());
         }
     }
 
