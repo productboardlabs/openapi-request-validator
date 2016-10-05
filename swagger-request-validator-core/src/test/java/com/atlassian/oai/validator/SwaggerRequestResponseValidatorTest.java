@@ -246,4 +246,16 @@ public class SwaggerRequestResponseValidatorTest {
         assertPass(classUnderTest.validate(request, response));
     }
 
+    @Test
+    public void validate_jsonPayloadAccepted() {
+
+        final SwaggerRequestResponseValidator validator = SwaggerRequestResponseValidator.createFor("{}").build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void validate_neitherPathNorJson() {
+
+        final SwaggerRequestResponseValidator validator = SwaggerRequestResponseValidator.createFor("<>").build();
+    }
+
 }
