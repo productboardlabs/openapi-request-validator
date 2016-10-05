@@ -259,7 +259,7 @@ public class SwaggerRequestResponseValidator {
          *     .withSwaggerJsonUrl("/api/swagger.json");
          * </pre>
          *
-         * @param swaggerJsonUrl The location of the Swagger JSON specification to use in the validator.
+         * @param swaggerJsonUrlOrPayload The location of the Swagger JSON specification to use in the validator.
          * @return this builder instance.
          */
         public Builder withSwaggerJsonUrl(final String swaggerJsonUrlOrPayload) {
