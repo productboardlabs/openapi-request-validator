@@ -16,6 +16,7 @@ import io.swagger.models.Operation;
 import io.swagger.models.Path;
 import io.swagger.models.Swagger;
 import io.swagger.parser.SwaggerParser;
+import io.swagger.parser.util.RemoteUrl;
 import io.swagger.parser.util.SwaggerDeserializationResult;
 
 import javax.annotation.Nonnull;
@@ -47,7 +48,7 @@ public class SwaggerRequestResponseValidator {
     private final ResponseValidator responseValidator;
 
     /**
-     * Create a new instance using the Swagger JSON specification at the given location.
+     * Create a new instance using the Swagger JSON specification at the given location OR actual swagger JSON String payload.
      * <p>
      * The URL can be an absolute HTTP/HTTPS URL, a File URL or a classpath location (without the classpath: scheme).
      * <p>
@@ -61,10 +62,12 @@ public class SwaggerRequestResponseValidator {
      *
      *     // Create from a classpath resource in the /api package
      *     .createFor("/api/swagger.json");
+     *
+     *     // Create from a swagger JSON payload
+     *     .createFor("{\"swagger\": \"2.0\", ...}")
      * </pre>
      *
      * @param swaggerJsonUrl The location of the Swagger JSON specification to use in the validator.
-     *
      * @return A new builder instance to use for creating configuring {@link SwaggerRequestResponseValidator} instances.
      */
     public static Builder createFor(@Nonnull final String swaggerJsonUrl) {
@@ -74,23 +77,25 @@ public class SwaggerRequestResponseValidator {
     /**
      * Construct a new validator for the specification at the given URL.
      *
-     * @param swaggerJsonUrl The location of the Swagger JSON specification to use in this validator.
+     * @param swaggerJsonUrl   The location of the Swagger JSON specification to use in this validator.
      * @param basePathOverride (Optional) override for the base path defined in the Swagger specification.
-     * @param messages The message resolver to use for resolving validation messages.
+     * @param messages         The message resolver to use for resolving validation messages.
      */
-    private SwaggerRequestResponseValidator(@Nonnull final String swaggerJsonUrl,
+    private SwaggerRequestResponseValidator(@Nonnull final String swaggerJsonUrlOrPayload,
                                             @Nullable final String basePathOverride,
                                             @Nonnull final MessageResolver messages) {
 
-        requireNonNull(swaggerJsonUrl, "A Swagger URL is required");
+        requireNonNull(swaggerJsonUrlOrPayload, "A Swagger JSON URL or payload is required");
 
         final SwaggerDeserializationResult swaggerParseResult =
-                new SwaggerParser().readWithInfo(swaggerJsonUrl, null, true);
+                swaggerJsonUrlOrPayload.startsWith("{") ?
+                        new SwaggerParser().readWithInfo(swaggerJsonUrlOrPayload) :
+                        new SwaggerParser().readWithInfo(swaggerJsonUrlOrPayload, null, true);
         this.api = swaggerParseResult.getSwagger();
         if (api == null) {
             throw new IllegalArgumentException(
-                    format("Unable to load API descriptor from %s:\n\t%s",
-                            swaggerJsonUrl, swaggerParseResult.getMessages().toString().replace("\n", "\n\t")));
+                    format("Unable to load API descriptor from provided %s:\n\t%s",
+                            swaggerJsonUrlOrPayload, swaggerParseResult.getMessages().toString().replace("\n", "\n\t")));
         }
         this.basePathOverride = Optional.ofNullable(basePathOverride);
         this.messages = messages;
@@ -101,12 +106,11 @@ public class SwaggerRequestResponseValidator {
 
     /**
      * Validate the given request/response against the API.
-     *
+     * <p>
      * See class docs for more information on the validation performed.
      *
-     * @param request The request to validate (required)
+     * @param request  The request to validate (required)
      * @param response The response to validate (required)
-     *
      * @return The outcome of the validation
      */
     @Nonnull
@@ -234,7 +238,7 @@ public class SwaggerRequestResponseValidator {
      * A builder used to createFor configured instances of the {@link SwaggerRequestResponseValidator}.
      */
     public static class Builder {
-        private String swaggerJsonUrl;
+        private String swaggerJsonUrlOrPayload = "";
         private String basePathOverride;
         private LevelResolver levelResolver = LevelResolver.defaultResolver();
 
@@ -254,12 +258,12 @@ public class SwaggerRequestResponseValidator {
          *     // Create from a classpath resource in the /api package
          *     .withSwaggerJsonUrl("/api/swagger.json");
          * </pre>
-         * @param swaggerJsonUrl The location of the Swagger JSON specification to use in the validator.
          *
+         * @param swaggerJsonUrl The location of the Swagger JSON specification to use in the validator.
          * @return this builder instance.
          */
-        public Builder withSwaggerJsonUrl(final String swaggerJsonUrl) {
-            this.swaggerJsonUrl = swaggerJsonUrl;
+        public Builder withSwaggerJsonUrl(final String swaggerJsonUrlOrPayload) {
+            this.swaggerJsonUrlOrPayload = swaggerJsonUrlOrPayload;
             return this;
         }
 
@@ -270,7 +274,6 @@ public class SwaggerRequestResponseValidator {
          * requests against an internal URL where the URL paths differ.
          *
          * @param basePathOverride An optional basepath override to override the one defined in the Swagger spec.
-         *
          * @return this builder instance.
          */
         public Builder withBasePathOverride(final String basePathOverride) {
@@ -287,7 +290,6 @@ public class SwaggerRequestResponseValidator {
          * If not provided, a default resolver will be used that resolves all message to ERROR.
          *
          * @param levelResolver The resolver to use for resolving validation message levels.
-         *
          * @return this builder instance.
          */
         public Builder withLevelResolver(final LevelResolver levelResolver) {
@@ -301,7 +303,7 @@ public class SwaggerRequestResponseValidator {
          * @return The configured {@link SwaggerRequestResponseValidator} instance.
          */
         public SwaggerRequestResponseValidator build() {
-            return new SwaggerRequestResponseValidator(swaggerJsonUrl, basePathOverride, new MessageResolver(levelResolver));
+            return new SwaggerRequestResponseValidator(swaggerJsonUrlOrPayload, basePathOverride, new MessageResolver(levelResolver));
         }
     }
 }
