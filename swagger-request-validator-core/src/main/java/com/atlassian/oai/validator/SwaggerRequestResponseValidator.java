@@ -67,17 +67,17 @@ public class SwaggerRequestResponseValidator {
      *     .createFor("{\"swagger\": \"2.0\", ...}")
      * </pre>
      *
-     * @param swaggerJsonUrl The location of the Swagger JSON specification to use in the validator.
+     * @param swaggerJsonUrlOrPayload The location of the Swagger JSON specification to use in the validator.
      * @return A new builder instance to use for creating configuring {@link SwaggerRequestResponseValidator} instances.
      */
-    public static Builder createFor(@Nonnull final String swaggerJsonUrl) {
-        return new Builder().withSwaggerJsonUrl(swaggerJsonUrl);
+    public static Builder createFor(@Nonnull final String swaggerJsonUrlOrPayload) {
+        return new Builder().withSwaggerJsonUrl(swaggerJsonUrlOrPayload);
     }
 
     /**
      * Construct a new validator for the specification at the given URL.
      *
-     * @param swaggerJsonUrl   The location of the Swagger JSON specification to use in this validator.
+     * @param swaggerJsonUrlOrPayload   The location of the Swagger JSON specification to use in this validator.
      * @param basePathOverride (Optional) override for the base path defined in the Swagger specification.
      * @param messages         The message resolver to use for resolving validation messages.
      */
