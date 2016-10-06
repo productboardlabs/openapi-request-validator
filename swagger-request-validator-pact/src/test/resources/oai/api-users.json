@@ -4,55 +4,44 @@
     "title": "Users",
     "version": "1.0.0"
   },
-  "tags": [
-    {
-      "name": "user",
-      "description": "Operations related to Users"
-    }
-  ],
+  "tags": [{
+    "name": "user",
+    "description": "Operations related to Users"
+  }],
   "basePath": "/",
   "paths": {
     "/users": {
       "get": {
-        "tags": [
-          "user"
-        ],
+        "tags": ["user"],
         "summary": "Get all users",
         "operationId": "get all users",
         "produces": [
           "application/json"
         ],
-        "security": [
-          {
-            "basic": [
-              "read_users"
-            ]
+        "security": [{
+          "basic": ["read_users"]
+        }],
+        "parameters": [{
+          "name": "maxCount",
+          "in": "query",
+          "description": "The maximum number of results to return",
+          "required": false,
+          "type": "integer",
+          "format": "int32",
+          "minimum": 1
+        }, {
+          "name": "filter",
+          "in": "query",
+          "description": "The IDs include in the results",
+          "required": false,
+          "type": "array",
+          "collectionFormat": "csv",
+          "maxItems": 10,
+          "items": {
+            "type": "number",
+            "format": "int32"
           }
-        ],
-        "parameters": [
-          {
-            "name": "maxCount",
-            "in": "query",
-            "description": "The maximum number of results to return",
-            "required": false,
-            "type": "integer",
-            "format": "int32",
-            "minimum": 1
-          },
-          {
-            "name": "filter",
-            "in": "query",
-            "description": "The IDs include in the results",
-            "required": false,
-            "type": "array",
-            "collectionFormat": "csv",
-            "maxItems": 10,
-            "items": {
-              "type": "number",
-              "format": "int32"
-            }
-          }
-        ],
+        }],
         "responses": {
           "200": {
             "description": "Users response",
@@ -75,9 +64,7 @@
         }
       },
       "post": {
-        "tags": [
-          "user"
-        ],
+        "tags": ["user"],
         "summary": "Create a new user",
         "operationId": "create new user",
         "produces": [
@@ -86,24 +73,18 @@
         "consumes": [
           "application/json"
         ],
-        "security": [
-          {
-            "basic": [
-              "create_user"
-            ]
+        "security": [{
+          "basic": ["create_user"]
+        }],
+        "parameters": [{
+          "name": "user",
+          "in": "body",
+          "description": "The new user details to create",
+          "required": true,
+          "schema": {
+            "$ref": "#/definitions/NewUser"
           }
-        ],
-        "parameters": [
-          {
-            "name": "user",
-            "in": "body",
-            "description": "The new user details to create",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/NewUser"
-            }
-          }
-        ],
+        }],
         "responses": {
           "200": {
             "description": "User response",
@@ -116,29 +97,22 @@
     },
     "/users/{id}": {
       "get": {
-        "tags": [
-          "user"
-        ],
+        "tags": ["user"],
         "summary": "Get a single user",
         "operationId": "get user by ID",
         "produces": [
           "application/json"
         ],
-        "security": [
-          {
-            "basic": [
-              "read_users"
-            ]
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The ID of the user to get",
-            "required": true,
-            "type": "integer",
-            "format": "int32"
+        "security": [{
+          "basic": ["read_users"]
+        }],
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "description": "The ID of the user to get",
+          "required": true,
+          "type": "integer",
+          "format": "int32"
           },
           {
             "name": "attributes",
@@ -146,8 +120,7 @@
             "description": "A comma separated list of additional attributes to include",
             "required": false,
             "type": "string"
-          }
-        ],
+          }],
         "responses": {
           "200": {
             "description": "User response",
@@ -183,19 +156,14 @@
         "produces": [
           "application/json"
         ],
-        "parameters": [
-          {
-            "name": "type",
-            "in": "query",
-            "description": "What type of healthcheck to perform",
-            "required": true,
-            "type": "string",
-            "enum": [
-              "deep",
-              "shallow"
-            ]
-          }
-        ],
+        "parameters": [{
+          "name": "type",
+          "in": "query",
+          "description": "What type of healthcheck to perform",
+          "required": true,
+          "type": "string",
+          "enum": ["deep", "shallow"]
+        }],
         "responses": {
           "200": {
             "description": "Everything is ok"
