@@ -3,7 +3,10 @@ package com.atlassian.oai.validator.pact;
 import com.atlassian.oai.validator.model.Request;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
@@ -20,6 +23,9 @@ public class PactRequest implements Request {
     public PactRequest(@Nonnull final au.com.dius.pact.model.Request internalRequest) {
         requireNonNull(internalRequest, "An Pact request is required");
         this.internalRequest = internalRequest;
+        if (this.internalRequest.getQuery() == null) {
+            this.internalRequest.setQuery(new HashMap<>());
+        }
     }
 
     @Nonnull
@@ -49,6 +55,6 @@ public class PactRequest implements Request {
     @Nonnull
     @Override
     public Collection<String> getQueryParameterValues(String name) {
-        return internalRequest.getQuery().get(name);
+        return internalRequest.getQuery().getOrDefault(name, Collections.emptyList());
     }
 }

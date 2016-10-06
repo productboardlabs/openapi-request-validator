@@ -113,7 +113,14 @@
           "required": true,
           "type": "integer",
           "format": "int32"
-        }],
+          },
+          {
+            "name": "attributes",
+            "in": "query",
+            "description": "A comma separated list of additional attributes to include",
+            "required": false,
+            "type": "string"
+          }],
         "responses": {
           "200": {
             "description": "User response",
