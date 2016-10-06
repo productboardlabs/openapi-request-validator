@@ -5,6 +5,7 @@ import com.atlassian.oai.validator.model.Request;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Optional;
 
@@ -54,11 +55,6 @@ public class PactRequest implements Request {
     @Nonnull
     @Override
     public Collection<String> getQueryParameterValues(String name) {
-
-        Collection<String> c = internalRequest.getQuery().get(name);
-        if (c == null) {
-            c = new ArrayList<>();
-        }
-        return c;
+        return internalRequest.getQuery().getOrDefault(name, Collections.emptyList());
     }
 }
