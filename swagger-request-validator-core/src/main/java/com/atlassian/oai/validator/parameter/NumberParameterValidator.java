@@ -6,10 +6,24 @@ import io.swagger.models.parameters.SerializableParameter;
 
 import javax.annotation.Nonnull;
 
-public class NumberParameterValidator extends BaseParameterValidator {
+import static com.google.common.base.MoreObjects.firstNonNull;
+
+public class NumberParameterValidator extends BaseNumericParameterValidator {
 
     public NumberParameterValidator(final MessageResolver messages) {
         super(messages);
+    }
+
+    @Override
+    protected Number getNumericValue(String value, SerializableParameter parameter) throws NumberFormatException {
+        if (parameter.getFormat().equalsIgnoreCase("float")) {
+            return Float.parseFloat(value);
+        } else if (parameter.getFormat().equalsIgnoreCase("double")) {
+            return Double.parseDouble(value);
+        } else {
+            throw new IllegalArgumentException(parameter.getFormat() + " is not a valid number format");
+        }
+
     }
 
     @Override
@@ -18,48 +32,4 @@ public class NumberParameterValidator extends BaseParameterValidator {
         return "number";
     }
 
-    @Override
-    protected void doValidate(@Nonnull final String value,
-                              @Nonnull final SerializableParameter parameter,
-                              @Nonnull final MutableValidationReport report) {
-        if (parameter.getFormat().equalsIgnoreCase("float")) {
-            try {
-                Float.parseFloat(value);
-            } catch (NumberFormatException e) {
-                failFormatValidation(value, parameter, "float", report);
-                return;
-            }
-        } else if (parameter.getFormat().equalsIgnoreCase("double")){
-            try {
-                Double.parseDouble(value);
-            } catch (NumberFormatException e) {
-                failFormatValidation(value, parameter, "double", report);
-                return;
-            }
-        }
-
-        final Double d = Double.parseDouble(value);
-        if (parameter.getMinimum() != null && d < parameter.getMinimum()) {
-            report.add(messages.get("validation.request.parameter.number.belowMin",
-                    value, parameter.getName(), parameter.getMinimum())
-            );
-        }
-
-        if (parameter.getMaximum() != null && d > parameter.getMaximum()) {
-            report.add(messages.get("validation.request.parameter.number.aboveMax",
-                    value, parameter.getName(), parameter.getMaximum())
-            );
-        }
-    }
-
-    private void failFormatValidation(
-            final String value,
-            final SerializableParameter parameter,
-            final String format,
-            final MutableValidationReport report) {
-        report.add(messages.get("validation.request.parameter.invalidFormat",
-                value, parameter.getName(), supportedParameterType(), format)
-        );
-
-    }
 }
