@@ -55,6 +55,13 @@ public interface LevelLoader {
     }
 
     /**
+     * Loads default level values from the "default-levels.properties" file in the library's classpath.
+     */
+    static LevelLoader defaultsLoader() {
+        return new PropertiesLoader(LevelLoader.class.getResource("/default-levels.properties"), null);
+    }
+
+    /**
      * The default loader chain used when no other loader is specified.
      * <p>
      * Loads in the following order:
