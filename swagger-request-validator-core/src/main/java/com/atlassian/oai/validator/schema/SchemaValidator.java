@@ -21,7 +21,7 @@ import io.swagger.util.Json;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -36,6 +36,10 @@ import static java.util.Objects.requireNonNull;
  * Supports validation of properties and request/response bodies, and supports schema references.
  */
 public class SchemaValidator {
+
+    public static final String ADDITIONAL_PROPERTIES_KEY = "validation.schema.additionalProperties";
+    public static final String INVALID_JSON_KEY = "validation.schema.invalidJson";
+    public static final String UNKNOWN_ERROR_KEY = "validation.schema.unknownError";
 
     private static final String ADDITIONAL_PROPERTIES_FIELD = "additionalProperties";
     private static final String DEFINITIONS_FIELD = "definitions";
@@ -102,24 +106,7 @@ public class SchemaValidator {
         ListProcessingReport processingReport = null;
         try {
             final JsonNode schemaObject = Json.mapper().readTree(Json.pretty(schema));
-            if (schemaObject instanceof ObjectNode) {
-                ((ObjectNode)schemaObject).set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
-            }
-
-            if (api != null) {
-                if (this.definitions == null) {
-                    this.definitions = Json.mapper().readTree(Json.pretty(api.getDefinitions()));
-
-                    // Explicitly disable additionalProperties
-                    // Calling code can choose what level to emit this failure at using validation.schema.additionalProperties
-                    this.definitions.forEach(n -> {
-                        if (!n.has(ADDITIONAL_PROPERTIES_FIELD)) {
-                            ((ObjectNode)n).set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
-                        }
-                    });
-                }
-                ((ObjectNode)schemaObject).set(DEFINITIONS_FIELD, this.definitions);
-            }
+            setupSchemaDefinitionRefs(schemaObject);
 
             // Only emit ERROR and above from the JSON schema validation
             final JsonSchemaFactory factory = JsonSchemaFactory.newBuilder()
@@ -140,13 +127,13 @@ public class SchemaValidator {
 
             processingReport = (ListProcessingReport)jsonSchema.validate(cleanedContent, true);
         } catch (final JsonParseException e) {
-            validationReport.add(messages.get("validation.schema.invalidJson", e.getMessage()));
+            validationReport.add(messages.get(INVALID_JSON_KEY, e.getMessage()));
             return validationReport;
         } catch (final ProcessingException e) {
             addProcessingMessage(validationReport, e.getProcessingMessage(), "processingError");
             return validationReport;
         } catch (final Exception e) {
-            validationReport.add(messages.get("validation.schema.unknownError", e.getMessage()));
+            validationReport.add(messages.get(UNKNOWN_ERROR_KEY, e.getMessage()));
             return validationReport;
         }
 
@@ -154,6 +141,33 @@ public class SchemaValidator {
             processingReport.forEach(pm -> addProcessingMessage(validationReport, pm, null));
         }
         return validationReport;
+    }
+
+    private void setupSchemaDefinitionRefs(JsonNode schemaObject) throws IOException {
+        if (schemaObject instanceof ObjectNode && additionalPropertiesValidationEnabled()) {
+            ((ObjectNode)schemaObject).set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
+        }
+
+        if (api != null) {
+            if (this.definitions == null) {
+                this.definitions = Json.mapper().readTree(Json.pretty(api.getDefinitions()));
+
+                // Explicitly disable additionalProperties
+                // Calling code can choose what level to emit this failure at using validation.schema.additionalProperties
+                if (additionalPropertiesValidationEnabled()) {
+                    this.definitions.forEach(n -> {
+                        if (!n.has(ADDITIONAL_PROPERTIES_FIELD)) {
+                            ((ObjectNode)n).set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
+                        }
+                    });
+                }
+            }
+            ((ObjectNode)schemaObject).set(DEFINITIONS_FIELD, this.definitions);
+        }
+    }
+
+    private boolean additionalPropertiesValidationEnabled() {
+        return !messages.isIgnored(ADDITIONAL_PROPERTIES_KEY);
     }
 
     private void addProcessingMessage(final MutableValidationReport validationReport,

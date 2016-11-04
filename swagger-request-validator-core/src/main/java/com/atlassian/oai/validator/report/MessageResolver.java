@@ -77,4 +77,29 @@ public class MessageResolver {
         return new ImmutableMessage(key, level, message);
     }
 
+    /**
+     * Get the level that the given message key would be resolved at when using the {@link #get} or
+     * {@link #create} methods.
+     * <p>
+     * Used in a small number of places where optimisations can be made if a validation will be ignored.
+     *
+     * @param key The message key to test
+     * @return The level the given message key will be resolved at, as determined by the configured {@link LevelResolver}.
+     */
+    public ValidationReport.Level getLevel(@Nonnull final String key) {
+        return levelResolver.getLevel(key);
+    }
+
+    /**
+     * Determine if the message with the given key would be resolved with a level of {@link ValidationReport.Level#IGNORE}.
+     * <p>
+     * Used in a small number of places where optimisations can be made if a validation will be ignored.
+     *
+     * @param key The message key to test
+     * @return <code>true</code> if the given message key will be ignored; <code>false</code> otherwise.
+     */
+    public boolean isIgnored(@Nonnull final String key) {
+        return getLevel(key) == ValidationReport.Level.IGNORE;
+    }
+
 }
