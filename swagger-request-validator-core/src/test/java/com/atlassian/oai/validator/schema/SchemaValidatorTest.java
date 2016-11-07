@@ -23,8 +23,7 @@ import static org.mockito.Mockito.when;
 
 public class SchemaValidatorTest {
 
-    private SchemaValidator classUnderTest =
-            new SchemaValidator(new SwaggerParser().read("/oai/api-users.json"), new MessageResolver());
+    private SchemaValidator classUnderTest = validator("/oai/api-users.json");
 
     @Test(expected = IllegalArgumentException.class)
     public void validate_withNullValue_shouldThrowException() {
@@ -170,6 +169,17 @@ public class SchemaValidatorTest {
     }
 
     @Test
+    public void validate_withJsonSchemaComposition_shouldFail_whenAdditionalPropertyValidationNotIgnored() {
+
+        final SchemaValidator classUnderTest = validator("/oai/api-composition.yaml");
+
+        final Model schema = new RefModel("#/definitions/User");
+        final String value = "{\"firstname\":\"user_firstname\", \"lastname\":\"user_lastname\", \"city\":\"user_city\"}";
+
+        assertFail(classUnderTest.validate(value, schema), "validation.schema.additionalProperties");
+    }
+
+    @Test
     public void validate_withValidModel_shouldPass_whenContainsNullValues() {
         final String value =
                 "{\"foo\":\"bar\"," +
@@ -196,5 +206,9 @@ public class SchemaValidatorTest {
                                 .build()
                 )
         );
+    }
+
+    private SchemaValidator validator(final String api) {
+        return new SchemaValidator(new SwaggerParser().read(api), new MessageResolver());
     }
 }
