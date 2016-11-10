@@ -1,0 +1,64 @@
+swagger: "2.0"
+info:
+  title: sample
+  description: Sample for Composition and Inheritence
+  version: v1
+
+host: localhost:8082
+
+schemes:
+  - http
+  - https
+
+basePath: /api
+consumes:
+  - application/json
+produces:
+  - application/json
+
+paths:
+  /user:
+    post:
+      description: Create a new user
+      parameters:
+        - in: body
+          name: body
+          description: ""
+          required: true
+          schema:
+            $ref: "#/definitions/User"
+          examples:
+              {
+                "firstname": "sample_first",
+                "lastname": "sample_last",
+                "city": "sample_city",
+                "country": "sample_country"
+              }
+
+      responses:
+        "201":
+          description: "ok"
+
+
+definitions:
+
+  Name:
+    type: object
+    required:
+    - firstname
+    - lastname
+    properties:
+      firstname:
+        type: string
+      lastname:
+        type: string
+
+  User:
+    allOf:
+      - $ref: "#/definitions/Name"
+      - type: object
+        properties:
+          city:
+            type: string
+          country:
+            type: string

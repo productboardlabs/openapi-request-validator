@@ -1,6 +1,8 @@
 package com.atlassian.oai.validator.schema;
 
+import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.MessageResolver;
+import com.atlassian.oai.validator.report.ValidationReport;
 import io.swagger.models.Model;
 import io.swagger.models.ModelImpl;
 import io.swagger.models.RefModel;
@@ -13,6 +15,7 @@ import io.swagger.models.properties.StringProperty;
 import io.swagger.parser.SwaggerParser;
 import org.junit.Test;
 
+import static com.atlassian.oai.validator.schema.SchemaValidator.ADDITIONAL_PROPERTIES_KEY;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static org.mockito.Mockito.mock;
@@ -20,8 +23,7 @@ import static org.mockito.Mockito.when;
 
 public class SchemaValidatorTest {
 
-    private SchemaValidator classUnderTest =
-            new SchemaValidator(new SwaggerParser().read("/oai/api-users.json"), new MessageResolver());
+    private SchemaValidator classUnderTest = validator("/oai/api-users.json");
 
     @Test(expected = IllegalArgumentException.class)
     public void validate_withNullValue_shouldThrowException() {
@@ -156,6 +158,28 @@ public class SchemaValidatorTest {
     }
 
     @Test
+    public void validate_withJsonSchemaComposition_shouldWork_whenAdditionalPropertyValidationIgnored() {
+
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/api-composition.yaml");
+
+        final Model schema = new RefModel("#/definitions/User");
+        final String value = "{\"firstname\":\"user_firstname\", \"lastname\":\"user_lastname\", \"city\":\"user_city\"}";
+
+        assertPass(classUnderTest.validate(value, schema));
+    }
+
+    @Test
+    public void validate_withJsonSchemaComposition_shouldFail_whenAdditionalPropertyValidationNotIgnored() {
+
+        final SchemaValidator classUnderTest = validator("/oai/api-composition.yaml");
+
+        final Model schema = new RefModel("#/definitions/User");
+        final String value = "{\"firstname\":\"user_firstname\", \"lastname\":\"user_lastname\", \"city\":\"user_city\"}";
+
+        assertFail(classUnderTest.validate(value, schema), "validation.schema.additionalProperties");
+    }
+
+    @Test
     public void validate_withValidModel_shouldPass_whenContainsNullValues() {
         final String value =
                 "{\"foo\":\"bar\"," +
@@ -170,5 +194,21 @@ public class SchemaValidatorTest {
                 .required("foo");
 
         assertPass(classUnderTest.validate(value, schema));
+    }
+
+    private SchemaValidator validatorWithAdditionalPropertiesIgnored(final String api) {
+        return new SchemaValidator(
+                new SwaggerParser().read(api),
+                new MessageResolver(
+                        LevelResolver
+                                .create()
+                                .withLevel(ADDITIONAL_PROPERTIES_KEY, ValidationReport.Level.IGNORE)
+                                .build()
+                )
+        );
+    }
+
+    private SchemaValidator validator(final String api) {
+        return new SchemaValidator(new SwaggerParser().read(api), new MessageResolver());
     }
 }

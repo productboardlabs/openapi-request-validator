@@ -189,6 +189,7 @@ public class LevelResolver {
                 this.loader = LevelLoader.defaultLoaderChain();
             }
             ValidationReport.Level defaultLevel = this.defaultLevel;
+            levels.putAll(LevelLoader.defaultsLoader().loadLevels());
             levels.putAll(this.levels);
             if (loader != null) {
                 levels.putAll(loader.loadLevels());
