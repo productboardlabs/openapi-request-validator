@@ -66,15 +66,16 @@ public class MessageResolver {
      * Uses the configured {@link LevelResolver} to resolve the message level.
      *
      * @param key The key to include in the message.
-     * @param message The message to include
+     * @param message The message to include.
+     * @param additionalInfo Additional information to include in the message (if any).
      *
      * @return A message that contains the given key and message string.
      * The level will be set by the configured {@link LevelResolver}.
      */
-    public ValidationReport.Message create(@Nonnull final String key, final String message) {
+    public ValidationReport.Message create(@Nonnull final String key, final String message, final String... additionalInfo) {
         requireNonNull(key, "A message key is required.");
         final ValidationReport.Level level = levelResolver.getLevel(key);
-        return new ImmutableMessage(key, level, message);
+        return new ImmutableMessage(key, level, message, additionalInfo);
     }
 
     /**
