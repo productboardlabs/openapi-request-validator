@@ -29,7 +29,7 @@ public interface ValidationReport {
         String getKey();
         String getMessage();
         Level getLevel();
-        List<String>getAdditionalInfo();
+        List<String> getAdditionalInfo();
     }
 
     ValidationReport EMPTY_REPORT = new ValidationReport(){
