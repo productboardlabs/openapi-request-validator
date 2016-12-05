@@ -24,7 +24,9 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import static com.atlassian.oai.validator.util.StringUtils.capitalise;
@@ -195,8 +197,22 @@ public class SchemaValidator {
         final JsonNode processingMessage = pm.asJson();
         final String validationKeyword = keywordOverride != null ? keywordOverride : processingMessage.get("keyword").textValue();
         final String pointer = processingMessage.has("instance") ? processingMessage.get("instance").get("pointer").textValue() : "";
-        final String message = (pointer.isEmpty() ? "" : "[Path '" + pointer + "'] ") + capitalise(pm.getMessage());
-        validationReport.add(messages.create("validation.schema." + validationKeyword, message));
+
+        final List<String> subReports = new ArrayList<>();
+        if (processingMessage.has("reports")) {
+            final JsonNode reports = processingMessage.get("reports");
+            reports.fields().forEachRemaining(field -> {
+               field.getValue().elements().forEachRemaining(report -> {
+                   subReports.add(field.getKey() + ": " + capitalise(report.get("message").textValue()));
+               });
+            });
+        }
+
+        final String message =
+                (pointer.isEmpty() ? "" : "[Path '" + pointer + "'] ")
+                + capitalise(pm.getMessage());
+
+        validationReport.add(messages.create("validation.schema." + validationKeyword, message, subReports.toArray(new String[0])));
     }
 
     /**

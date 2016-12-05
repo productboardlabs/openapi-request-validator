@@ -18,6 +18,10 @@ import org.junit.Test;
 import static com.atlassian.oai.validator.schema.SchemaValidator.ADDITIONAL_PROPERTIES_KEY;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.iterableWithSize;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -166,6 +170,23 @@ public class SchemaValidatorTest {
         final String value = "{\"firstname\":\"user_firstname\", \"lastname\":\"user_lastname\", \"city\":\"user_city\"}";
 
         assertPass(classUnderTest.validate(value, schema));
+    }
+
+    @Test
+    public void validate_withAllOf_shouldAddInfoOnNestedFailures_whenSubSchemaValidationFails() {
+
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/api-composition.yaml");
+
+        final Model schema = new RefModel("#/definitions/User");
+        final String value = "{\"firstname\":\"user_firstname\", \"city\":1}";
+
+        final ValidationReport report = classUnderTest.validate(value, schema);
+        assertFail(report, "validation.schema.allOf");
+
+        final ValidationReport.Message message = report.getMessages().get(0);
+        assertThat(message.getAdditionalInfo(), iterableWithSize(2));
+        assertThat(message.getAdditionalInfo(), hasItem(containsString("/definitions/User/allOf/0")));
+        assertThat(message.getAdditionalInfo(), hasItem(containsString("/definitions/User/allOf/1")));
     }
 
     @Test
