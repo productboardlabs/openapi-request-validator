@@ -24,7 +24,9 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -111,31 +113,23 @@ public class SchemaValidator {
         requireNonNull(schema, "A schema is required");
 
         final MutableValidationReport validationReport = new MutableValidationReport();
-        ListProcessingReport processingReport = null;
+
         try {
-            final JsonNode schemaObject = Json.mapper().readTree(Json.pretty(schema));
-            setupSchemaDefinitionRefs(schemaObject);
+            final JsonNode schemaObject = readSchema(schema);
+            final JsonNode content = readContent(value, schema);
 
             checkForKnownGotchasAndLogMessage(schemaObject);
 
-            // Only emit ERROR and above from the JSON schema validation
-            final JsonSchemaFactory factory = JsonSchemaFactory.newBuilder()
-                    .setReportProvider(new ListReportProvider(LogLevel.ERROR, LogLevel.FATAL))
-                    .freeze();
+            final ListProcessingReport processingReport =
+                    (ListProcessingReport) getJsonSchemaFactory()
+                            .getJsonSchema(schemaObject)
+                            .validate(content, true);
 
-            final com.github.fge.jsonschema.main.JsonSchema jsonSchema = factory.getJsonSchema(schemaObject);
-
-            String normalisedValue = value;
-            if (schema instanceof StringProperty) {
-                normalisedValue = quote(value);
+            if((processingReport != null) && !processingReport.isSuccess()) {
+                processingReport.forEach(pm -> addProcessingMessage(validationReport, pm, null));
             }
+            return validationReport;
 
-            final JsonNode content = Json.mapper().readTree(normalisedValue);
-            final JsonNode cleanedContent = content.deepCopy();
-
-            cleanupNullValues(cleanedContent);
-
-            processingReport = (ListProcessingReport)jsonSchema.validate(cleanedContent, true);
         } catch (final JsonParseException e) {
             validationReport.add(messages.get(INVALID_JSON_KEY, e.getMessage()));
             return validationReport;
@@ -146,14 +140,24 @@ public class SchemaValidator {
             validationReport.add(messages.get(UNKNOWN_ERROR_KEY, e.getMessage()));
             return validationReport;
         }
-
-        if((processingReport != null) && !processingReport.isSuccess()) {
-            processingReport.forEach(pm -> addProcessingMessage(validationReport, pm, null));
-        }
-        return validationReport;
     }
 
-    private void setupSchemaDefinitionRefs(JsonNode schemaObject) throws IOException {
+    private JsonSchemaFactory getJsonSchemaFactory() {
+        return JsonSchemaFactory
+                .newBuilder()
+                .setReportProvider(
+                    // Only emit ERROR and above from the JSON schema validation
+                    new ListReportProvider(LogLevel.ERROR, LogLevel.FATAL))
+                .freeze();
+    }
+
+    private JsonNode readSchema(@Nonnull final Object schema) throws IOException {
+        final JsonNode schemaObject = Json.mapper().readTree(Json.pretty(schema));
+        setupSchemaDefinitionRefs(schemaObject);
+        return schemaObject;
+    }
+
+    private void setupSchemaDefinitionRefs(final JsonNode schemaObject) throws IOException {
         if (schemaObject instanceof ObjectNode && additionalPropertiesValidationEnabled()) {
             ((ObjectNode)schemaObject).set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
         }
@@ -177,6 +181,42 @@ public class SchemaValidator {
             }
             ((ObjectNode)schemaObject).set(DEFINITIONS_FIELD, this.definitions);
         }
+    }
+
+    private JsonNode readContent(@Nonnull final String value, @Nonnull final Object schema) throws IOException {
+        String normalisedValue = value;
+        if (schema instanceof StringProperty) {
+            normalisedValue = quote(value);
+        }
+        return cleanupNullValues(Json.mapper().readTree(normalisedValue));
+    }
+
+    /**
+     * Cleans up null values (except arrays) from the given <code>JsonNode</code> and its sub-nodes.
+     */
+    private JsonNode cleanupNullValues(final JsonNode node) {
+        final JsonNode result = node.deepCopy();
+
+        final Deque<JsonNode> toClean = new ArrayDeque<>();
+        toClean.add(result);
+
+        while(!toClean.isEmpty()) {
+            final JsonNode n = toClean.pop();
+            if (!n.isObject()) {
+                continue;
+            }
+            final Iterator<Map.Entry<String, JsonNode>> fields = n.fields();
+            while (fields.hasNext()) {
+                final Map.Entry<String, JsonNode> field = fields.next();
+                if (field.getValue().isNull()) {
+                    fields.remove();
+                } else if (field.getValue().isObject()){
+                    toClean.add(field.getValue());
+                }
+            }
+        }
+
+        return result;
     }
 
     private boolean additionalPropertiesValidationEnabled() {
@@ -215,22 +255,5 @@ public class SchemaValidator {
         validationReport.add(messages.create("validation.schema." + validationKeyword, message, subReports.toArray(new String[0])));
     }
 
-    /**
-     * Method cleans up null values (except arrays) from given <code>JsonNode</code>.
-     * Mutates the argument, use with caution!
-     * @param node
-     */
-    private void cleanupNullValues(final JsonNode node) {
-        if (node.isObject()) {
-            final Iterator<Map.Entry<String, JsonNode>> entries = node.fields();
-            while (entries.hasNext()) {
-                final Map.Entry<String, JsonNode> entry = entries.next();
-                if (entry.getValue().isNull()) {
-                    entries.remove();
-                } else {
-                    cleanupNullValues(entry.getValue());
-                }
-            }
-        }
-    }
+
 }
