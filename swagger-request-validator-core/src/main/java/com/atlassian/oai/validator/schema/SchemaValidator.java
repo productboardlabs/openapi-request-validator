@@ -9,10 +9,7 @@ import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.report.ListProcessingReport;
-import com.github.fge.jsonschema.core.report.ListReportProvider;
-import com.github.fge.jsonschema.core.report.LogLevel;
 import com.github.fge.jsonschema.core.report.ProcessingMessage;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import io.swagger.models.Model;
 import io.swagger.models.Swagger;
 import io.swagger.models.properties.Property;
@@ -31,6 +28,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import static com.atlassian.oai.validator.schema.SwaggerV20Library.OAI_V2_METASCHEMA_URI;
+import static com.atlassian.oai.validator.schema.SwaggerV20Library.schemaFactory;
 import static com.atlassian.oai.validator.util.StringUtils.capitalise;
 import static com.atlassian.oai.validator.util.StringUtils.quote;
 import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
@@ -52,6 +51,7 @@ public class SchemaValidator {
     private static final String ADDITIONAL_PROPERTIES_FIELD = "additionalProperties";
     private static final String DEFINITIONS_FIELD = "definitions";
     private static final String ALLOF_FIELD = "allOf";
+    private static final String SCHEMA_REF_FIELD = "$schema";
 
     private final Swagger api;
     private JsonNode definitions;
@@ -121,9 +121,7 @@ public class SchemaValidator {
             checkForKnownGotchasAndLogMessage(schemaObject);
 
             final ListProcessingReport processingReport =
-                    (ListProcessingReport) getJsonSchemaFactory()
-                            .getJsonSchema(schemaObject)
-                            .validate(content, true);
+                    (ListProcessingReport) schemaFactory().getJsonSchema(schemaObject).validate(content, true);
 
             if((processingReport != null) && !processingReport.isSuccess()) {
                 processingReport.forEach(pm -> addProcessingMessage(validationReport, pm, null));
@@ -142,15 +140,6 @@ public class SchemaValidator {
         }
     }
 
-    private JsonSchemaFactory getJsonSchemaFactory() {
-        return JsonSchemaFactory
-                .newBuilder()
-                .setReportProvider(
-                    // Only emit ERROR and above from the JSON schema validation
-                    new ListReportProvider(LogLevel.ERROR, LogLevel.FATAL))
-                .freeze();
-    }
-
     private JsonNode readSchema(@Nonnull final Object schema) throws IOException {
         final JsonNode schemaObject = Json.mapper().readTree(Json.pretty(schema));
         setupSchemaDefinitionRefs(schemaObject);
@@ -158,28 +147,31 @@ public class SchemaValidator {
     }
 
     private void setupSchemaDefinitionRefs(final JsonNode schemaObject) throws IOException {
-        if (schemaObject instanceof ObjectNode && additionalPropertiesValidationEnabled()) {
-            ((ObjectNode)schemaObject).set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
+        final ObjectNode objectNode = (ObjectNode) schemaObject;
+
+        objectNode.put(SCHEMA_REF_FIELD, OAI_V2_METASCHEMA_URI);
+        if (additionalPropertiesValidationEnabled()) {
+            objectNode.set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
         }
 
         if (api != null) {
             if (this.definitions == null) {
                 this.definitions = Json.mapper().readTree(Json.pretty(api.getDefinitions()));
-
-                // Explicitly disable additionalProperties
-                // Calling code can choose what level to emit this failure at using validation.schema.additionalProperties
-                if (additionalPropertiesValidationEnabled()) {
-                    this.definitions.forEach(n -> {
+                this.definitions.forEach(n -> {
+                    if (additionalPropertiesValidationEnabled()) {
+                        // Explicitly disable additionalProperties
+                        // Calling code can choose what level to emit this failure at using
+                        // validation.schema.additionalProperties
                         if (!n.has(ADDITIONAL_PROPERTIES_FIELD)) {
-                            ((ObjectNode)n).set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
+                            ((ObjectNode) n).set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
                         }
-                        if (n.has(ALLOF_FIELD)) {
-                            this.definitionsContainAllOf = true;
-                        }
-                    });
-                }
+                    }
+                    if (n.has(ALLOF_FIELD)) {
+                        this.definitionsContainAllOf = true;
+                    }
+                });
             }
-            ((ObjectNode)schemaObject).set(DEFINITIONS_FIELD, this.definitions);
+            objectNode.set(DEFINITIONS_FIELD, this.definitions);
         }
     }
 

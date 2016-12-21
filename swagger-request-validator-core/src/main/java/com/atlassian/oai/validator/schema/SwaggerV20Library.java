@@ -1,0 +1,256 @@
+package com.atlassian.oai.validator.schema;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.fge.jackson.NodeType;
+import com.github.fge.jackson.jsonpointer.JsonPointer;
+import com.github.fge.jsonschema.cfg.ValidationConfiguration;
+import com.github.fge.jsonschema.core.exceptions.ProcessingException;
+import com.github.fge.jsonschema.core.keyword.syntax.checkers.AbstractSyntaxChecker;
+import com.github.fge.jsonschema.core.messages.JsonSchemaSyntaxMessageBundle;
+import com.github.fge.jsonschema.core.processing.Processor;
+import com.github.fge.jsonschema.core.report.ListReportProvider;
+import com.github.fge.jsonschema.core.report.LogLevel;
+import com.github.fge.jsonschema.core.report.ProcessingMessage;
+import com.github.fge.jsonschema.core.report.ProcessingReport;
+import com.github.fge.jsonschema.core.tree.SchemaTree;
+import com.github.fge.jsonschema.keyword.digest.AbstractDigester;
+import com.github.fge.jsonschema.keyword.validator.AbstractKeywordValidator;
+import com.github.fge.jsonschema.library.DraftV4Library;
+import com.github.fge.jsonschema.library.Keyword;
+import com.github.fge.jsonschema.library.Library;
+import com.github.fge.jsonschema.main.JsonSchemaFactory;
+import com.github.fge.jsonschema.messages.JsonSchemaValidationBundle;
+import com.github.fge.jsonschema.processors.data.FullData;
+import com.github.fge.msgsimple.bundle.MessageBundle;
+import com.github.fge.msgsimple.bundle.PropertiesBundle;
+import com.github.fge.msgsimple.load.MessageBundleLoader;
+import com.github.fge.msgsimple.load.MessageBundles;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
+import static com.github.fge.msgsimple.load.MessageBundles.getBundle;
+
+/**
+ * Library that extends the JSON Schema v4 and adds the additional keywords introduced by the
+ * Swagger/OAI v2.0 specification.
+ */
+public class SwaggerV20Library {
+
+    public static final String OAI_V2_METASCHEMA_URI = "https://openapis.org/specification/versions/2.0#";
+
+    public static final String DISCRIMINATOR_KEYWORD = "discriminator";
+
+    private static final Library LIBRARY =
+            DraftV4Library.get().thaw()
+            .addKeyword(
+                    Keyword.newBuilder(DISCRIMINATOR_KEYWORD)
+                            .withSyntaxChecker(DiscriminatorSyntaxChecker.getInstance())
+                            .withDigester(DiscriminatorDigester.getInstance())
+                            .withValidatorClass(DiscriminatorKeywordValidator.class)
+                            .freeze())
+            .freeze();
+
+    static Library get() {
+        return LIBRARY;
+    }
+
+    /**
+     * @return A {@link JsonSchemaFactory} instance configured with the Swagger/OAI V20 metaschema library suitable
+     * for use in validating Swagger/OpenAPI documents
+     */
+    public static JsonSchemaFactory schemaFactory() {
+        return JsonSchemaFactory
+                .newBuilder()
+                .setValidationConfiguration(
+                        ValidationConfiguration.newBuilder()
+                                .setDefaultLibrary(OAI_V2_METASCHEMA_URI, SwaggerV20Library.get())
+                                .setSyntaxMessages(getBundle(SwaggerV20Library.SyntaxBundle.class))
+                                .setValidationMessages(getBundle(SwaggerV20Library.ValidationBundle.class))
+                                .freeze())
+                .setReportProvider(
+                        // Only emit ERROR and above from the JSON schema validation
+                        new ListReportProvider(LogLevel.ERROR, LogLevel.FATAL))
+                .freeze();
+    }
+
+    /**
+     * Syntax checker for the <code>discriminator</code> keyword introduced by the Swagger/OpenAPI specification.
+     *
+     * @see <a href="http://swagger.io/specification/#composition-and-inheritance--polymorphism--83">Swagger specification</a>
+     */
+    public static class DiscriminatorSyntaxChecker extends AbstractSyntaxChecker {
+
+        private static final DiscriminatorSyntaxChecker INSTANCE = new DiscriminatorSyntaxChecker();
+
+        static DiscriminatorSyntaxChecker getInstance() {
+            return INSTANCE;
+        }
+
+        DiscriminatorSyntaxChecker() {
+            super(DISCRIMINATOR_KEYWORD, NodeType.STRING);
+        }
+
+        @Override
+        protected void checkValue(final Collection<JsonPointer> pointers,
+                                  final MessageBundle bundle,
+                                  final ProcessingReport report,
+                                  final SchemaTree tree) throws ProcessingException {
+
+            final JsonNode node = getNode(tree);
+            if (node.textValue().isEmpty()) {
+                report.error(msg(tree, bundle, "err.swaggerv2.discriminator.empty"));
+            }
+
+            // TODO: Check value is a property in the properties list
+            // TODO: Check property is defined to be a String
+            // TODO: Check property is marked as required
+        }
+
+        private ProcessingMessage msg(final SchemaTree tree, final MessageBundle bundle, final String key) {
+            return newMsg(tree, bundle, key).put("key", key);
+        }
+    }
+
+    /**
+     * Digester for the <code>discriminator</code> keyword introduced by the Swagger/OpenAPI specification.
+     */
+    public static class DiscriminatorDigester extends AbstractDigester {
+
+        private static final DiscriminatorDigester INSTANCE = new DiscriminatorDigester();
+
+        public static DiscriminatorDigester getInstance() {
+            return INSTANCE;
+        }
+
+        private DiscriminatorDigester() {
+            super(DISCRIMINATOR_KEYWORD, NodeType.OBJECT);
+        }
+
+        @Override
+        public JsonNode digest(final JsonNode schema) {
+            final ObjectNode ret = FACTORY.objectNode();
+            ret.put(keyword, schema.get(keyword).textValue());
+            return ret;
+        }
+    }
+
+    /**
+     * Keyword validator for the <code>discriminator</code> keyword introduced by the Swagger/OpenAPI specification.
+     *
+     * @see <a href="http://swagger.io/specification/#composition-and-inheritance--polymorphism--83">Swagger specification</a>
+     */
+    public static class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
+
+        private final String fieldName;
+
+        public DiscriminatorKeywordValidator(final JsonNode digest) {
+            super(DISCRIMINATOR_KEYWORD);
+            this.fieldName = digest.get(keyword).textValue();
+        }
+
+        @Override
+        public void validate(final Processor<FullData, FullData> processor,
+                             final ProcessingReport report,
+                             final MessageBundle bundle,
+                             final FullData data) throws ProcessingException {
+
+            final JsonNode discriminatorNode = data.getInstance().getNode().get(fieldName);
+            if (discriminatorNode == null) {
+                report.error(
+                        msg(data, bundle, "err.swaggerv2.discriminator.missing")
+                                .putArgument("discriminatorField", fieldName)
+                );
+                return;
+            }
+            if (!discriminatorNode.isTextual()) {
+                report.error(
+                        msg(data, bundle, "err.swaggerv2.discriminator.nonText")
+                                .putArgument("discriminatorField", fieldName)
+                );
+                return;
+            }
+            if (discriminatorNode.textValue().isEmpty()) {
+                report.error(
+                        msg(data, bundle, "err.swaggerv2.discriminator.missing")
+                                .putArgument("discriminatorField", fieldName)
+                );
+                return;
+            }
+
+            // Valid 'subclasses' should use allOf to reference the parent schema definition
+            final String parentDefinitionRef = "#" + data.getSchema().getPointer().toString();
+            final Set<String> validDiscriminatorValues = new HashSet<>();
+            data.getSchema().getBaseNode().get("definitions").fields().forEachRemaining(e -> {
+                final JsonNode def = e.getValue();
+                if (!def.has("allOf")) {
+                    return;
+                }
+
+                def.get("allOf").forEach(n -> {
+                    if (n.has("$ref") && n.get("$ref").textValue().equals(parentDefinitionRef)) {
+                        validDiscriminatorValues.add(e.getKey());
+                    }
+                });
+
+            });
+
+            if (!validDiscriminatorValues.contains(discriminatorNode.textValue())) {
+                report.error(
+                        msg(data, bundle, "err.swaggerv2.discriminator.invalid")
+                                .putArgument("discriminatorField", fieldName)
+                                .putArgument("value", discriminatorNode.textValue())
+                                .putArgument("allowedValues", validDiscriminatorValues)
+                );
+            }
+
+        }
+
+        @Override
+        public String toString() {
+            return keyword;
+        }
+
+        private ProcessingMessage msg(final FullData data, final MessageBundle bundle, final String key) {
+            return newMsg(data, bundle, key).put("key", key);
+        }
+    }
+
+    /**
+     * Message bundle loader that appends messages for the Swagger V20 extensions to the standard
+     * JSON Schema syntax bundle.
+     */
+    public static class SyntaxBundle implements MessageBundleLoader {
+
+        private static final String PATH = "schema-validation.properties";
+
+        @Override
+        public MessageBundle getBundle() {
+            return MessageBundles
+                    .getBundle(JsonSchemaSyntaxMessageBundle.class)
+                    .thaw()
+                    .appendBundle(PropertiesBundle.forPath(PATH))
+                    .freeze();
+        }
+    }
+
+    /**
+     * Message bundle loader that appends messages for the Swagger V20 extensions to the standard
+     * JSON Schema validation message bundle.
+     */
+    public static class ValidationBundle implements MessageBundleLoader {
+
+        private static final String PATH = "schema-validation.properties";
+
+        @Override
+        public MessageBundle getBundle() {
+            return MessageBundles
+                    .getBundle(JsonSchemaValidationBundle.class)
+                    .thaw()
+                    .appendBundle(PropertiesBundle.forPath(PATH))
+                    .freeze();
+        }
+    }
+}
