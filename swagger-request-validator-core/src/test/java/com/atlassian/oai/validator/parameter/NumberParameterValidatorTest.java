@@ -84,4 +84,20 @@ public class NumberParameterValidatorTest {
     public void validate_withValueMultipleOf_shouldPass() {
         assertPass(classUnderTest.validate("1.5", floatParamMultipleOf(0.5f)));
     }
+
+    @Test
+    public void validate_withFormatNull_shouldPass() {
+        assertPass(classUnderTest.validate("25", floatParamFormat(null)));
+    }
+
+    @Test
+    public void validate_withFormatUnknown_shouldPass() {
+        assertPass(classUnderTest.validate("25", floatParamFormat("unknown")));
+    }
+
+    @Test
+    public void validate_withNonNumericValueFormatUnknown_shouldFail() {
+        assertFail(classUnderTest.validate("not-a-Number", floatParamFormat("unknown")),
+            "validation.request.parameter.invalidFormat");
+    }
 }
