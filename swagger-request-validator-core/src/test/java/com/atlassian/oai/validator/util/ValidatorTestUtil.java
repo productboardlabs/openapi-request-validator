@@ -127,6 +127,19 @@ public class ValidatorTestUtil {
         return result;
     }
 
+    public static SerializableParameter intParamFormat(String format) {
+        final SerializableParameter result = mock(SerializableParameter.class);
+        when(result.getName()).thenReturn("Test Parameter");
+        when(result.getType()).thenReturn("integer");
+        when(result.getFormat()).thenReturn(format);
+        when(result.getRequired()).thenReturn(true);
+        when(result.getMinimum()).thenReturn(null);
+        when(result.getMaximum()).thenReturn(null);
+        when(result.isExclusiveMinimum()).thenReturn(null);
+        when(result.isExclusiveMaximum()).thenReturn(null);
+        return result;
+    }
+
     public static SerializableParameter intParamMultipleOf(Number multipleOf) {
         final SerializableParameter result = mock(SerializableParameter.class);
         when(result.getName()).thenReturn("Test Parameter");
@@ -194,6 +207,19 @@ public class ValidatorTestUtil {
         when(result.getMaximum()).thenReturn(max);
         when(result.isExclusiveMinimum()).thenReturn(exclusiveMin);
         when(result.isExclusiveMaximum()).thenReturn(exclusiveMax);
+        return result;
+    }
+
+    public static SerializableParameter floatParamFormat(String format) {
+        final SerializableParameter result = mock(SerializableParameter.class);
+        when(result.getName()).thenReturn("Test Parameter");
+        when(result.getType()).thenReturn("number");
+        when(result.getFormat()).thenReturn(format);
+        when(result.getMinimum()).thenReturn(null);
+        when(result.getMaximum()).thenReturn(null);
+        when(result.isExclusiveMinimum()).thenReturn(null);
+        when(result.isExclusiveMaximum()).thenReturn(null);
+        when(result.getMultipleOf()).thenReturn(null);
         return result;
     }
 

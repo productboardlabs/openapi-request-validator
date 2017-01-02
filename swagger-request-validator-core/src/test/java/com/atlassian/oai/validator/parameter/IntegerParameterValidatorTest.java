@@ -83,4 +83,19 @@ public class IntegerParameterValidatorTest {
         assertPass(classUnderTest.validate("25", intParamMultipleOf(5)));
     }
 
+    @Test
+    public void validate_withFormatNull_shouldPass() {
+        assertPass(classUnderTest.validate("25", intParamFormat(null)));
+    }
+
+    @Test
+    public void validate_withFormatUnknown_shouldPass() {
+        assertPass(classUnderTest.validate("25", intParamFormat("unknown")));
+    }
+
+    @Test
+    public void validate_withNonIntegerValueFormatUnknown_shouldFail() {
+        assertFail(classUnderTest.validate("123.1", intParamFormat("unknown")),
+                "validation.request.parameter.invalidFormat");
+    }
 }
