@@ -29,9 +29,12 @@ import com.github.fge.msgsimple.load.MessageBundles;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import static com.atlassian.oai.validator.util.StreamUtils.stream;
 import static com.github.fge.msgsimple.load.MessageBundles.getBundle;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Library that extends the JSON Schema v4 and adds the additional keywords introduced by the
@@ -76,6 +79,10 @@ public class SwaggerV20Library {
                 .freeze();
     }
 
+    private static boolean arrayNodeContains(final JsonNode requiredProperties, final String element) {
+        return stream(requiredProperties.elements()).anyMatch(e -> e.textValue().equals(element));
+    }
+
     /**
      * Syntax checker for the <code>discriminator</code> keyword introduced by the Swagger/OpenAPI specification.
      *
@@ -99,14 +106,41 @@ public class SwaggerV20Library {
                                   final ProcessingReport report,
                                   final SchemaTree tree) throws ProcessingException {
 
-            final JsonNode node = getNode(tree);
-            if (node.textValue().isEmpty()) {
+            final String discriminatorFieldName = getNode(tree).textValue();
+            if (discriminatorFieldName.isEmpty()) {
                 report.error(msg(tree, bundle, "err.swaggerv2.discriminator.empty"));
+                return;
             }
 
-            // TODO: Check value is a property in the properties list
-            // TODO: Check property is defined to be a String
-            // TODO: Check property is marked as required
+            final JsonNode properties = tree.getNode().get("properties");
+            final List<String> propertyNames = stream(properties.fieldNames()).collect(toList());
+            if (!properties.has(discriminatorFieldName)) {
+                report.error(msg(tree, bundle, "err.swaggerv2.discriminator.noProperty")
+                        .putArgument("fieldName", discriminatorFieldName)
+                        .putArgument("properties", propertyNames)
+                );
+                return;
+            }
+
+            final JsonNode property = properties.get(discriminatorFieldName);
+            if (!property.has("type") ||
+                    !property.get("type").textValue().equalsIgnoreCase("string")) {
+                report.error(msg(tree, bundle, "err.swaggerv2.discriminator.wrongType")
+                        .putArgument("fieldName", discriminatorFieldName)
+                );
+                return;
+            }
+
+            final JsonNode requiredProperties = tree.getNode().get("required");
+            if (requiredProperties == null ||
+                    !requiredProperties.isArray() ||
+                    requiredProperties.size() == 0 ||
+                    !arrayNodeContains(requiredProperties, discriminatorFieldName)) {
+                report.error(msg(tree, bundle, "err.swaggerv2.discriminator.notRequired")
+                        .putArgument("fieldName", discriminatorFieldName)
+                );
+                return;
+            }
         }
 
         private ProcessingMessage msg(final SchemaTree tree, final MessageBundle bundle, final String key) {
@@ -205,6 +239,8 @@ public class SwaggerV20Library {
                                 .putArgument("allowedValues", validDiscriminatorValues)
                 );
             }
+
+            // TODO: Validate correct sub-schema based on discriminator
 
         }
 

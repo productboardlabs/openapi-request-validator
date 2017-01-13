@@ -23,6 +23,7 @@ public class SwaggerV20LibraryTest {
     @Parameters(name = "{0}")
     public static Collection<Object[]> params() {
         return Arrays.asList(new Object[][] {
+                // Name, Schema, Example, Expected
                 {"discriminator_shouldPass_whenValid",
                         "discriminator-valid", "discriminator-valid",
                         null
@@ -43,10 +44,22 @@ public class SwaggerV20LibraryTest {
                         "discriminator-valid", "discriminator-invalid-nonStringDiscriminator",
                         new String[]{"err.swaggerv2.discriminator.nonText"}
                 },
-                {"discriminator_shouldFail_emptyValue",
+                {"discriminator_shouldFail_whenEmptyValue",
                         "discriminator-invalid-empty", "discriminator-valid",
                         new String[]{"err.swaggerv2.discriminator.empty"}
-                }
+                },
+                {"discriminator_shouldFail_whenNotAProperty",
+                        "discriminator-invalid-noProperty", "discriminator-valid",
+                        new String[]{"err.swaggerv2.discriminator.noProperty"}
+                },
+                {"discriminator_shouldFail_whenNotAStringProperty",
+                        "discriminator-invalid-wrongType", "discriminator-valid",
+                        new String[]{"err.swaggerv2.discriminator.wrongType"}
+                },
+                {"discriminator_shouldFail_whenPropertyNotMarkedAsRequired",
+                        "discriminator-invalid-notRequired", "discriminator-valid",
+                        new String[]{"err.swaggerv2.discriminator.notRequired"}
+                },
         });
     }
 
@@ -99,6 +112,7 @@ public class SwaggerV20LibraryTest {
                keys.add(msgJson.get("key").textValue());
             }
         });
+        builder.append("\n]");
 
         for (String key : expectedMsgs) {
             if (!keys.contains(key)) {
