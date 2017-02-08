@@ -282,4 +282,12 @@ public class SwaggerRequestResponseValidatorTest {
         final SwaggerRequestResponseValidator validator = SwaggerRequestResponseValidator.createFor("<>").build();
     }
 
+    @Test
+    public void validate_formData_manyValuesForSingleKey() {
+        String formData = "email=abc%40gmail.com&email=";
+        final Request request = SimpleRequest.Builder.put("/users/1").withBody(formData).build();
+        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
+        assertFail(classUnderTest.validate(request, response), "validation.request.parameter.missing");
+    }
+
 }

@@ -7,6 +7,9 @@ import com.atlassian.oai.validator.parameter.ParameterValidators;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.SchemaValidator;
+import com.google.common.base.Charsets;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.net.MediaType;
 import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.Parameter;
@@ -15,12 +18,10 @@ import javax.annotation.Nonnull;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
@@ -81,11 +82,12 @@ public class RequestValidator {
 
     @Nonnull
     private ValidationReport validateForm(@Nonnull Optional<String> requestBody, @Nonnull ApiOperation apiOperation) {
-        HashMap<String, List<String>> paramAndValues = parseFormData(requestBody.get());
+        Multimap<String, String> formData = parseFormData(requestBody.get());
         List<ValidationReport> reports = new ArrayList<>();
         for (Parameter parameter : apiOperation.getOperation().getParameters()) {
-            List<String> parameterValues = paramAndValues.getOrDefault(parameter.getName(), Collections.singletonList(null));
-            reports.addAll(parameterValues.stream().map(value -> parameterValidators.validate(value, parameter)).collect(Collectors.toList()));
+            Collection<String> parameterValues = formData.get(parameter.getName());
+            parameterValues = parameterValues.isEmpty() ? Collections.singletonList(null) : parameterValues;
+            parameterValues.forEach(value -> reports.add(parameterValidators.validate(value, parameter)));
         }
         return reports.stream().reduce(ValidationReport.empty(), ValidationReport::merge);
     }
@@ -184,20 +186,18 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private HashMap<String, List<String>> parseFormData(String formData) {
-        HashMap<String, List<String>> params = new HashMap<>();
+    private Multimap<String, String> parseFormData(String formData) {
+        Multimap<String, String> params = ArrayListMultimap.create();
         String[] pairs = formData.split("&");
         try {
             for (String pair : pairs) {
                 String[] fields = pair.split("=");
+                String name = URLDecoder.decode(fields[0], Charsets.UTF_8.name());
+                String value = null;
                 if (fields.length > 1) {
-                    String name = URLDecoder.decode(fields[0], "UTF-8");
-                    String value = URLDecoder.decode(fields[1], "UTF-8");
-                    params.merge(name, Collections.singletonList(value), (oldValue, newValue) -> {
-                        oldValue.addAll(newValue);
-                        return oldValue;
-                    });
+                    value = URLDecoder.decode(fields[1], Charsets.UTF_8.name());
                 }
+                params.put(name, value);
             }
         } catch (UnsupportedEncodingException ex) {
             throw new RuntimeException(ex);
