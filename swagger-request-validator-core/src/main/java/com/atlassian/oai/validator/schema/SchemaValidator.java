@@ -49,6 +49,7 @@ public class SchemaValidator {
     public static final String UNKNOWN_ERROR_KEY = "validation.schema.unknownError";
 
     private static final String ADDITIONAL_PROPERTIES_FIELD = "additionalProperties";
+    private static final String DISCRIMINATOR_FIELD = "discriminator";
     private static final String DEFINITIONS_FIELD = "definitions";
     private static final String ALLOF_FIELD = "allOf";
     private static final String SCHEMA_REF_FIELD = "$schema";
@@ -162,7 +163,7 @@ public class SchemaValidator {
                         // Explicitly disable additionalProperties
                         // Calling code can choose what level to emit this failure at using
                         // validation.schema.additionalProperties
-                        if (!n.has(ADDITIONAL_PROPERTIES_FIELD)) {
+                        if (!n.has(ADDITIONAL_PROPERTIES_FIELD) && !n.has(DISCRIMINATOR_FIELD)) {
                             ((ObjectNode) n).set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
                         }
                     }

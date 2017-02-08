@@ -159,5 +159,7 @@ the request/response against it.
 
 In a schema that uses composition via `allOf`, however, this can lead to the above errors.
 
+This problem will also occur in any schema that uses `discriminator`, as that by necessity uses the `allOf` keyword.
+
 To fix the problem you will need to opt-out of the additionalProperties validation by setting the level of 
 `validation.schema.additionalProperties` to `IGNORE` (see above for how to set this).
