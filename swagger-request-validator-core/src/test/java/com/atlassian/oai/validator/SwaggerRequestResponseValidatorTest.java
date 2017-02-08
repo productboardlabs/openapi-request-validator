@@ -58,7 +58,7 @@ public class SwaggerRequestResponseValidatorTest {
     }
 
     @Test
-    public void validate_withRequestMissingRequiredBody_shouldFail() {
+    public void validate_withRequestMissingRequiredJsonBody_shouldFail() {
         final Request request = SimpleRequest.Builder.post("/users").build();
         final Response response = SimpleResponse.Builder.ok().build();
 
@@ -66,7 +66,15 @@ public class SwaggerRequestResponseValidatorTest {
     }
 
     @Test
-    public void validate_withValidRequestBody_shouldPass() {
+    public void validate_withRequestMissingRequiredFormDataBody_shouldFail() {
+        String formData = "fmail=abc%40gmail.com";
+        final Request request = SimpleRequest.Builder.put("/users/1").withBody(formData).build();
+        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
+        assertFail(classUnderTest.validate(request, response), "validation.request.parameter.missing");
+    }
+
+    @Test
+    public void validate_withValidJsonBody_shouldPass() {
         final Request request = SimpleRequest.Builder.post("/users").withBody(loadRequest("newuser-valid")).build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
 
@@ -74,11 +82,27 @@ public class SwaggerRequestResponseValidatorTest {
     }
 
     @Test
-    public void validate_withInvalidRequestBody_shouldFail() {
+    public void validate_withValidFormDataBody_shouldPass() {
+        String formData = "email=abc%40gmail.com";
+        final Request request = SimpleRequest.Builder.put("/users/1").withBody(formData).build();
+        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
+        assertPass(classUnderTest.validate(request, response));
+    }
+
+    @Test
+    public void validate_withInvalidJsonRequestBody_shouldFail() {
         final Request request = SimpleRequest.Builder.post("/users").withBody(loadRequest("newuser-invalid-missingrequired")).build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
 
         assertFail(classUnderTest.validate(request, response), "validation.schema.required");
+    }
+
+    @Test
+    public void validate_withInvalidFormDataRequestBody_shouldFail() {
+        String formData = "malformed-form-url-encoded";
+        final Request request = SimpleRequest.Builder.put("/users/1").withBody(formData).build();
+        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
+        assertFail(classUnderTest.validate(request, response), "validation.request.parameter.missing");
     }
 
     @Test

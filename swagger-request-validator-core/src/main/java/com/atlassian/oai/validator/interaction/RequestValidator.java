@@ -7,12 +7,20 @@ import com.atlassian.oai.validator.parameter.ParameterValidators;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.SchemaValidator;
+import com.google.common.net.MediaType;
 import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.Parameter;
 
 import javax.annotation.Nonnull;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
@@ -62,6 +70,28 @@ public class RequestValidator {
     @Nonnull
     private ValidationReport validateRequestBody(@Nonnull final Optional<String> requestBody,
                                                  @Nonnull final ApiOperation apiOperation) {
+
+        if (isFormData(requestBody, apiOperation)) {
+            return validateForm(requestBody, apiOperation);
+        } else {
+            return validateBody(requestBody, apiOperation);
+        }
+    }
+
+
+    @Nonnull
+    private ValidationReport validateForm(@Nonnull Optional<String> requestBody, @Nonnull ApiOperation apiOperation) {
+        HashMap<String, List<String>> paramAndValues = parseFormData(requestBody.get());
+        List<ValidationReport> reports = new ArrayList<>();
+        for (Parameter parameter : apiOperation.getOperation().getParameters()) {
+            List<String> parameterValues = paramAndValues.getOrDefault(parameter.getName(), Collections.singletonList(null));
+            reports.addAll(parameterValues.stream().map(value -> parameterValidators.validate(value, parameter)).collect(Collectors.toList()));
+        }
+        return reports.stream().reduce(ValidationReport.empty(), ValidationReport::merge);
+    }
+
+    @Nonnull
+    private ValidationReport validateBody(@Nonnull Optional<String> requestBody, @Nonnull ApiOperation apiOperation) {
         final Optional<Parameter> bodyParameter = apiOperation.getOperation().getParameters()
                 .stream().filter(p -> p.getIn().equalsIgnoreCase("body")).findFirst();
 
@@ -144,4 +174,35 @@ public class RequestValidator {
                 .map((v) -> parameterValidators.validate(v, queryParameter))
                 .reduce(ValidationReport.empty(), ValidationReport::merge);
     }
+
+    @Nonnull
+    private boolean isFormData(@Nonnull Optional<String> requestBody, @Nonnull ApiOperation apiOperation) {
+        List<String> consumes = apiOperation.getOperation().getConsumes();
+        return null != consumes && !consumes.isEmpty() &&
+                consumes.stream().anyMatch(p -> p.equals(MediaType.FORM_DATA.toString()))
+                && requestBody.isPresent();
+    }
+
+    @Nonnull
+    private HashMap<String, List<String>> parseFormData(String formData) {
+        HashMap<String, List<String>> params = new HashMap<>();
+        String[] pairs = formData.split("&");
+        try {
+            for (String pair : pairs) {
+                String[] fields = pair.split("=");
+                if (fields.length > 1) {
+                    String name = URLDecoder.decode(fields[0], "UTF-8");
+                    String value = URLDecoder.decode(fields[1], "UTF-8");
+                    params.merge(name, Collections.singletonList(value), (oldValue, newValue) -> {
+                        oldValue.addAll(newValue);
+                        return oldValue;
+                    });
+                }
+            }
+        } catch (UnsupportedEncodingException ex) {
+            throw new RuntimeException(ex);
+        }
+        return params;
+    }
+
 }

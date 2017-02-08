@@ -140,6 +140,34 @@
             }
           }
         }
+      },
+      "put": {
+        "tags": ["user"],
+        "summary": "Update a user's name",
+        "operationId": "Update a user's name",
+        "produces": [
+          "application/json"
+        ],
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "parameters": [
+          {
+          "name": "email",
+          "in": "formData",
+          "description": "The new email to set",
+          "required": true,
+          "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User response",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          }
+        }
       }
     },
     "/healthcheck": {
