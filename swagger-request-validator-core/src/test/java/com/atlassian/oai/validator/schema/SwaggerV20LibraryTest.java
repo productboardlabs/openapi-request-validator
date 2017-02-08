@@ -44,6 +44,10 @@ public class SwaggerV20LibraryTest {
                         "discriminator-valid", "discriminator-invalid-nonStringDiscriminator",
                         new String[]{"err.swaggerv2.discriminator.nonText"}
                 },
+                {"discriminator_shouldFail_whenDoesntMatchSubSchema",
+                        "discriminator-valid", "discriminator-invalid-doesntMatchSubSchema",
+                        new String[]{"err.swaggerv2.discriminator.fail"}
+                },
                 {"discriminator_shouldFail_whenEmptyValue",
                         "discriminator-invalid-empty", "discriminator-valid",
                         new String[]{"err.swaggerv2.discriminator.empty"}

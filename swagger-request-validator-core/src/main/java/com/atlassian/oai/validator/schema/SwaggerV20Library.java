@@ -9,6 +9,7 @@ import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.keyword.syntax.checkers.AbstractSyntaxChecker;
 import com.github.fge.jsonschema.core.messages.JsonSchemaSyntaxMessageBundle;
 import com.github.fge.jsonschema.core.processing.Processor;
+import com.github.fge.jsonschema.core.report.ListProcessingReport;
 import com.github.fge.jsonschema.core.report.ListReportProvider;
 import com.github.fge.jsonschema.core.report.LogLevel;
 import com.github.fge.jsonschema.core.report.ProcessingMessage;
@@ -28,9 +29,9 @@ import com.github.fge.msgsimple.load.MessageBundleLoader;
 import com.github.fge.msgsimple.load.MessageBundles;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import static com.atlassian.oai.validator.util.StreamUtils.stream;
 import static com.github.fge.msgsimple.load.MessageBundles.getBundle;
@@ -191,6 +192,12 @@ public class SwaggerV20Library {
                              final MessageBundle bundle,
                              final FullData data) throws ProcessingException {
 
+            if (!data.getSchema().getNode().has(keyword)) {
+                // If the discriminator keyword has been removed we are in a validation loop
+                // We need to bail out early in this case
+                return;
+            }
+
             final JsonNode discriminatorNode = data.getInstance().getNode().get(fieldName);
             if (discriminatorNode == null) {
                 report.error(
@@ -215,8 +222,9 @@ public class SwaggerV20Library {
             }
 
             // Valid 'subclasses' should use allOf to reference the parent schema definition
-            final String parentDefinitionRef = "#" + data.getSchema().getPointer().toString();
-            final Set<String> validDiscriminatorValues = new HashSet<>();
+            final SchemaTree schemaTree = data.getSchema();
+            final String parentDefinitionRef = "#" + schemaTree.getPointer().toString();
+            final Map<String, JsonNode> validDiscriminatorValues = new HashMap<>();
             data.getSchema().getBaseNode().get("definitions").fields().forEachRemaining(e -> {
                 final JsonNode def = e.getValue();
                 if (!def.has("allOf")) {
@@ -225,22 +233,36 @@ public class SwaggerV20Library {
 
                 def.get("allOf").forEach(n -> {
                     if (n.has("$ref") && n.get("$ref").textValue().equals(parentDefinitionRef)) {
-                        validDiscriminatorValues.add(e.getKey());
+                        validDiscriminatorValues.put(e.getKey(), def);
                     }
                 });
 
             });
 
-            if (!validDiscriminatorValues.contains(discriminatorNode.textValue())) {
+            if (!validDiscriminatorValues.containsKey(discriminatorNode.textValue())) {
                 report.error(
                         msg(data, bundle, "err.swaggerv2.discriminator.invalid")
                                 .putArgument("discriminatorField", fieldName)
                                 .putArgument("value", discriminatorNode.textValue())
-                                .putArgument("allowedValues", validDiscriminatorValues)
+                                .putArgument("allowedValues", validDiscriminatorValues.keySet())
                 );
             }
 
-            // TODO: Validate correct sub-schema based on discriminator
+            final ListProcessingReport subReport = new ListProcessingReport(report.getLogLevel(), LogLevel.FATAL);
+            final JsonPointer ptr = JsonPointer.of("definitions", discriminatorNode.textValue());
+            final FullData newData = data.withSchema(schemaTree.setPointer(ptr));
+
+            // Remove the discriminator keyword to prevent validation loops
+            ((ObjectNode)schemaTree.getNode()).remove(keyword);
+
+            // Validate against the sub-schema
+            processor.process(subReport, newData);
+
+            if (!subReport.isSuccess()) {
+                report.error(msg(data, bundle, "err.swaggerv2.discriminator.fail")
+                        .putArgument("schema", ptr.toString())
+                        .put("report", subReport.asJson()));
+            }
 
         }
 
