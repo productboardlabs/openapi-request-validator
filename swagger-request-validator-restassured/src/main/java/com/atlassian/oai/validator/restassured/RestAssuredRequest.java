@@ -1,13 +1,13 @@
 package com.atlassian.oai.validator.restassured;
 
 import com.atlassian.oai.validator.model.Request;
+import io.restassured.http.Header;
 import io.restassured.specification.FilterableRequestSpecification;
 
 import javax.annotation.Nonnull;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
@@ -67,5 +67,11 @@ public class RestAssuredRequest implements Request {
 
     private boolean isGetRequest() {
         return getMethod() == Method.GET;
+    }
+
+    @Nonnull
+    @Override
+    public Map<String, String> getHeaders() {
+        return internalRequest.getHeaders().asList().stream().collect(Collectors.toMap(Header::getName, Header::getValue));
     }
 }

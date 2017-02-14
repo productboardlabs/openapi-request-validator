@@ -8,6 +8,9 @@ import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadRequest;
@@ -103,6 +106,36 @@ public class SwaggerRequestResponseValidatorTest {
         final Request request = SimpleRequest.Builder.put("/users/1").withBody(formData).build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
         assertFail(classUnderTest.validate(request, response), "validation.request.parameter.missing");
+    }
+
+    @Test
+    public void validate_authorizationHeaderIsChecked_shouldPass() {
+        Map<String, String> authorisationHeader = new HashMap<>();
+        authorisationHeader.put("Authorization", "Bearer mytoken");
+        final Request request = SimpleRequest.Builder.get("/secure/users/1").withHeaders(authorisationHeader).build();
+        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
+        assertPass(classUnderTest.validate(request, response));
+    }
+
+    @Test
+    public void validate_authorizationHeaderIsChecked_shouldFail() {
+        final Request request = SimpleRequest.Builder.get("/secure/users/1").build();
+        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
+        assertFail(classUnderTest.validate(request, response), "validation.request.security.missing");
+    }
+
+    @Test
+    public void validate_authorizationQueryParamIsChecked_shouldPass() {
+        final Request request = SimpleRequest.Builder.put("/secure/users/1").withQueryParam("authorization", "token").build();
+        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
+        assertPass(classUnderTest.validate(request, response));
+    }
+
+    @Test
+    public void validate_authorizationQueryParamIsChecked_shouldFail() {
+        final Request request = SimpleRequest.Builder.put("/secure/users/1").build();
+        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
+        assertFail(classUnderTest.validate(request, response), "validation.request.security.missing");
     }
 
     @Test
