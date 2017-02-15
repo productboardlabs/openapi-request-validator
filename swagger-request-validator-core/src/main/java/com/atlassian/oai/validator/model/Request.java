@@ -2,6 +2,7 @@ package com.atlassian.oai.validator.model;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -53,5 +54,8 @@ public interface Request {
      */
     @Nonnull
     Collection<String> getQueryParameterValues(String name);
+
+    @Nonnull
+    Map<String, Collection<String>> getHeaders();
 
 }

@@ -11,6 +11,10 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.net.MediaType;
+import io.swagger.models.Swagger;
+import io.swagger.models.auth.ApiKeyAuthDefinition;
+import io.swagger.models.auth.In;
+import io.swagger.models.auth.SecuritySchemeDefinition;
 import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.Parameter;
 
@@ -21,6 +25,8 @@ import java.util.Collection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
@@ -33,6 +39,7 @@ public class RequestValidator {
     private final SchemaValidator schemaValidator;
     private final ParameterValidators parameterValidators;
     private final MessageResolver messages;
+    private final Swagger swaggerDefinition;
 
     /**
      * Construct a new request validator with the given schema validator.
@@ -40,10 +47,11 @@ public class RequestValidator {
      * @param schemaValidator The schema validator to use when validating request bodies
      * @param messages The message resolver to use
      */
-    public RequestValidator(@Nonnull final SchemaValidator schemaValidator, @Nonnull final MessageResolver messages) {
+    public RequestValidator(@Nonnull final SchemaValidator schemaValidator, @Nonnull final MessageResolver messages, @Nonnull final Swagger swaggerDefinition) {
         this.schemaValidator = requireNonNull(schemaValidator, "A schema validator is required");
         this.parameterValidators = new ParameterValidators(schemaValidator, messages);
         this.messages = requireNonNull(messages, "A message resolver is required");
+        this.swaggerDefinition = requireNonNull(swaggerDefinition, "A swagger definition required");
     }
 
     /**
@@ -63,9 +71,63 @@ public class RequestValidator {
         requireNonNull(request, "A request is required");
         requireNonNull(apiOperation, "An API operation is required");
 
-        return validatePathParameters(requestPath, apiOperation)
+        return  vaildateSecurity(request, apiOperation)
+                .merge(validatePathParameters(requestPath, apiOperation))
                 .merge(validateRequestBody(request.getBody(), apiOperation))
                 .merge(validateQueryParameters(request, apiOperation));
+    }
+
+    private ValidationReport vaildateSecurity(Request request, ApiOperation apiOperation) {
+        List<Map<String, List<String>>> securityRequired = apiOperation.getOperation().getSecurity();
+
+        if (null != securityRequired && !securityRequired.isEmpty()) {
+            Map<String, SecuritySchemeDefinition> filtered = new HashMap<>();
+            for (Map.Entry<String, SecuritySchemeDefinition> s: swaggerDefinition.getSecurityDefinitions().entrySet() ) {
+                securityRequired.stream().filter(item -> item.containsKey(s.getKey())).forEach(item -> filtered.put(s.getKey(), s.getValue()));
+            }
+
+            return filtered.entrySet().stream().map(e -> validateSingleSecurityParameter(request, e.getValue()))
+                    .reduce(ValidationReport.empty(), ValidationReport::merge);
+        }
+        return ValidationReport.EMPTY_REPORT;
+    }
+
+    private ValidationReport validateSingleSecurityParameter(Request request, SecuritySchemeDefinition securitySchemeDefinition) {
+          switch (securitySchemeDefinition.getType()) {
+              case "apiKey" :
+                  ApiKeyAuthDefinition apiKeyAuthDefinition = (ApiKeyAuthDefinition) securitySchemeDefinition;
+                  In in = apiKeyAuthDefinition.getIn();
+                  switch (in.toValue()) {
+                      case "header":
+                          return checkApiKeyAuthorizationByHeader(request, apiKeyAuthDefinition);
+                      case "query" :
+                          return checkApiKeyAuthorizationByQueryParameter(request, apiKeyAuthDefinition);
+                      default:
+                          return ValidationReport.EMPTY_REPORT;
+                  }
+              default:
+                  return ValidationReport.EMPTY_REPORT;
+          }
+    }
+
+    @Nonnull
+    private ValidationReport checkApiKeyAuthorizationByQueryParameter(Request request, ApiKeyAuthDefinition apiKeyAuthDefinition) {
+        Optional<String> authQueryParam = request.getQueryParameterValues(apiKeyAuthDefinition.getName()).stream().findFirst();
+        if (!authQueryParam.isPresent()) {
+            return ValidationReport.singleton(messages.get("validation.request.security.missing", request.getMethod(), request.getPath()));
+        }
+        return ValidationReport.EMPTY_REPORT;
+    }
+
+    @Nonnull
+    private ValidationReport checkApiKeyAuthorizationByHeader(Request request, ApiKeyAuthDefinition apiKeyAuthDefinition) {
+        Boolean exists = request.getHeaders().entrySet()
+                .stream().anyMatch(e -> e.getKey().equals(apiKeyAuthDefinition.getName()));
+
+        if (!exists) {
+             return ValidationReport.singleton(messages.get("validation.request.security.missing", request.getMethod(), request.getPath()));
+        }
+        return ValidationReport.EMPTY_REPORT;
     }
 
     @Nonnull
@@ -74,9 +136,8 @@ public class RequestValidator {
 
         if (isFormData(requestBody, apiOperation)) {
             return validateForm(requestBody, apiOperation);
-        } else {
-            return validateBody(requestBody, apiOperation);
         }
+        return validateBody(requestBody, apiOperation);
     }
 
 

@@ -9,6 +9,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Optional;
 
 import static java.util.Arrays.asList;
@@ -25,15 +26,18 @@ public class SimpleRequest implements Request {
     private final Method method;
     private final Optional<String> requestBody;
     private final Map<String, Collection<String>> queryParams;
+    private final Map<String, Collection<String>> headers;
 
     private SimpleRequest(@Nonnull final Method method,
                           @Nonnull final String path,
                           @Nullable final String body,
-                          @Nonnull final Map<String, Collection<String>> queryParams) {
+                          @Nonnull final Map<String, Collection<String>> queryParams,
+                          @Nonnull final Map<String, Collection<String>> headers) {
         this.method = requireNonNull(method, "A method is required");
         this.path = requireNonNull(path, "A request path is required");
         this.requestBody = Optional.ofNullable(body);
         this.queryParams = requireNonNull(queryParams);
+        this.headers = headers;
     }
 
     @Nonnull
@@ -69,6 +73,12 @@ public class SimpleRequest implements Request {
         return Collections.unmodifiableCollection(queryParams.keySet());
     }
 
+    @Nonnull
+    @Override
+    public Map<String, Collection<String>> getHeaders() {
+        return Collections.unmodifiableMap(headers);
+    }
+
     /**
      * A builder for constructing new {@link SimpleRequest} instances.
      */
@@ -78,6 +88,7 @@ public class SimpleRequest implements Request {
         private Method method;
         private String body;
         private Multimap<String, String> queryParams = MultimapBuilder.hashKeys().arrayListValues().build();
+        private Map<String, Collection<String>> headers = new HashMap<>();
 
         public static Builder get(final String path) {
             return new Builder(Method.GET, path);
@@ -109,13 +120,18 @@ public class SimpleRequest implements Request {
             return this;
         }
 
+        public Builder withHeaders(final Map<String, Collection<String>> headers) {
+            this.headers.putAll(headers);
+            return this;
+        }
+
         public Builder withQueryParam(final String name, final String... values) {
             queryParams.putAll(name.toLowerCase(), asList(values));
             return this;
         }
 
         public SimpleRequest build() {
-            return new SimpleRequest(method, path, body, queryParams.asMap());
+            return new SimpleRequest(method, path, body, queryParams.asMap(), headers);
         }
     }
 }

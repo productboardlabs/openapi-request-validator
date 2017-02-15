@@ -99,7 +99,7 @@ public class SwaggerRequestResponseValidator {
         this.basePathOverride = Optional.ofNullable(basePathOverride);
         this.messages = messages;
         final SchemaValidator schemaValidator = new SchemaValidator(api, messages);
-        this.requestValidator = new RequestValidator(schemaValidator, messages);
+        this.requestValidator = new RequestValidator(schemaValidator, messages, api);
         this.responseValidator = new ResponseValidator(schemaValidator, messages);
     }
 

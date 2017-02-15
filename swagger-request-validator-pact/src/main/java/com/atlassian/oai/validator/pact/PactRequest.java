@@ -3,11 +3,12 @@ package com.atlassian.oai.validator.pact;
 import com.atlassian.oai.validator.model.Request;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.empty;
@@ -56,5 +57,11 @@ public class PactRequest implements Request {
     @Override
     public Collection<String> getQueryParameterValues(String name) {
         return internalRequest.getQuery().getOrDefault(name, Collections.emptyList());
+    }
+
+    @Nonnull
+    @Override
+    public Map<String, Collection<String>> getHeaders() {
+        return internalRequest.getHeaders().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, v -> Collections.singleton(v.getValue())));
     }
 }
