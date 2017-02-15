@@ -8,6 +8,8 @@ import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import org.junit.Test;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -110,8 +112,8 @@ public class SwaggerRequestResponseValidatorTest {
 
     @Test
     public void validate_authorizationHeaderIsChecked_shouldPass() {
-        Map<String, String> authorisationHeader = new HashMap<>();
-        authorisationHeader.put("Authorization", "Bearer mytoken");
+        Map<String, Collection<String>> authorisationHeader = new HashMap<>();
+        authorisationHeader.put("Authorization", Collections.singleton("Bearer mytoken"));
         final Request request = SimpleRequest.Builder.get("/secure/users/1").withHeaders(authorisationHeader).build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
         assertPass(classUnderTest.validate(request, response));

@@ -56,6 +56,6 @@ public interface Request {
     Collection<String> getQueryParameterValues(String name);
 
     @Nonnull
-    Map<String, String> getHeaders();
+    Map<String, Collection<String>> getHeaders();
 
 }

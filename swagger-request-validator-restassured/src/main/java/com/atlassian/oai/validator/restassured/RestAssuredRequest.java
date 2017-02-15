@@ -5,9 +5,13 @@ import io.restassured.http.Header;
 import io.restassured.specification.FilterableRequestSpecification;
 
 import javax.annotation.Nonnull;
-import java.util.*;
-import java.util.function.Function;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.Collections;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
@@ -71,7 +75,7 @@ public class RestAssuredRequest implements Request {
 
     @Nonnull
     @Override
-    public Map<String, String> getHeaders() {
-        return internalRequest.getHeaders().asList().stream().collect(Collectors.toMap(Header::getName, Header::getValue));
+    public Map<String, Collection<String>> getHeaders() {
+        return internalRequest.getHeaders().asList().stream().collect(Collectors.toMap(Header::getName, v -> Collections.singleton(v.getValue())));
     }
 }

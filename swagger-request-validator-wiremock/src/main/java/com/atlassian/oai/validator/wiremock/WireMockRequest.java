@@ -67,7 +67,7 @@ public class WireMockRequest implements Request {
 
     @Nonnull
     @Override
-    public Map<String, String> getHeaders() {
-        return internalRequest.getHeaders().all().stream().collect(Collectors.toMap(MultiValue::key, MultiValue::firstValue));
+    public Map<String, Collection<String>> getHeaders() {
+        return internalRequest.getHeaders().all().stream().collect(Collectors.toMap(MultiValue::key, MultiValue::values));
     }
 }

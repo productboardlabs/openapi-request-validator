@@ -21,7 +21,13 @@ import io.swagger.models.parameters.Parameter;
 import javax.annotation.Nonnull;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.*;
+import java.util.Collection;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
 
@@ -41,11 +47,11 @@ public class RequestValidator {
      * @param schemaValidator The schema validator to use when validating request bodies
      * @param messages The message resolver to use
      */
-    public RequestValidator(@Nonnull final SchemaValidator schemaValidator, @Nonnull final MessageResolver messages, @Nonnull Swagger swaggerDefinition) {
+    public RequestValidator(@Nonnull final SchemaValidator schemaValidator, @Nonnull final MessageResolver messages, @Nonnull final Swagger swaggerDefinition) {
         this.schemaValidator = requireNonNull(schemaValidator, "A schema validator is required");
         this.parameterValidators = new ParameterValidators(schemaValidator, messages);
         this.messages = requireNonNull(messages, "A message resolver is required");
-        this.swaggerDefinition = swaggerDefinition;
+        this.swaggerDefinition = requireNonNull(swaggerDefinition, "A swagger definition required");
     }
 
     /**
@@ -65,8 +71,8 @@ public class RequestValidator {
         requireNonNull(request, "A request is required");
         requireNonNull(apiOperation, "An API operation is required");
 
-        return  vaildateSecurity(request, apiOperation).merge(
-                validatePathParameters(requestPath, apiOperation))
+        return  vaildateSecurity(request, apiOperation)
+                .merge(validatePathParameters(requestPath, apiOperation))
                 .merge(validateRequestBody(request.getBody(), apiOperation))
                 .merge(validateQueryParameters(request, apiOperation));
     }
@@ -107,20 +113,21 @@ public class RequestValidator {
     @Nonnull
     private ValidationReport checkApiKeyAuthorizationByQueryParameter(Request request, ApiKeyAuthDefinition apiKeyAuthDefinition) {
         Optional<String> authQueryParam = request.getQueryParameterValues(apiKeyAuthDefinition.getName()).stream().findFirst();
-        if (null == authQueryParam || !authQueryParam.isPresent())
-            return ValidationReport.singleton(messages.get("validation.request.security.missing", request.getMethod(),request.getPath()));
-        else
-            return ValidationReport.EMPTY_REPORT;
+        if (!authQueryParam.isPresent()) {
+            return ValidationReport.singleton(messages.get("validation.request.security.missing", request.getMethod(), request.getPath()));
+        }
+        return ValidationReport.EMPTY_REPORT;
     }
 
     @Nonnull
     private ValidationReport checkApiKeyAuthorizationByHeader(Request request, ApiKeyAuthDefinition apiKeyAuthDefinition) {
-        String authHeader = request.getHeaders().get(apiKeyAuthDefinition.getName());
-        if (null == authHeader || authHeader.isEmpty())
-            return ValidationReport.singleton(messages.get("validation.request.security.missing", request.getMethod(), request.getPath()));
-         else
-            return ValidationReport.EMPTY_REPORT;
+        Boolean exists = request.getHeaders().entrySet()
+                .stream().anyMatch(e -> e.getKey().equals(apiKeyAuthDefinition.getName()));
 
+        if (!exists) {
+             return ValidationReport.singleton(messages.get("validation.request.security.missing", request.getMethod(), request.getPath()));
+        }
+        return ValidationReport.EMPTY_REPORT;
     }
 
     @Nonnull
@@ -129,9 +136,8 @@ public class RequestValidator {
 
         if (isFormData(requestBody, apiOperation)) {
             return validateForm(requestBody, apiOperation);
-        } else {
-            return validateBody(requestBody, apiOperation);
         }
+        return validateBody(requestBody, apiOperation);
     }
 
 
