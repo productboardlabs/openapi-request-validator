@@ -124,7 +124,7 @@ public class SchemaValidator {
             final ListProcessingReport processingReport =
                     (ListProcessingReport) schemaFactory().getJsonSchema(schemaObject).validate(content, true);
 
-            if((processingReport != null) && !processingReport.isSuccess()) {
+            if ((processingReport != null) && !processingReport.isSuccess()) {
                 processingReport.forEach(pm -> addProcessingMessage(validationReport, pm, null));
             }
             return validationReport;
@@ -193,7 +193,7 @@ public class SchemaValidator {
         final Deque<JsonNode> toClean = new ArrayDeque<>();
         toClean.add(result);
 
-        while(!toClean.isEmpty()) {
+        while (!toClean.isEmpty()) {
             final JsonNode n = toClean.pop();
             if (!n.isObject()) {
                 continue;
@@ -203,7 +203,7 @@ public class SchemaValidator {
                 final Map.Entry<String, JsonNode> field = fields.next();
                 if (field.getValue().isNull()) {
                     fields.remove();
-                } else if (field.getValue().isObject()){
+                } else if (field.getValue().isObject()) {
                     toClean.add(field.getValue());
                 }
             }
@@ -247,6 +247,5 @@ public class SchemaValidator {
 
         validationReport.add(messages.create("validation.schema." + validationKeyword, message, subReports.toArray(new String[0])));
     }
-
 
 }

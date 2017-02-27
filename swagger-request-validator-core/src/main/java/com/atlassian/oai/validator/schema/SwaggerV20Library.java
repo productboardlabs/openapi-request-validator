@@ -43,6 +43,8 @@ import static java.util.stream.Collectors.toList;
  */
 public class SwaggerV20Library {
 
+    private SwaggerV20Library() { }
+
     public static final String OAI_V2_METASCHEMA_URI = "https://openapis.org/specification/versions/2.0#";
 
     public static final String DISCRIMINATOR_KEYWORD = "discriminator";
@@ -253,7 +255,7 @@ public class SwaggerV20Library {
             final FullData newData = data.withSchema(schemaTree.setPointer(ptr));
 
             // Remove the discriminator keyword to prevent validation loops
-            ((ObjectNode)schemaTree.getNode()).remove(keyword);
+            ((ObjectNode) schemaTree.getNode()).remove(keyword);
 
             // Validate against the sub-schema
             processor.process(subReport, newData);
