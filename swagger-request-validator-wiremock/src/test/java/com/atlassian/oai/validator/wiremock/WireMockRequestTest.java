@@ -1,5 +1,7 @@
 package com.atlassian.oai.validator.wiremock;
 
+import com.github.tomakehurst.wiremock.http.HttpHeader;
+import com.github.tomakehurst.wiremock.http.HttpHeaders;
 import com.github.tomakehurst.wiremock.http.Request;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -60,6 +62,23 @@ public class WireMockRequestTest {
         final WireMockRequest classUnderTest = new WireMockRequest(request);
 
         assertThat(classUnderTest.getQueryParameterValues("foo"), contains(""));
+    }
+
+    @Test
+    public void getHeaderValues_doesCaseInsensitiveLookup() {
+        final Request request = Mockito.mock(Request.class);
+        when(request.getUrl()).thenReturn("/some/path");
+        when(request.getHeaders()).thenReturn(
+                new HttpHeaders(new HttpHeader("X-My-Header", "foop", "barf"))
+        );
+
+        final WireMockRequest classUnderTest = new WireMockRequest(request);
+
+        assertThat(classUnderTest.getHeaderValues("x-my-header"), contains("foop", "barf"));
+        assertThat(classUnderTest.getHeaderValue("x-MY-header").isPresent(), is(true));
+
+        assertThat(classUnderTest.getHeaderValues("not-a-header").isEmpty(), is(true));
+        assertThat(classUnderTest.getHeaderValue("not-a-header").isPresent(), is(false));
     }
 
 }

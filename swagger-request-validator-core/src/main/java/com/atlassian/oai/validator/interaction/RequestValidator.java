@@ -73,13 +73,16 @@ public class RequestValidator {
         requireNonNull(request, "A request is required");
         requireNonNull(apiOperation, "An API operation is required");
 
-        return  vaildateSecurity(request, apiOperation)
+        return  validateSecurity(request, apiOperation)
+                .merge(validateContentType(request, apiOperation))
                 .merge(validatePathParameters(requestPath, apiOperation))
                 .merge(validateRequestBody(request.getBody(), apiOperation))
                 .merge(validateQueryParameters(request, apiOperation));
     }
 
-    private ValidationReport vaildateSecurity(final Request request, final ApiOperation apiOperation) {
+    @Nonnull
+    private ValidationReport validateSecurity(@Nonnull final Request request,
+                                              @Nonnull final ApiOperation apiOperation) {
         final List<Map<String, List<String>>> securityRequired = apiOperation.getOperation().getSecurity();
 
         if (null != securityRequired && !securityRequired.isEmpty()) {
@@ -127,16 +130,20 @@ public class RequestValidator {
     @Nonnull
     private ValidationReport checkApiKeyAuthorizationByHeader(@Nonnull final Request request,
                                                               @Nonnull final ApiKeyAuthDefinition apiKeyAuthDefinition) {
-        final Boolean exists = request.getHeaders().entrySet()
-                .stream()
-                .anyMatch(e -> e.getKey().equals(apiKeyAuthDefinition.getName()));
 
-        if (!exists) {
+        if (!request.getHeaderValue(apiKeyAuthDefinition.getName()).isPresent()) {
             return ValidationReport.singleton(
                  messages.get("validation.request.security.missing",
                          request.getMethod(), request.getPath())
             );
         }
+        return ValidationReport.EMPTY_REPORT;
+    }
+
+    @Nonnull
+    private ValidationReport validateContentType(@Nonnull final Request request,
+                                                 @Nonnull final ApiOperation apiOperation) {
+
         return ValidationReport.EMPTY_REPORT;
     }
 
@@ -220,6 +227,7 @@ public class RequestValidator {
         return validationReport;
     }
 
+    @Nonnull
     private ValidationReport validateQueryParameters(@Nonnull final Request request,
                                                      @Nonnull final ApiOperation apiOperation) {
         return apiOperation
@@ -231,6 +239,7 @@ public class RequestValidator {
                 .reduce(ValidationReport.empty(), ValidationReport::merge);
     }
 
+    @Nonnull
     private ValidationReport validateQueryParameter(@Nonnull final Request request,
                                                     @Nonnull final ApiOperation apiOperation,
                                                     @Nonnull final Parameter queryParameter) {

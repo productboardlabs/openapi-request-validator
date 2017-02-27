@@ -6,15 +6,10 @@ import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.model.SimpleResponse;
 import org.junit.Test;
 
-import java.util.Collection;
-import java.util.Map;
-
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadRequest;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadResponse;
-import static java.util.Collections.singleton;
-import static java.util.Collections.singletonMap;
 
 /**
  * Tests for Request validation behavior
@@ -90,7 +85,10 @@ public class RequestValidationTest {
 
     @Test
     public void validate_withInvalidJsonRequestBody_shouldFail() {
-        final Request request = SimpleRequest.Builder.post("/users").withBody(loadRequest("newuser-invalid-missingrequired")).build();
+        final Request request = SimpleRequest.Builder
+                .post("/users")
+                .withBody(loadRequest("newuser-invalid-missingrequired"))
+                .build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
 
         assertFail(classUnderTest.validate(request, response), "validation.schema.required");
@@ -106,9 +104,10 @@ public class RequestValidationTest {
 
     @Test
     public void validate_authorizationHeaderIsChecked_shouldPass() {
-        final Map<String, Collection<String>> authorisationHeader =
-                singletonMap("Authorization", singleton("Bearer mytoken"));
-        final Request request = SimpleRequest.Builder.get("/secure/users/1").withHeaders(authorisationHeader).build();
+        final Request request = SimpleRequest.Builder
+                .get("/secure/users/1")
+                .withHeader("Authorization", "Bearer mytoken")
+                .build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
         assertPass(classUnderTest.validate(request, response));
     }
