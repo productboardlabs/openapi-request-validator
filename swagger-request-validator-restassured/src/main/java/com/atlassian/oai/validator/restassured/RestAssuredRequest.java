@@ -59,7 +59,7 @@ public class RestAssuredRequest implements Request {
 
     @Nonnull
     @Override
-    public Collection<String> getQueryParameterValues(String name) {
+    public Collection<String> getQueryParameterValues(final String name) {
         if (internalRequest.getQueryParams().containsKey(name)) {
             return singleton(internalRequest.getQueryParams().get(name));
         }

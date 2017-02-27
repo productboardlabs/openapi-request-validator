@@ -12,9 +12,9 @@ class CapturingFilter implements Filter {
     private RestAssuredResponse response;
 
     @Override
-    public Response filter(FilterableRequestSpecification requestSpec,
-                           FilterableResponseSpecification responseSpec,
-                           FilterContext ctx) {
+    public Response filter(final FilterableRequestSpecification requestSpec,
+                           final FilterableResponseSpecification responseSpec,
+                           final FilterContext ctx) {
         this.request = new RestAssuredRequest(requestSpec);
         final Response result = ctx.next(requestSpec, responseSpec);
         this.response = new RestAssuredResponse(result);

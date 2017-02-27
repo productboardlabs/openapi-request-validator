@@ -106,7 +106,7 @@ public class PactProviderValidatorTest {
 
     }
 
-    private void setupBrokerLatestPactsResponse(int status, String responseName) {
+    private void setupBrokerLatestPactsResponse(final int status, final String responseName) {
         wireMock.stubFor(get(urlPathEqualTo("/pacts/provider/Provider/latest"))
                 .willReturn(aResponse()
                         .withStatus(status)

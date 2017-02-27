@@ -40,7 +40,7 @@ public class SwaggerValidatorPactConsumerTestExample {
             new ValidatedPactProviderRule(SWAGGER_JSON_URL, null, PROVIDER_ID, this);
 
     @Pact(provider = PROVIDER_ID, consumer = CONSUMER_ID)
-    public PactFragment getValidPet(PactDslWithProvider builder) {
+    public PactFragment getValidPet(final PactDslWithProvider builder) {
         return builder
                 .uponReceiving("GET valid pet")
                 .method("GET")
@@ -52,7 +52,7 @@ public class SwaggerValidatorPactConsumerTestExample {
     }
 
     @Pact(provider = PROVIDER_ID, consumer = CONSUMER_ID)
-    public PactFragment getPetWithIncompleteResponse(PactDslWithProvider builder) {
+    public PactFragment getPetWithIncompleteResponse(final PactDslWithProvider builder) {
         return builder
                 .uponReceiving("GET invalid pet")
                 .method("GET")
@@ -68,7 +68,7 @@ public class SwaggerValidatorPactConsumerTestExample {
     }
 
     @Pact(provider = PROVIDER_ID, consumer = CONSUMER_ID)
-    public PactFragment getPetWithInvalidResponse(PactDslWithProvider builder) {
+    public PactFragment getPetWithInvalidResponse(final PactDslWithProvider builder) {
         return builder
                 .uponReceiving("GET invalid pet")
                 .method("GET")
@@ -85,7 +85,7 @@ public class SwaggerValidatorPactConsumerTestExample {
     }
 
     @Pact(provider = PROVIDER_ID, consumer = CONSUMER_ID)
-    public PactFragment getPetWithInvalidId(PactDslWithProvider builder) {
+    public PactFragment getPetWithInvalidId(final PactDslWithProvider builder) {
         return builder
                 .uponReceiving("GET pet with invalid ID")
                 .method("GET")
@@ -96,7 +96,7 @@ public class SwaggerValidatorPactConsumerTestExample {
     }
 
     @Pact(provider = PROVIDER_ID, consumer = CONSUMER_ID)
-    public PactFragment getPetWithAdditionalProperties(PactDslWithProvider builder) {
+    public PactFragment getPetWithAdditionalProperties(final PactDslWithProvider builder) {
         return builder
                 .uponReceiving("GET pet with additional properties")
                 .method("GET")

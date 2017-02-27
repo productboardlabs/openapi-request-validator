@@ -89,19 +89,19 @@ public class ValidatedPactProviderRule implements TestRule {
         final PactDslWithProvider dslBuilder = ConsumerPactBuilder.consumer(pact.consumer()).hasPactWith(providerId);
         try {
             return Optional.of((PactFragment) method.invoke(target, dslBuilder));
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw e;
         }
     }
 
-    private Optional<Method> findPactMethod(PactVerification pactVerification) {
+    private Optional<Method> findPactMethod(final PactVerification pactVerification) {
         final String pactFragment = pactVerification.fragment();
         for (Method method : target.getClass().getMethods()) {
             final Pact pact = method.getAnnotation(Pact.class);
             if (pact != null && pact.provider().equals(providerId)
                     && (pactFragment.isEmpty() || pactFragment.equals(method.getName()))) {
 
-                boolean hasValidPactSignature =
+                final boolean hasValidPactSignature =
                         PactFragment.class.isAssignableFrom(method.getReturnType())
                                 && method.getParameterTypes().length == 1
                                 && method.getParameterTypes()[0].isAssignableFrom(PactDslWithProvider.class);
@@ -116,7 +116,7 @@ public class ValidatedPactProviderRule implements TestRule {
     }
 
     public static class PactValidationError extends RuntimeException {
-        public PactValidationError(String message) {
+        public PactValidationError(final String message) {
             super(message);
         }
     }

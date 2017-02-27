@@ -58,7 +58,7 @@ public class WireMockRequest implements Request {
 
     @Nonnull
     @Override
-    public Collection<String> getQueryParameterValues(String name) {
+    public Collection<String> getQueryParameterValues(final String name) {
         if (queryParameterMap.containsKey(name)) {
             return queryParameterMap.get(name).values();
         }

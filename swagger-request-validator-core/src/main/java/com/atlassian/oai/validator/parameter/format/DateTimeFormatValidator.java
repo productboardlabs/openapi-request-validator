@@ -6,7 +6,7 @@ import java.time.format.DateTimeFormatter;
 
 public class DateTimeFormatValidator extends BaseDateFormatValidator {
 
-    public DateTimeFormatValidator(MessageResolver messages) {
+    public DateTimeFormatValidator(final MessageResolver messages) {
         super(messages);
     }
 
@@ -16,7 +16,7 @@ public class DateTimeFormatValidator extends BaseDateFormatValidator {
     }
 
     @Override
-    public boolean supports(String format) {
+    public boolean supports(final String format) {
         return format.equals("date-time");
     }
 

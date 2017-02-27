@@ -36,7 +36,7 @@ public class ArrayParameterValidator extends BaseParameterValidator {
         MULTI(null);
 
         final String separator;
-        CollectionFormat(String separator) {
+        CollectionFormat(final String separator) {
             this.separator = separator;
         }
 

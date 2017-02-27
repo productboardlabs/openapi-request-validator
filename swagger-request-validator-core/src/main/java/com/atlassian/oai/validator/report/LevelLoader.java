@@ -128,7 +128,7 @@ public interface LevelLoader {
             }
             try {
                 props.load(new FileReader(source));
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 log.warn(format("Unable to load levels file %s", source.getAbsolutePath()), e);
             }
         }
@@ -141,7 +141,7 @@ public interface LevelLoader {
             }
             try {
                 props.load(new InputStreamReader(source.openStream()));
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 log.warn(format("Unable to load levels file %s", source.toExternalForm()), e);
             }
         }
@@ -162,7 +162,7 @@ public interface LevelLoader {
                 final String value = props.getProperty(n).toUpperCase();
                 try {
                     result.put(key, ValidationReport.Level.valueOf(value));
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     log.warn("Unable to load level {} from property with value '{}'.", key, value);
                 }
             });
@@ -177,7 +177,7 @@ public interface LevelLoader {
             final String value = props.getProperty(toPropertyName(DEFAULT_LEVEL_KEY));
             try {
                 return Optional.of(ValidationReport.Level.valueOf(value.toUpperCase()));
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 log.warn("Unable to load the default level from property '{}'.", value);
                 return Optional.empty();
             }
@@ -229,7 +229,7 @@ public interface LevelLoader {
 
         private final LevelLoader[] loaders;
 
-        public ChainingLoader(LevelLoader... loaders) {
+        public ChainingLoader(final LevelLoader... loaders) {
             this.loaders = loaders;
         }
 

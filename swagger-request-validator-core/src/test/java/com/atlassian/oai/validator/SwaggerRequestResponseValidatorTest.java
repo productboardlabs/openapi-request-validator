@@ -9,14 +9,14 @@ import com.atlassian.oai.validator.report.ValidationReport;
 import org.junit.Test;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadRequest;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadResponse;
+import static java.util.Collections.singleton;
+import static java.util.Collections.singletonMap;
 
 public class SwaggerRequestResponseValidatorTest {
 
@@ -72,7 +72,7 @@ public class SwaggerRequestResponseValidatorTest {
 
     @Test
     public void validate_withRequestMissingRequiredFormDataBody_shouldFail() {
-        String formData = "fmail=abc%40gmail.com";
+        final String formData = "fmail=abc%40gmail.com";
         final Request request = SimpleRequest.Builder.put("/users/1").withBody(formData).build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
         assertFail(classUnderTest.validate(request, response), "validation.request.parameter.missing");
@@ -88,7 +88,7 @@ public class SwaggerRequestResponseValidatorTest {
 
     @Test
     public void validate_withValidFormDataBody_shouldPass() {
-        String formData = "email=abc%40gmail.com";
+        final String formData = "email=abc%40gmail.com";
         final Request request = SimpleRequest.Builder.put("/users/1").withBody(formData).build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
         assertPass(classUnderTest.validate(request, response));
@@ -104,7 +104,7 @@ public class SwaggerRequestResponseValidatorTest {
 
     @Test
     public void validate_withInvalidFormDataRequestBody_shouldFail() {
-        String formData = "malformed-form-url-encoded";
+        final String formData = "malformed-form-url-encoded";
         final Request request = SimpleRequest.Builder.put("/users/1").withBody(formData).build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
         assertFail(classUnderTest.validate(request, response), "validation.request.parameter.missing");
@@ -112,8 +112,8 @@ public class SwaggerRequestResponseValidatorTest {
 
     @Test
     public void validate_authorizationHeaderIsChecked_shouldPass() {
-        Map<String, Collection<String>> authorisationHeader = new HashMap<>();
-        authorisationHeader.put("Authorization", Collections.singleton("Bearer mytoken"));
+        final Map<String, Collection<String>> authorisationHeader =
+                singletonMap("Authorization", singleton("Bearer mytoken"));
         final Request request = SimpleRequest.Builder.get("/secure/users/1").withHeaders(authorisationHeader).build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
         assertPass(classUnderTest.validate(request, response));
@@ -307,19 +307,17 @@ public class SwaggerRequestResponseValidatorTest {
 
     @Test
     public void validate_jsonPayloadAccepted() {
-
-        final SwaggerRequestResponseValidator validator = SwaggerRequestResponseValidator.createFor("{}").build();
+        SwaggerRequestResponseValidator.createFor("{}").build();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void validate_neitherPathNorJson() {
-
-        final SwaggerRequestResponseValidator validator = SwaggerRequestResponseValidator.createFor("<>").build();
+        SwaggerRequestResponseValidator.createFor("<>").build();
     }
 
     @Test
     public void validate_formData_manyValuesForSingleKey() {
-        String formData = "email=abc%40gmail.com&email=";
+        final String formData = "email=abc%40gmail.com&email=";
         final Request request = SimpleRequest.Builder.put("/users/1").withBody(formData).build();
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
         assertFail(classUnderTest.validate(request, response), "validation.request.parameter.missing");

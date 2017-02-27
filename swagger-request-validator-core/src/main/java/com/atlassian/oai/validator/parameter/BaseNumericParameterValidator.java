@@ -5,27 +5,26 @@ import com.atlassian.oai.validator.report.MutableValidationReport;
 import io.swagger.models.parameters.SerializableParameter;
 
 import javax.annotation.Nonnull;
-import javax.print.Doc;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 
 public abstract class BaseNumericParameterValidator extends BaseParameterValidator {
 
-    public BaseNumericParameterValidator(@Nonnull MessageResolver messages) {
+    public BaseNumericParameterValidator(@Nonnull final MessageResolver messages) {
         super(messages);
     }
 
     @Override
-    protected void doValidate(@Nonnull String value,
-                              @Nonnull SerializableParameter parameter,
-                              @Nonnull MutableValidationReport validationReport) {
+    protected void doValidate(@Nonnull final String value,
+                              @Nonnull final SerializableParameter parameter,
+                              @Nonnull final MutableValidationReport validationReport) {
 
         try {
-            double doubleValue = getNumericValue(value, parameter).doubleValue();
+            final double doubleValue = getNumericValue(value, parameter).doubleValue();
             validateMinimum(parameter, validationReport, doubleValue);
             validateMaximum(parameter, validationReport, doubleValue);
             validateMultipleOf(parameter, validationReport, doubleValue);
-        } catch (NumberFormatException e) {
+        } catch (final NumberFormatException e) {
             failFormatValidation(value, parameter, parameter.getFormat(), validationReport);
         }
     }
@@ -41,14 +40,12 @@ public abstract class BaseNumericParameterValidator extends BaseParameterValidat
 
     }
 
-    private void validateMultipleOf(SerializableParameter parameter,
-                                    MutableValidationReport report,
-                                    Double value) {
+    private void validateMultipleOf(final SerializableParameter parameter,
+                                    final MutableValidationReport report,
+                                    final Double value) {
 
-        Number multipleOf = parameter.getMultipleOf();
-        Double doubleMultipleOf = multipleOf != null ?
-            multipleOf.doubleValue() :
-            null;
+        final Number multipleOf = parameter.getMultipleOf();
+        final Double doubleMultipleOf = multipleOf != null ? multipleOf.doubleValue() : null;
         if (doubleMultipleOf != null && (value % doubleMultipleOf != 0d)) {
             report.add(messages.get("validation.request.parameter.number.multipleOf",
                 value, parameter.getName(), multipleOf)
@@ -56,9 +53,11 @@ public abstract class BaseNumericParameterValidator extends BaseParameterValidat
         }
     }
 
-    private void validateMinimum(SerializableParameter parameter, MutableValidationReport report, Double value) {
-        Double minimum = parameter.getMinimum();
-        boolean exclusiveMinimum = firstNonNull(parameter.isExclusiveMinimum(), false);
+    private void validateMinimum(final SerializableParameter parameter,
+                                 final MutableValidationReport report,
+                                 final Double value) {
+        final Double minimum = parameter.getMinimum();
+        final boolean exclusiveMinimum = firstNonNull(parameter.isExclusiveMinimum(), false);
 
         if (parameter.getMinimum() != null) {
             if (exclusiveMinimum && value <= minimum) {
@@ -73,9 +72,11 @@ public abstract class BaseNumericParameterValidator extends BaseParameterValidat
         }
     }
 
-    private void validateMaximum(SerializableParameter parameter, MutableValidationReport report, Double value) {
-        Double maximum = parameter.getMaximum();
-        boolean exclusiveMaximum = firstNonNull(parameter.isExclusiveMaximum(), false);
+    private void validateMaximum(final SerializableParameter parameter,
+                                 final MutableValidationReport report,
+                                 final Double value) {
+        final Double maximum = parameter.getMaximum();
+        final boolean exclusiveMaximum = firstNonNull(parameter.isExclusiveMaximum(), false);
 
         if (parameter.getMaximum() != null) {
             if (exclusiveMaximum && value >= maximum) {

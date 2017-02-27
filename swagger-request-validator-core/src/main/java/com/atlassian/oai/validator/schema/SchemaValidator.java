@@ -153,7 +153,7 @@ public class SchemaValidator {
         return validationReport;
     }
 
-    private void setupSchemaDefinitionRefs(JsonNode schemaObject) throws IOException {
+    private void setupSchemaDefinitionRefs(final JsonNode schemaObject) throws IOException {
         if (schemaObject instanceof ObjectNode && additionalPropertiesValidationEnabled()) {
             ((ObjectNode) schemaObject).set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
         }
