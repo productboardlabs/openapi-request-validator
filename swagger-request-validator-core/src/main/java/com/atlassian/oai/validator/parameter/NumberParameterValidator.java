@@ -1,12 +1,10 @@
 package com.atlassian.oai.validator.parameter;
 
 import com.atlassian.oai.validator.report.MessageResolver;
-import com.atlassian.oai.validator.report.MutableValidationReport;
 import io.swagger.models.parameters.SerializableParameter;
 
 import javax.annotation.Nonnull;
-
-import static com.google.common.base.MoreObjects.firstNonNull;
+import java.math.BigDecimal;
 
 public class NumberParameterValidator extends BaseNumericParameterValidator {
 
@@ -15,15 +13,16 @@ public class NumberParameterValidator extends BaseNumericParameterValidator {
     }
 
     @Override
-    protected Number getNumericValue(String value, SerializableParameter parameter) throws NumberFormatException {
-        if (parameter.getFormat().equalsIgnoreCase("float")) {
+    protected Number getNumericValue(final String value,
+                                     final SerializableParameter parameter) throws NumberFormatException {
+        final String format = parameter.getFormat();
+        if ("float".equals(format)) {
             return Float.parseFloat(value);
-        } else if (parameter.getFormat().equalsIgnoreCase("double")) {
+        } else if ("double".equals(format)) {
             return Double.parseDouble(value);
         } else {
-            throw new IllegalArgumentException(parameter.getFormat() + " is not a valid number format");
+            return new BigDecimal(value);
         }
-
     }
 
     @Override

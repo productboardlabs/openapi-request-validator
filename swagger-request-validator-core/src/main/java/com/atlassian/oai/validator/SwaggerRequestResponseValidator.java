@@ -99,7 +99,7 @@ public class SwaggerRequestResponseValidator {
         this.basePathOverride = Optional.ofNullable(basePathOverride);
         this.messages = messages;
         final SchemaValidator schemaValidator = new SchemaValidator(api, messages);
-        this.requestValidator = new RequestValidator(schemaValidator, messages);
+        this.requestValidator = new RequestValidator(schemaValidator, messages, api);
         this.responseValidator = new ResponseValidator(schemaValidator, messages);
     }
 
@@ -185,19 +185,19 @@ public class SwaggerRequestResponseValidator {
 
         @Override
         @Nonnull
-        public String part(int index) {
+        public String part(final int index) {
             return pathParts.get(index);
         }
 
         @Override
-        public boolean isParam(int index) {
+        public boolean isParam(final int index) {
             final String part = part(index);
             return part.startsWith("{") && part.endsWith("}");
         }
 
         @Override
         @Nullable
-        public String paramName(int index) {
+        public String paramName(final int index) {
             if (!isParam(index)) {
                 return null;
             }
@@ -225,7 +225,7 @@ public class SwaggerRequestResponseValidator {
             return trimmedPath;
         }
 
-        private String trimPrefix(@Nonnull String requestPath, @Nullable String prefix) {
+        private String trimPrefix(@Nonnull final String requestPath, @Nullable final String prefix) {
             if (prefix == null || !requestPath.startsWith(prefix)) {
                 return requestPath;
             }

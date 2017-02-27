@@ -1,3 +1,13 @@
+# v1.0.9
+
+* Added basic support for validation of security tokens in headers and query params
+[[#30]](https://bitbucket.org/atlassian/swagger-request-validator/issues/30)
+
+# v1.0.8
+
+* Added support for validation of `x-www-form-urlencoded` request bodies
+[[#28]](https://bitbucket.org/atlassian/swagger-request-validator/issues/28)
+
 # v1.0.7
 
 * Added additional error messages from schema validation when composite schema validation fails (e.g. `allOf`) 

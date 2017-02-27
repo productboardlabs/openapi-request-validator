@@ -36,7 +36,7 @@ public class ArrayParameterValidator extends BaseParameterValidator {
         MULTI(null);
 
         final String separator;
-        CollectionFormat(String separator) {
+        CollectionFormat(final String separator) {
             this.separator = separator;
         }
 
@@ -75,7 +75,7 @@ public class ArrayParameterValidator extends BaseParameterValidator {
             return report;
         }
 
-        final SerializableParameter parameter = (SerializableParameter)p;
+        final SerializableParameter parameter = (SerializableParameter) p;
 
         if (parameter.getRequired() && (value == null || value.trim().isEmpty())) {
             return report.add(messages.get("validation.request.parameter.missing", parameter.getName()));
@@ -95,7 +95,7 @@ public class ArrayParameterValidator extends BaseParameterValidator {
             return report;
         }
 
-        final SerializableParameter parameter = (SerializableParameter)p;
+        final SerializableParameter parameter = (SerializableParameter) p;
         if (parameter.getRequired() && (values == null || values.isEmpty())) {
             return report.add(messages.get("validation.request.parameter.missing", parameter.getName()));
         }

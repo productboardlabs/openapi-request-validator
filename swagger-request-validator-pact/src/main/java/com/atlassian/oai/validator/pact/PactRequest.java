@@ -3,15 +3,17 @@ package com.atlassian.oai.validator.pact;
 import com.atlassian.oai.validator.model.Request;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
+import static java.util.Collections.singleton;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * Adapter for using Pact requests in the Swagger validator
@@ -54,7 +56,15 @@ public class PactRequest implements Request {
 
     @Nonnull
     @Override
-    public Collection<String> getQueryParameterValues(String name) {
+    public Collection<String> getQueryParameterValues(final String name) {
         return internalRequest.getQuery().getOrDefault(name, Collections.emptyList());
+    }
+
+    @Nonnull
+    @Override
+    public Map<String, Collection<String>> getHeaders() {
+        return internalRequest.getHeaders().entrySet()
+                .stream()
+                .collect(toMap(Map.Entry::getKey, v -> singleton(v.getValue())));
     }
 }

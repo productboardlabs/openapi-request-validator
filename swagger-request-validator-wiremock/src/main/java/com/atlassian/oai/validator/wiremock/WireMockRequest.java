@@ -2,6 +2,7 @@ package com.atlassian.oai.validator.wiremock;
 
 import com.atlassian.oai.validator.model.Request;
 import com.github.tomakehurst.wiremock.common.Urls;
+import com.github.tomakehurst.wiremock.http.MultiValue;
 import com.github.tomakehurst.wiremock.http.QueryParameter;
 
 import javax.annotation.Nonnull;
@@ -10,6 +11,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
@@ -56,10 +58,16 @@ public class WireMockRequest implements Request {
 
     @Nonnull
     @Override
-    public Collection<String> getQueryParameterValues(String name) {
+    public Collection<String> getQueryParameterValues(final String name) {
         if (queryParameterMap.containsKey(name)) {
             return queryParameterMap.get(name).values();
         }
         return Collections.emptyList();
+    }
+
+    @Nonnull
+    @Override
+    public Map<String, Collection<String>> getHeaders() {
+        return internalRequest.getHeaders().all().stream().collect(Collectors.toMap(MultiValue::key, MultiValue::values));
     }
 }

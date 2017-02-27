@@ -11,17 +11,17 @@ public abstract class BaseDateFormatValidator implements FormatValidator<String>
 
     private final MessageResolver messages;
 
-    protected BaseDateFormatValidator(MessageResolver messages) {
+    protected BaseDateFormatValidator(final MessageResolver messages) {
         this.messages = messages;
     }
 
     @Override
     public void validate(@Nonnull final MutableValidationReport report,
                          @Nonnull final String value) {
-        DateTimeFormatter dateFormatter = getFormatter();
+        final DateTimeFormatter dateFormatter = getFormatter();
         try {
             dateFormatter.parse(value);
-        } catch (DateTimeParseException e) {
+        } catch (final DateTimeParseException e) {
             report.add(messages.get("validation.request.parameter.string." + getMessageKey() + ".invalid", value));
         }
     }

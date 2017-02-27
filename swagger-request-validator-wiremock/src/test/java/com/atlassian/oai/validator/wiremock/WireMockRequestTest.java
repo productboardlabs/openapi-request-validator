@@ -32,7 +32,6 @@ public class WireMockRequestTest {
         assertThat(classUnderTest.getPath(), is("/some/path"));
     }
 
-
     @Test
     public void getQueryParamValues_returnsEmpty_whenNoParam() {
         final Request request = Mockito.mock(Request.class);

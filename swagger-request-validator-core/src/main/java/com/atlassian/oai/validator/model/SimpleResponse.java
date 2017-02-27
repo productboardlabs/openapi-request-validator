@@ -11,7 +11,7 @@ public class SimpleResponse implements Response {
     private final int response;
     private final Optional<String> responseBody;
 
-    private SimpleResponse(int response, Optional<String> responseBody) {
+    private SimpleResponse(final int response, final Optional<String> responseBody) {
         this.response = response;
         this.responseBody = responseBody;
     }
@@ -35,7 +35,7 @@ public class SimpleResponse implements Response {
         private int status;
         private String body;
 
-        public static Builder status(int status) {
+        public static Builder status(final int status) {
             return new Builder(status);
         }
 

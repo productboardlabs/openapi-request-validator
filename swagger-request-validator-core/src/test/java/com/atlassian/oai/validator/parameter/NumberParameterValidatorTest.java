@@ -1,10 +1,13 @@
 package com.atlassian.oai.validator.parameter;
 
 import com.atlassian.oai.validator.report.MessageResolver;
-import com.atlassian.oai.validator.util.ValidatorTestUtil;
 import org.junit.Test;
 
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.*;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.floatParam;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.floatParamFormat;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.floatParamMultipleOf;
 
 public class NumberParameterValidatorTest {
 
@@ -83,5 +86,21 @@ public class NumberParameterValidatorTest {
     @Test
     public void validate_withValueMultipleOf_shouldPass() {
         assertPass(classUnderTest.validate("1.5", floatParamMultipleOf(0.5f)));
+    }
+
+    @Test
+    public void validate_withFormatNull_shouldPass() {
+        assertPass(classUnderTest.validate("25", floatParamFormat(null)));
+    }
+
+    @Test
+    public void validate_withFormatUnknown_shouldPass() {
+        assertPass(classUnderTest.validate("25", floatParamFormat("unknown")));
+    }
+
+    @Test
+    public void validate_withNonNumericValueFormatUnknown_shouldFail() {
+        assertFail(classUnderTest.validate("not-a-Number", floatParamFormat("unknown")),
+            "validation.request.parameter.invalidFormat");
     }
 }

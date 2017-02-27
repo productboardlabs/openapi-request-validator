@@ -52,4 +52,6 @@ public class StringUtils {
         }
         return value;
     }
+
+    private StringUtils() { }
 }

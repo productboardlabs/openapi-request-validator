@@ -140,6 +140,78 @@
             }
           }
         }
+      },
+      "put": {
+        "tags": ["user"],
+        "summary": "Update a user's name",
+        "operationId": "Update a user's name",
+        "produces": [
+          "application/json"
+        ],
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "parameters": [
+          {
+          "name": "email",
+          "in": "formData",
+          "description": "The new email to set",
+          "required": true,
+          "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User response",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          }
+        }
+      }
+    },
+    "/secure/users/{id}" : {
+      "get": {
+        "tags": ["user"],
+        "summary": "Get a user's name",
+        "operationId": "Get a user's name",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "User response",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["user"],
+        "summary": "Update a user's name",
+        "operationId": "Update a user's name",
+        "security": [
+          {
+            "queryParam": []
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "User response",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          }
+        }
       }
     },
     "/healthcheck": {
@@ -176,7 +248,21 @@
         "read_users": "Read users",
         "create_user": "Create user"
       }
+    },
+    "bearer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "description": "Authentication by a bearer token"
+    },
+    "queryParam" : {
+      "type": "apiKey",
+      "name": "authorization",
+      "in": "query",
+      "description": "Authentication by a query parameter"
+
     }
+
   },
   "definitions": {
     "User": {

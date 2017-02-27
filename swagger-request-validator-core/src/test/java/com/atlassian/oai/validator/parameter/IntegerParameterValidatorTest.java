@@ -3,8 +3,11 @@ package com.atlassian.oai.validator.parameter;
 import com.atlassian.oai.validator.report.MessageResolver;
 import org.junit.Test;
 
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.*;
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.floatParam;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.intParam;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.intParamFormat;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.intParamMultipleOf;
 
 public class IntegerParameterValidatorTest {
 
@@ -83,4 +86,19 @@ public class IntegerParameterValidatorTest {
         assertPass(classUnderTest.validate("25", intParamMultipleOf(5)));
     }
 
+    @Test
+    public void validate_withFormatNull_shouldPass() {
+        assertPass(classUnderTest.validate("25", intParamFormat(null)));
+    }
+
+    @Test
+    public void validate_withFormatUnknown_shouldPass() {
+        assertPass(classUnderTest.validate("25", intParamFormat("unknown")));
+    }
+
+    @Test
+    public void validate_withNonIntegerValueFormatUnknown_shouldFail() {
+        assertFail(classUnderTest.validate("123.1", intParamFormat("unknown")),
+                "validation.request.parameter.invalidFormat");
+    }
 }

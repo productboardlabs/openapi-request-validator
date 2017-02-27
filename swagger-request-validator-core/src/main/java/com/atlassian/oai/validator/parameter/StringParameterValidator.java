@@ -63,7 +63,7 @@ public class StringParameterValidator extends BaseParameterValidator {
                                          @Nonnull final MutableValidationReport report) {
 
         if (parameter.getFormat() != null) {
-            FormatValidator<String> formatValidator = formatValidators.stream()
+            final FormatValidator<String> formatValidator = formatValidators.stream()
                     .filter(validator -> validator.supports(parameter.getFormat()))
                     .findFirst()
                     .orElse(new NoOpStringFormatValidator());

@@ -22,17 +22,17 @@ public class ValidatedWireMockRule extends WireMockRule {
         setupValidationListener(swaggerJsonUrl);
     }
 
-    public ValidatedWireMockRule(final String swaggerJsonUrl, Options options, boolean failOnUnmatchedStubs) {
+    public ValidatedWireMockRule(final String swaggerJsonUrl, final Options options, final boolean failOnUnmatchedStubs) {
         super(options, failOnUnmatchedStubs);
         setupValidationListener(swaggerJsonUrl);
     }
 
-    public ValidatedWireMockRule(final String swaggerJsonUrl, int port) {
+    public ValidatedWireMockRule(final String swaggerJsonUrl, final int port) {
         super(port);
         setupValidationListener(swaggerJsonUrl);
     }
 
-    public ValidatedWireMockRule(final String swaggerJsonUrl, int port, Integer httpsPort) {
+    public ValidatedWireMockRule(final String swaggerJsonUrl, final int port, final Integer httpsPort) {
         super(port, httpsPort);
         setupValidationListener(swaggerJsonUrl);
     }

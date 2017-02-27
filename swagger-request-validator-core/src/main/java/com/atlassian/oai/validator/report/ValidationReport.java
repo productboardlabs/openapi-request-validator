@@ -26,9 +26,13 @@ public interface ValidationReport {
      * A single message in the validation report
      */
     interface Message {
+
         String getKey();
+
         String getMessage();
+
         Level getLevel();
+
         List<String> getAdditionalInfo();
     }
 
@@ -45,7 +49,7 @@ public interface ValidationReport {
         }
 
         @Override
-        public ValidationReport merge(ValidationReport other) {
+        public ValidationReport merge(final ValidationReport other) {
             return other;
         }
     };
@@ -85,7 +89,7 @@ public interface ValidationReport {
             }
 
             @Override
-            public ValidationReport merge(@Nonnull ValidationReport other) {
+            public ValidationReport merge(@Nonnull final ValidationReport other) {
                 final MutableValidationReport result = new MutableValidationReport();
                 result.addAll(this);
                 result.addAll(other);

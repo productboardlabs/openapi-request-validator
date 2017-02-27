@@ -26,7 +26,7 @@ public final class ParameterValidators {
      * @param schemaValidator The schema validator to use. If not provided a default (empty) validator will be used.
      * @param messages The message resolver to use.
      */
-    public ParameterValidators(@Nullable final SchemaValidator schemaValidator, @Nonnull MessageResolver messages) {
+    public ParameterValidators(@Nullable final SchemaValidator schemaValidator, @Nonnull final MessageResolver messages) {
         this.arrayValidator = new ArrayParameterValidator(schemaValidator, messages);
         this.messages = requireNonNull(messages);
         this.validators = asList(
@@ -40,7 +40,7 @@ public final class ParameterValidators {
         requireNonNull(parameter);
 
         if ((parameter instanceof SerializableParameter) &&
-                ((SerializableParameter)parameter).getType().equalsIgnoreCase("array")) {
+                ((SerializableParameter) parameter).getType().equalsIgnoreCase("array")) {
             return arrayValidator.validate(value, parameter);
         }
 

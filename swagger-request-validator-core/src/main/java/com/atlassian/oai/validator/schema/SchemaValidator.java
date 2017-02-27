@@ -235,9 +235,9 @@ public class SchemaValidator {
         if (processingMessage.has("reports")) {
             final JsonNode reports = processingMessage.get("reports");
             reports.fields().forEachRemaining(field -> {
-               field.getValue().elements().forEachRemaining(report -> {
-                   subReports.add(field.getKey() + ": " + capitalise(report.get("message").textValue()));
-               });
+                field.getValue().elements().forEachRemaining(report -> {
+                    subReports.add(field.getKey() + ": " + capitalise(report.get("message").textValue()));
+                });
             });
         }
 

@@ -7,11 +7,26 @@ import com.atlassian.oai.validator.parameter.ParameterValidators;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.SchemaValidator;
+import com.google.common.base.Charsets;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.net.MediaType;
+import io.swagger.models.Swagger;
+import io.swagger.models.auth.ApiKeyAuthDefinition;
+import io.swagger.models.auth.In;
+import io.swagger.models.auth.SecuritySchemeDefinition;
 import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.Parameter;
 
 import javax.annotation.Nonnull;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.Collection;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
@@ -24,6 +39,7 @@ public class RequestValidator {
     private final SchemaValidator schemaValidator;
     private final ParameterValidators parameterValidators;
     private final MessageResolver messages;
+    private final Swagger swaggerDefinition;
 
     /**
      * Construct a new request validator with the given schema validator.
@@ -31,10 +47,13 @@ public class RequestValidator {
      * @param schemaValidator The schema validator to use when validating request bodies
      * @param messages The message resolver to use
      */
-    public RequestValidator(@Nonnull final SchemaValidator schemaValidator, @Nonnull final MessageResolver messages) {
+    public RequestValidator(@Nonnull final SchemaValidator schemaValidator,
+                            @Nonnull final MessageResolver messages,
+                            @Nonnull final Swagger swaggerDefinition) {
         this.schemaValidator = requireNonNull(schemaValidator, "A schema validator is required");
         this.parameterValidators = new ParameterValidators(schemaValidator, messages);
         this.messages = requireNonNull(messages, "A message resolver is required");
+        this.swaggerDefinition = requireNonNull(swaggerDefinition, "A swagger definition required");
     }
 
     /**
@@ -54,14 +73,100 @@ public class RequestValidator {
         requireNonNull(request, "A request is required");
         requireNonNull(apiOperation, "An API operation is required");
 
-        return validatePathParameters(requestPath, apiOperation)
+        return  vaildateSecurity(request, apiOperation)
+                .merge(validatePathParameters(requestPath, apiOperation))
                 .merge(validateRequestBody(request.getBody(), apiOperation))
                 .merge(validateQueryParameters(request, apiOperation));
+    }
+
+    private ValidationReport vaildateSecurity(final Request request, final ApiOperation apiOperation) {
+        final List<Map<String, List<String>>> securityRequired = apiOperation.getOperation().getSecurity();
+
+        if (null != securityRequired && !securityRequired.isEmpty()) {
+            final Map<String, SecuritySchemeDefinition> filtered = new HashMap<>();
+            for (Map.Entry<String, SecuritySchemeDefinition> s: swaggerDefinition.getSecurityDefinitions().entrySet()) {
+                securityRequired.stream().filter(item -> item.containsKey(s.getKey())).forEach(item -> filtered.put(s.getKey(), s.getValue()));
+            }
+
+            return filtered.entrySet().stream().map(e -> validateSingleSecurityParameter(request, e.getValue()))
+                    .reduce(ValidationReport.empty(), ValidationReport::merge);
+        }
+        return ValidationReport.EMPTY_REPORT;
+    }
+
+    @Nonnull
+    private ValidationReport validateSingleSecurityParameter(@Nonnull final Request request,
+                                                             @Nonnull final SecuritySchemeDefinition securitySchemeDefinition) {
+        switch (securitySchemeDefinition.getType()) {
+            case "apiKey" :
+                final ApiKeyAuthDefinition apiKeyAuthDefinition = (ApiKeyAuthDefinition) securitySchemeDefinition;
+                final In in = apiKeyAuthDefinition.getIn();
+                switch (in.toValue()) {
+                    case "header":
+                        return checkApiKeyAuthorizationByHeader(request, apiKeyAuthDefinition);
+                    case "query" :
+                        return checkApiKeyAuthorizationByQueryParameter(request, apiKeyAuthDefinition);
+                    default:
+                        return ValidationReport.EMPTY_REPORT;
+                }
+            default:
+                return ValidationReport.EMPTY_REPORT;
+        }
+    }
+
+    @Nonnull
+    private ValidationReport checkApiKeyAuthorizationByQueryParameter(@Nonnull final Request request,
+                                                                      @Nonnull final ApiKeyAuthDefinition apiKeyAuthDefinition) {
+        final Optional<String> authQueryParam = request.getQueryParameterValues(apiKeyAuthDefinition.getName()).stream().findFirst();
+        if (!authQueryParam.isPresent()) {
+            return ValidationReport.singleton(messages.get("validation.request.security.missing", request.getMethod(), request.getPath()));
+        }
+        return ValidationReport.EMPTY_REPORT;
+    }
+
+    @Nonnull
+    private ValidationReport checkApiKeyAuthorizationByHeader(@Nonnull final Request request,
+                                                              @Nonnull final ApiKeyAuthDefinition apiKeyAuthDefinition) {
+        final Boolean exists = request.getHeaders().entrySet()
+                .stream()
+                .anyMatch(e -> e.getKey().equals(apiKeyAuthDefinition.getName()));
+
+        if (!exists) {
+            return ValidationReport.singleton(
+                 messages.get("validation.request.security.missing",
+                         request.getMethod(), request.getPath())
+            );
+        }
+        return ValidationReport.EMPTY_REPORT;
     }
 
     @Nonnull
     private ValidationReport validateRequestBody(@Nonnull final Optional<String> requestBody,
                                                  @Nonnull final ApiOperation apiOperation) {
+
+        if (isFormData(requestBody, apiOperation)) {
+            return validateForm(requestBody, apiOperation);
+        }
+        return validateBody(requestBody, apiOperation);
+    }
+
+    @Nonnull
+    private ValidationReport validateForm(@Nonnull final Optional<String> requestBody,
+                                          @Nonnull final ApiOperation apiOperation) {
+
+        final Multimap<String, String> formData = parseFormData(requestBody.get());
+        final List<ValidationReport> reports = new ArrayList<>();
+        for (Parameter parameter : apiOperation.getOperation().getParameters()) {
+            Collection<String> parameterValues = formData.get(parameter.getName());
+            parameterValues = parameterValues.isEmpty() ? Collections.singletonList(null) : parameterValues;
+            parameterValues.forEach(value -> reports.add(parameterValidators.validate(value, parameter)));
+        }
+        return reports.stream().reduce(ValidationReport.empty(), ValidationReport::merge);
+    }
+
+    @Nonnull
+    private ValidationReport validateBody(@Nonnull final Optional<String> requestBody,
+                                          @Nonnull final ApiOperation apiOperation) {
         final Optional<Parameter> bodyParameter = apiOperation.getOperation().getParameters()
                 .stream().filter(p -> p.getIn().equalsIgnoreCase("body")).findFirst();
 
@@ -86,7 +191,7 @@ public class RequestValidator {
             return ValidationReport.empty();
         }
 
-        return schemaValidator.validate(requestBody.get(), ((BodyParameter)bodyParameter.get()).getSchema());
+        return schemaValidator.validate(requestBody.get(), ((BodyParameter) bodyParameter.get()).getSchema());
     }
 
     @Nonnull
@@ -144,4 +249,31 @@ public class RequestValidator {
                 .map((v) -> parameterValidators.validate(v, queryParameter))
                 .reduce(ValidationReport.empty(), ValidationReport::merge);
     }
+
+    @Nonnull
+    private boolean isFormData(@Nonnull final Optional<String> requestBody,
+                               @Nonnull final ApiOperation apiOperation) {
+        final List<String> consumes = apiOperation.getOperation().getConsumes();
+        return null != consumes && !consumes.isEmpty() &&
+                consumes.stream().anyMatch(p -> p.equals(MediaType.FORM_DATA.toString()))
+                && requestBody.isPresent();
+    }
+
+    @Nonnull
+    private Multimap<String, String> parseFormData(@Nonnull final String formData) {
+        final Multimap<String, String> params = ArrayListMultimap.create();
+        final String[] pairs = formData.split("&");
+        try {
+            for (String pair : pairs) {
+                final String[] fields = pair.split("=");
+                final String name = URLDecoder.decode(fields[0], Charsets.UTF_8.name());
+                final String value = (fields.length > 1) ? URLDecoder.decode(fields[1], Charsets.UTF_8.name()) : null;
+                params.put(name, value);
+            }
+        } catch (final UnsupportedEncodingException ex) {
+            throw new RuntimeException(ex);
+        }
+        return params;
+    }
+
 }

@@ -2,8 +2,6 @@ package com.atlassian.oai.validator.util;
 
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReportFormatter;
-import io.swagger.models.parameters.AbstractSerializableParameter;
-import io.swagger.models.parameters.Parameter;
 import io.swagger.models.parameters.SerializableParameter;
 import io.swagger.models.properties.IntegerProperty;
 import io.swagger.models.properties.Property;
@@ -28,12 +26,14 @@ import static org.mockito.Mockito.when;
 
 public class ValidatorTestUtil {
 
+    private ValidatorTestUtil() { }
+
     private static final Logger log = LoggerFactory.getLogger(ValidatorTestUtil.class);
 
     /**
      * Assert that validation has failed.
      */
-    public static void assertFail(ValidationReport report, String... expectedKeys) {
+    public static void assertFail(final ValidationReport report, final String... expectedKeys) {
         log.trace(ValidationReportFormatter.format(report));
         assertThat(report.getMessages(), is(not(empty())));
 
@@ -49,7 +49,7 @@ public class ValidatorTestUtil {
     /**
      * Assert that validation has passed.
      */
-    public static void assertPass(ValidationReport report) {
+    public static void assertPass(final ValidationReport report) {
         assertThat(report.getMessages(), is(empty()));
     }
 
@@ -83,7 +83,7 @@ public class ValidatorTestUtil {
                 builder.append(line).append('\n');
             }
             return builder.toString();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             e.printStackTrace();
             return null;
         }
@@ -95,7 +95,7 @@ public class ValidatorTestUtil {
         return intParam(true, null, null);
     }
 
-    public static SerializableParameter intParam(boolean required) {
+    public static SerializableParameter intParam(final boolean required) {
         return intParam(required, null, null);
     }
 
@@ -114,7 +114,8 @@ public class ValidatorTestUtil {
         return result;
     }
 
-    public static SerializableParameter intParam(final Double min, final Double max, final Boolean exclusiveMin, final Boolean exclusiveMax) {
+    public static SerializableParameter intParam(final Double min, final Double max,
+                                                 final Boolean exclusiveMin, final Boolean exclusiveMax) {
         final SerializableParameter result = mock(SerializableParameter.class);
         when(result.getName()).thenReturn("Test Parameter");
         when(result.getType()).thenReturn("integer");
@@ -127,7 +128,20 @@ public class ValidatorTestUtil {
         return result;
     }
 
-    public static SerializableParameter intParamMultipleOf(Number multipleOf) {
+    public static SerializableParameter intParamFormat(final String format) {
+        final SerializableParameter result = mock(SerializableParameter.class);
+        when(result.getName()).thenReturn("Test Parameter");
+        when(result.getType()).thenReturn("integer");
+        when(result.getFormat()).thenReturn(format);
+        when(result.getRequired()).thenReturn(true);
+        when(result.getMinimum()).thenReturn(null);
+        when(result.getMaximum()).thenReturn(null);
+        when(result.isExclusiveMinimum()).thenReturn(null);
+        when(result.isExclusiveMaximum()).thenReturn(null);
+        return result;
+    }
+
+    public static SerializableParameter intParamMultipleOf(final Number multipleOf) {
         final SerializableParameter result = mock(SerializableParameter.class);
         when(result.getName()).thenReturn("Test Parameter");
         when(result.getType()).thenReturn("integer");
@@ -165,7 +179,7 @@ public class ValidatorTestUtil {
         return floatParam(true, null, null);
     }
 
-    public static SerializableParameter floatParam(boolean required) {
+    public static SerializableParameter floatParam(final boolean required) {
         return floatParam(required, null, null);
     }
 
@@ -184,7 +198,8 @@ public class ValidatorTestUtil {
         return result;
     }
 
-    public static SerializableParameter floatParam(final Double min, final Double max, Boolean exclusiveMin, Boolean exclusiveMax) {
+    public static SerializableParameter floatParam(final Double min, final Double max,
+                                                   final Boolean exclusiveMin, final Boolean exclusiveMax) {
         final SerializableParameter result = mock(SerializableParameter.class);
         when(result.getName()).thenReturn("Test Parameter");
         when(result.getType()).thenReturn("number");
@@ -197,7 +212,20 @@ public class ValidatorTestUtil {
         return result;
     }
 
-    public static SerializableParameter floatParamMultipleOf(Number multipleOf) {
+    public static SerializableParameter floatParamFormat(final String format) {
+        final SerializableParameter result = mock(SerializableParameter.class);
+        when(result.getName()).thenReturn("Test Parameter");
+        when(result.getType()).thenReturn("number");
+        when(result.getFormat()).thenReturn(format);
+        when(result.getMinimum()).thenReturn(null);
+        when(result.getMaximum()).thenReturn(null);
+        when(result.isExclusiveMinimum()).thenReturn(null);
+        when(result.isExclusiveMaximum()).thenReturn(null);
+        when(result.getMultipleOf()).thenReturn(null);
+        return result;
+    }
+
+    public static SerializableParameter floatParamMultipleOf(final Number multipleOf) {
         final SerializableParameter result = mock(SerializableParameter.class);
         when(result.getName()).thenReturn("Test Parameter");
         when(result.getType()).thenReturn("number");

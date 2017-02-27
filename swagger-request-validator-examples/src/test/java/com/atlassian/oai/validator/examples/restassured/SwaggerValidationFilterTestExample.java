@@ -34,6 +34,7 @@ public class SwaggerValidationFilterTestExample {
     // or to a service running in your TEST environment etc.)
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(PORT);
+
     @Before
     public void setup() {
         wireMockRule.stubFor(

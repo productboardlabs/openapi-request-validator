@@ -10,7 +10,7 @@ import com.atlassian.oai.validator.report.ValidationReport;
  */
 public class PactLevelResolverFactory {
 
-    private PactLevelResolverFactory(){}
+    private PactLevelResolverFactory() { }
 
     /**
      * Create a {@link LevelResolver} instance that is suitable for use in Pact validation scenarios.
