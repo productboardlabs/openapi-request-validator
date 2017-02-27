@@ -96,7 +96,7 @@ To run the project tests:
 Pull requests, issues and comments welcome. For pull requests:
 
 * Add tests for new features and bug fixes
-* Follow the existing style
+* Follow the existing style (checkstyle checking is enabled by default in builds)
 * Separate unrelated changes into multiple pull requests
 
 See the existing [issues](https://bitbucket.org/atlassian/swagger-request-validator/issues) for things to start
