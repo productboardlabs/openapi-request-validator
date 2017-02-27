@@ -26,6 +26,8 @@ import static org.mockito.Mockito.when;
 
 public class ValidatorTestUtil {
 
+    private ValidatorTestUtil() { }
+
     private static final Logger log = LoggerFactory.getLogger(ValidatorTestUtil.class);
 
     /**

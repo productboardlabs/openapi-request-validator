@@ -69,5 +69,14 @@
         <module name="FinalLocalVariable">
             <property name="tokens" value="VARIABLE_DEF,PARAMETER_DEF"/>
         </module>
+        <module name="Indentation"/>
+        <module name="CommentsIndentation"/>
+        <module name="EmptyCatchBlock">
+            <property name="commentFormat" value="Expected"/>
+        </module>
+        <module name="HideUtilityClassConstructor"/>
+        <module name="UnnecessaryParentheses"/>
+        <module name="UnusedImports"/>
+        <module name="VariableDeclarationUsageDistance"/>
     </module>
 </module>

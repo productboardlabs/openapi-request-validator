@@ -97,21 +97,21 @@ public class RequestValidator {
     @Nonnull
     private ValidationReport validateSingleSecurityParameter(@Nonnull final Request request,
                                                              @Nonnull final SecuritySchemeDefinition securitySchemeDefinition) {
-          switch (securitySchemeDefinition.getType()) {
-              case "apiKey" :
-                  final ApiKeyAuthDefinition apiKeyAuthDefinition = (ApiKeyAuthDefinition) securitySchemeDefinition;
-                  final In in = apiKeyAuthDefinition.getIn();
-                  switch (in.toValue()) {
-                      case "header":
-                          return checkApiKeyAuthorizationByHeader(request, apiKeyAuthDefinition);
-                      case "query" :
-                          return checkApiKeyAuthorizationByQueryParameter(request, apiKeyAuthDefinition);
-                      default:
-                          return ValidationReport.EMPTY_REPORT;
-                  }
-              default:
-                  return ValidationReport.EMPTY_REPORT;
-          }
+        switch (securitySchemeDefinition.getType()) {
+            case "apiKey" :
+                final ApiKeyAuthDefinition apiKeyAuthDefinition = (ApiKeyAuthDefinition) securitySchemeDefinition;
+                final In in = apiKeyAuthDefinition.getIn();
+                switch (in.toValue()) {
+                    case "header":
+                        return checkApiKeyAuthorizationByHeader(request, apiKeyAuthDefinition);
+                    case "query" :
+                        return checkApiKeyAuthorizationByQueryParameter(request, apiKeyAuthDefinition);
+                    default:
+                        return ValidationReport.EMPTY_REPORT;
+                }
+            default:
+                return ValidationReport.EMPTY_REPORT;
+        }
     }
 
     @Nonnull
@@ -132,10 +132,10 @@ public class RequestValidator {
                 .anyMatch(e -> e.getKey().equals(apiKeyAuthDefinition.getName()));
 
         if (!exists) {
-             return ValidationReport.singleton(
-                     messages.get("validation.request.security.missing",
-                             request.getMethod(), request.getPath())
-             );
+            return ValidationReport.singleton(
+                 messages.get("validation.request.security.missing",
+                         request.getMethod(), request.getPath())
+            );
         }
         return ValidationReport.EMPTY_REPORT;
     }

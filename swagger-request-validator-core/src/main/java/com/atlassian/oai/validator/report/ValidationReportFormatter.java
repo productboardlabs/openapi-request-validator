@@ -42,4 +42,6 @@ public class ValidationReportFormatter {
                 .forEach(info -> b.append("\n\t* ").append(info.replace("\n", "\n\t\t")));
         return b.toString();
     }
+
+    private ValidationReportFormatter() { }
 }
