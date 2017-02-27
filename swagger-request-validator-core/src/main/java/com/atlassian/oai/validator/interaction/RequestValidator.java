@@ -82,7 +82,7 @@ public class RequestValidator {
 
         if (null != securityRequired && !securityRequired.isEmpty()) {
             Map<String, SecuritySchemeDefinition> filtered = new HashMap<>();
-            for (Map.Entry<String, SecuritySchemeDefinition> s: swaggerDefinition.getSecurityDefinitions().entrySet() ) {
+            for (Map.Entry<String, SecuritySchemeDefinition> s: swaggerDefinition.getSecurityDefinitions().entrySet()) {
                 securityRequired.stream().filter(item -> item.containsKey(s.getKey())).forEach(item -> filtered.put(s.getKey(), s.getValue()));
             }
 
@@ -140,7 +140,6 @@ public class RequestValidator {
         return validateBody(requestBody, apiOperation);
     }
 
-
     @Nonnull
     private ValidationReport validateForm(@Nonnull Optional<String> requestBody, @Nonnull ApiOperation apiOperation) {
         Multimap<String, String> formData = parseFormData(requestBody.get());
@@ -179,7 +178,7 @@ public class RequestValidator {
             return ValidationReport.empty();
         }
 
-        return schemaValidator.validate(requestBody.get(), ((BodyParameter)bodyParameter.get()).getSchema());
+        return schemaValidator.validate(requestBody.get(), ((BodyParameter) bodyParameter.get()).getSchema());
     }
 
     @Nonnull

@@ -135,7 +135,7 @@ public class SchemaValidator {
 
             cleanupNullValues(cleanedContent);
 
-            processingReport = (ListProcessingReport)jsonSchema.validate(cleanedContent, true);
+            processingReport = (ListProcessingReport) jsonSchema.validate(cleanedContent, true);
         } catch (final JsonParseException e) {
             validationReport.add(messages.get(INVALID_JSON_KEY, e.getMessage()));
             return validationReport;
@@ -147,7 +147,7 @@ public class SchemaValidator {
             return validationReport;
         }
 
-        if((processingReport != null) && !processingReport.isSuccess()) {
+        if ((processingReport != null) && !processingReport.isSuccess()) {
             processingReport.forEach(pm -> addProcessingMessage(validationReport, pm, null));
         }
         return validationReport;
@@ -155,7 +155,7 @@ public class SchemaValidator {
 
     private void setupSchemaDefinitionRefs(JsonNode schemaObject) throws IOException {
         if (schemaObject instanceof ObjectNode && additionalPropertiesValidationEnabled()) {
-            ((ObjectNode)schemaObject).set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
+            ((ObjectNode) schemaObject).set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
         }
 
         if (api != null) {
@@ -167,7 +167,7 @@ public class SchemaValidator {
                 if (additionalPropertiesValidationEnabled()) {
                     this.definitions.forEach(n -> {
                         if (!n.has(ADDITIONAL_PROPERTIES_FIELD)) {
-                            ((ObjectNode)n).set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
+                            ((ObjectNode) n).set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
                         }
                         if (n.has(ALLOF_FIELD)) {
                             this.definitionsContainAllOf = true;
@@ -175,7 +175,7 @@ public class SchemaValidator {
                     });
                 }
             }
-            ((ObjectNode)schemaObject).set(DEFINITIONS_FIELD, this.definitions);
+            ((ObjectNode) schemaObject).set(DEFINITIONS_FIELD, this.definitions);
         }
     }
 

@@ -23,7 +23,7 @@ abstract class BaseParameterValidator implements ParameterValidator {
     public boolean supports(@Nullable final Parameter p) {
         return p != null &&
                 p instanceof SerializableParameter &&
-                supportedParameterType().equalsIgnoreCase(((SerializableParameter)p).getType());
+                supportedParameterType().equalsIgnoreCase(((SerializableParameter) p).getType());
     }
 
     @Override
@@ -35,7 +35,7 @@ abstract class BaseParameterValidator implements ParameterValidator {
             return report;
         }
 
-        final SerializableParameter parameter = (SerializableParameter)p;
+        final SerializableParameter parameter = (SerializableParameter) p;
 
         if (parameter.getRequired() && (value == null || value.trim().isEmpty())) {
             return report.add(messages.get("validation.request.parameter.missing", p.getName()));
