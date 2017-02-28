@@ -75,6 +75,7 @@ public class RequestValidator {
 
         return  validateSecurity(request, apiOperation)
                 .merge(validateContentType(request, apiOperation))
+                .merge(validateAccepts(request, apiOperation))
                 .merge(validatePathParameters(requestPath, apiOperation))
                 .merge(validateRequestBody(request.getBody(), apiOperation))
                 .merge(validateQueryParameters(request, apiOperation));
@@ -143,38 +144,52 @@ public class RequestValidator {
     @Nonnull
     private ValidationReport validateContentType(@Nonnull final Request request,
                                                  @Nonnull final ApiOperation apiOperation) {
+        return validateMediaTypes(request,
+                "Content-Type",
+                getConsumes(apiOperation),
+                "validation.request.contentType.invalid",
+                "validation.request.contentType.notAllowed");
+    }
 
-        final Optional<String> requestContentType = request.getHeaderValue("content-type");
-        if (!requestContentType.isPresent()) {
-            // If no content type is specified assume its ok
+    @Nonnull
+    private ValidationReport validateAccepts(@Nonnull final Request request,
+                                             @Nonnull final ApiOperation apiOperation) {
+        return validateMediaTypes(request,
+                "Accepts",
+                getProduces(apiOperation),
+                "validation.request.accepts.invalid",
+                "validation.request.accepts.notAllowed");
+    }
+
+    @Nonnull
+    private ValidationReport validateMediaTypes(@Nonnull final Request request,
+                                                @Nonnull final String headerName,
+                                                @Nonnull final Collection<String> specMediaTypes,
+                                                @Nonnull final String invalidTypeKey,
+                                                @Nonnull final String notAllowedKey) {
+
+        final Optional<String> requestHeader = request.getHeaderValue(headerName);
+        if (!requestHeader.isPresent()) {
             return ValidationReport.EMPTY_REPORT;
         }
 
         final MediaType requestMediaType;
         try {
-            requestMediaType = MediaType.parse(requestContentType.get());
+            requestMediaType = MediaType.parse(requestHeader.get());
         } catch (final IllegalArgumentException e) {
-            return ValidationReport.singleton(
-                    messages.get("validation.request.contentType.invalid",
-                            requestContentType.get())
-            );
+            return ValidationReport.singleton(messages.get(invalidTypeKey, requestHeader.get()));
         }
 
-        final Collection<String> consumes = getConsumes(apiOperation);
-        if (consumes.isEmpty()) {
-            // If no consumes are specified then nothing to validate
+        if (specMediaTypes.isEmpty()) {
             return ValidationReport.EMPTY_REPORT;
         }
 
         final boolean contentTypeMatchesConsumes =
-                consumes.stream()
+                specMediaTypes.stream()
                         .map(MediaType::parse)
                         .anyMatch(m -> m.withoutParameters().is(requestMediaType.withoutParameters()));
         if (!contentTypeMatchesConsumes) {
-            return ValidationReport.singleton(
-                    messages.get("validation.request.contentType.notAllowed",
-                            requestContentType.get(), consumes)
-            );
+            return ValidationReport.singleton(messages.get(notAllowedKey, requestHeader.get(), specMediaTypes));
         }
 
         return ValidationReport.EMPTY_REPORT;
@@ -187,6 +202,15 @@ public class RequestValidator {
             return swaggerDefinition.getConsumes() == null ? Collections.emptyList() : swaggerDefinition.getConsumes();
         }
         return apiOperation.getOperation().getConsumes();
+    }
+
+    @Nonnull
+    private Collection<String> getProduces(@Nonnull final ApiOperation apiOperation) {
+        // Operation-specific 'produces' overrides global produces entries
+        if (apiOperation.getOperation().getProduces() == null) {
+            return swaggerDefinition.getProduces() == null ? Collections.emptyList() : swaggerDefinition.getProduces();
+        }
+        return apiOperation.getOperation().getProduces();
     }
 
     @Nonnull

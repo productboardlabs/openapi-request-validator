@@ -258,4 +258,39 @@ public class RequestValidationTest {
                 "validation.request.contentType.invalid");
     }
 
+    @Test
+    public void validate_withMatchingAccepts_shouldPass() {
+        final Request request = SimpleRequest.Builder
+                .post("/users")
+                .withBody(loadRequest("newuser-valid"))
+                .withHeader("Accepts", "application/json;charset=UTF-8")
+                .build();
+
+        assertPass(classUnderTest.validate(request, validUserResponse));
+    }
+
+    @Test
+    public void validate_withNonMatchingAccepts_shouldFail() {
+        final Request request = SimpleRequest.Builder
+                .post("/users")
+                .withBody(loadRequest("newuser-valid"))
+                .withHeader("accepts", "text/html")
+                .build();
+
+        assertFail(classUnderTest.validate(request, validUserResponse),
+                "validation.request.accepts.notAllowed");
+    }
+
+    @Test
+    public void validate_withInvalidAccepts_shouldFail() {
+        final Request request = SimpleRequest.Builder
+                .post("/users")
+                .withBody(loadRequest("newuser-valid"))
+                .withHeader("accepts", "foop")
+                .build();
+
+        assertFail(classUnderTest.validate(request, validUserResponse),
+                "validation.request.accepts.invalid");
+    }
+
 }
