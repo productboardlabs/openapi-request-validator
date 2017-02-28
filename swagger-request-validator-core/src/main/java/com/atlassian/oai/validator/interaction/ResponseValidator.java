@@ -5,8 +5,14 @@ import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.SchemaValidator;
+import com.google.common.net.MediaType;
+import io.swagger.models.Swagger;
 
 import javax.annotation.Nonnull;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
 
@@ -17,6 +23,7 @@ public class ResponseValidator {
 
     private final SchemaValidator schemaValidator;
     private final MessageResolver messages;
+    private final Swagger swaggerDefinition;
 
     /**
      * Construct a new response validator with the given schema validator.
@@ -24,9 +31,12 @@ public class ResponseValidator {
      * @param schemaValidator The schema validator to use when validating response bodies
      * @param messages The message resolver to use
      */
-    public ResponseValidator(@Nonnull final SchemaValidator schemaValidator, @Nonnull final MessageResolver messages) {
+    public ResponseValidator(@Nonnull final SchemaValidator schemaValidator,
+                             @Nonnull final MessageResolver messages,
+                             @Nonnull final Swagger swaggerDefinition) {
         this.schemaValidator = requireNonNull(schemaValidator, "A schema validator is required");
         this.messages = requireNonNull(messages, "A message resolver is required");
+        this.swaggerDefinition = requireNonNull(swaggerDefinition, "A swagger definition is required");
     }
 
     /**
@@ -54,7 +64,8 @@ public class ResponseValidator {
             );
         }
 
-        return validateResponseBody(response, apiResponse, apiOperation);
+        return validateResponseBody(response, apiResponse, apiOperation)
+                .merge(validateContentType(response, apiOperation));
     }
 
     @Nonnull
@@ -73,5 +84,45 @@ public class ResponseValidator {
         }
 
         return schemaValidator.validate(response.getBody().get(), apiResponse.getSchema());
+    }
+
+    @Nonnull
+    private ValidationReport validateContentType(@Nonnull final Response response,
+                                                 @Nonnull final ApiOperation apiOperation) {
+
+        final Optional<String> requestHeader = response.getHeaderValue("Content-Type");
+        if (!requestHeader.isPresent()) {
+            return ValidationReport.EMPTY_REPORT;
+        }
+
+        final MediaType requestMediaType;
+        try {
+            requestMediaType = MediaType.parse(requestHeader.get());
+        } catch (final IllegalArgumentException e) {
+            return ValidationReport.singleton(messages.get("validation.response.contentType.invalid", requestHeader.get()));
+        }
+
+        final Collection<String> produces = getProduces(apiOperation);
+        if (produces.isEmpty()) {
+            return ValidationReport.EMPTY_REPORT;
+        }
+
+        final boolean contentTypeMatchesProduces = produces.stream()
+                        .map(MediaType::parse)
+                        .anyMatch(m -> m.withoutParameters().is(requestMediaType.withoutParameters()));
+        if (!contentTypeMatchesProduces) {
+            return ValidationReport.singleton(messages.get("validation.response.contentType.notAllowed", requestHeader.get(), produces));
+        }
+
+        return ValidationReport.EMPTY_REPORT;
+    }
+
+    @Nonnull
+    private Collection<String> getProduces(@Nonnull final ApiOperation apiOperation) {
+        // Operation-specific 'produces' overrides global produces entries
+        if (apiOperation.getOperation().getProduces() == null) {
+            return swaggerDefinition.getProduces() == null ? Collections.emptyList() : swaggerDefinition.getProduces();
+        }
+        return apiOperation.getOperation().getProduces();
     }
 }

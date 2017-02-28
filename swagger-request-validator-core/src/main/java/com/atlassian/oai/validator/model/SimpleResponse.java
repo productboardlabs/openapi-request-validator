@@ -87,7 +87,7 @@ public class SimpleResponse implements Response {
         }
 
         public Builder withHeader(final String key, final String... values) {
-            this.headers.putAll(key, asList(values));
+            this.headers.putAll(key.toLowerCase(), asList(values));
             return this;
         }
 

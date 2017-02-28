@@ -185,11 +185,11 @@ public class RequestValidator {
             return ValidationReport.EMPTY_REPORT;
         }
 
-        final boolean contentTypeMatchesConsumes =
+        final boolean contentTypeMatches =
                 specMediaTypes.stream()
                         .map(MediaType::parse)
                         .anyMatch(m -> m.withoutParameters().is(requestMediaType.withoutParameters()));
-        if (!contentTypeMatchesConsumes) {
+        if (!contentTypeMatches) {
             return ValidationReport.singleton(messages.get(notAllowedKey, requestHeader.get(), specMediaTypes));
         }
 
