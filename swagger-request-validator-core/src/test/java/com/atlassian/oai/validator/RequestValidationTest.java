@@ -293,4 +293,27 @@ public class RequestValidationTest {
                 "validation.request.accepts.invalid");
     }
 
+    @Test
+    public void validate_withValidHeaderParam_shouldPass() {
+        final Request request = SimpleRequest.Builder
+                .get("/healthcheck")
+                .withQueryParam("type", "shallow")
+                .withHeader("X-Max-Timeout", "30")
+                .build();
+
+        assertPass(classUnderTest.validate(request, validUserResponse));
+    }
+
+    @Test
+    public void validate_withInvalidHeaderParam_shouldFail() {
+        final Request request = SimpleRequest.Builder
+                .get("/healthcheck")
+                .withQueryParam("type", "shallow")
+                .withHeader("X-Max-Timeout", "30.0")
+                .build();
+
+        assertFail(classUnderTest.validate(request, validUserResponse),
+                "validation.request.parameter.invalidFormat");
+    }
+
 }

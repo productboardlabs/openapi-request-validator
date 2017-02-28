@@ -228,6 +228,13 @@
           "required": true,
           "type": "string",
           "enum": ["deep", "shallow"]
+        }, {
+          "name": "x-max-timeout",
+          "in": "header",
+          "description": "How long to wait for downstream to response",
+          "required": false,
+          "type": "integer",
+          "format": "int32"
         }],
         "responses": {
           "200": {

@@ -76,6 +76,7 @@ public class RequestValidator {
         return  validateSecurity(request, apiOperation)
                 .merge(validateContentType(request, apiOperation))
                 .merge(validateAccepts(request, apiOperation))
+                .merge(validateHeaders(request, apiOperation))
                 .merge(validatePathParameters(requestPath, apiOperation))
                 .merge(validateRequestBody(request.getBody(), apiOperation))
                 .merge(validateQueryParameters(request, apiOperation));
@@ -301,27 +302,45 @@ public class RequestValidator {
                 .getParameters()
                 .stream()
                 .filter(p -> p.getIn().equalsIgnoreCase("QUERY"))
-                .map(p -> validateQueryParameter(request, apiOperation, p))
+                .map(p -> validateParameter(
+                        apiOperation, p,
+                        request.getQueryParameterValues(p.getName()),
+                        "validation.request.parameter.query.missing")
+                )
                 .reduce(ValidationReport.empty(), ValidationReport::merge);
     }
 
     @Nonnull
-    private ValidationReport validateQueryParameter(@Nonnull final Request request,
-                                                    @Nonnull final ApiOperation apiOperation,
-                                                    @Nonnull final Parameter queryParameter) {
+    private ValidationReport validateHeaders(@Nonnull final Request request,
+                                             @Nonnull final ApiOperation apiOperation) {
+        return apiOperation
+                .getOperation()
+                .getParameters()
+                .stream()
+                .filter(p -> p.getIn().equalsIgnoreCase("HEADER"))
+                .map(p -> validateParameter(
+                        apiOperation, p,
+                        request.getHeaderValues(p.getName()),
+                        "validation.request.parameter.header.missing")
+                )
+                .reduce(ValidationReport.empty(), ValidationReport::merge);
+    }
 
-        final Collection<String> queryParameterValues = request.getQueryParameterValues(queryParameter.getName());
+    @Nonnull
+    private ValidationReport validateParameter(@Nonnull final ApiOperation apiOperation,
+                                               @Nonnull final Parameter parameter,
+                                               @Nonnull final Collection<String> parameterValues,
+                                               @Nonnull final String missingKey) {
 
-        if (queryParameterValues.isEmpty() && queryParameter.getRequired()) {
+        if (parameterValues.isEmpty() && parameter.getRequired()) {
             return ValidationReport.singleton(
-                    messages.get("validation.request.parameter.query.missing",
-                            queryParameter.getName(), apiOperation.getPathString().original())
+                    messages.get(missingKey, parameter.getName(), apiOperation.getPathString().original())
             );
         }
 
-        return queryParameterValues
+        return parameterValues
                 .stream()
-                .map((v) -> parameterValidators.validate(v, queryParameter))
+                .map((v) -> parameterValidators.validate(v, parameter))
                 .reduce(ValidationReport.empty(), ValidationReport::merge);
     }
 
