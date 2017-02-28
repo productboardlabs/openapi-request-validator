@@ -60,7 +60,7 @@ public interface Request {
      * <p>
      * Result will include key and all values (in the case of multiple headers with the same key)
      *
-     * @return The map of <code>key->values</code> for the headers associated with this request.
+     * @return The map of <code>key-&gt;values</code> for the headers associated with this request.
      */
     @Nonnull
     Map<String, Collection<String>> getHeaders();
