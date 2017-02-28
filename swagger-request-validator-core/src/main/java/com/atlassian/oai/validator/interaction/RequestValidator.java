@@ -21,11 +21,11 @@ import io.swagger.models.parameters.Parameter;
 import javax.annotation.Nonnull;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.Collection;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -144,7 +144,49 @@ public class RequestValidator {
     private ValidationReport validateContentType(@Nonnull final Request request,
                                                  @Nonnull final ApiOperation apiOperation) {
 
+        final Optional<String> requestContentType = request.getHeaderValue("content-type");
+        if (!requestContentType.isPresent()) {
+            // If no content type is specified assume its ok
+            return ValidationReport.EMPTY_REPORT;
+        }
+
+        final MediaType requestMediaType;
+        try {
+            requestMediaType = MediaType.parse(requestContentType.get());
+        } catch (final IllegalArgumentException e) {
+            return ValidationReport.singleton(
+                    messages.get("validation.request.contentType.invalid",
+                            requestContentType.get())
+            );
+        }
+
+        final Collection<String> consumes = getConsumes(apiOperation);
+        if (consumes.isEmpty()) {
+            // If no consumes are specified then nothing to validate
+            return ValidationReport.EMPTY_REPORT;
+        }
+
+        final boolean contentTypeMatchesConsumes =
+                consumes.stream()
+                        .map(MediaType::parse)
+                        .anyMatch(m -> m.withoutParameters().is(requestMediaType.withoutParameters()));
+        if (!contentTypeMatchesConsumes) {
+            return ValidationReport.singleton(
+                    messages.get("validation.request.contentType.notAllowed",
+                            requestContentType.get(), consumes)
+            );
+        }
+
         return ValidationReport.EMPTY_REPORT;
+    }
+
+    @Nonnull
+    private Collection<String> getConsumes(@Nonnull final ApiOperation apiOperation) {
+        // Operation-specific 'consumes' overrides global consumes entries
+        if (apiOperation.getOperation().getConsumes() == null) {
+            return swaggerDefinition.getConsumes() == null ? Collections.emptyList() : swaggerDefinition.getConsumes();
+        }
+        return apiOperation.getOperation().getConsumes();
     }
 
     @Nonnull

@@ -78,6 +78,9 @@ public class RestAssuredRequest implements Request {
     @Nonnull
     @Override
     public Collection<String> getHeaderValues(final String name) {
+        if (internalRequest.getHeaders() == null) {
+            return emptyList();
+        }
         return internalRequest.getHeaders().getValues(name);
     }
 

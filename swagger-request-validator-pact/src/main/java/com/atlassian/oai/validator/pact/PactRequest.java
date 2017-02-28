@@ -72,7 +72,7 @@ public class PactRequest implements Request {
     @Nonnull
     @Override
     public Collection<String> getHeaderValues(final String name) {
-        if (internalRequest.getHeaders().containsKey(name.toLowerCase())) {
+        if (internalRequest.getHeaders() != null && internalRequest.getHeaders().containsKey(name.toLowerCase())) {
             return singleton(internalRequest.getHeaders().get(name.toLowerCase()));
         }
         return emptyList();
