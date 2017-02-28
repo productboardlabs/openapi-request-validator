@@ -1,10 +1,13 @@
 package com.atlassian.oai.validator.wiremock;
 
 import com.atlassian.oai.validator.model.Response;
+import com.github.tomakehurst.wiremock.http.HttpHeader;
 
 import javax.annotation.Nonnull;
+import java.util.Collection;
 import java.util.Optional;
 
+import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -27,5 +30,15 @@ public class WireMockResponse implements Response {
     @Override
     public Optional<String> getBody() {
         return Optional.ofNullable(internalResponse.getBodyAsString());
+    }
+
+    @Nonnull
+    @Override
+    public Collection<String> getHeaderValues(final String name) {
+        final HttpHeader header = internalResponse.getHeaders().getHeader(name);
+        if (header.isPresent()) {
+            return header.values();
+        }
+        return emptyList();
     }
 }
