@@ -259,38 +259,38 @@ public class RequestValidationTest {
     }
 
     @Test
-    public void validate_withMatchingAccepts_shouldPass() {
+    public void validate_withMatchingAccept_shouldPass() {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withBody(loadRequest("newuser-valid"))
-                .withHeader("Accepts", "application/json;charset=UTF-8")
+                .withHeader("Accept", "application/json;charset=UTF-8")
                 .build();
 
         assertPass(classUnderTest.validate(request, validUserResponse));
     }
 
     @Test
-    public void validate_withNonMatchingAccepts_shouldFail() {
+    public void validate_withNonMatchingAccept_shouldFail() {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withBody(loadRequest("newuser-valid"))
-                .withHeader("accepts", "text/html")
+                .withHeader("accept", "text/html")
                 .build();
 
         assertFail(classUnderTest.validate(request, validUserResponse),
-                "validation.request.accepts.notAllowed");
+                "validation.request.accept.notAllowed");
     }
 
     @Test
-    public void validate_withInvalidAccepts_shouldFail() {
+    public void validate_withInvalidAccept_shouldFail() {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withBody(loadRequest("newuser-valid"))
-                .withHeader("accepts", "foop")
+                .withHeader("accept", "foop")
                 .build();
 
         assertFail(classUnderTest.validate(request, validUserResponse),
-                "validation.request.accepts.invalid");
+                "validation.request.accept.invalid");
     }
 
     @Test

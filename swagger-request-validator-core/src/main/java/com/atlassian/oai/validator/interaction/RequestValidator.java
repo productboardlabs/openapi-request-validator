@@ -156,10 +156,10 @@ public class RequestValidator {
     private ValidationReport validateAccepts(@Nonnull final Request request,
                                              @Nonnull final ApiOperation apiOperation) {
         return validateMediaTypes(request,
-                "Accepts",
+                "Accept",
                 getProduces(apiOperation),
-                "validation.request.accepts.invalid",
-                "validation.request.accepts.notAllowed");
+                "validation.request.accept.invalid",
+                "validation.request.accept.notAllowed");
     }
 
     @Nonnull
