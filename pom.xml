@@ -49,7 +49,7 @@
     <properties>
         <pact-jvm.version>3.2.6</pact-jvm.version>
         <junit.version>4.12</junit.version>
-        <swagger-parser.version>1.0.19</swagger-parser.version>
+        <swagger-parser.version>1.0.25</swagger-parser.version>
         <json-schema-validator.version>2.2.6</json-schema-validator.version>
         <jdk.version>1.8</jdk.version>
         <source.encoding>UTF-8</source.encoding>
