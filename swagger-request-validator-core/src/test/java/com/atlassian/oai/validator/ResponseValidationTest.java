@@ -1,8 +1,10 @@
 package com.atlassian.oai.validator;
 
+import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.model.SimpleResponse;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
@@ -17,8 +19,9 @@ public class ResponseValidationTest {
     private final SwaggerRequestResponseValidator classUnderTest =
             SwaggerRequestResponseValidator.createFor("/oai/api-users.json").build();
 
-    private final SimpleRequest getUserRequest = SimpleRequest.Builder.get("/users/1").build();
-    private final SimpleRequest getUsersRequest = SimpleRequest.Builder.get("/users").build();
+    private final Request getUserRequest = SimpleRequest.Builder.get("/users/1").build();
+    private final Request getUsersRequest = SimpleRequest.Builder.get("/users").build();
+    private final Request healthcheckRequest = SimpleRequest.Builder.get("/healthcheck").withQueryParam("type", "shallow").build();
 
     @Test
     public void validate_withResponseBodyMissingRequiredField_shouldFail() {
@@ -117,4 +120,37 @@ public class ResponseValidationTest {
         assertFail(classUnderTest.validate(getUsersRequest, response),
                 "validation.response.contentType.invalid");
     }
+
+    @Test
+    public void validate_withValidResponseHeader_shouldPass() {
+        final Response response = SimpleResponse.Builder
+                .serverError()
+                .withHeader("X-Failure-Code", "123456")
+                .build();
+
+        assertPass(classUnderTest.validate(healthcheckRequest, response));
+    }
+
+    @Test
+    public void validate_withInvalidResponseHeader_shouldFail() {
+        final Response response = SimpleResponse.Builder
+                .serverError()
+                .withHeader("X-Failure-Code", "1.0")
+                .build();
+
+        assertFail(classUnderTest.validate(healthcheckRequest, response),
+                "validation.schema.type");
+    }
+
+    @Test
+    @Ignore("Swagger parser currently does not read the 'required' flag on headers")
+    public void validate_withResponseMissingRequiredHeader_shouldFail() {
+        final Response response = SimpleResponse.Builder
+                .serverError()
+                .build();
+
+        assertFail(classUnderTest.validate(healthcheckRequest, response),
+                "validation.response.header.missing");
+    }
+
 }

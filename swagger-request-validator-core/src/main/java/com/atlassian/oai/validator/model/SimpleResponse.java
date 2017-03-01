@@ -77,6 +77,10 @@ public class SimpleResponse implements Response {
             return new Builder(404);
         }
 
+        public static Builder serverError() {
+            return new Builder(500);
+        }
+
         public Builder(final int status) {
             this.status = status;
         }

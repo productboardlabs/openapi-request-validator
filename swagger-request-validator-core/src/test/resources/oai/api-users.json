@@ -241,7 +241,15 @@
             "description": "Everything is ok"
           },
           "500": {
-            "description": "Healthcheck failed"
+            "description": "Healthcheck failed",
+            "headers": {
+              "X-Failure-Code": {
+                "description": "Characterisation of the healthcheck failure.",
+                "type":  "integer",
+                "minimum": 0.0,
+                "required": true
+              }
+            }
           }
         }
       }

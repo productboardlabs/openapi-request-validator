@@ -7,11 +7,13 @@ import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.SchemaValidator;
 import com.google.common.net.MediaType;
 import io.swagger.models.Swagger;
+import io.swagger.models.properties.Property;
 
 import javax.annotation.Nonnull;
-
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
@@ -52,11 +54,7 @@ public class ResponseValidator {
         requireNonNull(response, "A response is required");
         requireNonNull(apiOperation, "An API operation is required");
 
-        io.swagger.models.Response apiResponse = apiOperation.getOperation().getResponses().get(Integer.toString(response.getStatus()));
-        if (apiResponse == null) {
-            apiResponse = apiOperation.getOperation().getResponses().get("default"); // try the default response
-        }
-
+        final io.swagger.models.Response apiResponse = getApiResponse(response, apiOperation);
         if (apiResponse == null) {
             return ValidationReport.singleton(
                     messages.get("validation.response.status.unknown",
@@ -65,7 +63,19 @@ public class ResponseValidator {
         }
 
         return validateResponseBody(response, apiResponse, apiOperation)
-                .merge(validateContentType(response, apiOperation));
+                .merge(validateContentType(response, apiOperation))
+                .merge(validateHeaders(response, apiResponse, apiOperation));
+    }
+
+    @Nullable
+    private io.swagger.models.Response getApiResponse(@Nonnull final Response response,
+                                                      @Nonnull final ApiOperation apiOperation) {
+        final io.swagger.models.Response apiResponse =
+                apiOperation.getOperation().getResponses().get(Integer.toString(response.getStatus()));
+        if (apiResponse == null) {
+            return apiOperation.getOperation().getResponses().get("default"); // try the default response
+        }
+        return apiResponse;
     }
 
     @Nonnull
@@ -124,5 +134,40 @@ public class ResponseValidator {
             return swaggerDefinition.getProduces() == null ? Collections.emptyList() : swaggerDefinition.getProduces();
         }
         return apiOperation.getOperation().getProduces();
+    }
+
+    @Nonnull
+    private ValidationReport validateHeaders(@Nonnull final Response response,
+                                             @Nonnull final io.swagger.models.Response apiResponse,
+                                             @Nonnull final ApiOperation apiOperation) {
+
+        final Map<String, Property> apiHeaders = apiResponse.getHeaders();
+        if (apiHeaders == null || apiHeaders.isEmpty()) {
+            return ValidationReport.EMPTY_REPORT;
+        }
+
+        return apiHeaders.entrySet()
+                .stream()
+                .map(h -> validateHeader(apiOperation, h.getValue(), response.getHeaderValues(h.getKey())))
+                .reduce(ValidationReport.empty(), ValidationReport::merge);
+
+    }
+
+    @Nonnull
+    private ValidationReport validateHeader(@Nonnull final ApiOperation apiOperation,
+                                            @Nonnull final Property property,
+                                            @Nonnull final Collection<String> propertyValues) {
+
+        if (propertyValues.isEmpty() && (property.getRequired() || Boolean.FALSE == property.getAllowEmptyValue())) {
+            return ValidationReport.singleton(
+                    messages.get("validation.response.header.missing",
+                            property.getName(), apiOperation.getPathString().original())
+            );
+        }
+
+        return propertyValues
+                .stream()
+                .map((v) -> schemaValidator.validate(v, property))
+                .reduce(ValidationReport.empty(), ValidationReport::merge);
     }
 }
