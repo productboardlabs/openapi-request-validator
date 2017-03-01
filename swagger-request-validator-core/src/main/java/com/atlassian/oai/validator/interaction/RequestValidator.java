@@ -169,28 +169,35 @@ public class RequestValidator {
                                                 @Nonnull final String invalidTypeKey,
                                                 @Nonnull final String notAllowedKey) {
 
-        final Optional<String> requestHeader = request.getHeaderValue(headerName);
-        if (!requestHeader.isPresent()) {
+        final Collection<String> requestHeaderValues = request.getHeaderValues(headerName);
+        if (requestHeaderValues.isEmpty()) {
             return ValidationReport.EMPTY_REPORT;
         }
 
-        final MediaType requestMediaType;
-        try {
-            requestMediaType = MediaType.parse(requestHeader.get());
-        } catch (final IllegalArgumentException e) {
-            return ValidationReport.singleton(messages.get(invalidTypeKey, requestHeader.get()));
+        final List<MediaType> requestMediaTypes = new ArrayList<>();
+        for (final String requestHeaderValue : requestHeaderValues) {
+            try {
+                requestMediaTypes.add(MediaType.parse(requestHeaderValue));
+            } catch (final IllegalArgumentException e) {
+                return ValidationReport.singleton(messages.get(invalidTypeKey, requestHeaderValue));
+            }
         }
 
         if (specMediaTypes.isEmpty()) {
             return ValidationReport.EMPTY_REPORT;
         }
 
-        final boolean contentTypeMatches =
-                specMediaTypes.stream()
-                        .map(MediaType::parse)
-                        .anyMatch(m -> m.withoutParameters().is(requestMediaType.withoutParameters()));
-        if (!contentTypeMatches) {
-            return ValidationReport.singleton(messages.get(notAllowedKey, requestHeader.get(), specMediaTypes));
+        final boolean mediaTypeMatchesSpec = specMediaTypes.stream()
+                .map(MediaType::parse)
+                .anyMatch(specType ->
+                        requestMediaTypes.stream()
+                                .anyMatch(requestType ->
+                                        specType.withoutParameters().is(requestType.withoutParameters())
+                                )
+                );
+
+        if (!mediaTypeMatchesSpec) {
+            return ValidationReport.singleton(messages.get(notAllowedKey, requestHeaderValues, specMediaTypes));
         }
 
         return ValidationReport.EMPTY_REPORT;

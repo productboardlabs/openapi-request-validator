@@ -270,11 +270,45 @@ public class RequestValidationTest {
     }
 
     @Test
+    public void validate_withWildcardAccept_shouldPass() {
+        final Request request = SimpleRequest.Builder
+                .post("/users")
+                .withBody(loadRequest("newuser-valid"))
+                .withHeader("Accept", "*/*")
+                .build();
+
+        assertPass(classUnderTest.validate(request, validUserResponse));
+    }
+
+    @Test
+    public void validate_withMultipleAcceptHeaders_shouldPass_whenOneMatches() {
+        final Request request = SimpleRequest.Builder
+                .post("/users")
+                .withBody(loadRequest("newuser-valid"))
+                .withHeader("Accept", "text/html", "application/json;charset=UTF-8")
+                .build();
+
+        assertPass(classUnderTest.validate(request, validUserResponse));
+    }
+
+    @Test
     public void validate_withNonMatchingAccept_shouldFail() {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withBody(loadRequest("newuser-valid"))
                 .withHeader("accept", "text/html")
+                .build();
+
+        assertFail(classUnderTest.validate(request, validUserResponse),
+                "validation.request.accept.notAllowed");
+    }
+
+    @Test
+    public void validate_withMultipleAcceptHeaders_shouldFail_whenNoneMatch() {
+        final Request request = SimpleRequest.Builder
+                .post("/users")
+                .withBody(loadRequest("newuser-valid"))
+                .withHeader("Accept", "text/html", "application/binary")
                 .build();
 
         assertFail(classUnderTest.validate(request, validUserResponse),
