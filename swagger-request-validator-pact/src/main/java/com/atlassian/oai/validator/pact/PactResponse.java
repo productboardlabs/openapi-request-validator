@@ -4,6 +4,7 @@ import com.atlassian.oai.validator.model.Response;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 
 import static java.util.Collections.emptyList;
@@ -38,8 +39,9 @@ public class PactResponse implements Response {
     @Nonnull
     @Override
     public Collection<String> getHeaderValues(final String name) {
-        if (internalResponse.getHeaders() != null && internalResponse.getHeaders().containsKey(name.toLowerCase())) {
-            return singleton(internalResponse.getHeaders().get(name.toLowerCase()));
+        final Map<String, String> headers = internalResponse.getHeaders();
+        if (headers != null && headers.containsKey(name.toLowerCase())) {
+            return singleton(headers.get(name.toLowerCase()));
         }
         return emptyList();
     }
