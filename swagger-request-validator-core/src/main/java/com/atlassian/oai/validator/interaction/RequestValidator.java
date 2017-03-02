@@ -187,20 +187,18 @@ public class RequestValidator {
             return ValidationReport.EMPTY_REPORT;
         }
 
-        final boolean mediaTypeMatchesSpec = specMediaTypes.stream()
+        return specMediaTypes
+                .stream()
                 .map(MediaType::parse)
-                .anyMatch(specType ->
+                .filter(specType ->
                         requestMediaTypes.stream()
                                 .anyMatch(requestType ->
                                         specType.withoutParameters().is(requestType.withoutParameters())
                                 )
-                );
-
-        if (!mediaTypeMatchesSpec) {
-            return ValidationReport.singleton(messages.get(notAllowedKey, requestHeaderValues, specMediaTypes));
-        }
-
-        return ValidationReport.EMPTY_REPORT;
+                )
+                .findFirst()
+                .map(m -> ValidationReport.empty())
+                .orElse(ValidationReport.singleton(messages.get(notAllowedKey, requestHeaderValues, specMediaTypes)));
     }
 
     @Nonnull
