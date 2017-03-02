@@ -1,3 +1,17 @@
+# v1.0.10
+
+* Added support for request and response header validation 
+[[#22]](https://bitbucket.org/atlassian/swagger-request-validator/issues/22)
+* Added support for request Content-Type validation against spec Consumes types
+[[#22]](https://bitbucket.org/atlassian/swagger-request-validator/issues/22)
+* Added support for request Accept validation against spec Produces types 
+[[#22]](https://bitbucket.org/atlassian/swagger-request-validator/issues/22)
+* Added support for response Content-Type validation against spec Produces types 
+[[#22]](https://bitbucket.org/atlassian/swagger-request-validator/issues/22)
+* Added support for the Swagger/OpenAPI `discriminator` keyword
+[[#26]](https://bitbucket.org/atlassian/swagger-request-validator/issues/26)
+
+
 # v1.0.9
 
 * Added basic support for validation of security tokens in headers and query params
