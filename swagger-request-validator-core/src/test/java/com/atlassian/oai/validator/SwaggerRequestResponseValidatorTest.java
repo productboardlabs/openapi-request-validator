@@ -8,19 +8,18 @@ import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import org.junit.Test;
 
-import java.util.Collection;
-import java.util.Map;
-
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadRequest;
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadResponse;
-import static java.util.Collections.singleton;
-import static java.util.Collections.singletonMap;
 
+/**
+ * General behavioral tests for the {@link SwaggerRequestResponseValidator}.
+ *
+ * @see RequestValidationTest
+ * @see ResponseValidationTest
+ */
 public class SwaggerRequestResponseValidatorTest {
 
-    private SwaggerRequestResponseValidator classUnderTest = SwaggerRequestResponseValidator.createFor("/oai/api-users.json").build();
+    private final SwaggerRequestResponseValidator classUnderTest =
+            SwaggerRequestResponseValidator.createFor("/oai/api-users.json").build();
 
     @Test(expected = NullPointerException.class)
     public void validate_withNullRequest_throwsNPE() {
@@ -36,255 +35,6 @@ public class SwaggerRequestResponseValidatorTest {
         final Response response = null;
 
         classUnderTest.validate(request, response);
-    }
-
-    @Test
-    public void validate_withValidRequestResponse_shouldSucceed() {
-        final Request request = SimpleRequest.Builder.get("/users/1").build();
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
-
-        assertPass(classUnderTest.validate(request, response));
-    }
-
-    @Test
-    public void validate_withInvalidPathParam_shouldFail() {
-        final Request request = SimpleRequest.Builder.get("/users/a").build();
-        final Response response = SimpleResponse.Builder.badRequest().build();
-
-        assertFail(classUnderTest.validate(request, response), "validation.request.parameter.invalidFormat");
-    }
-
-    @Test
-    public void validate_withInvalidRequestMethod_shouldFail() {
-        final Request request = SimpleRequest.Builder.patch("/users/1").build();
-        final Response response = SimpleResponse.Builder.ok().build();
-
-        assertFail(classUnderTest.validate(request, response), "validation.request.operation.notAllowed");
-    }
-
-    @Test
-    public void validate_withRequestMissingRequiredJsonBody_shouldFail() {
-        final Request request = SimpleRequest.Builder.post("/users").build();
-        final Response response = SimpleResponse.Builder.ok().build();
-
-        assertFail(classUnderTest.validate(request, response), "validation.request.body.missing");
-    }
-
-    @Test
-    public void validate_withRequestMissingRequiredFormDataBody_shouldFail() {
-        final String formData = "fmail=abc%40gmail.com";
-        final Request request = SimpleRequest.Builder.put("/users/1").withBody(formData).build();
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
-        assertFail(classUnderTest.validate(request, response), "validation.request.parameter.missing");
-    }
-
-    @Test
-    public void validate_withValidJsonBody_shouldPass() {
-        final Request request = SimpleRequest.Builder.post("/users").withBody(loadRequest("newuser-valid")).build();
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
-
-        assertPass(classUnderTest.validate(request, response));
-    }
-
-    @Test
-    public void validate_withValidFormDataBody_shouldPass() {
-        final String formData = "email=abc%40gmail.com";
-        final Request request = SimpleRequest.Builder.put("/users/1").withBody(formData).build();
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
-        assertPass(classUnderTest.validate(request, response));
-    }
-
-    @Test
-    public void validate_withInvalidJsonRequestBody_shouldFail() {
-        final Request request = SimpleRequest.Builder.post("/users").withBody(loadRequest("newuser-invalid-missingrequired")).build();
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
-
-        assertFail(classUnderTest.validate(request, response), "validation.schema.required");
-    }
-
-    @Test
-    public void validate_withInvalidFormDataRequestBody_shouldFail() {
-        final String formData = "malformed-form-url-encoded";
-        final Request request = SimpleRequest.Builder.put("/users/1").withBody(formData).build();
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
-        assertFail(classUnderTest.validate(request, response), "validation.request.parameter.missing");
-    }
-
-    @Test
-    public void validate_authorizationHeaderIsChecked_shouldPass() {
-        final Map<String, Collection<String>> authorisationHeader =
-                singletonMap("Authorization", singleton("Bearer mytoken"));
-        final Request request = SimpleRequest.Builder.get("/secure/users/1").withHeaders(authorisationHeader).build();
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
-        assertPass(classUnderTest.validate(request, response));
-    }
-
-    @Test
-    public void validate_authorizationHeaderIsChecked_shouldFail() {
-        final Request request = SimpleRequest.Builder.get("/secure/users/1").build();
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
-        assertFail(classUnderTest.validate(request, response), "validation.request.security.missing");
-    }
-
-    @Test
-    public void validate_authorizationQueryParamIsChecked_shouldPass() {
-        final Request request = SimpleRequest.Builder.put("/secure/users/1").withQueryParam("authorization", "token").build();
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
-        assertPass(classUnderTest.validate(request, response));
-    }
-
-    @Test
-    public void validate_authorizationQueryParamIsChecked_shouldFail() {
-        final Request request = SimpleRequest.Builder.put("/secure/users/1").build();
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
-        assertFail(classUnderTest.validate(request, response), "validation.request.security.missing");
-    }
-
-    @Test
-    public void validate_withRequestBody_shouldFail_whenNoneExpected() {
-        final Request request = SimpleRequest.Builder.get("/users").withBody(loadRequest("newuser-valid")).build();
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
-
-        assertFail(classUnderTest.validate(request, response), "validation.request.body.unexpected");
-    }
-
-    @Test
-    public void validate_withValidQueryParams_shouldPass() {
-        final Request request = SimpleRequest.Builder.get("/users").withQueryParam("maxCount", "10").build();
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
-
-        assertPass(classUnderTest.validate(request, response));
-    }
-
-    @Test
-    public void validate_withInvalidQueryParamFormat_shouldFail() {
-        final Request request = SimpleRequest.Builder.get("/users").withQueryParam("maxCount", "a").build();
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
-
-        assertFail(classUnderTest.validate(request, response), "validation.request.parameter.invalidFormat");
-    }
-
-    @Test
-    public void validate_withMissingQueryParam_shouldPass_whenOptional() {
-        final Request request = SimpleRequest.Builder.get("/users").build();
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
-
-        assertPass(classUnderTest.validate(request, response));
-    }
-
-    @Test
-    public void validate_withArrayQueryParam_shouldPass_whenValid() {
-        final Request request = SimpleRequest.Builder.get("/users").withQueryParam("filter", "1,2,3").build();
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
-
-        assertPass(classUnderTest.validate(request, response));
-    }
-
-    @Test
-    public void validate_withArrayQueryParam_shouldFail_whenInvalidFormat() {
-        final Request request = SimpleRequest.Builder.get("/users").withQueryParam("filter", "1,\"bob\",3").build();
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
-
-        assertFail(classUnderTest.validate(request, response), "validation.schema.type");
-    }
-
-    @Test
-    public void validate_withExtraQueryParams_shouldPass() {
-        final Request request = SimpleRequest.Builder.get("/users")
-                .withQueryParam("foo", "bar")
-                .withQueryParam("something", "else")
-                .build();
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
-
-        assertPass(classUnderTest.validate(request, response));
-    }
-
-    @Test
-    public void validate_withMissingQueryParam_shouldFail_whenRequired() {
-        final Request request = SimpleRequest.Builder.get("/healthcheck").build();
-        final Response response = SimpleResponse.Builder.ok().build();
-
-        assertFail(classUnderTest.validate(request, response), "validation.request.parameter.query.missing");
-    }
-
-    @Test
-    public void validate_withValidQueryParam_shouldPass_whenRequired() {
-        final Request request = SimpleRequest.Builder.get("/healthcheck").withQueryParam("type", "deep").build();
-        final Response response = SimpleResponse.Builder.ok().build();
-
-        assertPass(classUnderTest.validate(request, response));
-    }
-
-    @Test
-    public void validate_withResponseBodyMissingRequiredField_shouldFail() {
-        final Request request = SimpleRequest.Builder.get("/users/1").build();
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-invalid-missingrequired")).build();
-
-        assertFail(classUnderTest.validate(request, response), "validation.schema.required");
-    }
-
-    @Test
-    public void validate_withResponseBodyWithAdditionalFields_shouldFail() {
-        final Request request = SimpleRequest.Builder.get("/users/1").build();
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-invalid-additionalproperties")).build();
-
-        assertFail(classUnderTest.validate(request, response), "validation.schema.additionalProperties");
-    }
-
-    @Test
-    public void validate_withResponseBodyBadDataFormat_shouldFail() {
-        final Request request = SimpleRequest.Builder.get("/users/1").build();
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-invalid-baddataformat")).build();
-
-        assertFail(classUnderTest.validate(request, response), "validation.schema.type");
-    }
-
-    @Test
-    public void validate_withResponseMissingRequiredBody_shouldFail() {
-        final Request request = SimpleRequest.Builder.get("/users/1").build();
-        final Response response = SimpleResponse.Builder.ok().build();
-
-        assertFail(classUnderTest.validate(request, response), "validation.response.body.missing");
-    }
-
-    @Test
-    public void validate_withRequiredResponseBodyEmpty_shouldFail() {
-        final Request request = SimpleRequest.Builder.get("/users/1").build();
-        final Response response = SimpleResponse.Builder.ok().withBody("").build();
-
-        assertFail(classUnderTest.validate(request, response), "validation.response.body.missing");
-    }
-
-    @Test
-    public void validate_withResponseContainingMalformedJson_shouldFail() {
-        final Request request = SimpleRequest.Builder.get("/users/1").build();
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-invalid-malformedjson")).build();
-
-        assertFail(classUnderTest.validate(request, response), "validation.schema.invalidJson");
-    }
-
-    @Test
-    public void validate_withResponseNotMatchingSchemaForStatusCode_shouldFail() {
-        final Request request = SimpleRequest.Builder.get("/users/1").build();
-        final Response response = SimpleResponse.Builder.notFound().withBody(loadResponse("user-valid")).build();
-
-        assertFail(classUnderTest.validate(request, response), "validation.schema.required");
-    }
-
-    @Test
-    public void validate_withResponseContainingUnknownStatusCode_shouldFail_whenNoDefaultResponseDefined() {
-        final Request request = SimpleRequest.Builder.get("/users/1").build();
-        final Response response = SimpleResponse.Builder.status(666).build();
-
-        assertFail(classUnderTest.validate(request, response), "validation.response.status.unknown");
-    }
-
-    @Test
-    public void validate_withResponseContainingUnknownStatusCode_shouldPass_whenDefaultResponseDefined() {
-        final Request request = SimpleRequest.Builder.get("/users").build();
-        final Response response = SimpleResponse.Builder.status(666).withBody(loadResponse("error-valid")).build();
-
-        assertPass(classUnderTest.validate(request, response));
     }
 
     @Test
@@ -313,14 +63,6 @@ public class SwaggerRequestResponseValidatorTest {
     @Test(expected = IllegalArgumentException.class)
     public void validate_neitherPathNorJson() {
         SwaggerRequestResponseValidator.createFor("<>").build();
-    }
-
-    @Test
-    public void validate_formData_manyValuesForSingleKey() {
-        final String formData = "email=abc%40gmail.com&email=";
-        final Request request = SimpleRequest.Builder.put("/users/1").withBody(formData).build();
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
-        assertFail(classUnderTest.validate(request, response), "validation.request.parameter.missing");
     }
 
 }

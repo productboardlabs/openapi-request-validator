@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.empty;
@@ -66,5 +67,15 @@ public class PactRequest implements Request {
         return internalRequest.getHeaders().entrySet()
                 .stream()
                 .collect(toMap(Map.Entry::getKey, v -> singleton(v.getValue())));
+    }
+
+    @Nonnull
+    @Override
+    public Collection<String> getHeaderValues(final String name) {
+        final Map<String, String> headers = internalRequest.getHeaders();
+        if (headers != null && headers.containsKey(name.toLowerCase())) {
+            return singleton(headers.get(name.toLowerCase()));
+        }
+        return emptyList();
     }
 }

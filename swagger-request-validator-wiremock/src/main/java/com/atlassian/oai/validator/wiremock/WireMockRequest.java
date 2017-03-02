@@ -2,18 +2,20 @@ package com.atlassian.oai.validator.wiremock;
 
 import com.atlassian.oai.validator.model.Request;
 import com.github.tomakehurst.wiremock.common.Urls;
+import com.github.tomakehurst.wiremock.http.HttpHeader;
 import com.github.tomakehurst.wiremock.http.MultiValue;
 import com.github.tomakehurst.wiremock.http.QueryParameter;
 
 import javax.annotation.Nonnull;
 import java.net.URI;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 
 /**
  * Adapter for using WireMock requests in the Swagger Request Validator
@@ -47,7 +49,7 @@ public class WireMockRequest implements Request {
     @Nonnull
     @Override
     public Optional<String> getBody() {
-        return Optional.ofNullable(internalRequest.getBodyAsString());
+        return ofNullable(internalRequest.getBodyAsString());
     }
 
     @Nonnull
@@ -62,7 +64,7 @@ public class WireMockRequest implements Request {
         if (queryParameterMap.containsKey(name)) {
             return queryParameterMap.get(name).values();
         }
-        return Collections.emptyList();
+        return emptyList();
     }
 
     @Nonnull
@@ -70,4 +72,15 @@ public class WireMockRequest implements Request {
     public Map<String, Collection<String>> getHeaders() {
         return internalRequest.getHeaders().all().stream().collect(Collectors.toMap(MultiValue::key, MultiValue::values));
     }
+
+    @Nonnull
+    @Override
+    public Collection<String> getHeaderValues(final String name) {
+        final HttpHeader header = internalRequest.getHeaders().getHeader(name);
+        if (header.isPresent()) {
+            return header.values();
+        }
+        return emptyList();
+    }
+
 }

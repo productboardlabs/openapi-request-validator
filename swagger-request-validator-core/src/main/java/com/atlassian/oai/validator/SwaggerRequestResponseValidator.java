@@ -100,7 +100,7 @@ public class SwaggerRequestResponseValidator {
         this.messages = messages;
         final SchemaValidator schemaValidator = new SchemaValidator(api, messages);
         this.requestValidator = new RequestValidator(schemaValidator, messages, api);
-        this.responseValidator = new ResponseValidator(schemaValidator, messages);
+        this.responseValidator = new ResponseValidator(schemaValidator, messages, api);
     }
 
     /**

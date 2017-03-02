@@ -3,8 +3,10 @@ package com.atlassian.oai.validator.restassured;
 import com.atlassian.oai.validator.model.Response;
 
 import javax.annotation.Nonnull;
+import java.util.Collection;
 import java.util.Optional;
 
+import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -27,5 +29,14 @@ public class RestAssuredResponse implements Response {
     @Override
     public Optional<String> getBody() {
         return Optional.ofNullable(internalResponse.getBody().asString());
+    }
+
+    @Nonnull
+    @Override
+    public Collection<String> getHeaderValues(final String name) {
+        if (internalResponse.getHeaders() == null) {
+            return emptyList();
+        }
+        return internalResponse.getHeaders().getValues(name);
     }
 }

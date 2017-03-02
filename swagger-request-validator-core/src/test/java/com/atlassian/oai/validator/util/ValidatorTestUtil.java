@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
 import java.util.List;
 
 import static java.lang.String.format;
@@ -109,8 +110,8 @@ public class ValidatorTestUtil {
         when(result.getType()).thenReturn("integer");
         when(result.getFormat()).thenReturn("int32");
         when(result.getRequired()).thenReturn(required);
-        when(result.getMinimum()).thenReturn(min);
-        when(result.getMaximum()).thenReturn(max);
+        when(result.getMinimum()).thenReturn(min == null ? null : BigDecimal.valueOf(min));
+        when(result.getMaximum()).thenReturn(max == null ? null : BigDecimal.valueOf(max));
         return result;
     }
 
@@ -121,8 +122,8 @@ public class ValidatorTestUtil {
         when(result.getType()).thenReturn("integer");
         when(result.getFormat()).thenReturn("int32");
         when(result.getRequired()).thenReturn(true);
-        when(result.getMinimum()).thenReturn(min);
-        when(result.getMaximum()).thenReturn(max);
+        when(result.getMinimum()).thenReturn(min == null ? null : BigDecimal.valueOf(min));
+        when(result.getMaximum()).thenReturn(max == null ? null : BigDecimal.valueOf(max));
         when(result.isExclusiveMinimum()).thenReturn(exclusiveMin);
         when(result.isExclusiveMaximum()).thenReturn(exclusiveMax);
         return result;
@@ -193,8 +194,8 @@ public class ValidatorTestUtil {
         when(result.getType()).thenReturn("number");
         when(result.getFormat()).thenReturn("float");
         when(result.getRequired()).thenReturn(required);
-        when(result.getMinimum()).thenReturn(min);
-        when(result.getMaximum()).thenReturn(max);
+        when(result.getMinimum()).thenReturn(min == null ? null : BigDecimal.valueOf(min));
+        when(result.getMaximum()).thenReturn(max == null ? null : BigDecimal.valueOf(max));
         return result;
     }
 
@@ -205,8 +206,8 @@ public class ValidatorTestUtil {
         when(result.getType()).thenReturn("number");
         when(result.getFormat()).thenReturn("float");
         when(result.getRequired()).thenReturn(true);
-        when(result.getMinimum()).thenReturn(min);
-        when(result.getMaximum()).thenReturn(max);
+        when(result.getMinimum()).thenReturn(min == null ? null : BigDecimal.valueOf(min));
+        when(result.getMaximum()).thenReturn(max == null ? null : BigDecimal.valueOf(max));
         when(result.isExclusiveMinimum()).thenReturn(exclusiveMin);
         when(result.isExclusiveMaximum()).thenReturn(exclusiveMax);
         return result;

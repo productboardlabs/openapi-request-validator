@@ -21,11 +21,11 @@ import io.swagger.models.parameters.Parameter;
 import javax.annotation.Nonnull;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.Collection;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -73,13 +73,18 @@ public class RequestValidator {
         requireNonNull(request, "A request is required");
         requireNonNull(apiOperation, "An API operation is required");
 
-        return  vaildateSecurity(request, apiOperation)
+        return  validateSecurity(request, apiOperation)
+                .merge(validateContentType(request, apiOperation))
+                .merge(validateAccepts(request, apiOperation))
+                .merge(validateHeaders(request, apiOperation))
                 .merge(validatePathParameters(requestPath, apiOperation))
                 .merge(validateRequestBody(request.getBody(), apiOperation))
                 .merge(validateQueryParameters(request, apiOperation));
     }
 
-    private ValidationReport vaildateSecurity(final Request request, final ApiOperation apiOperation) {
+    @Nonnull
+    private ValidationReport validateSecurity(@Nonnull final Request request,
+                                              @Nonnull final ApiOperation apiOperation) {
         final List<Map<String, List<String>>> securityRequired = apiOperation.getOperation().getSecurity();
 
         if (null != securityRequired && !securityRequired.isEmpty()) {
@@ -127,17 +132,91 @@ public class RequestValidator {
     @Nonnull
     private ValidationReport checkApiKeyAuthorizationByHeader(@Nonnull final Request request,
                                                               @Nonnull final ApiKeyAuthDefinition apiKeyAuthDefinition) {
-        final Boolean exists = request.getHeaders().entrySet()
-                .stream()
-                .anyMatch(e -> e.getKey().equals(apiKeyAuthDefinition.getName()));
 
-        if (!exists) {
+        if (!request.getHeaderValue(apiKeyAuthDefinition.getName()).isPresent()) {
             return ValidationReport.singleton(
                  messages.get("validation.request.security.missing",
                          request.getMethod(), request.getPath())
             );
         }
         return ValidationReport.EMPTY_REPORT;
+    }
+
+    @Nonnull
+    private ValidationReport validateContentType(@Nonnull final Request request,
+                                                 @Nonnull final ApiOperation apiOperation) {
+        return validateMediaTypes(request,
+                "Content-Type",
+                getConsumes(apiOperation),
+                "validation.request.contentType.invalid",
+                "validation.request.contentType.notAllowed");
+    }
+
+    @Nonnull
+    private ValidationReport validateAccepts(@Nonnull final Request request,
+                                             @Nonnull final ApiOperation apiOperation) {
+        return validateMediaTypes(request,
+                "Accept",
+                getProduces(apiOperation),
+                "validation.request.accept.invalid",
+                "validation.request.accept.notAllowed");
+    }
+
+    @Nonnull
+    private ValidationReport validateMediaTypes(@Nonnull final Request request,
+                                                @Nonnull final String headerName,
+                                                @Nonnull final Collection<String> specMediaTypes,
+                                                @Nonnull final String invalidTypeKey,
+                                                @Nonnull final String notAllowedKey) {
+
+        final Collection<String> requestHeaderValues = request.getHeaderValues(headerName);
+        if (requestHeaderValues.isEmpty()) {
+            return ValidationReport.EMPTY_REPORT;
+        }
+
+        final List<MediaType> requestMediaTypes = new ArrayList<>();
+        for (final String requestHeaderValue : requestHeaderValues) {
+            try {
+                requestMediaTypes.add(MediaType.parse(requestHeaderValue));
+            } catch (final IllegalArgumentException e) {
+                return ValidationReport.singleton(messages.get(invalidTypeKey, requestHeaderValue));
+            }
+        }
+
+        if (specMediaTypes.isEmpty()) {
+            return ValidationReport.EMPTY_REPORT;
+        }
+
+        return specMediaTypes
+                .stream()
+                .map(MediaType::parse)
+                .filter(specType ->
+                        requestMediaTypes.stream()
+                                .anyMatch(requestType ->
+                                        specType.withoutParameters().is(requestType.withoutParameters())
+                                )
+                )
+                .findFirst()
+                .map(m -> ValidationReport.empty())
+                .orElse(ValidationReport.singleton(messages.get(notAllowedKey, requestHeaderValues, specMediaTypes)));
+    }
+
+    @Nonnull
+    private Collection<String> getConsumes(@Nonnull final ApiOperation apiOperation) {
+        // Operation-specific 'consumes' overrides global consumes entries
+        if (apiOperation.getOperation().getConsumes() == null) {
+            return swaggerDefinition.getConsumes() == null ? Collections.emptyList() : swaggerDefinition.getConsumes();
+        }
+        return apiOperation.getOperation().getConsumes();
+    }
+
+    @Nonnull
+    private Collection<String> getProduces(@Nonnull final ApiOperation apiOperation) {
+        // Operation-specific 'produces' overrides global produces entries
+        if (apiOperation.getOperation().getProduces() == null) {
+            return swaggerDefinition.getProduces() == null ? Collections.emptyList() : swaggerDefinition.getProduces();
+        }
+        return apiOperation.getOperation().getProduces();
     }
 
     @Nonnull
@@ -220,6 +299,7 @@ public class RequestValidator {
         return validationReport;
     }
 
+    @Nonnull
     private ValidationReport validateQueryParameters(@Nonnull final Request request,
                                                      @Nonnull final ApiOperation apiOperation) {
         return apiOperation
@@ -227,26 +307,45 @@ public class RequestValidator {
                 .getParameters()
                 .stream()
                 .filter(p -> p.getIn().equalsIgnoreCase("QUERY"))
-                .map(p -> validateQueryParameter(request, apiOperation, p))
+                .map(p -> validateParameter(
+                        apiOperation, p,
+                        request.getQueryParameterValues(p.getName()),
+                        "validation.request.parameter.query.missing")
+                )
                 .reduce(ValidationReport.empty(), ValidationReport::merge);
     }
 
-    private ValidationReport validateQueryParameter(@Nonnull final Request request,
-                                                    @Nonnull final ApiOperation apiOperation,
-                                                    @Nonnull final Parameter queryParameter) {
+    @Nonnull
+    private ValidationReport validateHeaders(@Nonnull final Request request,
+                                             @Nonnull final ApiOperation apiOperation) {
+        return apiOperation
+                .getOperation()
+                .getParameters()
+                .stream()
+                .filter(p -> p.getIn().equalsIgnoreCase("HEADER"))
+                .map(p -> validateParameter(
+                        apiOperation, p,
+                        request.getHeaderValues(p.getName()),
+                        "validation.request.parameter.header.missing")
+                )
+                .reduce(ValidationReport.empty(), ValidationReport::merge);
+    }
 
-        final Collection<String> queryParameterValues = request.getQueryParameterValues(queryParameter.getName());
+    @Nonnull
+    private ValidationReport validateParameter(@Nonnull final ApiOperation apiOperation,
+                                               @Nonnull final Parameter parameter,
+                                               @Nonnull final Collection<String> parameterValues,
+                                               @Nonnull final String missingKey) {
 
-        if (queryParameterValues.isEmpty() && queryParameter.getRequired()) {
+        if (parameterValues.isEmpty() && parameter.getRequired()) {
             return ValidationReport.singleton(
-                    messages.get("validation.request.parameter.query.missing",
-                            queryParameter.getName(), apiOperation.getPathString().original())
+                    messages.get(missingKey, parameter.getName(), apiOperation.getPathString().original())
             );
         }
 
-        return queryParameterValues
+        return parameterValues
                 .stream()
-                .map((v) -> parameterValidators.validate(v, queryParameter))
+                .map((v) -> parameterValidators.validate(v, parameter))
                 .reduce(ValidationReport.empty(), ValidationReport::merge);
     }
 

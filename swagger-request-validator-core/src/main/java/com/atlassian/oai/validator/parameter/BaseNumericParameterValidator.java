@@ -6,6 +6,8 @@ import io.swagger.models.parameters.SerializableParameter;
 
 import javax.annotation.Nonnull;
 
+import java.math.BigDecimal;
+
 import static com.google.common.base.MoreObjects.firstNonNull;
 
 public abstract class BaseNumericParameterValidator extends BaseParameterValidator {
@@ -56,15 +58,15 @@ public abstract class BaseNumericParameterValidator extends BaseParameterValidat
     private void validateMinimum(final SerializableParameter parameter,
                                  final MutableValidationReport report,
                                  final Double value) {
-        final Double minimum = parameter.getMinimum();
+        final BigDecimal minimum = parameter.getMinimum();
         final boolean exclusiveMinimum = firstNonNull(parameter.isExclusiveMinimum(), false);
 
         if (parameter.getMinimum() != null) {
-            if (exclusiveMinimum && value <= minimum) {
+            if (exclusiveMinimum && value <= minimum.doubleValue()) {
                 report.add(messages.get("validation.request.parameter.number.belowExclusiveMin",
                     value, parameter.getName(), minimum)
                 );
-            } else if (!exclusiveMinimum && value < minimum) {
+            } else if (!exclusiveMinimum && value < minimum.doubleValue()) {
                 report.add(messages.get("validation.request.parameter.number.belowMin",
                     value, parameter.getName(), minimum)
                 );
@@ -75,15 +77,15 @@ public abstract class BaseNumericParameterValidator extends BaseParameterValidat
     private void validateMaximum(final SerializableParameter parameter,
                                  final MutableValidationReport report,
                                  final Double value) {
-        final Double maximum = parameter.getMaximum();
+        final BigDecimal maximum = parameter.getMaximum();
         final boolean exclusiveMaximum = firstNonNull(parameter.isExclusiveMaximum(), false);
 
         if (parameter.getMaximum() != null) {
-            if (exclusiveMaximum && value >= maximum) {
+            if (exclusiveMaximum && value >= maximum.doubleValue()) {
                 report.add(messages.get("validation.request.parameter.number.aboveExclusiveMax",
                     value, parameter.getName(), maximum)
                 );
-            } else if (!exclusiveMaximum && value > maximum) {
+            } else if (!exclusiveMaximum && value > maximum.doubleValue()) {
                 report.add(messages.get("validation.request.parameter.number.aboveMax",
                     value, parameter.getName(), maximum)
                 );

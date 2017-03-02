@@ -7,7 +7,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -78,6 +77,15 @@ public class SimpleRequest implements Request {
         return Collections.unmodifiableMap(headers);
     }
 
+    @Nonnull
+    @Override
+    public Collection<String> getHeaderValues(final String name) {
+        if (name != null && headers.containsKey(name.toLowerCase())) {
+            return Collections.unmodifiableCollection(headers.get(name.toLowerCase()));
+        }
+        return Collections.emptyList();
+    }
+
     /**
      * A builder for constructing new {@link SimpleRequest} instances.
      */
@@ -87,7 +95,7 @@ public class SimpleRequest implements Request {
         private Method method;
         private String body;
         private Multimap<String, String> queryParams = MultimapBuilder.hashKeys().arrayListValues().build();
-        private Map<String, Collection<String>> headers = new HashMap<>();
+        private Multimap<String, String> headers = MultimapBuilder.hashKeys().arrayListValues().build();
 
         public static Builder get(final String path) {
             return new Builder(Method.GET, path);
@@ -119,8 +127,8 @@ public class SimpleRequest implements Request {
             return this;
         }
 
-        public Builder withHeaders(final Map<String, Collection<String>> headers) {
-            this.headers.putAll(headers);
+        public Builder withHeader(final String name, final String... values) {
+            this.headers.putAll(name.toLowerCase(), asList(values));
             return this;
         }
 
@@ -130,7 +138,7 @@ public class SimpleRequest implements Request {
         }
 
         public SimpleRequest build() {
-            return new SimpleRequest(method, path, body, queryParams.asMap(), headers);
+            return new SimpleRequest(method, path, body, queryParams.asMap(), headers.asMap());
         }
     }
 }

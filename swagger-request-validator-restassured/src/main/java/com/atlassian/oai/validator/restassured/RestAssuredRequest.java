@@ -69,13 +69,22 @@ public class RestAssuredRequest implements Request {
         return emptyList();
     }
 
-    private boolean isGetRequest() {
-        return getMethod() == Method.GET;
-    }
-
     @Nonnull
     @Override
     public Map<String, Collection<String>> getHeaders() {
         return internalRequest.getHeaders().asList().stream().collect(Collectors.toMap(Header::getName, v -> Collections.singleton(v.getValue())));
+    }
+
+    @Nonnull
+    @Override
+    public Collection<String> getHeaderValues(final String name) {
+        if (internalRequest.getHeaders() == null) {
+            return emptyList();
+        }
+        return internalRequest.getHeaders().getValues(name);
+    }
+
+    private boolean isGetRequest() {
+        return getMethod() == Method.GET;
     }
 }
