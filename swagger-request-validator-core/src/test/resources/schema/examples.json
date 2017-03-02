@@ -1,0 +1,30 @@
+{
+  "discriminator-valid": {
+    "name": "Moggy",
+    "petType": "Cat",
+    "huntingSkill": "clueless"
+  },
+  "discriminator-invalid-badDiscriminator": {
+    "name": "Fred",
+    "petType": "Owner"
+  },
+  "discriminator-invalid-missingDiscriminator": {
+    "name": "Fred",
+    "huntingSkill": "clueless"
+  },
+  "discriminator-invalid-emptyDiscriminator": {
+    "name": "Fred",
+    "petType": "",
+    "huntingSkill": "clueless"
+  },
+  "discriminator-invalid-nonStringDiscriminator": {
+    "name": "Fred",
+    "petType": 1,
+    "huntingSkill": "clueless"
+  },
+  "discriminator-invalid-doesntMatchSubSchema": {
+    "name": "Moggy",
+    "petType": "Cat",
+    "huntingSkill": "ruthless"
+  }
+}

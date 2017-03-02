@@ -9,10 +9,7 @@ import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.report.ListProcessingReport;
-import com.github.fge.jsonschema.core.report.ListReportProvider;
-import com.github.fge.jsonschema.core.report.LogLevel;
 import com.github.fge.jsonschema.core.report.ProcessingMessage;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import io.swagger.models.Model;
 import io.swagger.models.Swagger;
 import io.swagger.models.properties.Property;
@@ -24,11 +21,15 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import static com.atlassian.oai.validator.schema.SwaggerV20Library.OAI_V2_METASCHEMA_URI;
+import static com.atlassian.oai.validator.schema.SwaggerV20Library.schemaFactory;
 import static com.atlassian.oai.validator.util.StringUtils.capitalise;
 import static com.atlassian.oai.validator.util.StringUtils.quote;
 import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
@@ -48,8 +49,10 @@ public class SchemaValidator {
     public static final String UNKNOWN_ERROR_KEY = "validation.schema.unknownError";
 
     private static final String ADDITIONAL_PROPERTIES_FIELD = "additionalProperties";
+    private static final String DISCRIMINATOR_FIELD = "discriminator";
     private static final String DEFINITIONS_FIELD = "definitions";
     private static final String ALLOF_FIELD = "allOf";
+    private static final String SCHEMA_REF_FIELD = "$schema";
 
     private final Swagger api;
     private JsonNode definitions;
@@ -111,31 +114,21 @@ public class SchemaValidator {
         requireNonNull(schema, "A schema is required");
 
         final MutableValidationReport validationReport = new MutableValidationReport();
-        ListProcessingReport processingReport = null;
+
         try {
-            final JsonNode schemaObject = Json.mapper().readTree(Json.pretty(schema));
-            setupSchemaDefinitionRefs(schemaObject);
+            final JsonNode schemaObject = readSchema(schema);
+            final JsonNode content = readContent(value, schema);
 
             checkForKnownGotchasAndLogMessage(schemaObject);
 
-            // Only emit ERROR and above from the JSON schema validation
-            final JsonSchemaFactory factory = JsonSchemaFactory.newBuilder()
-                    .setReportProvider(new ListReportProvider(LogLevel.ERROR, LogLevel.FATAL))
-                    .freeze();
+            final ListProcessingReport processingReport =
+                    (ListProcessingReport) schemaFactory().getJsonSchema(schemaObject).validate(content, true);
 
-            final com.github.fge.jsonschema.main.JsonSchema jsonSchema = factory.getJsonSchema(schemaObject);
-
-            String normalisedValue = value;
-            if (schema instanceof StringProperty) {
-                normalisedValue = quote(value);
+            if ((processingReport != null) && !processingReport.isSuccess()) {
+                processingReport.forEach(pm -> addProcessingMessage(validationReport, pm, null));
             }
+            return validationReport;
 
-            final JsonNode content = Json.mapper().readTree(normalisedValue);
-            final JsonNode cleanedContent = content.deepCopy();
-
-            cleanupNullValues(cleanedContent);
-
-            processingReport = (ListProcessingReport) jsonSchema.validate(cleanedContent, true);
         } catch (final JsonParseException e) {
             validationReport.add(messages.get(INVALID_JSON_KEY, e.getMessage()));
             return validationReport;
@@ -146,37 +139,77 @@ public class SchemaValidator {
             validationReport.add(messages.get(UNKNOWN_ERROR_KEY, e.getMessage()));
             return validationReport;
         }
+    }
 
-        if ((processingReport != null) && !processingReport.isSuccess()) {
-            processingReport.forEach(pm -> addProcessingMessage(validationReport, pm, null));
-        }
-        return validationReport;
+    private JsonNode readSchema(@Nonnull final Object schema) throws IOException {
+        final JsonNode schemaObject = Json.mapper().readTree(Json.pretty(schema));
+        setupSchemaDefinitionRefs(schemaObject);
+        return schemaObject;
     }
 
     private void setupSchemaDefinitionRefs(final JsonNode schemaObject) throws IOException {
-        if (schemaObject instanceof ObjectNode && additionalPropertiesValidationEnabled()) {
-            ((ObjectNode) schemaObject).set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
+        final ObjectNode objectNode = (ObjectNode) schemaObject;
+
+        objectNode.put(SCHEMA_REF_FIELD, OAI_V2_METASCHEMA_URI);
+        if (additionalPropertiesValidationEnabled()) {
+            objectNode.set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
         }
 
         if (api != null) {
             if (this.definitions == null) {
                 this.definitions = Json.mapper().readTree(Json.pretty(api.getDefinitions()));
-
-                // Explicitly disable additionalProperties
-                // Calling code can choose what level to emit this failure at using validation.schema.additionalProperties
-                if (additionalPropertiesValidationEnabled()) {
-                    this.definitions.forEach(n -> {
-                        if (!n.has(ADDITIONAL_PROPERTIES_FIELD)) {
+                this.definitions.forEach(n -> {
+                    if (additionalPropertiesValidationEnabled()) {
+                        // Explicitly disable additionalProperties
+                        // Calling code can choose what level to emit this failure at using
+                        // validation.schema.additionalProperties
+                        if (!n.has(ADDITIONAL_PROPERTIES_FIELD) && !n.has(DISCRIMINATOR_FIELD)) {
                             ((ObjectNode) n).set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
                         }
-                        if (n.has(ALLOF_FIELD)) {
-                            this.definitionsContainAllOf = true;
-                        }
-                    });
+                    }
+                    if (n.has(ALLOF_FIELD)) {
+                        this.definitionsContainAllOf = true;
+                    }
+                });
+            }
+            objectNode.set(DEFINITIONS_FIELD, this.definitions);
+        }
+    }
+
+    private JsonNode readContent(@Nonnull final String value, @Nonnull final Object schema) throws IOException {
+        String normalisedValue = value;
+        if (schema instanceof StringProperty) {
+            normalisedValue = quote(value);
+        }
+        return cleanupNullValues(Json.mapper().readTree(normalisedValue));
+    }
+
+    /**
+     * Cleans up null values (except arrays) from the given <code>JsonNode</code> and its sub-nodes.
+     */
+    private JsonNode cleanupNullValues(final JsonNode node) {
+        final JsonNode result = node.deepCopy();
+
+        final Deque<JsonNode> toClean = new ArrayDeque<>();
+        toClean.add(result);
+
+        while (!toClean.isEmpty()) {
+            final JsonNode n = toClean.pop();
+            if (!n.isObject()) {
+                continue;
+            }
+            final Iterator<Map.Entry<String, JsonNode>> fields = n.fields();
+            while (fields.hasNext()) {
+                final Map.Entry<String, JsonNode> field = fields.next();
+                if (field.getValue().isNull()) {
+                    fields.remove();
+                } else if (field.getValue().isObject()) {
+                    toClean.add(field.getValue());
                 }
             }
-            ((ObjectNode) schemaObject).set(DEFINITIONS_FIELD, this.definitions);
         }
+
+        return result;
     }
 
     private boolean additionalPropertiesValidationEnabled() {
@@ -215,22 +248,4 @@ public class SchemaValidator {
         validationReport.add(messages.create("validation.schema." + validationKeyword, message, subReports.toArray(new String[0])));
     }
 
-    /**
-     * Method cleans up null values (except arrays) from given <code>JsonNode</code>.
-     * Mutates the argument, use with caution!
-     * @param node
-     */
-    private void cleanupNullValues(final JsonNode node) {
-        if (node.isObject()) {
-            final Iterator<Map.Entry<String, JsonNode>> entries = node.fields();
-            while (entries.hasNext()) {
-                final Map.Entry<String, JsonNode> entry = entries.next();
-                if (entry.getValue().isNull()) {
-                    entries.remove();
-                } else {
-                    cleanupNullValues(entry.getValue());
-                }
-            }
-        }
-    }
 }

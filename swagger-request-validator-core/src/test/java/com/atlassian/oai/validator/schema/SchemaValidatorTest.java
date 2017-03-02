@@ -217,6 +217,28 @@ public class SchemaValidatorTest {
         assertPass(classUnderTest.validate(value, schema));
     }
 
+    @Test
+    public void validate_withDiscriminator_shouldPass_whenValid() {
+
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/api-discriminator.yaml");
+        final Model schema = new RefModel("#/definitions/Pet");
+        final String value = "{\"name\": \"Moggy\", \"petType\": \"Cat\", \"huntingSkill\":\"clueless\"}";
+
+        assertPass(classUnderTest.validate(value, schema));
+
+    }
+
+    @Test
+    public void validate_withDiscriminator_shouldFail_whenInvalid() {
+
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/api-discriminator.yaml");
+        final Model schema = new RefModel("#/definitions/Pet");
+        final String value = "{\"name\": \"Moggy\", \"petType\": \"Cat\", \"huntingSkill\":\"ruthless\"}";
+
+        assertFail(classUnderTest.validate(value, schema), "validation.schema.discriminator");
+
+    }
+
     private SchemaValidator validatorWithAdditionalPropertiesIgnored(final String api) {
         return new SchemaValidator(
                 new SwaggerParser().read(api),
