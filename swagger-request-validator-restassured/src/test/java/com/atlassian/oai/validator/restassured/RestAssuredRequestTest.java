@@ -37,6 +37,7 @@ public class RestAssuredRequestTest {
                 .port(wireMock.port())
                 .filter(requestCaptor)
         .when()
+                .header("X-My-Header", "foo", "bar")
                 .get("/path")
         .then()
                 .assertThat()
@@ -46,6 +47,9 @@ public class RestAssuredRequestTest {
         assertThat(classUnderTest.getPath(), is("/path"));
         assertThat(classUnderTest.getMethod(), is(Request.Method.GET));
         assertThat(classUnderTest.getBody().isPresent(), is(false));
+        assertThat(classUnderTest.getHeaderValues("x-my-header"), contains("foo", "bar"));
+        assertThat(classUnderTest.getHeaderValue("x-my-HEADER").isPresent(), is(true));
+        assertThat(classUnderTest.getHeaderValue("not-a-header").isPresent(), is(false));
     }
 
     @Test

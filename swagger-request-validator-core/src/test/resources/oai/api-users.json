@@ -228,13 +228,28 @@
           "required": true,
           "type": "string",
           "enum": ["deep", "shallow"]
+        }, {
+          "name": "x-max-timeout",
+          "in": "header",
+          "description": "How long to wait for downstream to response",
+          "required": false,
+          "type": "integer",
+          "format": "int32"
         }],
         "responses": {
           "200": {
             "description": "Everything is ok"
           },
           "500": {
-            "description": "Healthcheck failed"
+            "description": "Healthcheck failed",
+            "headers": {
+              "X-Failure-Code": {
+                "description": "Characterisation of the healthcheck failure.",
+                "type":  "integer",
+                "minimum": 0.0,
+                "required": true
+              }
+            }
           }
         }
       }
