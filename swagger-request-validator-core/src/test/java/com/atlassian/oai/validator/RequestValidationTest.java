@@ -30,6 +30,7 @@ public class RequestValidationTest {
         final Request request = SimpleRequest.Builder.get("/users/1").build();
 
         assertPass(classUnderTest.validate(request, validUserResponse));
+        assertPass(classUnderTest.validateRequest(request));
     }
 
     @Test
@@ -39,6 +40,8 @@ public class RequestValidationTest {
 
         assertFail(classUnderTest.validate(request, response),
                 "validation.request.parameter.invalidFormat");
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.parameter.invalidFormat");
     }
 
     @Test
@@ -46,6 +49,8 @@ public class RequestValidationTest {
         final Request request = SimpleRequest.Builder.patch("/users/1").build();
 
         assertFail(classUnderTest.validate(request, okResponse),
+                "validation.request.operation.notAllowed");
+        assertFail(classUnderTest.validateRequest(request),
                 "validation.request.operation.notAllowed");
     }
 
@@ -55,6 +60,8 @@ public class RequestValidationTest {
 
         assertFail(classUnderTest.validate(request, okResponse),
                 "validation.request.body.missing");
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.body.missing");
     }
 
     @Test
@@ -62,6 +69,7 @@ public class RequestValidationTest {
         final String formData = "fmail=abc%40gmail.com";
         final Request request = SimpleRequest.Builder.put("/users/1").withBody(formData).build();
         assertFail(classUnderTest.validate(request, validUserResponse), "validation.request.parameter.missing");
+        assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.missing");
     }
 
     @Test
@@ -69,6 +77,7 @@ public class RequestValidationTest {
         final Request request = SimpleRequest.Builder.post("/users").withBody(loadRequest("newuser-valid")).build();
 
         assertPass(classUnderTest.validate(request, validUserResponse));
+        assertPass(classUnderTest.validateRequest(request));
     }
 
     @Test
@@ -76,6 +85,7 @@ public class RequestValidationTest {
         final String formData = "email=abc%40gmail.com";
         final Request request = SimpleRequest.Builder.put("/users/1").withBody(formData).build();
         assertPass(classUnderTest.validate(request, validUserResponse));
+        assertPass(classUnderTest.validateRequest(request));
     }
 
     @Test
@@ -83,6 +93,8 @@ public class RequestValidationTest {
         final String formData = "email=abc%40gmail.com&email=";
         final Request request = SimpleRequest.Builder.put("/users/1").withBody(formData).build();
         assertFail(classUnderTest.validate(request, validUserResponse),
+                "validation.request.parameter.missing");
+        assertFail(classUnderTest.validateRequest(request),
                 "validation.request.parameter.missing");
     }
 
@@ -95,6 +107,8 @@ public class RequestValidationTest {
 
         assertFail(classUnderTest.validate(request, validUserResponse),
                 "validation.schema.required");
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.schema.required");
     }
 
     @Test
@@ -102,6 +116,8 @@ public class RequestValidationTest {
         final String formData = "malformed-form-url-encoded";
         final Request request = SimpleRequest.Builder.put("/users/1").withBody(formData).build();
         assertFail(classUnderTest.validate(request, validUserResponse),
+                "validation.request.parameter.missing");
+        assertFail(classUnderTest.validateRequest(request),
                 "validation.request.parameter.missing");
     }
 
@@ -112,6 +128,7 @@ public class RequestValidationTest {
                 .withHeader("Authorization", "Bearer mytoken")
                 .build();
         assertPass(classUnderTest.validate(request, validUserResponse));
+        assertPass(classUnderTest.validateRequest(request));
     }
 
     @Test
@@ -119,18 +136,23 @@ public class RequestValidationTest {
         final Request request = SimpleRequest.Builder.get("/secure/users/1").build();
         assertFail(classUnderTest.validate(request, validUserResponse),
                 "validation.request.security.missing");
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.security.missing");
     }
 
     @Test
     public void validate_authorizationQueryParamIsChecked_shouldPass() {
         final Request request = SimpleRequest.Builder.put("/secure/users/1").withQueryParam("authorization", "token").build();
         assertPass(classUnderTest.validate(request, validUserResponse));
+        assertPass(classUnderTest.validateRequest(request));
     }
 
     @Test
     public void validate_authorizationQueryParamIsChecked_shouldFail() {
         final Request request = SimpleRequest.Builder.put("/secure/users/1").build();
         assertFail(classUnderTest.validate(request, validUserResponse),
+                "validation.request.security.missing");
+        assertFail(classUnderTest.validateRequest(request),
                 "validation.request.security.missing");
     }
 
@@ -140,6 +162,8 @@ public class RequestValidationTest {
 
         assertFail(classUnderTest.validate(request, validUsersResponse),
                 "validation.request.body.unexpected");
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.body.unexpected");
     }
 
     @Test
@@ -147,6 +171,7 @@ public class RequestValidationTest {
         final Request request = SimpleRequest.Builder.get("/users").withQueryParam("maxCount", "10").build();
 
         assertPass(classUnderTest.validate(request, validUsersResponse));
+        assertPass(classUnderTest.validateRequest(request));
     }
 
     @Test
@@ -155,6 +180,8 @@ public class RequestValidationTest {
 
         assertFail(classUnderTest.validate(request, validUsersResponse),
                 "validation.request.parameter.invalidFormat");
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.parameter.invalidFormat");
     }
 
     @Test
@@ -162,6 +189,7 @@ public class RequestValidationTest {
         final Request request = SimpleRequest.Builder.get("/users").build();
 
         assertPass(classUnderTest.validate(request, validUsersResponse));
+        assertPass(classUnderTest.validateRequest(request));
     }
 
     @Test
@@ -169,6 +197,7 @@ public class RequestValidationTest {
         final Request request = SimpleRequest.Builder.get("/users").withQueryParam("filter", "1,2,3").build();
 
         assertPass(classUnderTest.validate(request, validUsersResponse));
+        assertPass(classUnderTest.validateRequest(request));
     }
 
     @Test
@@ -176,6 +205,7 @@ public class RequestValidationTest {
         final Request request = SimpleRequest.Builder.get("/users").withQueryParam("filter", "1,\"bob\",3").build();
 
         assertFail(classUnderTest.validate(request, validUsersResponse), "validation.schema.type");
+        assertFail(classUnderTest.validateRequest(request), "validation.schema.type");
     }
 
     @Test
@@ -186,6 +216,7 @@ public class RequestValidationTest {
                 .build();
 
         assertPass(classUnderTest.validate(request, validUsersResponse));
+        assertPass(classUnderTest.validateRequest(request));
     }
 
     @Test
@@ -193,6 +224,7 @@ public class RequestValidationTest {
         final Request request = SimpleRequest.Builder.get("/healthcheck").build();
 
         assertFail(classUnderTest.validate(request, okResponse), "validation.request.parameter.query.missing");
+        assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.query.missing");
     }
 
     @Test
@@ -200,6 +232,7 @@ public class RequestValidationTest {
         final Request request = SimpleRequest.Builder.get("/healthcheck").withQueryParam("type", "deep").build();
 
         assertPass(classUnderTest.validate(request, okResponse));
+        assertPass(classUnderTest.validateRequest(request));
     }
 
     @Test
@@ -210,6 +243,7 @@ public class RequestValidationTest {
                 .build();
 
         assertPass(classUnderTest.validate(request, validUserResponse));
+        assertPass(classUnderTest.validateRequest(request));
     }
 
     @Test
@@ -221,6 +255,7 @@ public class RequestValidationTest {
                 .build();
 
         assertPass(classUnderTest.validate(request, validUserResponse));
+        assertPass(classUnderTest.validateRequest(request));
     }
 
     @Test
@@ -232,6 +267,7 @@ public class RequestValidationTest {
                 .build();
 
         assertPass(classUnderTest.validate(request, okResponse));
+        assertPass(classUnderTest.validateRequest(request));
     }
 
     @Test
@@ -243,6 +279,8 @@ public class RequestValidationTest {
                 .build();
 
         assertFail(classUnderTest.validate(request, validUserResponse),
+                "validation.request.contentType.notAllowed");
+        assertFail(classUnderTest.validateRequest(request),
                 "validation.request.contentType.notAllowed");
     }
 
@@ -256,6 +294,8 @@ public class RequestValidationTest {
 
         assertFail(classUnderTest.validate(request, validUserResponse),
                 "validation.request.contentType.invalid");
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.contentType.invalid");
     }
 
     @Test
@@ -267,6 +307,7 @@ public class RequestValidationTest {
                 .build();
 
         assertPass(classUnderTest.validate(request, validUserResponse));
+        assertPass(classUnderTest.validateRequest(request));
     }
 
     @Test
@@ -278,6 +319,7 @@ public class RequestValidationTest {
                 .build();
 
         assertPass(classUnderTest.validate(request, validUserResponse));
+        assertPass(classUnderTest.validateRequest(request));
     }
 
     @Test
@@ -289,6 +331,7 @@ public class RequestValidationTest {
                 .build();
 
         assertPass(classUnderTest.validate(request, validUserResponse));
+        assertPass(classUnderTest.validateRequest(request));
     }
 
     @Test
@@ -300,6 +343,8 @@ public class RequestValidationTest {
                 .build();
 
         assertFail(classUnderTest.validate(request, validUserResponse),
+                "validation.request.accept.notAllowed");
+        assertFail(classUnderTest.validateRequest(request),
                 "validation.request.accept.notAllowed");
     }
 
@@ -313,6 +358,8 @@ public class RequestValidationTest {
 
         assertFail(classUnderTest.validate(request, validUserResponse),
                 "validation.request.accept.notAllowed");
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.accept.notAllowed");
     }
 
     @Test
@@ -325,6 +372,8 @@ public class RequestValidationTest {
 
         assertFail(classUnderTest.validate(request, validUserResponse),
                 "validation.request.accept.invalid");
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.accept.invalid");
     }
 
     @Test
@@ -336,6 +385,7 @@ public class RequestValidationTest {
                 .build();
 
         assertPass(classUnderTest.validate(request, validUserResponse));
+        assertPass(classUnderTest.validateRequest(request));
     }
 
     @Test
@@ -347,6 +397,8 @@ public class RequestValidationTest {
                 .build();
 
         assertFail(classUnderTest.validate(request, validUserResponse),
+                "validation.request.parameter.invalidFormat");
+        assertFail(classUnderTest.validateRequest(request),
                 "validation.request.parameter.invalidFormat");
     }
 

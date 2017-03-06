@@ -8,7 +8,6 @@ import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.MessageResolver;
-import com.atlassian.oai.validator.report.MutableValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.SchemaValidator;
 import io.swagger.models.HttpMethod;
@@ -22,6 +21,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -117,31 +117,81 @@ public class SwaggerRequestResponseValidator {
         requireNonNull(request, "A request is required");
         requireNonNull(response, "A response is required");
 
-        final MutableValidationReport validationReport = new MutableValidationReport();
+        return validateOnApiOperation(request.getPath(), request.getMethod(),
+            apiOperation -> validateRequest(request, apiOperation)
+                    .merge(responseValidator.validateResponse(response, apiOperation))
+        );
+    }
 
+    /**
+     * Validate the given request against the API.
+     * <p>
+     * See class docs for more information on the validation performed.
+     *
+     * @param request The request to validate (required)
+     * @return The outcome of the request validation
+     */
+    @Nonnull
+    public ValidationReport validateRequest(@Nonnull final Request request) {
+        requireNonNull(request, "A request is required");
+
+        return validateOnApiOperation(request.getPath(), request.getMethod(),
+            apiOperation -> validateRequest(request, apiOperation)
+        );
+    }
+
+    /**
+     * Validate the given response against the API.
+     * <p>
+     * See class docs for more information on the validation performed.
+     *
+     * @param path     The request path (required)
+     * @param method   The request method (required)
+     * @param response The response to validate (required)
+     * @return The outcome of the response validation
+     */
+    @Nonnull
+    public ValidationReport validateResponse(@Nonnull final String path, @Nonnull final Request.Method method,
+                                             @Nonnull final Response response) {
+        requireNonNull(path, "A path is required");
+        requireNonNull(method, "A method is required");
+        requireNonNull(response, "A response is required");
+
+        return validateOnApiOperation(path, method,
+            apiOperation -> responseValidator.validateResponse(response, apiOperation)
+        );
+    }
+
+    private ValidationReport validateRequest(@Nonnull final Request request, @Nonnull final ApiOperation apiOperation) {
         final NormalisedPath requestPath = new ApiBasedNormalisedPath(request.getPath());
+        return requestValidator.validateRequest(requestPath, request, apiOperation);
+    }
+
+    private ValidationReport validateOnApiOperation(@Nonnull final String path, @Nonnull final Request.Method method,
+                                                    @Nonnull final Function<ApiOperation, ValidationReport> validationFunction) {
+        final NormalisedPath requestPath = new ApiBasedNormalisedPath(path);
 
         final Optional<NormalisedPath> maybeApiPath = findMatchingApiPath(requestPath);
         if (!maybeApiPath.isPresent()) {
-            return validationReport.add(messages.get("validation.request.path.missing", request.getPath()));
+            return ValidationReport.singleton(
+                    messages.get("validation.request.path.missing", path)
+            );
         }
 
         final NormalisedPath apiPathString = maybeApiPath.get();
         final Path apiPath = api.getPath(apiPathString.original());
 
-        final HttpMethod httpMethod = HttpMethod.valueOf(request.getMethod().name());
+        final HttpMethod httpMethod = HttpMethod.valueOf(method.name());
         final Operation operation = apiPath.getOperationMap().get(httpMethod);
         if (operation == null) {
-            return validationReport.add(messages.get("validation.request.operation.notAllowed",
-                    request.getMethod(), apiPathString.original())
+            return ValidationReport.singleton(
+                    messages.get("validation.request.operation.notAllowed", method, apiPathString.original())
             );
         }
 
-        final ApiOperation apiOperation = new ApiOperation(apiPathString, apiPath, httpMethod, operation);
-
-        return validationReport
-                .merge(requestValidator.validateRequest(requestPath, request, apiOperation))
-                .merge(responseValidator.validateResponse(response, apiOperation));
+        return validationFunction.apply(
+                new ApiOperation(apiPathString, apiPath, httpMethod, operation)
+        );
     }
 
     @Nonnull
