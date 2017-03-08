@@ -28,6 +28,8 @@ public class ResponseValidationTest {
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-invalid-missingrequired")).build();
 
         assertFail(classUnderTest.validate(getUserRequest, response), "validation.schema.required");
+        assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
+                "validation.schema.required");
     }
 
     @Test
@@ -35,6 +37,8 @@ public class ResponseValidationTest {
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-invalid-additionalproperties")).build();
 
         assertFail(classUnderTest.validate(getUserRequest, response), "validation.schema.additionalProperties");
+        assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
+                "validation.schema.additionalProperties");
     }
 
     @Test
@@ -42,6 +46,8 @@ public class ResponseValidationTest {
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-invalid-baddataformat")).build();
 
         assertFail(classUnderTest.validate(getUserRequest, response), "validation.schema.type");
+        assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
+                "validation.schema.type");
     }
 
     @Test
@@ -49,6 +55,8 @@ public class ResponseValidationTest {
         final Response response = SimpleResponse.Builder.ok().build();
 
         assertFail(classUnderTest.validate(getUserRequest, response), "validation.response.body.missing");
+        assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
+                "validation.response.body.missing");
     }
 
     @Test
@@ -56,6 +64,8 @@ public class ResponseValidationTest {
         final Response response = SimpleResponse.Builder.ok().withBody("").build();
 
         assertFail(classUnderTest.validate(getUserRequest, response), "validation.response.body.missing");
+        assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
+                "validation.response.body.missing");
     }
 
     @Test
@@ -63,6 +73,8 @@ public class ResponseValidationTest {
         final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-invalid-malformedjson")).build();
 
         assertFail(classUnderTest.validate(getUserRequest, response), "validation.schema.invalidJson");
+        assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
+                "validation.schema.invalidJson");
     }
 
     @Test
@@ -70,6 +82,8 @@ public class ResponseValidationTest {
         final Response response = SimpleResponse.Builder.notFound().withBody(loadResponse("user-valid")).build();
 
         assertFail(classUnderTest.validate(getUserRequest, response), "validation.schema.required");
+        assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
+                "validation.schema.required");
     }
 
     @Test
@@ -77,6 +91,8 @@ public class ResponseValidationTest {
         final Response response = SimpleResponse.Builder.status(666).build();
 
         assertFail(classUnderTest.validate(getUserRequest, response), "validation.response.status.unknown");
+        assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
+                "validation.response.status.unknown");
     }
 
     @Test
@@ -84,6 +100,7 @@ public class ResponseValidationTest {
         final Response response = SimpleResponse.Builder.status(666).withBody(loadResponse("error-valid")).build();
 
         assertPass(classUnderTest.validate(getUsersRequest, response));
+        assertPass(classUnderTest.validateResponse("/users", Request.Method.GET, response));
     }
 
     @Test
@@ -95,6 +112,7 @@ public class ResponseValidationTest {
                 .build();
 
         assertPass(classUnderTest.validate(getUsersRequest, response));
+        assertPass(classUnderTest.validateResponse("/users", Request.Method.GET, response));
     }
 
     @Test
@@ -106,6 +124,8 @@ public class ResponseValidationTest {
                 .build();
 
         assertFail(classUnderTest.validate(getUsersRequest, response),
+                "validation.response.contentType.notAllowed");
+        assertFail(classUnderTest.validateResponse("/users", Request.Method.GET, response),
                 "validation.response.contentType.notAllowed");
     }
 
@@ -119,6 +139,8 @@ public class ResponseValidationTest {
 
         assertFail(classUnderTest.validate(getUsersRequest, response),
                 "validation.response.contentType.invalid");
+        assertFail(classUnderTest.validateResponse("/users", Request.Method.GET, response),
+                "validation.response.contentType.invalid");
     }
 
     @Test
@@ -129,6 +151,7 @@ public class ResponseValidationTest {
                 .build();
 
         assertPass(classUnderTest.validate(healthcheckRequest, response));
+        assertPass(classUnderTest.validateResponse("/healthcheck", Request.Method.GET, response));
     }
 
     @Test
@@ -140,6 +163,8 @@ public class ResponseValidationTest {
 
         assertFail(classUnderTest.validate(healthcheckRequest, response),
                 "validation.schema.type");
+        assertFail(classUnderTest.validateResponse("/healthcheck", Request.Method.GET, response),
+                "validation.schema.type");
     }
 
     @Test
@@ -150,6 +175,8 @@ public class ResponseValidationTest {
                 .build();
 
         assertFail(classUnderTest.validate(healthcheckRequest, response),
+                "validation.response.header.missing");
+        assertFail(classUnderTest.validateResponse("/healthcheck", Request.Method.GET, response),
                 "validation.response.header.missing");
     }
 
