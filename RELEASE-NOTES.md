@@ -1,3 +1,8 @@
+# v1.0.11
+
+* Added ability to validate requests/responses independently
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/23)
+
 # v1.0.10
 
 * Added support for request and response header validation 
