@@ -7,6 +7,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -127,14 +128,22 @@ public class SimpleRequest implements Request {
             return this;
         }
 
+        public Builder withHeader(final String name, final List<String> values) {
+            this.headers.putAll(name.toLowerCase(), values);
+            return this;
+        }
+
         public Builder withHeader(final String name, final String... values) {
-            this.headers.putAll(name.toLowerCase(), asList(values));
+            return withHeader(name, asList(values));
+        }
+
+        public Builder withQueryParam(final String name, final List<String> values) {
+            queryParams.putAll(name.toLowerCase(), values);
             return this;
         }
 
         public Builder withQueryParam(final String name, final String... values) {
-            queryParams.putAll(name.toLowerCase(), asList(values));
-            return this;
+            return withQueryParam(name, asList(values));
         }
 
         public SimpleRequest build() {
