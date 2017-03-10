@@ -69,66 +69,57 @@ public class ArrayParameterValidator extends BaseParameterValidator {
     @Override
     @Nonnull
     public ValidationReport validate(@Nullable final String value, @Nullable final Parameter p) {
-        final MutableValidationReport report = new MutableValidationReport();
-
         if (!supports(p)) {
-            return report;
+            return ValidationReport.EMPTY_REPORT;
         }
 
         final SerializableParameter parameter = (SerializableParameter) p;
 
         if (parameter.getRequired() && (value == null || value.trim().isEmpty())) {
-            return report.add(messages.get("validation.request.parameter.missing", parameter.getName()));
+            return ValidationReport.singleton(messages.get("validation.request.parameter.missing", parameter.getName()));
         }
 
         if (value == null || value.trim().isEmpty()) {
-            return report;
+            return ValidationReport.EMPTY_REPORT;
         }
 
-        doValidate(value, parameter, report);
-        return report;
+        return doValidate(value, parameter);
     }
 
     public ValidationReport validate(@Nullable final Collection<String> values, @Nullable final Parameter p) {
-        final MutableValidationReport report = new MutableValidationReport();
         if (p == null) {
-            return report;
+            return ValidationReport.EMPTY_REPORT;
         }
 
         final SerializableParameter parameter = (SerializableParameter) p;
         if (parameter.getRequired() && (values == null || values.isEmpty())) {
-            return report.add(messages.get("validation.request.parameter.missing", parameter.getName()));
+            return ValidationReport.singleton(messages.get("validation.request.parameter.missing", parameter.getName()));
         }
 
         if (values == null) {
-            return report;
+            return ValidationReport.EMPTY_REPORT;
         }
 
         if (!parameter.getCollectionFormat().equalsIgnoreCase(CollectionFormat.MULTI.name())) {
-            return report.add(messages.get("validation.request.parameter.collection.invalidFormat",
+            return ValidationReport.singleton(messages.get("validation.request.parameter.collection.invalidFormat",
                     p.getName(), parameter.getCollectionFormat(), "multi")
             );
         }
 
-        doValidate(values, parameter, report);
-        return report;
+        return doValidate(values, parameter);
     }
 
     @Override
-    protected void doValidate(@Nonnull final String value,
-                              @Nonnull final SerializableParameter parameter,
-                              @Nonnull final MutableValidationReport validationReport) {
+    protected ValidationReport doValidate(@Nonnull final String value,
+                                          @Nonnull final SerializableParameter parameter) {
 
-        doValidate(CollectionFormat.from(parameter).split(value),
-                parameter,
-                validationReport);
-
+        return doValidate(CollectionFormat.from(parameter).split(value), parameter);
     }
 
-    private void doValidate(@Nonnull final Collection<String> values,
-                            @Nonnull final SerializableParameter parameter,
-                            @Nonnull final MutableValidationReport validationReport) {
+    private ValidationReport doValidate(@Nonnull final Collection<String> values,
+                                        @Nonnull final SerializableParameter parameter) {
 
+        final MutableValidationReport validationReport = new MutableValidationReport();
         if (parameter.getMaxItems() != null && values.size() > parameter.getMaxItems()) {
             validationReport.add(messages.get("validation.request.parameter.collection.tooManyItems",
                     parameter.getName(), parameter.getMaxItems(), values.size())
@@ -157,10 +148,11 @@ public class ArrayParameterValidator extends BaseParameterValidator {
                                 v, parameter.getName(), parameter.getEnum())
                         );
                     });
-            return;
+            return validationReport;
         }
 
         values.forEach(v ->
                 validationReport.addAll(schemaValidator.validate(v, parameter.getItems())));
+        return validationReport;
     }
 }

@@ -4,12 +4,15 @@ import com.atlassian.oai.validator.report.MessageResolver;
 import io.swagger.models.properties.IntegerProperty;
 import org.junit.Test;
 
+import java.util.Collection;
+
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.arrayParam;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.enumeratedArrayParam;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.intArrayParam;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.stringArrayParam;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.stringParam;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
@@ -54,6 +57,11 @@ public class ArrayParameterValidatorTest {
     }
 
     @Test
+    public void validate_withValue_shouldPass_whenUnsupportedParameter() {
+        assertPass(classUnderTest.validate("value", stringParam()));
+    }
+
+    @Test
     public void validate_withEmptyValue_shouldFail_whenRequired() {
         assertFail(classUnderTest.validate("", intArrayParam(true, "csv")),
                 "validation.request.parameter.missing");
@@ -93,6 +101,11 @@ public class ArrayParameterValidatorTest {
     }
 
     @Test
+    public void validate_withCollection_shouldPass_whenParamterMissing() {
+        assertPass(classUnderTest.validate(asList("value"), null));
+    }
+
+    @Test
     public void validate_withEmptyCollection_shouldFail_whenRequired() {
         assertFail(classUnderTest.validate(emptyList(), intArrayParam(true, "multi")),
                 "validation.request.parameter.missing");
@@ -101,6 +114,11 @@ public class ArrayParameterValidatorTest {
     @Test
     public void validate_withEmptyCollection_shouldPass_whenNotRequired() {
         assertPass(classUnderTest.validate(emptyList(), intArrayParam(false, "multi")));
+    }
+
+    @Test
+    public void validate_withNull_shouldPass_whenNotRequired() {
+        assertPass(classUnderTest.validate((Collection) null, intArrayParam(false, "multi")));
     }
 
     @Test

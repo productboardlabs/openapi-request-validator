@@ -9,6 +9,7 @@ import org.junit.Test;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.stringParam;
+import static java.util.Arrays.asList;
 
 public class StringParameterValidatorTest {
 
@@ -39,6 +40,20 @@ public class StringParameterValidatorTest {
     @Test
     public void validate_withEmptyValue_shouldFail_whenRequired() {
         assertFail(classUnderTest.validate("", stringParam(true)), "validation.request.parameter.missing");
+    }
+
+    @Test
+    public void validate_withEnum_shouldPass_whenMatching() {
+        parameter.setEnum(asList("Enum-1", "Enum-2", "Enum-3"));
+        assertPass(classUnderTest.validate("Enum-2", parameter));
+    }
+
+    @Test
+    public void validate_withEnum_shouldFail_whenNotMatching() {
+        parameter.setEnum(asList("Enum-1", "Enum-2", "Enum-3"));
+        assertFail(classUnderTest.validate("Unknown", parameter), "validation.request.parameter.enum.invalid");
+        // case sensitive match necessary
+        assertFail(classUnderTest.validate("ENUM-1", parameter), "validation.request.parameter.enum.invalid");
     }
 
     @Test
@@ -99,5 +114,11 @@ public class StringParameterValidatorTest {
     public void validate_withDateTimeFormat_shouldPass_whenAValidISODate() {
         parameter.setFormat("date-time");
         assertPass(classUnderTest.validate("2016-09-28T11:22:33.111Z", parameter));
+    }
+
+    @Test
+    public void validate_withUnsupportedFormat_shouldPass() {
+        parameter.setFormat("unsupported");
+        assertPass(classUnderTest.validate("should-pass", parameter));
     }
 }

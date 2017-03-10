@@ -6,6 +6,7 @@ import com.atlassian.oai.validator.parameter.format.FormatValidator;
 import com.atlassian.oai.validator.parameter.format.NoOpStringFormatValidator;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.MutableValidationReport;
+import com.atlassian.oai.validator.report.ValidationReport;
 import io.swagger.models.parameters.SerializableParameter;
 
 import javax.annotation.Nonnull;
@@ -32,11 +33,11 @@ public class StringParameterValidator extends BaseParameterValidator {
     }
 
     @Override
-    protected void doValidate(
+    protected ValidationReport doValidate(
             @Nonnull final String value,
-            @Nonnull final SerializableParameter parameter,
-            @Nonnull final MutableValidationReport report) {
+            @Nonnull final SerializableParameter parameter) {
 
+        final MutableValidationReport report = new MutableValidationReport();
         if (parameter.getPattern() != null && !value.matches(parameter.getPattern())) {
             report.add(messages.get("validation.request.parameter.string.patternMismatch",
                 parameter.getName(), parameter.getPattern())
@@ -55,12 +56,11 @@ public class StringParameterValidator extends BaseParameterValidator {
             );
         }
 
-        validateFormatIfPresent(value, parameter, report);
+        return report.merge(validateFormatIfPresent(value, parameter));
     }
 
-    private void validateFormatIfPresent(@Nonnull final String value,
-                                         @Nonnull final SerializableParameter parameter,
-                                         @Nonnull final MutableValidationReport report) {
+    private ValidationReport validateFormatIfPresent(@Nonnull final String value,
+                                                     @Nonnull final SerializableParameter parameter) {
 
         if (parameter.getFormat() != null) {
             final FormatValidator<String> formatValidator = formatValidators.stream()
@@ -68,7 +68,8 @@ public class StringParameterValidator extends BaseParameterValidator {
                     .findFirst()
                     .orElse(new NoOpStringFormatValidator());
 
-            formatValidator.validate(report, value);
+            return formatValidator.validate(value);
         }
+        return ValidationReport.empty();
     }
 }

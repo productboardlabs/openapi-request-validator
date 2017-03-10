@@ -1,6 +1,6 @@
 package com.atlassian.oai.validator.parameter.format;
 
-import com.atlassian.oai.validator.report.MutableValidationReport;
+import com.atlassian.oai.validator.report.ValidationReport;
 
 public class NoOpStringFormatValidator implements FormatValidator<String> {
 
@@ -10,5 +10,7 @@ public class NoOpStringFormatValidator implements FormatValidator<String> {
     }
 
     @Override
-    public void validate(final MutableValidationReport report, final String value) { }
+    public ValidationReport validate(final String value) {
+        return ValidationReport.empty();
+    }
 }

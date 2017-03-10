@@ -1,7 +1,7 @@
 package com.atlassian.oai.validator.parameter.format;
 
 import com.atlassian.oai.validator.report.MessageResolver;
-import com.atlassian.oai.validator.report.MutableValidationReport;
+import com.atlassian.oai.validator.report.ValidationReport;
 
 import javax.annotation.Nonnull;
 import java.time.format.DateTimeFormatter;
@@ -16,14 +16,14 @@ public abstract class BaseDateFormatValidator implements FormatValidator<String>
     }
 
     @Override
-    public void validate(@Nonnull final MutableValidationReport report,
-                         @Nonnull final String value) {
+    public ValidationReport validate(@Nonnull final String value) {
         final DateTimeFormatter dateFormatter = getFormatter();
         try {
             dateFormatter.parse(value);
         } catch (final DateTimeParseException e) {
-            report.add(messages.get("validation.request.parameter.string." + getMessageKey() + ".invalid", value));
+            return ValidationReport.singleton(messages.get("validation.request.parameter.string." + getMessageKey() + ".invalid", value));
         }
+        return ValidationReport.empty();
     }
 
     protected abstract String getMessageKey();

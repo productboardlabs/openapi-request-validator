@@ -6,6 +6,7 @@ import org.junit.Test;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.floatParam;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.doubleParam;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.intParam;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.stringParam;
 
@@ -29,8 +30,13 @@ public class ParameterValidatorsTest {
     }
 
     @Test
-    public void validate_withValidNumberParam_shouldPass() {
+    public void validate_withValidFloatParam_shouldPass() {
         assertPass(parameterValidators.validate("1.0", floatParam()));
+    }
+
+    @Test
+    public void validate_withValidDoubleParam_shouldPass() {
+        assertPass(parameterValidators.validate("1.0", doubleParam()));
     }
 
     @Test
