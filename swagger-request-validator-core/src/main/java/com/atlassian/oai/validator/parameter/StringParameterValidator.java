@@ -5,12 +5,12 @@ import com.atlassian.oai.validator.parameter.format.DateTimeFormatValidator;
 import com.atlassian.oai.validator.parameter.format.FormatValidator;
 import com.atlassian.oai.validator.parameter.format.NoOpStringFormatValidator;
 import com.atlassian.oai.validator.report.MessageResolver;
-import com.atlassian.oai.validator.report.MutableValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport;
 import io.swagger.models.parameters.SerializableParameter;
 
 import javax.annotation.Nonnull;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
 
@@ -33,30 +33,45 @@ public class StringParameterValidator extends BaseParameterValidator {
     }
 
     @Override
-    protected ValidationReport doValidate(
-            @Nonnull final String value,
-            @Nonnull final SerializableParameter parameter) {
+    protected ValidationReport doValidate(@Nonnull final String value,
+                                          @Nonnull final SerializableParameter parameter) {
 
-        final MutableValidationReport report = new MutableValidationReport();
+        return Stream.of(
+                validatePattern(value, parameter),
+                validateMaxLength(value, parameter),
+                validateMinLength(value, parameter),
+                validateFormatIfPresent(value, parameter)
+        ).reduce(ValidationReport.empty(), ValidationReport::merge);
+    }
+
+    private ValidationReport validatePattern(@Nonnull final String value,
+                                             @Nonnull final SerializableParameter parameter) {
         if (parameter.getPattern() != null && !value.matches(parameter.getPattern())) {
-            report.add(messages.get("validation.request.parameter.string.patternMismatch",
+            return ValidationReport.singleton(messages.get("validation.request.parameter.string.patternMismatch",
                 parameter.getName(), parameter.getPattern())
             );
         }
+        return ValidationReport.empty();
+    }
 
+    private ValidationReport validateMaxLength(@Nonnull final String value,
+                                               @Nonnull final SerializableParameter parameter) {
         if (parameter.getMinLength() != null && value.length() < parameter.getMinLength()) {
-            report.add(messages.get("validation.request.parameter.string.tooShort",
+            return ValidationReport.singleton(messages.get("validation.request.parameter.string.tooShort",
                 parameter.getName(), parameter.getMinLength())
             );
         }
+        return ValidationReport.empty();
+    }
 
+    private ValidationReport validateMinLength(@Nonnull final String value,
+                                               @Nonnull final SerializableParameter parameter) {
         if (parameter.getMaxLength() != null && value.length() > parameter.getMaxLength()) {
-            report.add(messages.get("validation.request.parameter.string.tooLong",
+            return ValidationReport.singleton(messages.get("validation.request.parameter.string.tooLong",
                 parameter.getName(), parameter.getMaxLength())
             );
         }
-
-        return report.merge(validateFormatIfPresent(value, parameter));
+        return ValidationReport.empty();
     }
 
     private ValidationReport validateFormatIfPresent(@Nonnull final String value,

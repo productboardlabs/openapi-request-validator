@@ -101,7 +101,7 @@ public class ArrayParameterValidatorTest {
     }
 
     @Test
-    public void validate_withCollection_shouldPass_whenParamterMissing() {
+    public void validate_withCollection_shouldPass_whenParameterMissing() {
         assertPass(classUnderTest.validate(asList("value"), null));
     }
 

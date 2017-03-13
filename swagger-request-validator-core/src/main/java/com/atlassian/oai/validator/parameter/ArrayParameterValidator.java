@@ -1,7 +1,6 @@
 package com.atlassian.oai.validator.parameter;
 
 import com.atlassian.oai.validator.report.MessageResolver;
-import com.atlassian.oai.validator.report.MutableValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.SchemaValidator;
 import io.swagger.models.parameters.Parameter;
@@ -14,6 +13,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
 
@@ -119,40 +119,52 @@ public class ArrayParameterValidator extends BaseParameterValidator {
     private ValidationReport doValidate(@Nonnull final Collection<String> values,
                                         @Nonnull final SerializableParameter parameter) {
 
-        final MutableValidationReport validationReport = new MutableValidationReport();
-        if (parameter.getMaxItems() != null && values.size() > parameter.getMaxItems()) {
-            validationReport.add(messages.get("validation.request.parameter.collection.tooManyItems",
-                    parameter.getName(), parameter.getMaxItems(), values.size())
-            );
-        }
-
-        if (parameter.getMinItems() != null && values.size() < parameter.getMinItems()) {
-            validationReport.add(messages.get("validation.request.parameter.collection.tooFewItems",
-                    parameter.getName(), parameter.getMinItems(), values.size())
-            );
-        }
-
-        if (Boolean.TRUE.equals(parameter.isUniqueItems()) &&
-                values.stream().distinct().count() != values.size()) {
-            validationReport.add(messages.get("validation.request.parameter.collection.duplicateItems",
-                    parameter.getName())
-            );
-        }
+        final ValidationReport report = Stream.of(
+                validateMaxItems(values, parameter),
+                validateMinItems(values, parameter),
+                validateUniqueItems(values, parameter)
+        ).reduce(ValidationReport.empty(), ValidationReport::merge);
 
         if (parameter.getEnum() != null && !parameter.getEnum().isEmpty()) {
             final Set<String> enumValues = new HashSet<>(parameter.getEnum());
-            values.stream()
+            return values.stream()
                     .filter(v -> !enumValues.contains(v))
-                    .forEach(v -> {
-                        validationReport.add(messages.get("validation.request.parameter.enum.invalid",
-                                v, parameter.getName(), parameter.getEnum())
-                        );
-                    });
-            return validationReport;
+                    .map(v -> ValidationReport.singleton(messages.get("validation.request.parameter.enum.invalid",
+                            v, parameter.getName(), parameter.getEnum())
+                    ))
+                    .reduce(report, ValidationReport::merge);
         }
 
-        values.forEach(v ->
-                validationReport.addAll(schemaValidator.validate(v, parameter.getItems())));
-        return validationReport;
+        return values.stream()
+                .map(v -> schemaValidator.validate(v, parameter.getItems()))
+                .reduce(report, ValidationReport::merge);
+    }
+
+    private ValidationReport validateUniqueItems(final @Nonnull Collection<String> values, final @Nonnull SerializableParameter parameter) {
+        if (Boolean.TRUE.equals(parameter.isUniqueItems()) &&
+            values.stream().distinct().count() != values.size()) {
+            return ValidationReport.singleton(messages.get("validation.request.parameter.collection.duplicateItems",
+                parameter.getName())
+            );
+        }
+        return ValidationReport.empty();
+    }
+
+    private ValidationReport validateMinItems(final @Nonnull Collection<String> values, final @Nonnull SerializableParameter parameter) {
+        if (parameter.getMinItems() != null && values.size() < parameter.getMinItems()) {
+            return ValidationReport.singleton(messages.get("validation.request.parameter.collection.tooFewItems",
+                parameter.getName(), parameter.getMinItems(), values.size())
+            );
+        }
+        return ValidationReport.empty();
+    }
+
+    private ValidationReport validateMaxItems(final @Nonnull Collection<String> values, final @Nonnull SerializableParameter parameter) {
+        if (parameter.getMaxItems() != null && values.size() > parameter.getMaxItems()) {
+            return ValidationReport.singleton(messages.get("validation.request.parameter.collection.tooManyItems",
+                parameter.getName(), parameter.getMaxItems(), values.size())
+            );
+        }
+        return ValidationReport.empty();
     }
 }
