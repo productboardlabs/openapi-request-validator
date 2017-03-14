@@ -234,13 +234,19 @@ public class RequestValidator {
                                           @Nonnull final ApiOperation apiOperation) {
 
         final Multimap<String, String> formData = parseFormData(requestBody.get());
-        final List<ValidationReport> reports = new ArrayList<>();
-        for (Parameter parameter : apiOperation.getOperation().getParameters()) {
-            Collection<String> parameterValues = formData.get(parameter.getName());
-            parameterValues = parameterValues.isEmpty() ? Collections.singletonList(null) : parameterValues;
-            parameterValues.forEach(value -> reports.add(parameterValidators.validate(value, parameter)));
-        }
-        return reports.stream().reduce(ValidationReport.empty(), ValidationReport::merge);
+        return apiOperation.getOperation().getParameters().stream()
+                .flatMap(parameter ->
+                        prepareFormDataForParameter(formData, parameter).stream()
+                                .map(value -> parameterValidators.validate(value, parameter))
+                )
+                .reduce(ValidationReport.empty(), ValidationReport::merge);
+    }
+
+    @Nonnull
+    private Collection<String> prepareFormDataForParameter(@Nonnull final Multimap<String, String> formData,
+                                                           @Nonnull final Parameter parameter) {
+        final Collection<String> parameterValues = formData.get(parameter.getName());
+        return parameterValues.isEmpty() ? Collections.singletonList(null) : parameterValues;
     }
 
     @Nonnull

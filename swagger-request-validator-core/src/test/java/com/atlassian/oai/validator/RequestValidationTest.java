@@ -45,6 +45,16 @@ public class RequestValidationTest {
     }
 
     @Test
+    public void validate_withNotMatchingApiPath_shouldFail() {
+        final Request request = SimpleRequest.Builder.patch("/peoples/1").build();
+
+        assertFail(classUnderTest.validate(request, okResponse),
+            "validation.request.path.missing");
+        assertFail(classUnderTest.validateRequest(request),
+            "validation.request.path.missing");
+    }
+
+    @Test
     public void validate_withInvalidRequestMethod_shouldFail() {
         final Request request = SimpleRequest.Builder.patch("/users/1").build();
 
