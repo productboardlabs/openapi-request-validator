@@ -1,5 +1,9 @@
 package com.atlassian.oai.validator.schema;
 
+import com.atlassian.oai.validator.schema.format.DoubleAttribute;
+import com.atlassian.oai.validator.schema.format.FloatAttribute;
+import com.atlassian.oai.validator.schema.format.Int32Attribute;
+import com.atlassian.oai.validator.schema.format.Int64Attribute;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.jackson.NodeType;
@@ -15,6 +19,7 @@ import com.github.fge.jsonschema.core.report.LogLevel;
 import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.core.tree.SchemaTree;
+import com.github.fge.jsonschema.format.draftv3.DateAttribute;
 import com.github.fge.jsonschema.keyword.digest.AbstractDigester;
 import com.github.fge.jsonschema.keyword.validator.AbstractKeywordValidator;
 import com.github.fge.jsonschema.library.DraftV4Library;
@@ -51,6 +56,11 @@ public class SwaggerV20Library {
 
     private static final Library LIBRARY =
             DraftV4Library.get().thaw()
+            .addFormatAttribute("int32", Int32Attribute.getInstance())
+            .addFormatAttribute("int64", Int64Attribute.getInstance())
+            .addFormatAttribute("float", FloatAttribute.getInstance())
+            .addFormatAttribute("double", DoubleAttribute.getInstance())
+            .addFormatAttribute("date", DateAttribute.getInstance())
             .addKeyword(
                     Keyword.newBuilder(DISCRIMINATOR_KEYWORD)
                             .withSyntaxChecker(DiscriminatorSyntaxChecker.getInstance())
