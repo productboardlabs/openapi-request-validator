@@ -27,8 +27,11 @@ public final class Int32Attribute extends AbstractFormatAttribute {
                          final FullData data) throws ProcessingException {
         final JsonNode instance = data.getInstance().getNode();
 
-        if (!instance.canConvertToInt()) {
-            report.error(newMsg(data, bundle, "err.format.int32.overflow")
+        if (!instance.isIntegralNumber()) {
+            report.error(newMsg(data, bundle, "err.format.int32.invalid")
+                    .putArgument("value", instance));
+        } else if (!instance.canConvertToInt()) {
+            report.warn(newMsg(data, bundle, "warn.format.int32.overflow")
                     .putArgument("value", instance));
         }
     }

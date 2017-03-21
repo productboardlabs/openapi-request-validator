@@ -27,8 +27,11 @@ public final class Int64Attribute extends AbstractFormatAttribute {
                          final FullData data) throws ProcessingException {
         final JsonNode instance = data.getInstance().getNode();
 
-        if (!instance.canConvertToLong()) {
-            report.error(newMsg(data, bundle, "err.format.int64.overflow")
+        if (!instance.isIntegralNumber()) {
+            report.error(newMsg(data, bundle, "err.format.int64.invalid")
+                    .putArgument("value", instance));
+        } else if (!instance.canConvertToLong()) {
+            report.warn(newMsg(data, bundle, "warn.format.int64.overflow")
                     .putArgument("value", instance));
         }
     }
