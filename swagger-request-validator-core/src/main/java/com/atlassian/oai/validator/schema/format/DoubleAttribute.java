@@ -9,6 +9,8 @@ import com.github.fge.jsonschema.format.FormatAttribute;
 import com.github.fge.jsonschema.processors.data.FullData;
 import com.github.fge.msgsimple.bundle.MessageBundle;
 
+import java.math.BigDecimal;
+
 public final class DoubleAttribute extends AbstractFormatAttribute {
 
     private static final FormatAttribute INSTANCE = new DoubleAttribute();
@@ -27,8 +29,11 @@ public final class DoubleAttribute extends AbstractFormatAttribute {
                          final FullData data) throws ProcessingException {
         final JsonNode instance = data.getInstance().getNode();
 
-        if (!instance.isDouble() && !instance.isFloat()) {
-            report.error(newMsg(data, bundle, "err.format.double.overflow")
+        final BigDecimal dec = instance.decimalValue();
+        final BigDecimal converted = BigDecimal.valueOf(dec.doubleValue());
+
+        if (dec.compareTo(converted) != 0) {
+            report.warn(newMsg(data, bundle, "warn.format.double.overflow")
                     .putArgument("value", instance));
         }
     }
