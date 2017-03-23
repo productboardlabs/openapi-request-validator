@@ -28,4 +28,14 @@ public class SwaggerV20AttributeTest extends AbstractAttributeTest {
     public void testInvalidInt64() throws Exception {
         testWarning("formats-valid", "format-invalid-int64",  "key", false, new String[] {"warn.format.int64.overflow"});
     }
+
+    @Test
+    public void testInvalidFloat() throws Exception {
+        testWarning("formats-valid", "format-invalid-float",  "key", false, new String[] {"warn.format.float.overflow"});
+    }
+
+    @Test
+    public void testInvalidDouble() throws Exception {
+        testWarning("formats-valid", "format-invalid-double",  "key", false, new String[] {"warn.format.double.overflow"});
+    }
 }

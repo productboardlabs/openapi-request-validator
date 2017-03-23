@@ -27,7 +27,7 @@
         },
         "dbl": {
           "type": "number",
-          "format": "float"
+          "format": "double"
         },
         "email": {
           "type": "string",

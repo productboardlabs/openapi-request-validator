@@ -1,5 +1,7 @@
 package com.atlassian.oai.validator.schema;
 
+import com.atlassian.oai.validator.schema.format.DoubleAttribute;
+import com.atlassian.oai.validator.schema.format.FloatAttribute;
 import com.atlassian.oai.validator.schema.format.Int32Attribute;
 import com.atlassian.oai.validator.schema.format.Int64Attribute;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -56,8 +58,8 @@ public class SwaggerV20Library {
             DraftV4Library.get().thaw()
             .addFormatAttribute("int32", Int32Attribute.getInstance())
             .addFormatAttribute("int64", Int64Attribute.getInstance())
-            //.addFormatAttribute("float", FloatAttribute.getInstance())
-            //.addFormatAttribute("double", DoubleAttribute.getInstance())
+            .addFormatAttribute("float", FloatAttribute.getInstance())
+            .addFormatAttribute("double", DoubleAttribute.getInstance())
             .addFormatAttribute("date", DateAttribute.getInstance())
             .addKeyword(
                     Keyword.newBuilder(DISCRIMINATOR_KEYWORD)
