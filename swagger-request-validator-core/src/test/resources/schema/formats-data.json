@@ -1,0 +1,92 @@
+{
+  "format-valid": {
+    "birthDate": "1990-01-02",
+    "lastLogin": "2017-02-02T12:13:14.156+07:00",
+    "age": 27,
+    "id": 34359738368,
+    "flo": 0.3333,
+    "dbl": 0.6083333333333333,
+    "email": "someone@somewhere.com"
+  },
+  "format-invalid-date": {
+    "birthDate": "1990-01-02T08:00:00",
+    "lastLogin": "2017-02-02T12:13:14.156+07:00",
+    "age": 27,
+    "id": 34359738368,
+    "flo": 0.3333,
+    "dbl": 0.6083333333333333,
+    "email": "someone@somewhere.com"
+  },
+  "format-invalid-date-time": {
+    "birthDate": "1990-01-02",
+    "lastLogin": "2017-02-02 12:13:14.156+07:00",
+    "age": 27,
+    "id": 34359738368,
+    "flo": 0.3333,
+    "dbl": 0.6083333333333333,
+    "email": "someone@somewhere.com"
+  },
+  "format-invalid-int32": {
+    "birthDate": "1990-01-02",
+    "lastLogin": "2017-02-02T12:13:14.156+07:00",
+    "age": 34359738368,
+    "id": 34359738368,
+    "flo": 0.3333,
+    "dbl": 0.6083333333333333,
+    "email": "someone@somewhere.com"
+  },
+  "format-invalid-int64": {
+    "birthDate": "1990-01-02",
+    "lastLogin": "2017-02-02T12:13:14.156+07:00",
+    "age": 27,
+    "id": 343597383683435973836834359738368,
+    "flo": 0.3333,
+    "dbl": 0.6083333333333333,
+    "email": "someone@somewhere.com"
+  },
+  "format-invalid-float": {
+    "birthDate": "1990-01-02",
+    "lastLogin": "2017-02-02T12:13:14.156+07:00",
+    "age": 27,
+    "id": 34359738368,
+    "flo": 10,
+    "dbl": 0.6083333333333333,
+    "email": "someone@somewhere.com"
+  },
+  "format-invalid-double": {
+    "birthDate": "1990-01-02",
+    "lastLogin": "2017-02-02T12:13:14.156+07:00",
+    "age": 27,
+    "id": 34359738368,
+    "flo": 0.3333,
+    "dbl": 20,
+    "email": "someone@somewhere.com"
+  },
+  "format-invalid-float2": {
+    "birthDate": "1990-01-02",
+    "lastLogin": "2017-02-02T12:13:14.156+07:00",
+    "age": 27,
+    "id": 34359738368,
+    "flo": 0.3333333333333333,
+    "dbl": 0.6083333333333333,
+    "email": "someone@somewhere.com"
+  },
+  "format-invalid-double2": {
+    "birthDate": "1990-01-02",
+    "lastLogin": "2017-02-02T12:13:14.156+07:00",
+    "age": 27,
+    "id": 34359738368,
+    "flo": 0.3333,
+    "dbl": 0.6083333333333333333333333333333333333333333333,
+    "email": "someone@somewhere.com"
+  },
+  "format-invalid-email": {
+    "birthDate": "1990-01-02",
+    "lastLogin": "2017-02-02T12:13:14.156+07:00",
+    "age": 27,
+    "id": 34359738368,
+    "flo": 0.3333,
+    "dbl": 0.6083333333333333,
+    "email": "someone@some@where.com"
+  }
+}
