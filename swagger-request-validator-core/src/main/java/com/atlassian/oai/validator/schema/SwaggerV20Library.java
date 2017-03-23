@@ -92,6 +92,27 @@ public class SwaggerV20Library {
                 .freeze();
     }
 
+    /**
+     * @param logLevel log level
+     * @param exceptionThreshold exception threshold
+     * @return A {@link JsonSchemaFactory} instance configured with the Swagger/OAI V20 metaschema library suitable
+     * for use in validating Swagger/OpenAPI documents
+     */
+    public static JsonSchemaFactory schemaFactory(final LogLevel logLevel, final LogLevel exceptionThreshold) {
+        return JsonSchemaFactory
+                .newBuilder()
+                .setValidationConfiguration(
+                        ValidationConfiguration.newBuilder()
+                                .setDefaultLibrary(OAI_V2_METASCHEMA_URI, SwaggerV20Library.get())
+                                .setSyntaxMessages(getBundle(SwaggerV20Library.SyntaxBundle.class))
+                                .setValidationMessages(getBundle(SwaggerV20Library.ValidationBundle.class))
+                                .freeze())
+                .setReportProvider(
+                        // Only emit ERROR and above from the JSON schema validation
+                        new ListReportProvider(logLevel, exceptionThreshold))
+                .freeze();
+    }
+
     private static boolean arrayNodeContains(final JsonNode requiredProperties, final String element) {
         return stream(requiredProperties.elements()).anyMatch(e -> e.textValue().equals(element));
     }
