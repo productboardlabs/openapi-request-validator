@@ -34,6 +34,7 @@ public final class DoubleAttribute extends AbstractFormatAttribute {
 
         if (dec.compareTo(converted) != 0) {
             report.warn(newMsg(data, bundle, "warn.format.double.overflow")
+                    .put("key", "warn.format.double.overflow")
                     .putArgument("value", instance));
         }
     }

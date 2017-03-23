@@ -34,6 +34,7 @@ public final class FloatAttribute extends AbstractFormatAttribute {
 
         if (dec.compareTo(converted) != 0) {
             report.warn(newMsg(data, bundle, "warn.format.float.overflow")
+                    .put("key", "warn.format.float.overflow")
                     .putArgument("value", instance));
         }
     }

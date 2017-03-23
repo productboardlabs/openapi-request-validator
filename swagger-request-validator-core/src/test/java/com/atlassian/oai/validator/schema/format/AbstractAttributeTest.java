@@ -7,7 +7,6 @@ import com.github.fge.jsonschema.core.report.LogLevel;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.format.FormatAttribute;
 import com.github.fge.jsonschema.format.draftv3.DateAttribute;
-import org.junit.Test;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -16,7 +15,7 @@ import java.util.Set;
 import static com.atlassian.oai.validator.schema.SwaggerV20Library.schemaFactory;
 import static org.junit.Assert.fail;
 
-public class DateAttributeTest {
+public abstract class AbstractAttributeTest {
 
     public FormatAttribute attr = DateAttribute.getInstance();
 
@@ -30,12 +29,8 @@ public class DateAttributeTest {
         }
     }
 
-    @Test
-    public void testValid() throws Exception {
-        final String schema = "formats-valid";
-        final String example = "format-valid";
-
-        final ProcessingReport report = schemaFactory()
+    void testValid(final String schema, final String example) throws Exception {
+        final ProcessingReport report = schemaFactory(LogLevel.WARNING, LogLevel.FATAL)
                 .getJsonSchema(loadSchema(schema))
                 .validateUnchecked(loadExample(example));
 
@@ -50,11 +45,24 @@ public class DateAttributeTest {
         fail(builder.toString());
     }
 
-    @Test
-    public void testInvalid() throws Exception {
-        final String schema = "formats-valid";
-        final String example = "format-invalid-date";
+    void testWarning(final String schema, final String example, final String key, final boolean pointer, final String[] expected) throws Exception {
+        final ProcessingReport report = schemaFactory(LogLevel.WARNING, LogLevel.FATAL)
+                .getJsonSchema(loadSchema(schema))
+                .validateUnchecked(loadExample(example));
 
+        if (!report.isSuccess()) {
+            final StringBuilder builder = new StringBuilder("Report contains unexpected errors: [");
+            report.forEach(pm -> {
+                builder.append('\n').append(pm.toString().replace("\n", "\n\t"));
+            });
+            builder.append("\n]");
+            fail(builder.toString());
+        }
+
+        checkMessages(report, "warning", key, pointer, expected);
+    }
+
+    void testError(final String schema, final String example, final String key, final boolean pointer, final String[] expected) throws Exception {
         final ProcessingReport report = schemaFactory(LogLevel.WARNING, LogLevel.FATAL)
                 .getJsonSchema(loadSchema(schema))
                 .validateUnchecked(loadExample(example));
@@ -63,34 +71,40 @@ public class DateAttributeTest {
             fail("Expected validation failure.");
         }
 
-        final String[] expected = {"/birthDate"};
+        checkMessages(report, "error", key, pointer, expected);
+    }
 
+    private void checkMessages(final ProcessingReport report, final String level, final String key, final boolean pointer, final String[] expected) {
         final StringBuilder builder = new StringBuilder("Report missing expected errors. Found errors: [");
-        final Set<String> instances = new HashSet<>();
+        final Set<String> values = new HashSet<>();
         report.forEach(pm -> {
             builder.append('\n').append(pm.toString().replace("\n", "\n\t"));
             final JsonNode msgJson = pm.asJson();
-            if (msgJson.has("level")) {
-                final String level = msgJson.get("level").textValue();
-                if ("error".equals(level) && msgJson.has("instance")) {
-                    instances.add(((ObjectNode) msgJson.get("instance")).get("pointer").textValue());
-                }
+
+            boolean ignore = false;
+            if (level != null && msgJson.has("level")) {
+                final String l = msgJson.get("level").textValue();
+                ignore = !level.equals(l);
+            }
+
+            if (!ignore && msgJson.has(key)) {
+                values.add(pointer ? ((ObjectNode) msgJson.get(key)).get("pointer").textValue() : msgJson.get(key).textValue());
             }
         });
         builder.append("\n]");
 
-        for (String key : expected) {
-            if (!instances.contains(key)) {
+        for (String k : expected) {
+            if (!values.contains(k)) {
                 fail(builder.toString());
             }
         }
     }
 
-    private JsonNode loadExample(final String name) throws Exception {
+    JsonNode loadExample(final String name) throws Exception {
         return examples.get(name);
     }
 
-    private JsonNode loadSchema(final String name) throws Exception {
+    JsonNode loadSchema(final String name) throws Exception {
         return JsonLoader.fromResource("/schema/" + name + ".json");
     }
 }
