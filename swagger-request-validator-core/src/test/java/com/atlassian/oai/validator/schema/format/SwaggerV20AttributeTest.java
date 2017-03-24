@@ -73,9 +73,20 @@ public class SwaggerV20AttributeTest extends AbstractAttributeTest {
     @Test
     public void testMultipleValidationErrors() throws Exception {
         final List<ExpectedMessage> expected = new LinkedList<>();
-        expected.add(new ExpectedMessage(LogLevel.ERROR, new Criteria("instance", "/birthDate", true)));
-        expected.add(new ExpectedMessage(LogLevel.WARNING, new Criteria("key", "warn.format.int64.overflow")));
-        expected.add(new ExpectedMessage(LogLevel.ERROR, new Criteria("key", "err.format.base64.invalid")));
+
+        final List<Criteria> criterion1 = new LinkedList<>();
+        criterion1.add(new Criteria("instance", "/birthDate", true));
+        expected.add(new ExpectedMessage(LogLevel.ERROR, criterion1));
+
+        final List<Criteria> criterion2 = new LinkedList<>();
+        criterion2.add(new Criteria("key", "warn.format.int64.overflow"));
+        criterion2.add(new Criteria("instance", "/id", true));
+        expected.add(new ExpectedMessage(LogLevel.WARNING, criterion2));
+
+        final List<Criteria> criterion3 = new LinkedList<>();
+        criterion3.add(new Criteria("key", "err.format.base64.invalid"));
+        criterion3.add(new Criteria("instance", "/encoded", true));
+        expected.add(new ExpectedMessage(LogLevel.ERROR, criterion3));
 
         test("formats-valid", "format-invalid-multiple-messages", expected);
     }
