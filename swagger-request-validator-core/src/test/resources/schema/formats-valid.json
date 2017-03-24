@@ -32,6 +32,10 @@
         "email": {
           "type": "string",
           "format": "email"
+        },
+        "encoded": {
+          "type": "string",
+          "format": "byte"
         }
       }
     }

@@ -38,4 +38,9 @@ public class SwaggerV20AttributeTest extends AbstractAttributeTest {
     public void testInvalidDouble() throws Exception {
         testWarning("formats-valid", "format-invalid-double",  "key", false, new String[] {"warn.format.double.overflow"});
     }
+
+    @Test
+    public void testInvalidBase64() throws Exception {
+        testError("formats-valid", "format-invalid-base64",  "key", false, new String[] {"err.format.base64.invalid"});
+    }
 }

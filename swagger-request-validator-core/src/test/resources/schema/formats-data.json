@@ -6,7 +6,8 @@
     "id": 34359738368,
     "flo": 0.3333,
     "dbl": 0.6083333333333333,
-    "email": "someone@somewhere.com"
+    "email": "someone@somewhere.com",
+    "encoded": "SGVsbG8gU3dhZ2dlciByZXF1ZXN0IHZhbGlkYXRvciE="
   },
   "format-invalid-date": {
     "birthDate": "1990-01-02T08:00:00"
@@ -28,5 +29,8 @@
   },
   "format-invalid-email": {
     "email": "someone@some@where.com"
+  },
+  "format-invalid-base64": {
+    "encoded": "invalid-base64-content"
   }
 }

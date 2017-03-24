@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.schema;
 
+import com.atlassian.oai.validator.schema.format.Base64Attribute;
 import com.atlassian.oai.validator.schema.format.DoubleAttribute;
 import com.atlassian.oai.validator.schema.format.FloatAttribute;
 import com.atlassian.oai.validator.schema.format.Int32Attribute;
@@ -61,6 +62,7 @@ public class SwaggerV20Library {
             .addFormatAttribute("float", FloatAttribute.getInstance())
             .addFormatAttribute("double", DoubleAttribute.getInstance())
             .addFormatAttribute("date", DateAttribute.getInstance())
+            .addFormatAttribute("byte", Base64Attribute.getInstance())
             .addKeyword(
                     Keyword.newBuilder(DISCRIMINATOR_KEYWORD)
                             .withSyntaxChecker(DiscriminatorSyntaxChecker.getInstance())
