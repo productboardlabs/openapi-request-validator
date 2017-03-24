@@ -32,5 +32,10 @@
   },
   "format-invalid-base64": {
     "encoded": "invalid-base64-content"
+  },
+  "format-invalid-multiple-messages": {
+    "birthDate": "invalid-date",
+    "id": 343597383683435973836834359738368,
+    "encoded": "invalid-base64-content"
   }
 }

@@ -4,13 +4,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.jackson.JsonLoader;
 import com.github.fge.jsonschema.core.report.LogLevel;
+import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.format.FormatAttribute;
 import com.github.fge.jsonschema.format.draftv3.DateAttribute;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Objects;
 
 import static com.atlassian.oai.validator.schema.SwaggerV20Library.schemaFactory;
 import static org.junit.Assert.fail;
@@ -29,85 +33,63 @@ public abstract class AbstractAttributeTest {
         }
     }
 
-    void testValid(final String schema, final String example) throws Exception {
+    void test(final String schema, final String example, final Collection<ExpectedMessage> expectedMsgs) throws Exception {
         final ProcessingReport report = schemaFactory(LogLevel.WARNING, LogLevel.FATAL)
                 .getJsonSchema(loadSchema(schema))
                 .validateUnchecked(loadExample(example));
 
-        if (report.isSuccess()) {
-            final StringBuilder builder = new StringBuilder();
-            report.forEach(pm -> {
-                if (pm.getLogLevel() == LogLevel.WARNING) {
-                    builder.append('\n').append(pm.toString().replace("\n", "\n\t"));
+        final Collection<ExpectedMessage> expectedMessages = Collections.synchronizedCollection(expectedMsgs);
+        final Collection<ProcessingMessage> unexpectedMessages = Collections.synchronizedCollection(new LinkedList<>());
+        report.forEach(pm -> {
+            final LogLevel logLevel = pm.getLogLevel();
+            if (logLevel != LogLevel.INFO && logLevel != logLevel.DEBUG) {
+                unexpectedMessages.add(pm);
+                final Iterator<ExpectedMessage> it = expectedMessages.iterator();
+                while (it.hasNext()) {
+                    final ExpectedMessage expected = it.next();
+                    if (expected.logLevel == logLevel) {
+                        final JsonNode msgJson = pm.asJson();
+
+                        boolean matching = true;
+                        for (Criteria c : expected.criterion) {
+                            if (msgJson.has(c.key)) {
+                                final String value = c.pointer ? ((ObjectNode) msgJson.get(c.key)).get("pointer").textValue() : msgJson.get(c.key).textValue();
+                                matching &= Objects.equals(c.value, value);
+                            } else {
+                                matching = false;
+                            }
+                        }
+
+                        if (matching) {
+                            unexpectedMessages.remove(pm);
+                            it.remove();
+                        }
+                    }
                 }
-            });
-            if (builder.length() > 0) {
-                final StringBuilder sb = new StringBuilder("Report contains unexpected warnings: [");
-                sb.append(builder).append("\n]");
-                fail(builder.toString());
-            }
-            return;
-        }
-        final StringBuilder builder = new StringBuilder("Report contains unexpected errors: [");
-        report.forEach(pm -> {
-            builder.append('\n').append(pm.toString().replace("\n", "\n\t"));
-        });
-        builder.append("\n]");
-        fail(builder.toString());
-    }
-
-    void testWarning(final String schema, final String example, final String key, final boolean pointer, final String[] expected) throws Exception {
-        final ProcessingReport report = schemaFactory(LogLevel.WARNING, LogLevel.FATAL)
-                .getJsonSchema(loadSchema(schema))
-                .validateUnchecked(loadExample(example));
-
-        if (!report.isSuccess()) {
-            final StringBuilder builder = new StringBuilder("Report contains unexpected errors: [");
-            report.forEach(pm -> {
-                builder.append('\n').append(pm.toString().replace("\n", "\n\t"));
-            });
-            builder.append("\n]");
-            fail(builder.toString());
-        }
-
-        checkMessages(report, "warning", key, pointer, expected);
-    }
-
-    void testError(final String schema, final String example, final String key, final boolean pointer, final String[] expected) throws Exception {
-        final ProcessingReport report = schemaFactory(LogLevel.WARNING, LogLevel.FATAL)
-                .getJsonSchema(loadSchema(schema))
-                .validateUnchecked(loadExample(example));
-
-        if (report.isSuccess()) {
-            fail("Expected validation failure.");
-        }
-
-        checkMessages(report, "error", key, pointer, expected);
-    }
-
-    private void checkMessages(final ProcessingReport report, final String level, final String key, final boolean pointer, final String[] expected) {
-        final StringBuilder builder = new StringBuilder("Report missing expected errors. Found errors: [");
-        final Set<String> values = new HashSet<>();
-        report.forEach(pm -> {
-            builder.append('\n').append(pm.toString().replace("\n", "\n\t"));
-            final JsonNode msgJson = pm.asJson();
-
-            boolean ignore = false;
-            if (level != null && msgJson.has("level")) {
-                final String l = msgJson.get("level").textValue();
-                ignore = !level.equals(l);
-            }
-
-            if (!ignore && msgJson.has(key)) {
-                values.add(pointer ? ((ObjectNode) msgJson.get(key)).get("pointer").textValue() : msgJson.get(key).textValue());
             }
         });
-        builder.append("\n]");
 
-        for (String k : expected) {
-            if (!values.contains(k)) {
-                fail(builder.toString());
+        if (!expectedMessages.isEmpty() || !unexpectedMessages.isEmpty()) {
+            final StringBuilder sb = new StringBuilder();
+            if (!unexpectedMessages.isEmpty()) {
+                sb.append("\nReport contains unexpected messages: [");
+                unexpectedMessages.forEach(unexpected -> {
+                    sb.append('\n').append(unexpected.toString().replace("\n", "\n\t"));
+                });
+                sb.append("\n]");
             }
+            if (!expectedMessages.isEmpty()) {
+                sb.append("\nMissing messages from report: [");
+                expectedMessages.forEach(expected -> {
+                    sb.append("\n\t").append(expected.logLevel).append(": [");
+                    expected.criterion.forEach(c -> {
+                        sb.append("\n\t\t").append(c.key).append(" -> ").append(c.value).append('\n');
+                    });
+                    sb.append("\t]");
+                });
+                sb.append("\n]");
+            }
+            fail(sb.toString());
         }
     }
 
@@ -117,5 +99,40 @@ public abstract class AbstractAttributeTest {
 
     JsonNode loadSchema(final String name) throws Exception {
         return JsonLoader.fromResource("/schema/" + name + ".json");
+    }
+
+    static class ExpectedMessage {
+
+        private final LogLevel logLevel;
+        private final Collection<Criteria> criterion;
+
+        public ExpectedMessage(final LogLevel logLevel, final Criteria criteria) {
+            this.logLevel = logLevel;
+            this.criterion = Collections.singleton(criteria);
+        }
+
+        public ExpectedMessage(final LogLevel logLevel, final Collection<Criteria> critorion) {
+            this.logLevel = logLevel;
+            this.criterion = critorion;
+        }
+    }
+
+    static class Criteria {
+
+        private final String key;
+        private final String value;
+        private final boolean pointer;
+
+        public Criteria(final String key, final String value) {
+            this.key = key;
+            this.value = value;
+            this.pointer = false;
+        }
+
+        public Criteria(final String key, final String value, final boolean pointer) {
+            this.key = key;
+            this.value = value;
+            this.pointer = pointer;
+        }
     }
 }

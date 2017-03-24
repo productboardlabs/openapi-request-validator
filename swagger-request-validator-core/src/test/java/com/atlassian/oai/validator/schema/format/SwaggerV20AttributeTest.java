@@ -1,46 +1,82 @@
 package com.atlassian.oai.validator.schema.format;
 
+import com.github.fge.jsonschema.core.report.LogLevel;
 import org.junit.Test;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 public class SwaggerV20AttributeTest extends AbstractAttributeTest {
 
     @Test
     public void testValid() throws Exception {
-        super.testValid("formats-valid", "format-valid");
+        test("formats-valid", "format-valid", Collections.emptySet());
     }
 
     @Test
     public void testInvalidDate() throws Exception {
-        testError("formats-valid", "format-invalid-date",  "instance", true, new String[] {"/birthDate"});
+        final List<ExpectedMessage> expected = new LinkedList<>();
+        expected.add(new ExpectedMessage(LogLevel.ERROR, new Criteria("instance", "/birthDate", true)));
+
+        test("formats-valid", "format-invalid-date", expected);
     }
 
     @Test
     public void testInvalidDateTime() throws Exception {
-        testError("formats-valid", "format-invalid-date-time",  "instance", true, new String[] {"/lastLogin"});
+        final List<ExpectedMessage> expected = new LinkedList<>();
+        expected.add(new ExpectedMessage(LogLevel.ERROR, new Criteria("instance", "/lastLogin", true)));
+
+        test("formats-valid", "format-invalid-date-time", expected);
     }
 
     @Test
     public void testInvalidInt32() throws Exception {
-        testWarning("formats-valid", "format-invalid-int32",  "key", false, new String[] {"warn.format.int32.overflow"});
+        final List<ExpectedMessage> expected = new LinkedList<>();
+        expected.add(new ExpectedMessage(LogLevel.WARNING, new Criteria("key", "warn.format.int32.overflow")));
+
+        test("formats-valid", "format-invalid-int32", expected);
     }
 
     @Test
     public void testInvalidInt64() throws Exception {
-        testWarning("formats-valid", "format-invalid-int64",  "key", false, new String[] {"warn.format.int64.overflow"});
+        final List<ExpectedMessage> expected = new LinkedList<>();
+        expected.add(new ExpectedMessage(LogLevel.WARNING, new Criteria("key", "warn.format.int64.overflow")));
+
+        test("formats-valid", "format-invalid-int64", expected);
     }
 
     @Test
     public void testInvalidFloat() throws Exception {
-        testWarning("formats-valid", "format-invalid-float",  "key", false, new String[] {"warn.format.float.overflow"});
+        final List<ExpectedMessage> expected = new LinkedList<>();
+        expected.add(new ExpectedMessage(LogLevel.WARNING, new Criteria("key", "warn.format.float.overflow")));
+
+        test("formats-valid", "format-invalid-float", expected);
     }
 
     @Test
     public void testInvalidDouble() throws Exception {
-        testWarning("formats-valid", "format-invalid-double",  "key", false, new String[] {"warn.format.double.overflow"});
+        final List<ExpectedMessage> expected = new LinkedList<>();
+        expected.add(new ExpectedMessage(LogLevel.WARNING, new Criteria("key", "warn.format.double.overflow")));
+
+        test("formats-valid", "format-invalid-double", expected);
     }
 
     @Test
     public void testInvalidBase64() throws Exception {
-        testError("formats-valid", "format-invalid-base64",  "key", false, new String[] {"err.format.base64.invalid"});
+        final List<ExpectedMessage> expected = new LinkedList<>();
+        expected.add(new ExpectedMessage(LogLevel.ERROR, new Criteria("key", "err.format.base64.invalid")));
+
+        test("formats-valid", "format-invalid-base64", expected);
+    }
+
+    @Test
+    public void testMultipleValidationErrors() throws Exception {
+        final List<ExpectedMessage> expected = new LinkedList<>();
+        expected.add(new ExpectedMessage(LogLevel.ERROR, new Criteria("instance", "/birthDate", true)));
+        expected.add(new ExpectedMessage(LogLevel.WARNING, new Criteria("key", "warn.format.int64.overflow")));
+        expected.add(new ExpectedMessage(LogLevel.ERROR, new Criteria("key", "err.format.base64.invalid")));
+
+        test("formats-valid", "format-invalid-multiple-messages", expected);
     }
 }
