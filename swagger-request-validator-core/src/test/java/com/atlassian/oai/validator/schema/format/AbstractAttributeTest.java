@@ -35,6 +35,17 @@ public abstract class AbstractAttributeTest {
                 .validateUnchecked(loadExample(example));
 
         if (report.isSuccess()) {
+            final StringBuilder builder = new StringBuilder();
+            report.forEach(pm -> {
+                if (pm.getLogLevel() == LogLevel.WARNING) {
+                    builder.append('\n').append(pm.toString().replace("\n", "\n\t"));
+                }
+            });
+            if (builder.length() > 0) {
+                final StringBuilder sb = new StringBuilder("Report contains unexpected warnings: [");
+                sb.append(builder).append("\n]");
+                fail(builder.toString());
+            }
             return;
         }
         final StringBuilder builder = new StringBuilder("Report contains unexpected errors: [");
