@@ -60,6 +60,9 @@ public abstract class AbstractAttributeTest {
                             } else {
                                 matching = false;
                             }
+                            if (!matching) {
+                                break;
+                            }
                         }
 
                         if (matching) {
