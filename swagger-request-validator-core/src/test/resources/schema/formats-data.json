@@ -7,7 +7,8 @@
     "flo": 0.3333,
     "dbl": 0.6083333333333333,
     "email": "someone@somewhere.com",
-    "encoded": "SGVsbG8gU3dhZ2dlciByZXF1ZXN0IHZhbGlkYXRvciE="
+    "encoded": "SGVsbG8gU3dhZ2dlciByZXF1ZXN0IHZhbGlkYXRvciE=",
+    "archive": true
   },
   "format-invalid-date": {
     "birthDate": "1990-01-02T08:00:00"
@@ -37,5 +38,12 @@
     "birthDate": "invalid-date",
     "id": 343597383683435973836834359738368,
     "encoded": "invalid-base64-content"
+  },
+  "format-invalid-types": {
+    "id": 123.456,
+    "age": "u18",
+    "dbl": "test",
+    "email": 10,
+    "archive": "true"
   }
 }

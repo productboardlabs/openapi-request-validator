@@ -36,6 +36,9 @@
         "encoded": {
           "type": "string",
           "format": "byte"
+        },
+        "archive": {
+          "type": "boolean"
         }
       }
     }

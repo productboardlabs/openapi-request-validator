@@ -90,4 +90,41 @@ public class SwaggerV20AttributeTest extends AbstractAttributeTest {
 
         test("formats-valid", "format-invalid-multiple-messages", expected);
     }
+
+    @Test
+    public void testInvalidTypes() throws Exception {
+        final List<ExpectedMessage> expected = new LinkedList<>();
+
+        final List<Criteria> criterion1 = new LinkedList<>();
+        criterion1.add(new Criteria("instance", "/age", true));
+        criterion1.add(new Criteria("keyword", "type", false));
+        criterion1.add(new Criteria("domain", "validation", false));
+        expected.add(new ExpectedMessage(LogLevel.ERROR, criterion1));
+
+        final List<Criteria> criterion2 = new LinkedList<>();
+        criterion2.add(new Criteria("instance", "/archive", true));
+        criterion2.add(new Criteria("keyword", "type", false));
+        criterion2.add(new Criteria("domain", "validation", false));
+        expected.add(new ExpectedMessage(LogLevel.ERROR, criterion2));
+
+        final List<Criteria> criterion3 = new LinkedList<>();
+        criterion3.add(new Criteria("instance", "/dbl", true));
+        criterion3.add(new Criteria("keyword", "type", false));
+        criterion3.add(new Criteria("domain", "validation", false));
+        expected.add(new ExpectedMessage(LogLevel.ERROR, criterion3));
+
+        final List<Criteria> criterion4 = new LinkedList<>();
+        criterion4.add(new Criteria("instance", "/email", true));
+        criterion4.add(new Criteria("keyword", "type", false));
+        criterion4.add(new Criteria("domain", "validation", false));
+        expected.add(new ExpectedMessage(LogLevel.ERROR, criterion4));
+
+        final List<Criteria> criterion5 = new LinkedList<>();
+        criterion5.add(new Criteria("instance", "/id", true));
+        criterion5.add(new Criteria("keyword", "type", false));
+        criterion5.add(new Criteria("domain", "validation", false));
+        expected.add(new ExpectedMessage(LogLevel.ERROR, criterion5));
+
+        test("formats-valid", "format-invalid-types", expected);
+    }
 }
