@@ -3,128 +3,93 @@ package com.atlassian.oai.validator.schema.format;
 import com.github.fge.jsonschema.core.report.LogLevel;
 import org.junit.Test;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-
 public class SwaggerV20AttributeTest extends AbstractAttributeTest {
 
     @Test
     public void testValid() throws Exception {
-        test("formats-valid", "format-valid", Collections.emptySet());
+        test("formats-valid", "format-valid");
     }
 
     @Test
     public void testInvalidDate() throws Exception {
-        final List<ExpectedMessage> expected = new LinkedList<>();
-        expected.add(new ExpectedMessage(LogLevel.ERROR, new Criteria("instance", "/birthDate", true)));
-
-        test("formats-valid", "format-invalid-date", expected);
+        test("formats-valid", "format-invalid-date",
+                new ExpectedMessage(LogLevel.ERROR, new Criteria("instance", "/birthDate", true)));
     }
 
     @Test
     public void testInvalidDateTime() throws Exception {
-        final List<ExpectedMessage> expected = new LinkedList<>();
-        expected.add(new ExpectedMessage(LogLevel.ERROR, new Criteria("instance", "/lastLogin", true)));
-
-        test("formats-valid", "format-invalid-date-time", expected);
+        test("formats-valid", "format-invalid-date-time",
+                new ExpectedMessage(LogLevel.ERROR, new Criteria("instance", "/lastLogin", true)));
     }
 
     @Test
     public void testInvalidInt32() throws Exception {
-        final List<ExpectedMessage> expected = new LinkedList<>();
-        expected.add(new ExpectedMessage(LogLevel.WARNING, new Criteria("key", "warn.format.int32.overflow")));
-
-        test("formats-valid", "format-invalid-int32", expected);
+        test("formats-valid", "format-invalid-int32",
+                new ExpectedMessage(LogLevel.WARNING, new Criteria("key", "warn.format.int32.overflow")));
     }
 
     @Test
     public void testInvalidInt64() throws Exception {
-        final List<ExpectedMessage> expected = new LinkedList<>();
-        expected.add(new ExpectedMessage(LogLevel.WARNING, new Criteria("key", "warn.format.int64.overflow")));
-
-        test("formats-valid", "format-invalid-int64", expected);
+        test("formats-valid", "format-invalid-int64",
+                new ExpectedMessage(LogLevel.WARNING, new Criteria("key", "warn.format.int64.overflow")));
     }
 
     @Test
     public void testInvalidFloat() throws Exception {
-        final List<ExpectedMessage> expected = new LinkedList<>();
-        expected.add(new ExpectedMessage(LogLevel.WARNING, new Criteria("key", "warn.format.float.overflow")));
-
-        test("formats-valid", "format-invalid-float", expected);
+        test("formats-valid", "format-invalid-float",
+                new ExpectedMessage(LogLevel.WARNING, new Criteria("key", "warn.format.float.overflow")));
     }
 
     @Test
     public void testInvalidDouble() throws Exception {
-        final List<ExpectedMessage> expected = new LinkedList<>();
-        expected.add(new ExpectedMessage(LogLevel.WARNING, new Criteria("key", "warn.format.double.overflow")));
-
-        test("formats-valid", "format-invalid-double", expected);
+        test("formats-valid", "format-invalid-double",
+                new ExpectedMessage(LogLevel.WARNING, new Criteria("key", "warn.format.double.overflow")));
     }
 
     @Test
     public void testInvalidBase64() throws Exception {
-        final List<ExpectedMessage> expected = new LinkedList<>();
-        expected.add(new ExpectedMessage(LogLevel.ERROR, new Criteria("key", "err.format.base64.invalid")));
-
-        test("formats-valid", "format-invalid-base64", expected);
+        test("formats-valid", "format-invalid-base64",
+                new ExpectedMessage(LogLevel.ERROR, new Criteria("key", "err.format.base64.invalid")));
     }
 
     @Test
     public void testMultipleValidationErrors() throws Exception {
-        final List<ExpectedMessage> expected = new LinkedList<>();
-
-        final List<Criteria> criterion1 = new LinkedList<>();
-        criterion1.add(new Criteria("instance", "/birthDate", true));
-        expected.add(new ExpectedMessage(LogLevel.ERROR, criterion1));
-
-        final List<Criteria> criterion2 = new LinkedList<>();
-        criterion2.add(new Criteria("key", "warn.format.int64.overflow"));
-        criterion2.add(new Criteria("instance", "/id", true));
-        expected.add(new ExpectedMessage(LogLevel.WARNING, criterion2));
-
-        final List<Criteria> criterion3 = new LinkedList<>();
-        criterion3.add(new Criteria("key", "err.format.base64.invalid"));
-        criterion3.add(new Criteria("instance", "/encoded", true));
-        expected.add(new ExpectedMessage(LogLevel.ERROR, criterion3));
-
-        test("formats-valid", "format-invalid-multiple-messages", expected);
+        test("formats-valid", "format-invalid-multiple-messages",
+                new ExpectedMessage(LogLevel.ERROR, new Criteria("instance", "/birthDate", true)),
+                new ExpectedMessage(LogLevel.WARNING,
+                        new Criteria("key", "warn.format.int64.overflow"),
+                        new Criteria("instance", "/id", true)),
+                new ExpectedMessage(LogLevel.ERROR,
+                        new Criteria("key", "err.format.base64.invalid"),
+                        new Criteria("instance", "/encoded", true)));
     }
 
     @Test
     public void testInvalidTypes() throws Exception {
-        final List<ExpectedMessage> expected = new LinkedList<>();
-
-        final List<Criteria> criterion1 = new LinkedList<>();
-        criterion1.add(new Criteria("instance", "/age", true));
-        criterion1.add(new Criteria("keyword", "type", false));
-        criterion1.add(new Criteria("domain", "validation", false));
-        expected.add(new ExpectedMessage(LogLevel.ERROR, criterion1));
-
-        final List<Criteria> criterion2 = new LinkedList<>();
-        criterion2.add(new Criteria("instance", "/archive", true));
-        criterion2.add(new Criteria("keyword", "type", false));
-        criterion2.add(new Criteria("domain", "validation", false));
-        expected.add(new ExpectedMessage(LogLevel.ERROR, criterion2));
-
-        final List<Criteria> criterion3 = new LinkedList<>();
-        criterion3.add(new Criteria("instance", "/dbl", true));
-        criterion3.add(new Criteria("keyword", "type", false));
-        criterion3.add(new Criteria("domain", "validation", false));
-        expected.add(new ExpectedMessage(LogLevel.ERROR, criterion3));
-
-        final List<Criteria> criterion4 = new LinkedList<>();
-        criterion4.add(new Criteria("instance", "/email", true));
-        criterion4.add(new Criteria("keyword", "type", false));
-        criterion4.add(new Criteria("domain", "validation", false));
-        expected.add(new ExpectedMessage(LogLevel.ERROR, criterion4));
-
-        final List<Criteria> criterion5 = new LinkedList<>();
-        criterion5.add(new Criteria("instance", "/id", true));
-        criterion5.add(new Criteria("keyword", "type", false));
-        criterion5.add(new Criteria("domain", "validation", false));
-        expected.add(new ExpectedMessage(LogLevel.ERROR, criterion5));
-
-        test("formats-valid", "format-invalid-types", expected);
+        test("formats-valid", "format-invalid-types",
+                new ExpectedMessage(LogLevel.ERROR,
+                        new Criteria("instance", "/age", true),
+                        new Criteria("keyword", "type", false),
+                        new Criteria("domain", "validation", false)),
+                new ExpectedMessage(LogLevel.ERROR,
+                        new Criteria("instance", "/archive", true),
+                        new Criteria("keyword", "type", false),
+                        new Criteria("domain", "validation", false)),
+                new ExpectedMessage(LogLevel.ERROR,
+                        new Criteria("instance", "/dbl", true),
+                        new Criteria("keyword", "type", false),
+                        new Criteria("domain", "validation", false)),
+                new ExpectedMessage(LogLevel.ERROR,
+                        new Criteria("instance", "/email", true),
+                        new Criteria("keyword", "type", false),
+                        new Criteria("domain", "validation", false)),
+                new ExpectedMessage(LogLevel.ERROR,
+                        new Criteria("instance", "/age", true),
+                        new Criteria("keyword", "type", false),
+                        new Criteria("domain", "validation", false)),
+                new ExpectedMessage(LogLevel.ERROR,
+                        new Criteria("instance", "/id", true),
+                        new Criteria("keyword", "type", false),
+                        new Criteria("domain", "validation", false)));
     }
 }

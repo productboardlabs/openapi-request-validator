@@ -10,6 +10,8 @@ import com.github.fge.jsonschema.format.FormatAttribute;
 import com.github.fge.jsonschema.format.draftv3.DateAttribute;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -33,12 +35,12 @@ public abstract class AbstractAttributeTest {
         }
     }
 
-    void test(final String schema, final String example, final Collection<ExpectedMessage> expectedMsgs) throws Exception {
+    void test(final String schema, final String example, final ExpectedMessage... expectedMsgs) throws Exception {
         final ProcessingReport report = schemaFactory(LogLevel.WARNING, LogLevel.FATAL)
                 .getJsonSchema(loadSchema(schema))
                 .validateUnchecked(loadExample(example));
 
-        final Collection<ExpectedMessage> expectedMessages = Collections.synchronizedCollection(expectedMsgs);
+        final Collection<ExpectedMessage> expectedMessages = Collections.synchronizedCollection(new ArrayList<>(Arrays.asList(expectedMsgs)));
         final Collection<ProcessingMessage> unexpectedMessages = Collections.synchronizedCollection(new LinkedList<>());
         report.forEach(pm -> {
             final LogLevel logLevel = pm.getLogLevel();
@@ -106,14 +108,9 @@ public abstract class AbstractAttributeTest {
         private final LogLevel logLevel;
         private final Collection<Criteria> criterion;
 
-        public ExpectedMessage(final LogLevel logLevel, final Criteria criteria) {
+        public ExpectedMessage(final LogLevel logLevel, final Criteria... criteria) {
             this.logLevel = logLevel;
-            this.criterion = Collections.singleton(criteria);
-        }
-
-        public ExpectedMessage(final LogLevel logLevel, final Collection<Criteria> critorion) {
-            this.logLevel = logLevel;
-            this.criterion = critorion;
+            this.criterion = Arrays.asList(criteria);
         }
     }
 
