@@ -14,6 +14,8 @@ import static org.mockito.Mockito.when;
 
 public class SwaggerValidationFilterTest {
 
+    private static final String FILENAME_API_WITH_POST = "api-with-post.json";
+
     private SwaggerValidationFilter classUnderTest = new SwaggerValidationFilter("api.json");
 
     @Test(expected = IllegalArgumentException.class)
@@ -29,7 +31,7 @@ public class SwaggerValidationFilterTest {
     @Test
     public void filter_returnsResponse_ifValidationSucceeds() {
         assertThat(classUnderTest.filter(
-                requestSpec("GET", "/hello/bob"), null,
+                requestSpec("GET", "/hello/bob", null), null,
                 response(200, "{\"message\":\"Hello bob!\"}")),
                 notNullValue());
     }
@@ -37,15 +39,16 @@ public class SwaggerValidationFilterTest {
     @Test (expected = SwaggerValidationFilter.SwaggerValidationException.class)
     public void filter_throwsException_ifValidationFails() {
         assertThat(classUnderTest.filter(
-                requestSpec("GET", "/hello/bob"), null,
+                requestSpec("GET", "/hello/bob", null), null,
                 response(200, "{\"msg\":\"Hello bob!\"}")), // Wrong field name
                 notNullValue());
     }
 
-    private FilterableRequestSpecification requestSpec(final String method, final String path) {
+    private FilterableRequestSpecification requestSpec(final String method, final String path, final String body) {
         final FilterableRequestSpecification request = mock(FilterableRequestSpecification.class);
         when(request.getMethod()).thenReturn(method);
         when(request.getDerivedPath()).thenReturn(path);
+        when(request.getBody()).thenReturn(body);
         return request;
     }
 
@@ -62,4 +65,19 @@ public class SwaggerValidationFilterTest {
 
         return ctx;
     }
+
+    /**
+     * Test result before fix:
+     * com.atlassian.oai.validator.restassured.SwaggerValidationFilter$SwaggerValidationException: Validation failed.
+     * [ERROR] POST operation not allowed on path '/hello/{name}'.
+     */
+    @Test
+    public void filter_validationTakesMethodIntoAccount() {
+        classUnderTest = new SwaggerValidationFilter(FILENAME_API_WITH_POST);
+        assertThat(classUnderTest.filter(
+            requestSpec("POST", "/hello/create", "{\"name\" : \"John Doe\"}"), null,
+            response(201, "{\"message\":\"Hello !\"}")),
+            notNullValue());
+    }
+
 }
