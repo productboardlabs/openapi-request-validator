@@ -173,27 +173,20 @@ public class SwaggerRequestResponseValidator {
                                                     @Nonnull final Function<ApiOperation, ValidationReport> validationFunction) {
         final NormalisedPath requestPath = new ApiBasedNormalisedPath(path);
 
-        final Map<ApiBasedNormalisedPath, Path> possibleApiPaths = findMatchingApiPaths(requestPath, method);
+        final Map<NormalisedPath, Path> possibleApiPaths = findMatchingApiPaths(requestPath, method);
         if (possibleApiPaths.isEmpty()) {
             return ValidationReport.singleton(
                     messages.get("validation.request.path.missing", path)
             );
         }
 
-        final Map<ApiBasedNormalisedPath, Path> possibleApiPathsForMethod = filterApiPathsByMethod(possibleApiPaths, method);
+        final Map<NormalisedPath, Path> possibleApiPathsForMethod = filterApiPathsByMethod(possibleApiPaths, method);
         if (possibleApiPathsForMethod.isEmpty()) {
             return ValidationReport.singleton(
                messages.get("validation.request.operation.notAllowed", method, path)
             );
         }
-        //is this still possible?
-        //        if(possibleApiPaths.size() > 1){
-        //
-        //            return ValidationReport.singleton(
-        //               messages.get("validation.request.operation.notAllowed", method, path)
-        //            );
-        //        }
-        final Map.Entry<ApiBasedNormalisedPath, Path> possiblePath = possibleApiPathsForMethod.entrySet().stream().findFirst().get();
+        final Map.Entry<NormalisedPath, Path> possiblePath = possibleApiPathsForMethod.entrySet().stream().findFirst().get();
         final String originalApiString = possiblePath.getKey().original();
         final Path apiPath = api.getPath(originalApiString);
 
@@ -206,7 +199,7 @@ public class SwaggerRequestResponseValidator {
     }
 
     @Nonnull
-    private Map<ApiBasedNormalisedPath, Path> findMatchingApiPaths(@Nonnull final NormalisedPath requestPath, @Nonnull final Request.Method method) {
+    private Map<NormalisedPath, Path> findMatchingApiPaths(@Nonnull final NormalisedPath requestPath, @Nonnull final Request.Method method) {
         final Map<ApiBasedNormalisedPath, Path> normalizedPathMap = api.getPaths().entrySet().stream()
             .collect(Collectors.toMap(p -> new ApiBasedNormalisedPath(p.getKey()), Map.Entry::getValue));
 
@@ -215,11 +208,11 @@ public class SwaggerRequestResponseValidator {
     }
 
     @Nonnull
-    private Map<ApiBasedNormalisedPath, Path> filterApiPathsByMethod(final Map<ApiBasedNormalisedPath, Path> possibleApiPaths, final Request.Method method) {
+    private Map<NormalisedPath, Path> filterApiPathsByMethod(final Map<NormalisedPath, Path> possibleApiPaths, final Request.Method method) {
         return possibleApiPaths.entrySet().stream().filter(p -> methodMatches(method, p)).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    private boolean methodMatches(@Nonnull final Request.Method method, final Map.Entry<ApiBasedNormalisedPath, Path> p) {
+    private boolean methodMatches(@Nonnull final Request.Method method, final Map.Entry<NormalisedPath, Path> p) {
         final Map<HttpMethod, Operation> operationMap = p.getValue().getOperationMap();
         return operationMap != null && operationMap.containsKey(HttpMethod.valueOf(method.name()));
     }

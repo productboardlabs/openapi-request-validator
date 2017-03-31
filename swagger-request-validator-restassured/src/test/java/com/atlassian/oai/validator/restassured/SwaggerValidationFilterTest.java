@@ -31,7 +31,7 @@ public class SwaggerValidationFilterTest {
     @Test
     public void filter_returnsResponse_ifValidationSucceeds() {
         assertThat(classUnderTest.filter(
-                requestSpec("GET", "/hello/bob", null), null,
+                requestSpec("GET", "/hello/bob"), null,
                 response(200, "{\"message\":\"Hello bob!\"}")),
                 notNullValue());
     }
@@ -39,9 +39,23 @@ public class SwaggerValidationFilterTest {
     @Test (expected = SwaggerValidationFilter.SwaggerValidationException.class)
     public void filter_throwsException_ifValidationFails() {
         assertThat(classUnderTest.filter(
-                requestSpec("GET", "/hello/bob", null), null,
+                requestSpec("GET", "/hello/bob"), null,
                 response(200, "{\"msg\":\"Hello bob!\"}")), // Wrong field name
                 notNullValue());
+    }
+
+    /**
+     * Test result before fix:
+     * com.atlassian.oai.validator.restassured.SwaggerValidationFilter$SwaggerValidationException: Validation failed.
+     * [ERROR] POST operation not allowed on path '/hello/{name}'.
+     */
+    @Test
+    public void filter_validationTakesMethodIntoAccount() {
+        classUnderTest = new SwaggerValidationFilter(FILENAME_API_WITH_POST);
+        assertThat(classUnderTest.filter(
+            requestSpec("POST", "/hello/create", "{\"name\" : \"John Doe\"}"), null,
+            response(201, "{\"message\":\"Hello !\"}")),
+            notNullValue());
     }
 
     private FilterableRequestSpecification requestSpec(final String method, final String path, final String body) {
@@ -49,6 +63,13 @@ public class SwaggerValidationFilterTest {
         when(request.getMethod()).thenReturn(method);
         when(request.getDerivedPath()).thenReturn(path);
         when(request.getBody()).thenReturn(body);
+        return request;
+    }
+
+    private FilterableRequestSpecification requestSpec(final String method, final String path) {
+        final FilterableRequestSpecification request = mock(FilterableRequestSpecification.class);
+        when(request.getMethod()).thenReturn(method);
+        when(request.getDerivedPath()).thenReturn(path);
         return request;
     }
 
@@ -64,20 +85,6 @@ public class SwaggerValidationFilterTest {
         when(ctx.next(any(), any())).thenReturn(response);
 
         return ctx;
-    }
-
-    /**
-     * Test result before fix:
-     * com.atlassian.oai.validator.restassured.SwaggerValidationFilter$SwaggerValidationException: Validation failed.
-     * [ERROR] POST operation not allowed on path '/hello/{name}'.
-     */
-    @Test
-    public void filter_validationTakesMethodIntoAccount() {
-        classUnderTest = new SwaggerValidationFilter(FILENAME_API_WITH_POST);
-        assertThat(classUnderTest.filter(
-            requestSpec("POST", "/hello/create", "{\"name\" : \"John Doe\"}"), null,
-            response(201, "{\"message\":\"Hello !\"}")),
-            notNullValue());
     }
 
 }
