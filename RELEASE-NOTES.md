@@ -1,3 +1,11 @@
+#v1.0.12
+
+* Added support for Swagger format validation within JSON schema (string/date, integer/int32 etc.)
+[[#36]](https://bitbucket.org/atlassian/swagger-request-validator/issues/36)
+* Added support for matching on method+path where there are overlapping path patterns across request operations
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/27/swagger-validation-failed-for-similar/diff)
+
+
 # v1.0.11
 
 * Added ability to validate requests/responses independently
