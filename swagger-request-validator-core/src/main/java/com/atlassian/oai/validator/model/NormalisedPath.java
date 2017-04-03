@@ -2,7 +2,6 @@ package com.atlassian.oai.validator.model;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.List;
 
 /**
  * A normalised representation of an API path.
@@ -13,10 +12,9 @@ import java.util.List;
 public interface NormalisedPath {
 
     /**
-     * @return The path parts from the normalised path
+     * @return The number of path parts from the normalised path
      */
-    @Nonnull
-    List<String> parts();
+    int noOfParts();
 
     /**
      * @return The path part at the given index
