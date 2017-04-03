@@ -1,0 +1,46 @@
+{
+  "$schema": "https://openapis.org/specification/versions/2.0#",
+  "$ref": "#/definitions/Rec",
+  "definitions": {
+    "Rec": {
+      "type": "object",
+      "properties": {
+        "birthDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "lastLogin": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "age": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "flo": {
+          "type": "number",
+          "format": "float"
+        },
+        "dbl": {
+          "type": "number",
+          "format": "double"
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "encoded": {
+          "type": "string",
+          "format": "byte"
+        },
+        "archive": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}
