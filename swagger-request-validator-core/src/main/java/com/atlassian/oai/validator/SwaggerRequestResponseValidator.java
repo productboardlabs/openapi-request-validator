@@ -20,8 +20,10 @@ import io.swagger.parser.util.SwaggerDeserializationResult;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -171,36 +173,48 @@ public class SwaggerRequestResponseValidator {
                                                     @Nonnull final Function<ApiOperation, ValidationReport> validationFunction) {
         final NormalisedPath requestPath = new ApiBasedNormalisedPath(path);
 
-        final Optional<NormalisedPath> maybeApiPath = findMatchingApiPath(requestPath);
-        if (!maybeApiPath.isPresent()) {
+        final Map<NormalisedPath, Path> possibleApiPaths = findMatchingApiPaths(requestPath, method);
+        if (possibleApiPaths.isEmpty()) {
             return ValidationReport.singleton(
                     messages.get("validation.request.path.missing", path)
             );
         }
 
-        final NormalisedPath apiPathString = maybeApiPath.get();
-        final Path apiPath = api.getPath(apiPathString.original());
+        final Map<NormalisedPath, Path> possibleApiPathsForMethod = filterApiPathsByMethod(possibleApiPaths, method);
+        if (possibleApiPathsForMethod.isEmpty()) {
+            return ValidationReport.singleton(
+               messages.get("validation.request.operation.notAllowed", method, path)
+            );
+        }
+        final Map.Entry<NormalisedPath, Path> possiblePath = possibleApiPathsForMethod.entrySet().stream().findFirst().get();
+        final String originalApiString = possiblePath.getKey().original();
+        final Path apiPath = api.getPath(originalApiString);
 
         final HttpMethod httpMethod = HttpMethod.valueOf(method.name());
         final Operation operation = apiPath.getOperationMap().get(httpMethod);
-        if (operation == null) {
-            return ValidationReport.singleton(
-                    messages.get("validation.request.operation.notAllowed", method, apiPathString.original())
-            );
-        }
 
         return validationFunction.apply(
-                new ApiOperation(apiPathString, apiPath, httpMethod, operation)
+                new ApiOperation(possiblePath.getKey(), apiPath, httpMethod, operation)
         );
     }
 
     @Nonnull
-    private Optional<NormalisedPath> findMatchingApiPath(@Nonnull final NormalisedPath requestPath) {
-        return api.getPaths().keySet()
-                .stream()
-                .map(p -> (NormalisedPath) new ApiBasedNormalisedPath(p))
-                .filter(p -> pathMatches(requestPath, p))
-                .findFirst();
+    private Map<NormalisedPath, Path> findMatchingApiPaths(@Nonnull final NormalisedPath requestPath, @Nonnull final Request.Method method) {
+        final Map<ApiBasedNormalisedPath, Path> normalizedPathMap = api.getPaths().entrySet().stream()
+            .collect(Collectors.toMap(p -> new ApiBasedNormalisedPath(p.getKey()), Map.Entry::getValue));
+
+        return normalizedPathMap.entrySet().stream().filter(p -> pathMatches(requestPath, p.getKey()))
+           .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    @Nonnull
+    private Map<NormalisedPath, Path> filterApiPathsByMethod(final Map<NormalisedPath, Path> possibleApiPaths, final Request.Method method) {
+        return possibleApiPaths.entrySet().stream().filter(p -> methodMatches(method, p)).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    private boolean methodMatches(@Nonnull final Request.Method method, final Map.Entry<NormalisedPath, Path> p) {
+        final Map<HttpMethod, Operation> operationMap = p.getValue().getOperationMap();
+        return operationMap != null && operationMap.containsKey(HttpMethod.valueOf(method.name()));
     }
 
     private boolean pathMatches(@Nonnull final NormalisedPath requestPath, @Nonnull final NormalisedPath apiPath) {
