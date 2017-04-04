@@ -24,11 +24,11 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
 
-public class ApiOperationFinder {
+public class ApiOperationResolver {
 
     private final String apiPrefix;
 
-    private final Map<Integer, List<NormalisedPath>> normalisedApiPaths;
+    private final Map<Integer, List<NormalisedPath>> apiPathsGroupedByNumberOfParts;
     private final Table<String, HttpMethod, Operation> operations;
 
     /**
@@ -37,15 +37,15 @@ public class ApiOperationFinder {
      * @param api              the Swagger API definition
      * @param basePathOverride (Optional) override for the base path defined in the Swagger specification.
      */
-    public ApiOperationFinder(@Nonnull final Swagger api, @Nullable final String basePathOverride) {
+    public ApiOperationResolver(@Nonnull final Swagger api, @Nullable final String basePathOverride) {
         this.apiPrefix = Optional.ofNullable(basePathOverride).orElse(api.getBasePath());
         final Map<String, Path> apiPaths = Optional.ofNullable(api.getPaths())
             .orElse(Collections.emptyMap());
 
-        // normalise all API paths and group them by there number of parts
-        this.normalisedApiPaths = apiPaths.keySet().stream()
+        // normalise all API paths and group them by their number of parts
+        this.apiPathsGroupedByNumberOfParts = apiPaths.keySet().stream()
             .map(p -> new ApiBasedNormalisedPath(p, apiPrefix))
-            .collect(Collectors.groupingBy(p -> p.noOfParts()));
+            .collect(Collectors.groupingBy(p -> p.numberOfParts()));
 
         // create a operation mapping for the API path and HTTP method
         this.operations = HashBasedTable.create();
@@ -68,8 +68,8 @@ public class ApiOperationFinder {
 
         // try to find possible matching paths regardless of HTTP method
         final NormalisedPath requestPath = new ApiBasedNormalisedPath(path, apiPrefix);
-        final List<NormalisedPath> possibleMatches = normalisedApiPaths
-            .getOrDefault(requestPath.noOfParts(), emptyList()).stream()
+        final List<NormalisedPath> possibleMatches = apiPathsGroupedByNumberOfParts
+            .getOrDefault(requestPath.numberOfParts(), emptyList()).stream()
             .filter(p -> pathMatches(requestPath, p))
             .collect(Collectors.toList());
 
@@ -81,7 +81,7 @@ public class ApiOperationFinder {
         final HttpMethod httpMethod = HttpMethod.valueOf(method.name());
         final Optional<NormalisedPath> pathOpt = possibleMatches.stream()
             .filter(apiPath -> operations.contains(apiPath.original(), httpMethod))
-            .findFirst();
+            .findFirst(); // if exists there can only be one path matching the path and method - overlapping paths+methods are not allowed
 
         return pathOpt
             .map(apiPath -> new ApiOperationMatch(new ApiOperation(apiPath, requestPath, httpMethod,
@@ -91,10 +91,10 @@ public class ApiOperationFinder {
 
     private static boolean pathMatches(@Nonnull final NormalisedPath requestPath,
                                        @Nonnull final NormalisedPath apiPath) {
-        if (requestPath.noOfParts() != apiPath.noOfParts()) {
+        if (requestPath.numberOfParts() != apiPath.numberOfParts()) {
             return false;
         }
-        for (int i = 0; i < requestPath.noOfParts(); i++) {
+        for (int i = 0; i < requestPath.numberOfParts(); i++) {
             if (requestPath.part(i).equalsIgnoreCase(apiPath.part(i)) || apiPath.isParam(i)) {
                 continue;
             }
@@ -118,7 +118,7 @@ public class ApiOperationFinder {
         }
 
         @Override
-        public int noOfParts() {
+        public int numberOfParts() {
             return pathParts.size();
         }
 

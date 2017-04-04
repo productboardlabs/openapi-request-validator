@@ -12,32 +12,17 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public class ApiOperationFinderTest {
+public class ApiOperationResolverTest {
 
     private static final String FILENAME_API_WITH_POST = "schema/api-operation-finder-test.json";
 
-    private ApiOperationFinder classUnderTest;
+    private ApiOperationResolver classUnderTest;
 
     @Before
     public void setup() throws IOException, URISyntaxException {
         final SwaggerDeserializationResult swaggerParseResult = new SwaggerParser().readWithInfo(FILENAME_API_WITH_POST, null, true);
         final Swagger swagger = swaggerParseResult.getSwagger();
-        this.classUnderTest = new ApiOperationFinder(swagger, null);
-    }
-
-    private void assertApiOperationFound(final String requestPath, final Request.Method requestMethod,
-                                         final String expDescription) {
-        final ApiOperationMatch apiOperationMatch = classUnderTest.findApiOperation(requestPath, requestMethod);
-        Assert.assertTrue(apiOperationMatch.isPathFound());
-        Assert.assertTrue(apiOperationMatch.isOperationAllowed());
-        Assert.assertEquals(apiOperationMatch.getApiOperation().getOperation().getDescription(), expDescription);
-    }
-
-    private void assertApiOperationNotFound(final String requestPath, final Request.Method requestMethod,
-                                            final boolean expPathFound, final boolean expOperationAllowed) {
-        final ApiOperationMatch apiOperationMatch = classUnderTest.findApiOperation(requestPath, requestMethod);
-        Assert.assertTrue(apiOperationMatch.isPathFound() == expPathFound);
-        Assert.assertTrue(apiOperationMatch.isOperationAllowed() == expOperationAllowed);
+        this.classUnderTest = new ApiOperationResolver(swagger, null);
     }
 
     @Test
@@ -58,16 +43,36 @@ public class ApiOperationFinderTest {
 
     @Test
     public void missingRequestPath() {
-        assertApiOperationNotFound("/", Request.Method.GET, false, false);
-        assertApiOperationNotFound("/modify/Id/Action", Request.Method.POST, false, false);
-        assertApiOperationNotFound("/very/long/request/path", Request.Method.PATCH, false, false);
+        assertMissingRequestPath("/", Request.Method.GET);
+        assertMissingRequestPath("/modify/Id/Action", Request.Method.POST);
+        assertMissingRequestPath("/very/long/request/path", Request.Method.PATCH);
     }
 
     @Test
     public void operationNotAllowed() {
-        assertApiOperationNotFound("/Id", Request.Method.DELETE, true, false);
-        assertApiOperationNotFound("/Id", Request.Method.PATCH, true, false);
-        assertApiOperationNotFound("/Id'/Action", Request.Method.GET, true, false);
-        assertApiOperationNotFound("/update/Id/Action", Request.Method.GET, true, false);
+        assertOperationNotAllowed("/Id", Request.Method.DELETE);
+        assertOperationNotAllowed("/Id", Request.Method.PATCH);
+        assertOperationNotAllowed("/Id'/Action", Request.Method.GET);
+        assertOperationNotAllowed("/update/Id/Action", Request.Method.GET);
+    }
+
+    private void assertApiOperationFound(final String requestPath, final Request.Method requestMethod,
+                                         final String expDescription) {
+        final ApiOperationMatch apiOperationMatch = classUnderTest.findApiOperation(requestPath, requestMethod);
+        Assert.assertTrue(apiOperationMatch.isPathFound());
+        Assert.assertTrue(apiOperationMatch.isOperationAllowed());
+        Assert.assertEquals(apiOperationMatch.getApiOperation().getOperation().getDescription(), expDescription);
+    }
+
+    private void assertMissingRequestPath(final String requestPath, final Request.Method requestMethod) {
+        final ApiOperationMatch apiOperationMatch = classUnderTest.findApiOperation(requestPath, requestMethod);
+        Assert.assertFalse(apiOperationMatch.isPathFound());
+        Assert.assertFalse(apiOperationMatch.isOperationAllowed());
+    }
+
+    private void assertOperationNotAllowed(final String requestPath, final Request.Method requestMethod) {
+        final ApiOperationMatch apiOperationMatch = classUnderTest.findApiOperation(requestPath, requestMethod);
+        Assert.assertTrue(apiOperationMatch.isPathFound());
+        Assert.assertFalse(apiOperationMatch.isOperationAllowed());
     }
 }

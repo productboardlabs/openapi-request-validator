@@ -281,7 +281,7 @@ public class RequestValidator {
 
         ValidationReport validationReport = ValidationReport.empty();
         final NormalisedPath requestPath = apiOperation.getRequestPath();
-        for (int i = 0; i < apiOperation.getPathString().noOfParts(); i++) {
+        for (int i = 0; i < apiOperation.getPathString().numberOfParts(); i++) {
             if (!apiOperation.getPathString().isParam(i)) {
                 continue;
             }

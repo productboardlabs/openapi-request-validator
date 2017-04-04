@@ -10,7 +10,7 @@ import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.SchemaValidator;
-import com.atlassian.oai.validator.interaction.ApiOperationFinder;
+import com.atlassian.oai.validator.interaction.ApiOperationResolver;
 import io.swagger.models.Swagger;
 import io.swagger.parser.SwaggerParser;
 import io.swagger.parser.util.SwaggerDeserializationResult;
@@ -35,7 +35,7 @@ public class SwaggerRequestResponseValidator {
 
     private final MessageResolver messages;
 
-    private final ApiOperationFinder apiOperationFinder;
+    private final ApiOperationResolver apiOperationResolver;
     private final RequestValidator requestValidator;
     private final ResponseValidator responseValidator;
 
@@ -90,7 +90,7 @@ public class SwaggerRequestResponseValidator {
                             swaggerJsonUrlOrPayload, swaggerParseResult.getMessages().toString().replace("\n", "\n\t")));
         }
         this.messages = messages;
-        this.apiOperationFinder = new ApiOperationFinder(api, basePathOverride);
+        this.apiOperationResolver = new ApiOperationResolver(api, basePathOverride);
         final SchemaValidator schemaValidator = new SchemaValidator(api, messages);
         this.requestValidator = new RequestValidator(schemaValidator, messages, api);
         this.responseValidator = new ResponseValidator(schemaValidator, messages, api);
@@ -157,7 +157,7 @@ public class SwaggerRequestResponseValidator {
 
     private ValidationReport validateOnApiOperation(@Nonnull final String path, @Nonnull final Request.Method method,
                                                     @Nonnull final Function<ApiOperation, ValidationReport> validationFunction) {
-        final ApiOperationMatch apiOperationMatch = apiOperationFinder.findApiOperation(path, method);
+        final ApiOperationMatch apiOperationMatch = apiOperationResolver.findApiOperation(path, method);
         if (!apiOperationMatch.isPathFound()) {
             return ValidationReport.singleton(
                     messages.get("validation.request.path.missing", path)

@@ -14,7 +14,7 @@ public interface NormalisedPath {
     /**
      * @return The number of path parts from the normalised path
      */
-    int noOfParts();
+    int numberOfParts();
 
     /**
      * @return The path part at the given index

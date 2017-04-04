@@ -23,7 +23,7 @@ public class ApiOperation {
                         @Nonnull final HttpMethod method, @Nonnull final Operation operation) {
 
         this.pathString = requireNonNull(pathString, "A path string is required");
-        this.requestPath = requireNonNull(requestPath, "A api path is required");
+        this.requestPath = requireNonNull(requestPath, "An api path is required");
         this.method = requireNonNull(method, "A request method is required");
         this.operation = requireNonNull(operation, "A operation object is required");
     }
