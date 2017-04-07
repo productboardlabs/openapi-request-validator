@@ -8,6 +8,7 @@ import io.swagger.models.ModelImpl;
 import io.swagger.models.RefModel;
 import io.swagger.models.Swagger;
 import io.swagger.models.properties.ArrayProperty;
+import io.swagger.models.properties.FloatProperty;
 import io.swagger.models.properties.IntegerProperty;
 import io.swagger.models.properties.ObjectProperty;
 import io.swagger.models.properties.Property;
@@ -205,14 +206,45 @@ public class SchemaValidatorTest {
         final String value =
                 "{\"foo\":\"bar\"," +
                 "\"baz\": null," +
+                "\"int\": null," +
                 "\"obj\":{\"obj1\": null, \"obj2\": null, \"obj3\": \"val3\"}," +
                 "\"arr\":[null, \"val1\", \"val2\"]}";
         final Model schema = new ModelImpl()
                 .property("foo", new StringProperty())
                 .property("baz", new StringProperty())
+                .property("int", new IntegerProperty())
                 .property("obj", new ObjectProperty())
                 .property("arr", new ArrayProperty())
                 .required("foo");
+
+        assertPass(classUnderTest.validate(value, schema));
+    }
+
+    @Test
+    public void validate_withValidModel_shouldPass_whenContainsNullValues_inArray() {
+        final String value = "{\"arr\": [1, 2, null, 3]}";
+        final Model schema = new ModelImpl()
+                .property("arr", new ArrayProperty().items(new IntegerProperty()));
+
+        assertPass(classUnderTest.validate(value, schema));
+    }
+
+    @Test
+    public void validate_withValidModel_shouldPass_whenContainsNullValues_inObjects_inArrays() {
+        final String value =
+                "{\"arr\": [" +
+                    "{\"int\":null}," +
+                    "{\"str\":null}," +
+                    "{\"flt\":null}" +
+                "]}";
+
+        final Model schema = new ModelImpl()
+                .property("arr", new ArrayProperty().items(
+                        new ObjectProperty()
+                                .property("int", new IntegerProperty())
+                                .property("str", new StringProperty())
+                                .property("flt", new FloatProperty())
+                ));
 
         assertPass(classUnderTest.validate(value, schema));
     }

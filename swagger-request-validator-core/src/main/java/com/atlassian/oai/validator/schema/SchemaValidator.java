@@ -73,8 +73,8 @@ public class SchemaValidator {
     /**
      * Build a new validator for the given API specification.
      *
-     * @param api The API to build the validator for. If provided, is used to retrieve schema definitions
-     *            for use in references.
+     * @param api      The API to build the validator for. If provided, is used to retrieve schema definitions
+     *                 for use in references.
      * @param messages The message resolver to use.
      */
     public SchemaValidator(@Nullable final Swagger api, @Nonnull final MessageResolver messages) {
@@ -85,9 +85,8 @@ public class SchemaValidator {
     /**
      * Validate the given value against the given property schema.
      *
-     * @param value The value to validate
+     * @param value  The value to validate
      * @param schema The property schema to validate the value against
-     *
      * @return A validation report containing accumulated validation errors
      */
     @Nonnull
@@ -98,9 +97,8 @@ public class SchemaValidator {
     /**
      * Validate the given value against the given model schema.
      *
-     * @param value The value to validate
+     * @param value  The value to validate
      * @param schema The model schema to validate the value against
-     *
      * @return A validation report containing accumulated validation errors
      */
     @Nonnull
@@ -197,16 +195,25 @@ public class SchemaValidator {
 
         while (!toClean.isEmpty()) {
             final JsonNode n = toClean.pop();
-            if (!n.isObject()) {
-                continue;
-            }
-            final Iterator<Map.Entry<String, JsonNode>> fields = n.fields();
-            while (fields.hasNext()) {
-                final Map.Entry<String, JsonNode> field = fields.next();
-                if (field.getValue().isNull()) {
-                    fields.remove();
-                } else if (field.getValue().isObject()) {
-                    toClean.add(field.getValue());
+            if (n.isObject()) {
+                final Iterator<Map.Entry<String, JsonNode>> fields = n.fields();
+                while (fields.hasNext()) {
+                    final JsonNode field = fields.next().getValue();
+                    if (field.isNull()) {
+                        fields.remove();
+                    } else if (field.isObject() || field.isArray()) {
+                        toClean.add(field);
+                    }
+                }
+            } else if (n.isArray()) {
+                final Iterator<JsonNode> elements = n.elements();
+                while (elements.hasNext()) {
+                    final JsonNode e = elements.next();
+                    if (e.isNull()) {
+                        elements.remove();
+                    } else if (e.isObject() || e.isArray()) {
+                        toClean.add(e);
+                    }
                 }
             }
         }
@@ -244,10 +251,10 @@ public class SchemaValidator {
 
         final String message =
                 (pointer.isEmpty() ? "" : "[Path '" + pointer + "'] ")
-                + capitalise(pm.getMessage());
+                        + capitalise(pm.getMessage());
 
         return ValidationReport.singleton(
-            messages.create("validation.schema." + validationKeyword, message, subReports.toArray(new String[0]))
+                messages.create("validation.schema." + validationKeyword, message, subReports.toArray(new String[0]))
         );
     }
 
