@@ -33,16 +33,14 @@ public class SimpleRequestTest {
         assertThat(request.getMethod(), is(Request.Method.DELETE));
         assertTrue(request.getBody().isPresent());
         assertThat(request.getBody().get(), is("body"));
-        // the query parameter "query0" wasn't added to the query parameters
-        assertThat(request.getQueryParameters(), containsInAnyOrder("query1", "query2", "query3", "query4"));
+        assertThat(request.getQueryParameters(), containsInAnyOrder("query0", "query1", "query2", "query3", "query4"));
         assertThat(request.getQueryParameterValues("query1"), containsInAnyOrder("abcd", "1234"));
         assertThat(request.getQueryParameterValues("query2"), containsInAnyOrder("+-*/"));
         assertThat(request.getQueryParameterValues("QUERY3"), containsInAnyOrder("1234", "abcd"));
         assertThat(request.getQueryParameterValues("QuErY4"), containsInAnyOrder("xyz", "XYZ"));
         assertTrue(request.getQueryParameterValues("query0").isEmpty());
         assertTrue(request.getQueryParameterValues("does not exist").isEmpty());
-        // the header value "header0" wasn't added to the header values
-        assertThat(request.getHeaders().keySet(), containsInAnyOrder("header1", "header2", "header3", "header4"));
+        assertThat(request.getHeaders().keySet(), containsInAnyOrder("header0", "header1", "header2", "header3", "header4"));
         assertThat(request.getHeaderValues("header1"), containsInAnyOrder("abc", "123"));
         assertThat(request.getHeaderValues("header2"), containsInAnyOrder("+-*"));
         assertThat(request.getHeaderValues("HEADER3"), containsInAnyOrder("123", "abc"));
