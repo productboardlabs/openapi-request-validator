@@ -9,10 +9,14 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Simple immutable {@link Request} implementation.
@@ -60,10 +64,13 @@ public class SimpleRequest implements Request {
     @Override
     @Nonnull
     public Collection<String> getQueryParameterValues(final String name) {
-        if (name != null && queryParams.containsKey(name.toLowerCase())) {
-            return Collections.unmodifiableCollection(queryParams.get(name.toLowerCase()));
+        if (name == null || !queryParams.containsKey(name.toLowerCase())) {
+            return emptyList();
         }
-        return Collections.emptyList();
+
+        return unmodifiableList(
+                queryParams.get(name.toLowerCase()).stream().filter(Objects::nonNull).collect(toList())
+        );
     }
 
     @Override
@@ -81,10 +88,13 @@ public class SimpleRequest implements Request {
     @Nonnull
     @Override
     public Collection<String> getHeaderValues(final String name) {
-        if (name != null && headers.containsKey(name.toLowerCase())) {
-            return Collections.unmodifiableCollection(headers.get(name.toLowerCase()));
+        if (name == null || !headers.containsKey(name.toLowerCase())) {
+            return emptyList();
         }
-        return Collections.emptyList();
+
+        return unmodifiableList(
+                headers.get(name.toLowerCase()).stream().filter(Objects::nonNull).collect(toList())
+        );
     }
 
     /**
@@ -129,7 +139,11 @@ public class SimpleRequest implements Request {
         }
 
         public Builder withHeader(final String name, final List<String> values) {
-            this.headers.putAll(name.toLowerCase(), values);
+            if (values == null || values.isEmpty()) {
+                headers.put(name, null);
+            } else {
+                headers.putAll(name.toLowerCase(), values);
+            }
             return this;
         }
 
@@ -138,7 +152,11 @@ public class SimpleRequest implements Request {
         }
 
         public Builder withQueryParam(final String name, final List<String> values) {
-            queryParams.putAll(name.toLowerCase(), values);
+            if (values == null || values.isEmpty()) {
+                queryParams.put(name, null);
+            } else {
+                queryParams.putAll(name.toLowerCase(), values);
+            }
             return this;
         }
 
