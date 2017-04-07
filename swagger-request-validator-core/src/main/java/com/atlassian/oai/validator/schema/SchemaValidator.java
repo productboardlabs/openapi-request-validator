@@ -193,7 +193,7 @@ public class SchemaValidator {
         final JsonNode result = node.deepCopy();
 
         final Deque<JsonNode> toClean = new ArrayDeque<>();
-        toClean.add(result);
+        toClean.push(result);
 
         while (!toClean.isEmpty()) {
             final JsonNode n = toClean.pop();
@@ -204,7 +204,7 @@ public class SchemaValidator {
                     if (field.isNull()) {
                         fields.remove();
                     } else if (field.isObject() || field.isArray()) {
-                        toClean.add(field);
+                        toClean.push(field);
                     }
                 }
             } else if (n.isArray()) {
@@ -214,7 +214,7 @@ public class SchemaValidator {
                     if (e.isNull()) {
                         elements.remove();
                     } else if (e.isObject() || e.isArray()) {
-                        toClean.add(e);
+                        toClean.push(e);
                     }
                 }
             }
