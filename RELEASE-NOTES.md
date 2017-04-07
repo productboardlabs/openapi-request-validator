@@ -1,3 +1,10 @@
+#v1.0.13
+* Fixed a bug in validation of nulls in arrays, or in objects within arrays
+[[#37]](https://bitbucket.org/atlassian/swagger-request-validator/issues/37)
+* Added support for no-value query params and headers in the SimpleRequest builder
+[[#34]](https://bitbucket.org/atlassian/swagger-request-validator/issues/34)
+
+
 #v1.0.12
 
 * Added support for Swagger format validation within JSON schema (string/date, integer/int32 etc.)
