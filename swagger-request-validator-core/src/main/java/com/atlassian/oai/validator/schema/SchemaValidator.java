@@ -181,13 +181,15 @@ public class SchemaValidator {
         if (schema instanceof StringProperty) {
             normalisedValue = quote(value);
         }
-        return cleanupNullValues(Json.mapper().readTree(normalisedValue));
+        return removeNullValuesFromTree(Json.mapper().readTree(normalisedValue));
     }
 
     /**
-     * Cleans up null values (except arrays) from the given <code>JsonNode</code> and its sub-nodes.
+     * Removes null values from the given <code>JsonNode</code> and its sub-nodes.
+     * <p>
+     * Traverses arrays and objects.
      */
-    private JsonNode cleanupNullValues(final JsonNode node) {
+    private JsonNode removeNullValuesFromTree(final JsonNode node) {
         final JsonNode result = node.deepCopy();
 
         final Deque<JsonNode> toClean = new ArrayDeque<>();
