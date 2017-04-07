@@ -1,0 +1,113 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "API Operation Finder"
+  },
+  "basePath": "/",
+  "paths": {
+    "/{id}": {
+      "get": {
+        "description": "GET:/{id}",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/delete": {
+      "delete": {
+        "description": "DELETE:/delete",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/{id}/{action}": {
+      "put": {
+        "description": "PUT:/{id}/{action}",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string"
+          },
+          {
+            "name": "action",
+            "in": "path",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/update/{id}": {
+      "post": {
+        "description": "POST:/update/{id}",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "patch": {
+        "description": "PATCH:/update/{id}",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/update/{id}/{action}": {
+      "post": {
+        "description": "POST:/update/{id}/{action}",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string"
+          },
+          {
+            "name": "action",
+            "in": "path",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    }
+  }
+}

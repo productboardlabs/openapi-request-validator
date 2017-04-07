@@ -59,17 +59,14 @@ public class RequestValidator {
     /**
      * Validate the request against the given API operation
      *
-     * @param requestPath The normalised path the request is on
      * @param request The request to validate
      * @param apiOperation The operation to validate the request against
      *
      * @return A validation report containing validation errors
      */
     @Nonnull
-    public ValidationReport validateRequest(@Nonnull final NormalisedPath requestPath,
-                                            @Nonnull final Request request,
+    public ValidationReport validateRequest(@Nonnull final Request request,
                                             @Nonnull final ApiOperation apiOperation) {
-        requireNonNull(requestPath, "A request path is required");
         requireNonNull(request, "A request is required");
         requireNonNull(apiOperation, "An API operation is required");
 
@@ -77,7 +74,7 @@ public class RequestValidator {
                 .merge(validateContentType(request, apiOperation))
                 .merge(validateAccepts(request, apiOperation))
                 .merge(validateHeaders(request, apiOperation))
-                .merge(validatePathParameters(requestPath, apiOperation))
+                .merge(validatePathParameters(apiOperation))
                 .merge(validateRequestBody(request.getBody(), apiOperation))
                 .merge(validateQueryParameters(request, apiOperation));
     }
@@ -280,11 +277,11 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private ValidationReport validatePathParameters(@Nonnull final NormalisedPath requestPath,
-                                                    @Nonnull final ApiOperation apiOperation) {
+    private ValidationReport validatePathParameters(@Nonnull final ApiOperation apiOperation) {
 
         ValidationReport validationReport = ValidationReport.empty();
-        for (int i = 0; i < apiOperation.getPathString().parts().size(); i++) {
+        final NormalisedPath requestPath = apiOperation.getRequestPath();
+        for (int i = 0; i < apiOperation.getPathString().numberOfParts(); i++) {
             if (!apiOperation.getPathString().isParam(i)) {
                 continue;
             }
