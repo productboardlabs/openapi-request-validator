@@ -112,9 +112,9 @@ public class ApiOperationResolver {
 
         public ApiBasedNormalisedPath(@Nonnull final String path, @Nullable final String apiPrefix) {
             this.original = requireNonNull(path, "A path is required");
+            this.apiPrefix = apiPrefix;
             this.normalised = normalise(path);
             this.pathParts = unmodifiableList(asList(normalised.split("/")));
-            this.apiPrefix = apiPrefix;
         }
 
         @Override
