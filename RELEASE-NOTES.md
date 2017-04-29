@@ -1,3 +1,7 @@
+#v1.0.14
+* Fixed a bug where API path prefix is not used in operation lookup 
+[[#40]](https://bitbucket.org/atlassian/swagger-request-validator/issues/40)
+
 #v1.0.13
 * Fixed a bug in validation of nulls in arrays, or in objects within arrays
 [[#37]](https://bitbucket.org/atlassian/swagger-request-validator/issues/37)
