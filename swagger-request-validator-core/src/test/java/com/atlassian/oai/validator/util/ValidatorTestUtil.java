@@ -180,6 +180,10 @@ public class ValidatorTestUtil {
         return floatParam(true, null, null);
     }
 
+    public static SerializableParameter doubleParam() {
+        return doubleParam(true, null, null);
+    }
+
     public static SerializableParameter floatParam(final boolean required) {
         return floatParam(required, null, null);
     }
@@ -193,6 +197,17 @@ public class ValidatorTestUtil {
         when(result.getName()).thenReturn("Test Parameter");
         when(result.getType()).thenReturn("number");
         when(result.getFormat()).thenReturn("float");
+        when(result.getRequired()).thenReturn(required);
+        when(result.getMinimum()).thenReturn(min == null ? null : BigDecimal.valueOf(min));
+        when(result.getMaximum()).thenReturn(max == null ? null : BigDecimal.valueOf(max));
+        return result;
+    }
+
+    public static SerializableParameter doubleParam(final boolean required, final Double min, final Double max) {
+        final SerializableParameter result = mock(SerializableParameter.class);
+        when(result.getName()).thenReturn("Test Parameter");
+        when(result.getType()).thenReturn("number");
+        when(result.getFormat()).thenReturn("double");
         when(result.getRequired()).thenReturn(required);
         when(result.getMinimum()).thenReturn(min == null ? null : BigDecimal.valueOf(min));
         when(result.getMaximum()).thenReturn(max == null ? null : BigDecimal.valueOf(max));

@@ -14,6 +14,8 @@ import static org.mockito.Mockito.when;
 
 public class SwaggerValidationFilterTest {
 
+    private static final String FILENAME_API_WITH_POST = "api-with-post.json";
+
     private SwaggerValidationFilter classUnderTest = new SwaggerValidationFilter("api.json");
 
     @Test(expected = IllegalArgumentException.class)
@@ -42,6 +44,28 @@ public class SwaggerValidationFilterTest {
                 notNullValue());
     }
 
+    /**
+     * Test result before fix:
+     * com.atlassian.oai.validator.restassured.SwaggerValidationFilter$SwaggerValidationException: Validation failed.
+     * [ERROR] POST operation not allowed on path '/hello/{name}'.
+     */
+    @Test
+    public void filter_validationTakesMethodIntoAccount() {
+        classUnderTest = new SwaggerValidationFilter(FILENAME_API_WITH_POST);
+        assertThat(classUnderTest.filter(
+            requestSpec("POST", "/hello/create", "{\"name\" : \"John Doe\"}"), null,
+            response(201, "{\"message\":\"Hello !\"}")),
+            notNullValue());
+    }
+
+    private FilterableRequestSpecification requestSpec(final String method, final String path, final String body) {
+        final FilterableRequestSpecification request = mock(FilterableRequestSpecification.class);
+        when(request.getMethod()).thenReturn(method);
+        when(request.getDerivedPath()).thenReturn(path);
+        when(request.getBody()).thenReturn(body);
+        return request;
+    }
+
     private FilterableRequestSpecification requestSpec(final String method, final String path) {
         final FilterableRequestSpecification request = mock(FilterableRequestSpecification.class);
         when(request.getMethod()).thenReturn(method);
@@ -62,4 +86,5 @@ public class SwaggerValidationFilterTest {
 
         return ctx;
     }
+
 }

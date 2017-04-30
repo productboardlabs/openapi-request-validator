@@ -1,7 +1,6 @@
 package com.atlassian.oai.validator.schema;
 
 import com.atlassian.oai.validator.report.MessageResolver;
-import com.atlassian.oai.validator.report.MutableValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -27,6 +26,7 @@ import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.StreamSupport;
 
 import static com.atlassian.oai.validator.schema.SwaggerV20Library.OAI_V2_METASCHEMA_URI;
 import static com.atlassian.oai.validator.schema.SwaggerV20Library.schemaFactory;
@@ -73,8 +73,8 @@ public class SchemaValidator {
     /**
      * Build a new validator for the given API specification.
      *
-     * @param api The API to build the validator for. If provided, is used to retrieve schema definitions
-     *            for use in references.
+     * @param api      The API to build the validator for. If provided, is used to retrieve schema definitions
+     *                 for use in references.
      * @param messages The message resolver to use.
      */
     public SchemaValidator(@Nullable final Swagger api, @Nonnull final MessageResolver messages) {
@@ -85,9 +85,8 @@ public class SchemaValidator {
     /**
      * Validate the given value against the given property schema.
      *
-     * @param value The value to validate
+     * @param value  The value to validate
      * @param schema The property schema to validate the value against
-     *
      * @return A validation report containing accumulated validation errors
      */
     @Nonnull
@@ -98,9 +97,8 @@ public class SchemaValidator {
     /**
      * Validate the given value against the given model schema.
      *
-     * @param value The value to validate
+     * @param value  The value to validate
      * @param schema The model schema to validate the value against
-     *
      * @return A validation report containing accumulated validation errors
      */
     @Nonnull
@@ -113,31 +111,33 @@ public class SchemaValidator {
         requireNonEmpty(value, "A value is required");
         requireNonNull(schema, "A schema is required");
 
-        final MutableValidationReport validationReport = new MutableValidationReport();
-
         try {
-            final JsonNode schemaObject = readSchema(schema);
-            final JsonNode content = readContent(value, schema);
+            final JsonNode schemaObject, content;
+            try {
+                schemaObject = readSchema(schema);
+                content = readContent(value, schema);
 
-            checkForKnownGotchasAndLogMessage(schemaObject);
+                checkForKnownGotchasAndLogMessage(schemaObject);
+            } catch (final JsonParseException e) {
+                return ValidationReport.singleton(messages.get(INVALID_JSON_KEY, e.getMessage()));
+            }
 
-            final ListProcessingReport processingReport =
-                    (ListProcessingReport) schemaFactory().getJsonSchema(schemaObject).validate(content, true);
+            final ListProcessingReport processingReport;
+            try {
+                processingReport = (ListProcessingReport) schemaFactory().getJsonSchema(schemaObject)
+                        .validate(content, true);
+            } catch (final ProcessingException e) {
+                return getProcessingMessage(e.getProcessingMessage(), "processingError");
+            }
 
             if ((processingReport != null) && !processingReport.isSuccess()) {
-                processingReport.forEach(pm -> addProcessingMessage(validationReport, pm, null));
+                return StreamSupport.stream(processingReport.spliterator(), false)
+                        .map(pm -> getProcessingMessage(pm, null))
+                        .reduce(ValidationReport.empty(), ValidationReport::merge);
             }
-            return validationReport;
-
-        } catch (final JsonParseException e) {
-            validationReport.add(messages.get(INVALID_JSON_KEY, e.getMessage()));
-            return validationReport;
-        } catch (final ProcessingException e) {
-            addProcessingMessage(validationReport, e.getProcessingMessage(), "processingError");
-            return validationReport;
+            return ValidationReport.empty();
         } catch (final Exception e) {
-            validationReport.add(messages.get(UNKNOWN_ERROR_KEY, e.getMessage()));
-            return validationReport;
+            return ValidationReport.singleton(messages.get(UNKNOWN_ERROR_KEY, e.getMessage()));
         }
     }
 
@@ -181,30 +181,41 @@ public class SchemaValidator {
         if (schema instanceof StringProperty) {
             normalisedValue = quote(value);
         }
-        return cleanupNullValues(Json.mapper().readTree(normalisedValue));
+        return removeNullValuesFromTree(Json.mapper().readTree(normalisedValue));
     }
 
     /**
-     * Cleans up null values (except arrays) from the given <code>JsonNode</code> and its sub-nodes.
+     * Removes null values from the given <code>JsonNode</code> and its sub-nodes.
+     * <p>
+     * Traverses arrays and objects.
      */
-    private JsonNode cleanupNullValues(final JsonNode node) {
+    private JsonNode removeNullValuesFromTree(final JsonNode node) {
         final JsonNode result = node.deepCopy();
 
         final Deque<JsonNode> toClean = new ArrayDeque<>();
-        toClean.add(result);
+        toClean.push(result);
 
         while (!toClean.isEmpty()) {
             final JsonNode n = toClean.pop();
-            if (!n.isObject()) {
-                continue;
-            }
-            final Iterator<Map.Entry<String, JsonNode>> fields = n.fields();
-            while (fields.hasNext()) {
-                final Map.Entry<String, JsonNode> field = fields.next();
-                if (field.getValue().isNull()) {
-                    fields.remove();
-                } else if (field.getValue().isObject()) {
-                    toClean.add(field.getValue());
+            if (n.isObject()) {
+                final Iterator<Map.Entry<String, JsonNode>> fields = n.fields();
+                while (fields.hasNext()) {
+                    final JsonNode field = fields.next().getValue();
+                    if (field.isNull()) {
+                        fields.remove();
+                    } else if (field.isObject() || field.isArray()) {
+                        toClean.push(field);
+                    }
+                }
+            } else if (n.isArray()) {
+                final Iterator<JsonNode> elements = n.elements();
+                while (elements.hasNext()) {
+                    final JsonNode e = elements.next();
+                    if (e.isNull()) {
+                        elements.remove();
+                    } else if (e.isObject() || e.isArray()) {
+                        toClean.push(e);
+                    }
                 }
             }
         }
@@ -224,9 +235,8 @@ public class SchemaValidator {
         }
     }
 
-    private void addProcessingMessage(final MutableValidationReport validationReport,
-                                      final ProcessingMessage pm,
-                                      final String keywordOverride) {
+    private ValidationReport getProcessingMessage(final ProcessingMessage pm,
+                                                  final String keywordOverride) {
         final JsonNode processingMessage = pm.asJson();
         final String validationKeyword = keywordOverride != null ? keywordOverride : processingMessage.get("keyword").textValue();
         final String pointer = processingMessage.has("instance") ? processingMessage.get("instance").get("pointer").textValue() : "";
@@ -243,9 +253,11 @@ public class SchemaValidator {
 
         final String message =
                 (pointer.isEmpty() ? "" : "[Path '" + pointer + "'] ")
-                + capitalise(pm.getMessage());
+                        + capitalise(pm.getMessage());
 
-        validationReport.add(messages.create("validation.schema." + validationKeyword, message, subReports.toArray(new String[0])));
+        return ValidationReport.singleton(
+                messages.create("validation.schema." + validationKeyword, message, subReports.toArray(new String[0]))
+        );
     }
 
 }

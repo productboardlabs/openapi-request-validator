@@ -1,13 +1,15 @@
 package com.atlassian.oai.validator.parameter;
 
-import com.atlassian.oai.validator.report.MessageResolver;
 import org.junit.Test;
+
+import com.atlassian.oai.validator.report.MessageResolver;
 
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.floatParam;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.floatParamFormat;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.floatParamMultipleOf;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.stringParam;
 
 public class NumberParameterValidatorTest {
 
@@ -51,7 +53,7 @@ public class NumberParameterValidatorTest {
     @Test
     public void validate_withValueGreaterThanMax_shouldFail_ifMaxSpecified() {
         assertFail(classUnderTest.validate("1.1", floatParam(null, 1.0)),
-                "validation.request.parameter.number.aboveMax");
+            "validation.request.parameter.number.aboveMax");
     }
 
     @Test
@@ -69,7 +71,7 @@ public class NumberParameterValidatorTest {
     @Test
     public void validate_withValueLessThanMin_shouldFail_ifMinSpecified() {
         assertFail(classUnderTest.validate("0.9", floatParam(1.0, null)),
-                "validation.request.parameter.number.belowMin");
+            "validation.request.parameter.number.belowMin");
     }
 
     @Test
@@ -102,5 +104,10 @@ public class NumberParameterValidatorTest {
     public void validate_withNonNumericValueFormatUnknown_shouldFail() {
         assertFail(classUnderTest.validate("not-a-Number", floatParamFormat("unknown")),
             "validation.request.parameter.invalidFormat");
+    }
+
+    @Test
+    public void validate_validatorDoesNotSupportParameterType_shouldPass() {
+        assertPass(classUnderTest.validate("invalid parameter", stringParam(true)));
     }
 }

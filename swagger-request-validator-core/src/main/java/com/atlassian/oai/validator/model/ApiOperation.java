@@ -2,7 +2,6 @@ package com.atlassian.oai.validator.model;
 
 import io.swagger.models.HttpMethod;
 import io.swagger.models.Operation;
-import io.swagger.models.Path;
 
 import javax.annotation.Nonnull;
 
@@ -16,15 +15,15 @@ import static java.util.Objects.requireNonNull;
  */
 public class ApiOperation {
     private final NormalisedPath pathString;
-    private final Path pathObject;
+    private final NormalisedPath requestPath;
     private final HttpMethod method;
     private final Operation operation;
 
-    public ApiOperation(@Nonnull final NormalisedPath pathString, @Nonnull final Path pathObject,
+    public ApiOperation(@Nonnull final NormalisedPath pathString, @Nonnull final NormalisedPath requestPath,
                         @Nonnull final HttpMethod method, @Nonnull final Operation operation) {
 
         this.pathString = requireNonNull(pathString, "A path string is required");
-        this.pathObject = requireNonNull(pathObject, "A path object is required");
+        this.requestPath = requireNonNull(requestPath, "An api path is required");
         this.method = requireNonNull(method, "A request method is required");
         this.operation = requireNonNull(operation, "A operation object is required");
     }
@@ -38,11 +37,11 @@ public class ApiOperation {
     }
 
     /**
-     * @return The path object from the OAI specification
+     * @return The normalised path from original request
      */
     @Nonnull
-    public Path getPathObject() {
-        return pathObject;
+    public NormalisedPath getRequestPath() {
+        return requestPath;
     }
 
     /**

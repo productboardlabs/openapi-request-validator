@@ -1,3 +1,22 @@
+#v1.0.14
+* Fixed a bug where API path prefix is not used in operation lookup 
+[[#40]](https://bitbucket.org/atlassian/swagger-request-validator/issues/40)
+
+#v1.0.13
+* Fixed a bug in validation of nulls in arrays, or in objects within arrays
+[[#37]](https://bitbucket.org/atlassian/swagger-request-validator/issues/37)
+* Added support for no-value query params and headers in the SimpleRequest builder
+[[#34]](https://bitbucket.org/atlassian/swagger-request-validator/issues/34)
+
+
+#v1.0.12
+
+* Added support for Swagger format validation within JSON schema (string/date, integer/int32 etc.)
+[[#36]](https://bitbucket.org/atlassian/swagger-request-validator/issues/36)
+* Added support for matching on method+path where there are overlapping path patterns across request operations
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/27/swagger-validation-failed-for-similar/diff)
+
+
 # v1.0.11
 
 * Added ability to validate requests/responses independently

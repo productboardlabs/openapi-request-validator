@@ -1,0 +1,49 @@
+{
+  "format-valid": {
+    "birthDate": "1990-01-02",
+    "lastLogin": "2017-02-02T12:13:14.156+07:00",
+    "age": 27,
+    "id": 34359738368,
+    "flo": 0.3333,
+    "dbl": 0.6083333333333333,
+    "email": "someone@somewhere.com",
+    "encoded": "SGVsbG8gU3dhZ2dlciByZXF1ZXN0IHZhbGlkYXRvciE=",
+    "archive": true
+  },
+  "format-invalid-date": {
+    "birthDate": "1990-01-02T08:00:00"
+  },
+  "format-invalid-date-time": {
+    "lastLogin": "2017-02-02 12:13:14.156+07:00"
+  },
+  "format-invalid-int32": {
+    "age": 34359738368
+  },
+  "format-invalid-int64": {
+    "id": 343597383683435973836834359738368
+  },
+  "format-invalid-float": {
+    "flo": 0.6083333333333333
+  },
+  "format-invalid-double": {
+    "dbl": 0.343597383683435973836834359738368343597383683435973836834359738368
+  },
+  "format-invalid-email": {
+    "email": "someone@some@where.com"
+  },
+  "format-invalid-base64": {
+    "encoded": "invalid-base64-content"
+  },
+  "format-invalid-multiple-messages": {
+    "birthDate": "invalid-date",
+    "id": 343597383683435973836834359738368,
+    "encoded": "invalid-base64-content"
+  },
+  "format-invalid-types": {
+    "id": 123.456,
+    "age": "u18",
+    "dbl": "test",
+    "email": 10,
+    "archive": "true"
+  }
+}
