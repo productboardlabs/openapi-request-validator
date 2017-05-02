@@ -1,7 +1,6 @@
 package com.atlassian.oai.validator.report;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,32 +14,8 @@ public class MutableValidationReport implements ValidationReport {
 
     private final List<ValidationReport.Message> messages = new ArrayList<>();
 
-    /**
-     * Add a validation message to this report.
-     *
-     * @param message The validation message to include
-     *
-     * @return This validation report instance
-     */
-    public MutableValidationReport add(@Nullable final Message message) {
-        if (message != null && message.getLevel() != Level.IGNORE) {
-            this.messages.add(message);
-        }
-        return this;
-    }
-
-    public void addAll(@Nonnull final ValidationReport other) {
-        this.messages.addAll(other.getMessages());
-    }
-
-    @Override
-    public ValidationReport merge(@Nonnull final ValidationReport other) {
-        requireNonNull(other, "A validation report is required");
-
-        final MutableValidationReport result = new MutableValidationReport();
-        result.messages.addAll(this.getMessages());
-        result.messages.addAll(other.getMessages());
-        return result;
+    MutableValidationReport(final Message message) {
+        this.messages.add(message);
     }
 
     @Nonnull
@@ -49,4 +24,35 @@ public class MutableValidationReport implements ValidationReport {
         return unmodifiableList(messages);
     }
 
+    @Override
+    public ValidationReport merge(@Nonnull final ValidationReport other) {
+        requireNonNull(other, "A validation report is required");
+        this.messages.addAll(other.getMessages());
+        return this;
+    }
+
+    /**
+     * Merge method especially optimized for {@link MutableValidationReport}.
+     * @see ValidationReport#merge(ValidationReport)
+     *
+     * @param other an other {@link MutableValidationReport}
+     * @return this {@link ValidationReport}
+     */
+    public ValidationReport merge(@Nonnull final MutableValidationReport other) {
+        requireNonNull(other, "A validation report is required");
+        this.messages.addAll(other.messages);
+        return this;
+    }
+
+    /**
+     * Merge method especially optimized for {@link EmptyValidationReport}.
+     * @see ValidationReport#merge(ValidationReport)
+     *
+     * @param other an {@link EmptyValidationReport}
+     * @return this {@link ValidationReport}
+     */
+    public ValidationReport merge(@Nonnull final EmptyValidationReport other) {
+        // nothing to do as an empty validation report contains no messages
+        return this;
+    }
 }

@@ -2,6 +2,8 @@ package com.atlassian.oai.validator.report;
 
 import org.junit.Test;
 
+import java.util.stream.Stream;
+
 import static com.atlassian.oai.validator.report.ValidationReport.Level.ERROR;
 import static com.atlassian.oai.validator.report.ValidationReport.Level.INFO;
 import static com.atlassian.oai.validator.report.ValidationReport.Level.WARN;
@@ -12,22 +14,24 @@ public class ValidationReportFormatterTest {
 
     @Test
     public void format_withNull_returnsNullReportMessage() {
-        final MutableValidationReport report = null;
+        final ValidationReport report = null;
         assertThat(ValidationReportFormatter.format(report), is("Validation report is null."));
     }
 
     @Test
     public void format_noErrors_returnsNoErrorMessage() {
-        final MutableValidationReport report = new MutableValidationReport();
+        final ValidationReport report = ValidationReport.empty();
         assertThat(ValidationReportFormatter.format(report), is("No validation errors."));
     }
 
     @Test
     public void format_withErrors_returnsFormattedMessages() {
-        final MutableValidationReport report = new MutableValidationReport();
-        report.add(new ImmutableMessage("key1", ERROR, "message 1"));
-        report.add(new ImmutableMessage("key2", WARN, "message 2"));
-        report.add(new ImmutableMessage("key3", INFO, "message 3"));
+        final ValidationReport report = Stream.of(
+                new ImmutableMessage("key1", ERROR, "message 1"),
+                new ImmutableMessage("key2", WARN, "message 2"),
+                new ImmutableMessage("key3", INFO, "message 3"))
+            .map(ValidationReport::singleton)
+            .reduce(ValidationReport.empty(), ValidationReport::merge);
 
         final String expected =
                 "Validation failed.\n" +

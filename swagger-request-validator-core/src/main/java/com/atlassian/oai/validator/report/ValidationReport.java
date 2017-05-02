@@ -1,7 +1,6 @@
 package com.atlassian.oai.validator.report;
 
 import javax.annotation.Nonnull;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -36,31 +35,13 @@ public interface ValidationReport {
         List<String> getAdditionalInfo();
     }
 
-    ValidationReport EMPTY_REPORT = new ValidationReport(){
-
-        @Override
-        public boolean hasErrors() {
-            return false;
-        }
-
-        @Override
-        public List<Message> getMessages() {
-            return Collections.emptyList();
-        }
-
-        @Override
-        public ValidationReport merge(final ValidationReport other) {
-            return other;
-        }
-    };
-
     /**
      * Return an empty report.
      *
      * @return an immutable empty report
      */
     static ValidationReport empty() {
-        return EMPTY_REPORT;
+        return EmptyValidationReport.EMPTY_REPORT;
     }
 
     /**
@@ -71,31 +52,7 @@ public interface ValidationReport {
      * @return An unmodifiable validation report with a single message
      */
     static ValidationReport singleton(final Message message) {
-        if (message == null || message.getLevel() == Level.IGNORE) {
-            return empty();
-        }
-
-        return new ValidationReport() {
-
-            @Override
-            public boolean hasErrors() {
-                return true;
-            }
-
-            @Nonnull
-            @Override
-            public List<Message> getMessages() {
-                return Collections.singletonList(message);
-            }
-
-            @Override
-            public ValidationReport merge(@Nonnull final ValidationReport other) {
-                final MutableValidationReport result = new MutableValidationReport();
-                result.addAll(this);
-                result.addAll(other);
-                return result;
-            }
-        };
+        return new MutableValidationReport(message);
     }
 
     /**
@@ -117,11 +74,11 @@ public interface ValidationReport {
 
     /**
      * Merge the validation messages from the given report with this one, and return a
-     * new report with the merged messaged.
+     * report with the merged messaged.
      *
      * @param other The validation report to merge with this one
      *
-     * @return A new report that contains all the messages from this report and the other report
+     * @return A report that contains all the messages from this report and the other report
      */
     ValidationReport merge(@Nonnull ValidationReport other);
 

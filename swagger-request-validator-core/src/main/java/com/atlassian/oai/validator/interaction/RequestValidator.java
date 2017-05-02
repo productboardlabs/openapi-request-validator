@@ -93,7 +93,7 @@ public class RequestValidator {
             return filtered.entrySet().stream().map(e -> validateSingleSecurityParameter(request, e.getValue()))
                     .reduce(ValidationReport.empty(), ValidationReport::merge);
         }
-        return ValidationReport.EMPTY_REPORT;
+        return ValidationReport.empty();
     }
 
     @Nonnull
@@ -109,10 +109,10 @@ public class RequestValidator {
                     case "query" :
                         return checkApiKeyAuthorizationByQueryParameter(request, apiKeyAuthDefinition);
                     default:
-                        return ValidationReport.EMPTY_REPORT;
+                        return ValidationReport.empty();
                 }
             default:
-                return ValidationReport.EMPTY_REPORT;
+                return ValidationReport.empty();
         }
     }
 
@@ -123,7 +123,7 @@ public class RequestValidator {
         if (!authQueryParam.isPresent()) {
             return ValidationReport.singleton(messages.get("validation.request.security.missing", request.getMethod(), request.getPath()));
         }
-        return ValidationReport.EMPTY_REPORT;
+        return ValidationReport.empty();
     }
 
     @Nonnull
@@ -136,7 +136,7 @@ public class RequestValidator {
                          request.getMethod(), request.getPath())
             );
         }
-        return ValidationReport.EMPTY_REPORT;
+        return ValidationReport.empty();
     }
 
     @Nonnull
@@ -168,7 +168,7 @@ public class RequestValidator {
 
         final Collection<String> requestHeaderValues = request.getHeaderValues(headerName);
         if (requestHeaderValues.isEmpty()) {
-            return ValidationReport.EMPTY_REPORT;
+            return ValidationReport.empty();
         }
 
         final List<MediaType> requestMediaTypes = new ArrayList<>();
@@ -181,7 +181,7 @@ public class RequestValidator {
         }
 
         if (specMediaTypes.isEmpty()) {
-            return ValidationReport.EMPTY_REPORT;
+            return ValidationReport.empty();
         }
 
         return specMediaTypes

@@ -70,7 +70,7 @@ public class ArrayParameterValidator extends BaseParameterValidator {
     @Nonnull
     public ValidationReport validate(@Nullable final String value, @Nullable final Parameter p) {
         if (!supports(p)) {
-            return ValidationReport.EMPTY_REPORT;
+            return ValidationReport.empty();
         }
 
         final SerializableParameter parameter = (SerializableParameter) p;
@@ -80,7 +80,7 @@ public class ArrayParameterValidator extends BaseParameterValidator {
         }
 
         if (value == null || value.trim().isEmpty()) {
-            return ValidationReport.EMPTY_REPORT;
+            return ValidationReport.empty();
         }
 
         return doValidate(value, parameter);
@@ -88,7 +88,7 @@ public class ArrayParameterValidator extends BaseParameterValidator {
 
     public ValidationReport validate(@Nullable final Collection<String> values, @Nullable final Parameter p) {
         if (p == null) {
-            return ValidationReport.EMPTY_REPORT;
+            return ValidationReport.empty();
         }
 
         final SerializableParameter parameter = (SerializableParameter) p;
@@ -97,7 +97,7 @@ public class ArrayParameterValidator extends BaseParameterValidator {
         }
 
         if (values == null) {
-            return ValidationReport.EMPTY_REPORT;
+            return ValidationReport.empty();
         }
 
         if (!parameter.getCollectionFormat().equalsIgnoreCase(CollectionFormat.MULTI.name())) {
