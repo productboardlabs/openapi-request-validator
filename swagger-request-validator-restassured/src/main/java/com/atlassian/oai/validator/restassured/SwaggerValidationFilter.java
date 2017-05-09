@@ -1,6 +1,7 @@
 package com.atlassian.oai.validator.restassured;
 
 import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
+import com.atlassian.oai.validator.SwaggerRequestResponseValidator.Builder;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReportFormatter;
 import io.restassured.filter.Filter;
@@ -33,9 +34,25 @@ public class SwaggerValidationFilter implements Filter {
 
     private final SwaggerRequestResponseValidator validator;
 
-    public SwaggerValidationFilter(final String swaggerJsonUrl) {
+	public SwaggerValidationFilter(final String swaggerJsonUrl) {
+		this(swaggerJsonUrl, null);
+	}
+
+	public SwaggerValidationFilter(final String swaggerJsonUrl, final String basePathOverride) {
+		this(swaggerJsonUrl, basePathOverride, null, null);
+	}
+
+	public SwaggerValidationFilter(final String swaggerJsonUrl, final String basePathOverride, final String authHeaderKey, final String authHeaderValue) {
         requireNonEmpty(swaggerJsonUrl, "A Swagger URL is required");
-        this.validator = SwaggerRequestResponseValidator.createFor(swaggerJsonUrl).build();
+
+        Builder validatorBuilder = SwaggerRequestResponseValidator.createFor(swaggerJsonUrl);
+		if (basePathOverride != null) {
+			validatorBuilder.withBasePathOverride(basePathOverride);
+		}
+		if (authHeaderKey != null && authHeaderValue != null) {
+			validatorBuilder.withAuthHeaderData(authHeaderKey, authHeaderValue);
+		}
+		this.validator = validatorBuilder.build();
     }
 
     @Override
