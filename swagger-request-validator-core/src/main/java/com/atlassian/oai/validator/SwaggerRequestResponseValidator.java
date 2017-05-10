@@ -93,9 +93,9 @@ public class SwaggerRequestResponseValidator {
      * @param authData         (Optional) A List of authentication data to add to swagger spec retrieval request.
      */
     private SwaggerRequestResponseValidator(@Nonnull final String swaggerJsonUrlOrPayload,
-								            @Nullable final String basePathOverride,
-								            @Nonnull final MessageResolver messages,
-								            @Nullable final List<AuthorizationValue> authData) {    
+            @Nullable final String basePathOverride,
+            @Nonnull final MessageResolver messages,
+            @Nullable final List<AuthorizationValue> authData) {
 
         requireNonNull(swaggerJsonUrlOrPayload, "A Swagger JSON URL or payload is required");
 
