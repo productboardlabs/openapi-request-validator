@@ -81,7 +81,7 @@ public class SwaggerRequestResponseValidator {
     private SwaggerRequestResponseValidator(@Nonnull final String swaggerJsonUrlOrPayload,
                                             @Nullable final String basePathOverride,
                                             @Nonnull final MessageResolver messages) {
-    	this(swaggerJsonUrlOrPayload, basePathOverride, messages, null);
+        this(swaggerJsonUrlOrPayload, basePathOverride, messages, null);
     }
     
     /**
@@ -200,7 +200,7 @@ public class SwaggerRequestResponseValidator {
         private String swaggerJsonUrlOrPayload = "";
         private String basePathOverride;
         private LevelResolver levelResolver = LevelResolver.defaultResolver();
-		private List<AuthorizationValue> authData;
+        private List<AuthorizationValue> authData;
 
         /**
          * The location of the Swagger JSON specification to use in the validator.
