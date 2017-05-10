@@ -257,19 +257,19 @@ public class SwaggerRequestResponseValidator {
             return this;
         }
 
-		/**
-		 * An optional key value header to add to the Swagger spec retrieval request.
-		 * <p>
-		 * This is necessary if e.g. your Swagger specification is retrieved from a remote host and the path to retrieve is secured by an api key in the request header.
-		 *
-		 * @param key A key name to add as request header key.
-		 * @param value A value to add as request header value.
-		 * @return this builder instance.
-		 */
-		public Builder withAuthHeaderData(final String key, final String value) {
-			this.authData = Arrays.asList(new AuthorizationValue(key, value, "header"));
-			return this;
-		}
+        /**
+         * An optional key value header to add to the Swagger spec retrieval request.
+         * <p>
+         * This is necessary if e.g. your Swagger specification is retrieved from a remote host and the path to retrieve is secured by an api key in the request header.
+         *
+         * @param key A key name to add as request header key.
+         * @param value A value to add as request header value.
+         * @return this builder instance.
+         */
+        public Builder withAuthHeaderData(final String key, final String value) {
+            this.authData = Arrays.asList(new AuthorizationValue(key, value, "header"));
+            return this;
+        }
 
         /**
          * Build a configured {@link SwaggerRequestResponseValidator} instance with the values collected in this builder.
@@ -277,7 +277,7 @@ public class SwaggerRequestResponseValidator {
          * @return The configured {@link SwaggerRequestResponseValidator} instance.
          */
         public SwaggerRequestResponseValidator build() {
-			return new SwaggerRequestResponseValidator(swaggerJsonUrlOrPayload, basePathOverride, new MessageResolver(levelResolver), authData);
+            return new SwaggerRequestResponseValidator(swaggerJsonUrlOrPayload, basePathOverride, new MessageResolver(levelResolver), authData);
         }
     }
 }

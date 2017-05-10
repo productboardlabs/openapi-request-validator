@@ -34,25 +34,25 @@ public class SwaggerValidationFilter implements Filter {
 
     private final SwaggerRequestResponseValidator validator;
 
-	public SwaggerValidationFilter(final String swaggerJsonUrl) {
-		this(swaggerJsonUrl, null);
-	}
+    public SwaggerValidationFilter(final String swaggerJsonUrl) {
+        this(swaggerJsonUrl, null);
+    }
 
-	public SwaggerValidationFilter(final String swaggerJsonUrl, final String basePathOverride) {
-		this(swaggerJsonUrl, basePathOverride, null, null);
-	}
+    public SwaggerValidationFilter(final String swaggerJsonUrl, final String basePathOverride) {
+        this(swaggerJsonUrl, basePathOverride, null, null);
+    }
 
-	public SwaggerValidationFilter(final String swaggerJsonUrl, final String basePathOverride, final String authHeaderKey, final String authHeaderValue) {
+    public SwaggerValidationFilter(final String swaggerJsonUrl, final String basePathOverride, final String authHeaderKey, final String authHeaderValue) {
         requireNonEmpty(swaggerJsonUrl, "A Swagger URL is required");
 
         Builder validatorBuilder = SwaggerRequestResponseValidator.createFor(swaggerJsonUrl);
-		if (basePathOverride != null) {
-			validatorBuilder.withBasePathOverride(basePathOverride);
-		}
-		if (authHeaderKey != null && authHeaderValue != null) {
-			validatorBuilder.withAuthHeaderData(authHeaderKey, authHeaderValue);
-		}
-		this.validator = validatorBuilder.build();
+        if (basePathOverride != null) {
+            validatorBuilder.withBasePathOverride(basePathOverride);
+        }
+        if (authHeaderKey != null && authHeaderValue != null) {
+            validatorBuilder.withAuthHeaderData(authHeaderKey, authHeaderValue);
+        }
+        this.validator = validatorBuilder.build();
     }
 
     @Override
