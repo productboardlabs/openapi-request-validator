@@ -267,7 +267,7 @@ public class SwaggerRequestResponseValidator {
          * @return this builder instance.
          */
         public Builder withAuthHeaderData(final String key, final String value) {
-			requireNonNull(key, "A key for the auth header is required");
+            requireNonNull(key, "A key for the auth header is required");
 
             this.authData = Arrays.asList(new AuthorizationValue(key, value, "header"));
             return this;
