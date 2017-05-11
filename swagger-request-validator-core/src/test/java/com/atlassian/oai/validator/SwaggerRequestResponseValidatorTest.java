@@ -65,4 +65,33 @@ public class SwaggerRequestResponseValidatorTest {
         SwaggerRequestResponseValidator.createFor("<>").build();
     }
 
+	@Test(expected = NullPointerException.class)
+	public void validate_withNullAuthHeaderKey_throwsNPE() throws Exception {
+		SwaggerRequestResponseValidator
+				.createFor("/oai/api-users.json")
+				.withAuthHeaderData(null, null)
+				.build();
+	}
+
+	@Test
+	public void validate_withNullAuthHeaderValue() throws Exception {
+		SwaggerRequestResponseValidator
+				.createFor("/oai/api-users.json")
+				.withAuthHeaderData("api-key", null)
+				.build();
+	}
+
+	@Test
+	public void validate_withBasePathOverride() throws Exception {
+		SwaggerRequestResponseValidator classUnderTest = 
+				SwaggerRequestResponseValidator
+						.createFor("/oai/api-users.json")
+						.withBasePathOverride("/test")
+						.build();
+
+		final Request request = SimpleRequest.Builder.get("/test/users/1").build();
+		final Response response = SimpleResponse.Builder.ok().withBody("{\"id\":1,\"name\":\"Max\",\"email\":\"max@example.com\"}").build();
+
+		assertPass(classUnderTest.validate(request, response));
+	}
 }

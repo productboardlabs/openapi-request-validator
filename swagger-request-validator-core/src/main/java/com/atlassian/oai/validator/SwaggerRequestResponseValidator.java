@@ -263,10 +263,12 @@ public class SwaggerRequestResponseValidator {
          * This is necessary if e.g. your Swagger specification is retrieved from a remote host and the path to retrieve is secured by an api key in the request header.
          *
          * @param key A key name to add as request header key.
-         * @param value A value to add as request header value.
+         * @param value (Optional) A value to add as request header value for the given key.
          * @return this builder instance.
          */
         public Builder withAuthHeaderData(final String key, final String value) {
+			requireNonNull(key, "A key for the auth header is required");
+
             this.authData = Arrays.asList(new AuthorizationValue(key, value, "header"));
             return this;
         }
