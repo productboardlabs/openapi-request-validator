@@ -83,7 +83,7 @@ public class SwaggerRequestResponseValidatorTest {
 
     @Test
     public void validate_withBasePathOverride() throws Exception {
-        SwaggerRequestResponseValidator classUnderTest = 
+        final SwaggerRequestResponseValidator classUnderTest = 
                 SwaggerRequestResponseValidator
                         .createFor("/oai/api-users.json")
                         .withBasePathOverride("/test")
