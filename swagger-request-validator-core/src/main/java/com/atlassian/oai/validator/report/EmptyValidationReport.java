@@ -1,15 +1,19 @@
 package com.atlassian.oai.validator.report;
 
-import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
+/**
+ * An empty {@link ValidationReport} which contains no {@link ValidationReport.Message}.
+ * An {@link EmptyValidationReport} can't have any error by definition.
+ * <p>
+ * This {@link EmptyValidationReport} is immutable.
+ */
 public class EmptyValidationReport implements ValidationReport {
 
-    static final ValidationReport EMPTY_REPORT = new EmptyValidationReport();
-
-    private EmptyValidationReport() {
-        // there is no need for more than one EmptyValidationReport besides this constant one above
+    EmptyValidationReport() {
     }
 
     @Override
@@ -21,10 +25,5 @@ public class EmptyValidationReport implements ValidationReport {
     @Override
     public List<Message> getMessages() {
         return Collections.emptyList();
-    }
-
-    @Override
-    public ValidationReport merge(@Nonnull final ValidationReport other) {
-        return other;
     }
 }

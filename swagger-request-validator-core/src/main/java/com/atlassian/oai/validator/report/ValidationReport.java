@@ -3,6 +3,8 @@ package com.atlassian.oai.validator.report;
 import javax.annotation.Nonnull;
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A report of validation errors that occurred during validation.
  * <p>
@@ -41,7 +43,7 @@ public interface ValidationReport {
      * @return an immutable empty report
      */
     static ValidationReport empty() {
-        return EmptyValidationReport.EMPTY_REPORT;
+        return new EmptyValidationReport();
     }
 
     /**
@@ -52,7 +54,7 @@ public interface ValidationReport {
      * @return An unmodifiable validation report with a single message
      */
     static ValidationReport singleton(final Message message) {
-        return new MutableValidationReport(message);
+        return new SingletonValidationReport(message);
     }
 
     /**
@@ -73,13 +75,16 @@ public interface ValidationReport {
     List<Message> getMessages();
 
     /**
-     * Merge the validation messages from the given report with this one, and return a
-     * report with the merged messaged.
+     * Merges the given validation report with this one, and return a new, unmodifiable report
+     * containing the messages from both reports.
      *
      * @param other The validation report to merge with this one
      *
-     * @return A report that contains all the messages from this report and the other report
+     * @return A new, unmodifiable validation report containing all the messages from this report
+     * and the other report
      */
-    ValidationReport merge(@Nonnull ValidationReport other);
-
+    default ValidationReport merge(@Nonnull ValidationReport other) {
+        requireNonNull(other, "A validation report is required");
+        return new MergedValidationReport(this, other);
+    }
 }
