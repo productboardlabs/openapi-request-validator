@@ -1,5 +1,9 @@
 package com.atlassian.oai.validator;
 
+import java.util.Arrays;
+import java.util.List;
+
+import com.atlassian.oai.validator.interaction.ApiOperationResolver;
 import com.atlassian.oai.validator.interaction.RequestValidator;
 import com.atlassian.oai.validator.interaction.ResponseValidator;
 import com.atlassian.oai.validator.model.ApiOperation;
@@ -10,8 +14,9 @@ import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.SchemaValidator;
-import com.atlassian.oai.validator.interaction.ApiOperationResolver;
+
 import io.swagger.models.Swagger;
+import io.swagger.models.auth.AuthorizationValue;
 import io.swagger.parser.SwaggerParser;
 import io.swagger.parser.util.SwaggerDeserializationResult;
 
@@ -76,13 +81,28 @@ public class SwaggerRequestResponseValidator {
     private SwaggerRequestResponseValidator(@Nonnull final String swaggerJsonUrlOrPayload,
                                             @Nullable final String basePathOverride,
                                             @Nonnull final MessageResolver messages) {
+        this(swaggerJsonUrlOrPayload, basePathOverride, messages, null);
+    }
+    
+    /**
+     * Construct a new validator for the specification at the given URL with authentication data.
+     *
+     * @param swaggerJsonUrlOrPayload   The location of the Swagger JSON specification to use in this validator.
+     * @param basePathOverride (Optional) override for the base path defined in the Swagger specification.
+     * @param messages         The message resolver to use for resolving validation messages.
+     * @param authData         (Optional) A List of authentication data to add to swagger spec retrieval request.
+     */
+    private SwaggerRequestResponseValidator(@Nonnull final String swaggerJsonUrlOrPayload,
+            @Nullable final String basePathOverride,
+            @Nonnull final MessageResolver messages,
+            @Nullable final List<AuthorizationValue> authData) {
 
         requireNonNull(swaggerJsonUrlOrPayload, "A Swagger JSON URL or payload is required");
 
         final SwaggerDeserializationResult swaggerParseResult =
                 swaggerJsonUrlOrPayload.startsWith("{") ?
                         new SwaggerParser().readWithInfo(swaggerJsonUrlOrPayload) :
-                        new SwaggerParser().readWithInfo(swaggerJsonUrlOrPayload, null, true);
+                        new SwaggerParser().readWithInfo(swaggerJsonUrlOrPayload, authData, true);
         final Swagger api = swaggerParseResult.getSwagger();
         if (api == null) {
             throw new IllegalArgumentException(
@@ -180,6 +200,7 @@ public class SwaggerRequestResponseValidator {
         private String swaggerJsonUrlOrPayload = "";
         private String basePathOverride;
         private LevelResolver levelResolver = LevelResolver.defaultResolver();
+        private List<AuthorizationValue> authData;
 
         /**
          * The location of the Swagger JSON specification to use in the validator.
@@ -237,12 +258,28 @@ public class SwaggerRequestResponseValidator {
         }
 
         /**
+         * An optional key value header to add to the Swagger spec retrieval request.
+         * <p>
+         * This is necessary if e.g. your Swagger specification is retrieved from a remote host and the path to retrieve is secured by an api key in the request header.
+         *
+         * @param key A key name to add as request header key.
+         * @param value (Optional) A value to add as request header value for the given key.
+         * @return this builder instance.
+         */
+        public Builder withAuthHeaderData(final String key, final String value) {
+            requireNonNull(key, "A key for the auth header is required");
+
+            this.authData = Arrays.asList(new AuthorizationValue(key, value, "header"));
+            return this;
+        }
+
+        /**
          * Build a configured {@link SwaggerRequestResponseValidator} instance with the values collected in this builder.
          *
          * @return The configured {@link SwaggerRequestResponseValidator} instance.
          */
         public SwaggerRequestResponseValidator build() {
-            return new SwaggerRequestResponseValidator(swaggerJsonUrlOrPayload, basePathOverride, new MessageResolver(levelResolver));
+            return new SwaggerRequestResponseValidator(swaggerJsonUrlOrPayload, basePathOverride, new MessageResolver(levelResolver), authData);
         }
     }
 }

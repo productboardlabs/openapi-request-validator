@@ -1,16 +1,19 @@
 package com.atlassian.oai.validator.restassured;
 
-import io.restassured.filter.FilterContext;
-import io.restassured.response.Response;
-import io.restassured.response.ResponseBody;
-import io.restassured.specification.FilterableRequestSpecification;
-import org.junit.Test;
-
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import org.junit.Test;
+
+import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
+
+import io.restassured.filter.FilterContext;
+import io.restassured.response.Response;
+import io.restassured.response.ResponseBody;
+import io.restassured.specification.FilterableRequestSpecification;
 
 public class SwaggerValidationFilterTest {
 
@@ -19,8 +22,13 @@ public class SwaggerValidationFilterTest {
     private SwaggerValidationFilter classUnderTest = new SwaggerValidationFilter("api.json");
 
     @Test(expected = IllegalArgumentException.class)
-    public void create_withNull_throwsException() {
-        new SwaggerValidationFilter(null);
+    public void create_withNullString_throwsException() {
+        new SwaggerValidationFilter((String) null);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void create_withNullSwaggerRequestResponseValidator_throwsException() {
+        new SwaggerValidationFilter((SwaggerRequestResponseValidator) null);
     }
 
     @Test(expected = IllegalArgumentException.class)
