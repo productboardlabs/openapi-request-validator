@@ -1,3 +1,7 @@
+#v1.0.15
+* Added support for providing auth data when retrieving remote Swagger API documents 
+[[#41]](https://bitbucket.org/atlassian/swagger-request-validator/issues/41)
+
 #v1.0.14
 * Fixed a bug where API path prefix is not used in operation lookup 
 [[#40]](https://bitbucket.org/atlassian/swagger-request-validator/issues/40)
