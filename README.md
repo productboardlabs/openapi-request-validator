@@ -99,8 +99,16 @@ Pull requests, issues and comments welcome. For pull requests:
 * Follow the existing style (checkstyle checking is enabled by default in builds)
 * Separate unrelated changes into multiple pull requests
 
+Please ensure that your branch builds successfully before you open your PR. The Pipelines build won't run by default 
+on a remote branch, so either enable Pipelines for your fork or run the build locally: 
+
+```
+mvn clean verify javadoc:javadoc
+```
+
 See the existing [issues](https://bitbucket.org/atlassian/swagger-request-validator/issues) for things to start
-contributing.
+contributing. If you want to start working on an issue, please assign the ticket to yourself and mark it as `open`
+so others know it is in progress.
 
 For bigger changes, make sure you start a discussion first by creating
 an issue and explaining the intended change.
