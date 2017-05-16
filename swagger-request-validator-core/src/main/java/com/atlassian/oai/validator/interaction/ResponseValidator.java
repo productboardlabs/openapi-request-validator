@@ -83,7 +83,7 @@ public class ResponseValidator {
                                                   @Nonnull final io.swagger.models.Response apiResponse,
                                                   @Nonnull final ApiOperation apiOperation) {
         if (apiResponse.getSchema() == null) {
-            return ValidationReport.EMPTY_REPORT;
+            return ValidationReport.empty();
         }
 
         if (!response.getBody().isPresent() || response.getBody().get().isEmpty()) {
@@ -102,7 +102,7 @@ public class ResponseValidator {
 
         final Optional<String> requestHeader = response.getHeaderValue("Content-Type");
         if (!requestHeader.isPresent()) {
-            return ValidationReport.EMPTY_REPORT;
+            return ValidationReport.empty();
         }
 
         final MediaType requestMediaType;
@@ -114,7 +114,7 @@ public class ResponseValidator {
 
         final Collection<String> produces = getProduces(apiOperation);
         if (produces.isEmpty()) {
-            return ValidationReport.EMPTY_REPORT;
+            return ValidationReport.empty();
         }
 
         final boolean contentTypeMatchesProduces = produces.stream()
@@ -124,7 +124,7 @@ public class ResponseValidator {
             return ValidationReport.singleton(messages.get("validation.response.contentType.notAllowed", requestHeader.get(), produces));
         }
 
-        return ValidationReport.EMPTY_REPORT;
+        return ValidationReport.empty();
     }
 
     @Nonnull
@@ -143,7 +143,7 @@ public class ResponseValidator {
 
         final Map<String, Property> apiHeaders = apiResponse.getHeaders();
         if (apiHeaders == null || apiHeaders.isEmpty()) {
-            return ValidationReport.EMPTY_REPORT;
+            return ValidationReport.empty();
         }
 
         return apiHeaders.entrySet()

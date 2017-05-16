@@ -22,6 +22,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -51,7 +52,8 @@ public class ValidatorTestUtil {
      * Assert that validation has passed.
      */
     public static void assertPass(final ValidationReport report) {
-        assertThat(report.getMessages(), is(empty()));
+        assertTrue(report.getMessages().isEmpty() ||
+            report.getMessages().stream().allMatch(m -> m.getLevel() == ValidationReport.Level.IGNORE));
     }
 
     /**
