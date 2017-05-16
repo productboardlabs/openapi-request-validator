@@ -1,3 +1,8 @@
+#v1.0.16
+* Removed `MutableValidationReport` and improved validation report behavior
+[[#35]](https://bitbucket.org/atlassian/swagger-request-validator/issues/35)
+[[#14]](https://bitbucket.org/atlassian/swagger-request-validator/issues/14)
+
 #v1.0.15
 * Added support for providing auth data when retrieving remote Swagger API documents 
 [[#41]](https://bitbucket.org/atlassian/swagger-request-validator/issues/41)
