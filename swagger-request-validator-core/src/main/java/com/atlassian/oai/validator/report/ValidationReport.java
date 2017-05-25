@@ -1,6 +1,7 @@
 package com.atlassian.oai.validator.report;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
@@ -53,7 +54,10 @@ public interface ValidationReport {
      *
      * @return An unmodifiable validation report with a single message
      */
-    static ValidationReport singleton(final Message message) {
+    static ValidationReport singleton(@Nullable final Message message) {
+        if (message == null) {
+            return empty();
+        }
         return new SingletonValidationReport(message);
     }
 

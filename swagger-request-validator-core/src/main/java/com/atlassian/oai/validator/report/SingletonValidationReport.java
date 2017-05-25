@@ -3,6 +3,7 @@ package com.atlassian.oai.validator.report;
 import com.google.common.collect.ImmutableList;
 
 import javax.annotation.Nonnull;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -15,6 +16,10 @@ public class SingletonValidationReport implements ValidationReport {
     private final List<ValidationReport.Message> singletonMessage;
 
     SingletonValidationReport(final ValidationReport.Message message) {
+        if (message == null) {
+            singletonMessage = Collections.emptyList();
+            return;
+        }
         this.singletonMessage = ImmutableList.of(message);
     }
 
