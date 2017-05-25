@@ -1,3 +1,9 @@
+#v1.0.17
+* Added support for additional HTTP methods
+[[#42]](https://bitbucket.org/atlassian/swagger-request-validator/issues/42)
+* Fixed NPE when missing required header parameters
+[[#43]](https://bitbucket.org/atlassian/swagger-request-validator/issues/43)
+
 #v1.0.16
 * Removed `MutableValidationReport` and improved validation report behavior
 [[#35]](https://bitbucket.org/atlassian/swagger-request-validator/issues/35)
