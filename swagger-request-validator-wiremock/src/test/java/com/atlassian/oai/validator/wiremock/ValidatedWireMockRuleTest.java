@@ -45,7 +45,7 @@ public class ValidatedWireMockRuleTest {
 
     private void setupStubWithBody(final String responseBody) {
         classUnderTest.stubFor(
-                WireMock.get(urlEqualTo("/hello/bob"))
+                WireMock.any(urlEqualTo("/hello/bob"))
                         .willReturn(aResponse()
                                 .withStatus(200)
                                 .withHeader("content-type", "application/json")

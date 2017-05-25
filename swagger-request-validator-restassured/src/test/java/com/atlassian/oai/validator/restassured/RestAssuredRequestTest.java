@@ -9,10 +9,10 @@ import org.junit.Test;
 import java.util.Optional;
 
 import static com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder.responseDefinition;
+import static com.github.tomakehurst.wiremock.client.WireMock.any;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static io.restassured.RestAssured.given;
+import static java.util.Arrays.stream;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
@@ -25,8 +25,7 @@ public class RestAssuredRequestTest {
 
     @Before
     public void setup() {
-        wireMock.stubFor(get(anyUrl()).willReturn(responseDefinition().withStatus(200)));
-        wireMock.stubFor(post(anyUrl()).willReturn(responseDefinition().withStatus(200)));
+        wireMock.stubFor(any(anyUrl()).willReturn(responseDefinition().withStatus(200)));
     }
 
     @Test
@@ -36,10 +35,10 @@ public class RestAssuredRequestTest {
         given()
                 .port(wireMock.port())
                 .filter(requestCaptor)
-        .when()
+                .when()
                 .header("X-My-Header", "foo", "bar")
                 .get("/path")
-        .then()
+                .then()
                 .assertThat()
                 .statusCode(200);
 
@@ -61,9 +60,9 @@ public class RestAssuredRequestTest {
                 .queryParam("queryParam", "value1")
                 .param("requestParam", "value2")
                 .filter(requestCaptor)
-        .when()
+                .when()
                 .get("/path")
-        .then()
+                .then()
                 .assertThat()
                 .statusCode(200);
 
@@ -83,9 +82,9 @@ public class RestAssuredRequestTest {
                 .queryParam("queryParam", "value1")
                 .param("requestParam", "value2")
                 .filter(requestCaptor)
-        .when()
+                .when()
                 .post("/path")
-        .then()
+                .then()
                 .assertThat()
                 .statusCode(200);
 
@@ -103,9 +102,9 @@ public class RestAssuredRequestTest {
         given()
                 .port(wireMock.port())
                 .filter(requestCaptor)
-        .when()
+                .when()
                 .get("/path")
-        .then()
+                .then()
                 .assertThat()
                 .statusCode(200);
 
@@ -121,14 +120,35 @@ public class RestAssuredRequestTest {
                 .port(wireMock.port())
                 .body("The body")
                 .filter(requestCaptor)
-        .when()
+                .when()
                 .post("/path")
-        .then()
+                .then()
                 .assertThat()
                 .statusCode(200);
 
         final RestAssuredRequest classUnderTest = requestCaptor.getRequest();
         assertThat(classUnderTest.getBody().get(), is("The body"));
+    }
+
+    @Test
+    public void supportsAllRequestMethods() {
+        stream(io.restassured.http.Method.values()).forEach(m -> {
+            assertThat(captureRequest(m).getMethod(), is(Request.Method.valueOf(m.name())));
+        });
+    }
+
+    private RestAssuredRequest captureRequest(final io.restassured.http.Method method) {
+        final CapturingFilter requestCaptor = new CapturingFilter();
+        given()
+                .port(wireMock.port())
+                .filter(requestCaptor)
+                .when()
+                .request(method, "/path")
+                .then()
+                .assertThat()
+                .statusCode(200);
+
+        return requestCaptor.getRequest();
     }
 
 }

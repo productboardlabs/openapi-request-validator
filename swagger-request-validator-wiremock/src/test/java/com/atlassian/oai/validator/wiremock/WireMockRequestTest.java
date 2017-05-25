@@ -3,8 +3,11 @@ package com.atlassian.oai.validator.wiremock;
 import com.github.tomakehurst.wiremock.http.HttpHeader;
 import com.github.tomakehurst.wiremock.http.HttpHeaders;
 import com.github.tomakehurst.wiremock.http.Request;
+import com.github.tomakehurst.wiremock.http.RequestMethod;
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import java.util.Arrays;
 
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
@@ -79,6 +82,25 @@ public class WireMockRequestTest {
 
         assertThat(classUnderTest.getHeaderValues("not-a-header").isEmpty(), is(true));
         assertThat(classUnderTest.getHeaderValue("not-a-header").isPresent(), is(false));
+    }
+
+    @Test
+    public void supportsAllRequestMethods() {
+        Arrays.stream(RequestMethod.values()).forEach(m -> {
+            // Wiremock supports an "any" method for matching,
+            // but will not be present in requests validated in the filter
+            if (m.getName().equalsIgnoreCase(RequestMethod.ANY.getName())) {
+                return;
+            }
+
+            final Request request = Mockito.mock(Request.class);
+            when(request.getUrl()).thenReturn("/some/path");
+            when(request.getMethod()).thenReturn(m);
+
+            final WireMockRequest classUnderTest = new WireMockRequest(request);
+            assertThat(classUnderTest.getMethod(),
+                    is(com.atlassian.oai.validator.model.Request.Method.valueOf(m.getName())));
+        });
     }
 
 }
