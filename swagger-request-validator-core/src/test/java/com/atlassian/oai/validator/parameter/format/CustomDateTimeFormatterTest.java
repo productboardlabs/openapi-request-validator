@@ -30,7 +30,7 @@ public class CustomDateTimeFormatterTest {
     }
     
     @Test
-    public void parse_withoutZeroOffset_shouldPass() {
+    public void parse_withZeroOffset_shouldPass() {
         try {
             dateTimeFormatter.parse("2017-05-31T20:00:01.123Z");
         } catch (final DateTimeParseException ex) {
@@ -52,7 +52,7 @@ public class CustomDateTimeFormatterTest {
         try {
             dateTimeFormatter.parse("2017-05-31T20:00:01.123456789-05:30");
         } catch (final DateTimeParseException ex) {
-            fail("Nano second fraction should pass");
+            fail("Negative date time offset should pass");
         }
     }
     
