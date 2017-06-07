@@ -427,7 +427,7 @@ public class RequestValidationTest {
     public void validate_withRequiredHeader_shouldPass_whenSupplied() {
         final Request request = SimpleRequest.Builder
                 .get("/headers")
-                .withHeader("x-required-header", "30")
+                .withHeader("X-Required-Header", "30")
                 .build();
 
         assertPass(classUnderTest.validateRequest(request));
