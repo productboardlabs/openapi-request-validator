@@ -6,6 +6,7 @@ import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
@@ -23,6 +24,12 @@ public class PactResponse implements Response {
     public PactResponse(@Nonnull final au.com.dius.pact.model.Response pactResponse) {
         requireNonNull(pactResponse, "A Pact response is required");
         this.internalResponse = pactResponse;
+
+        if (this.internalResponse.getHeaders() != null) {
+            final TreeMap<String, String> caseInsensitiveHeaders = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            caseInsensitiveHeaders.putAll(internalResponse.getHeaders());
+            this.internalResponse.setHeaders(caseInsensitiveHeaders);
+        }
     }
 
     @Override

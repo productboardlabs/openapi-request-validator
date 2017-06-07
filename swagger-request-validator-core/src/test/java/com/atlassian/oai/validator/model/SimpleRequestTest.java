@@ -40,7 +40,7 @@ public class SimpleRequestTest {
         assertThat(request.getQueryParameterValues("QuErY4"), containsInAnyOrder("xyz", "XYZ"));
         assertTrue(request.getQueryParameterValues("query0").isEmpty());
         assertTrue(request.getQueryParameterValues("does not exist").isEmpty());
-        assertThat(request.getHeaders().keySet(), containsInAnyOrder("header0", "header1", "header2", "header3", "header4"));
+        assertThat(request.getHeaders().keySet(), containsInAnyOrder("header0", "hEAdEr1", "HEADER2", "header3", "header4"));
         assertThat(request.getHeaderValues("header1"), containsInAnyOrder("abc", "123"));
         assertThat(request.getHeaderValues("header2"), containsInAnyOrder("+-*"));
         assertThat(request.getHeaderValues("HEADER3"), containsInAnyOrder("123", "abc"));

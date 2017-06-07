@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -88,12 +89,12 @@ public class SimpleRequest implements Request {
     @Nonnull
     @Override
     public Collection<String> getHeaderValues(final String name) {
-        if (name == null || !headers.containsKey(name.toLowerCase())) {
+        if (name == null || !headers.containsKey(name)) {
             return emptyList();
         }
 
         return unmodifiableList(
-                headers.get(name.toLowerCase()).stream().filter(Objects::nonNull).collect(toList())
+                headers.get(name).stream().filter(Objects::nonNull).collect(toList())
         );
     }
 
@@ -142,7 +143,7 @@ public class SimpleRequest implements Request {
             if (values == null || values.isEmpty()) {
                 headers.put(name, null);
             } else {
-                headers.putAll(name.toLowerCase(), values);
+                headers.putAll(name, values);
             }
             return this;
         }
@@ -165,7 +166,10 @@ public class SimpleRequest implements Request {
         }
 
         public SimpleRequest build() {
-            return new SimpleRequest(method, path, body, queryParams.asMap(), headers.asMap());
+            final TreeMap<String, Collection<String>> caseInsensitiveHeaders = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            caseInsensitiveHeaders.putAll(headers.asMap());
+
+            return new SimpleRequest(method, path, body, queryParams.asMap(), caseInsensitiveHeaders);
         }
     }
 }
