@@ -89,6 +89,6 @@ public class CustomDateTimeFormatterTest {
     
     @Test(expected=DateTimeParseException.class)
     public void parse_withTimeZone_shouldFail() {
-        dateTimeFormatter.parse("2017:05:31T23:45:20.123Z[Europe/Paris]");
+        dateTimeFormatter.parse("2017-05-31T23:45:20.123Z[Europe/Paris]");
     }
 }
