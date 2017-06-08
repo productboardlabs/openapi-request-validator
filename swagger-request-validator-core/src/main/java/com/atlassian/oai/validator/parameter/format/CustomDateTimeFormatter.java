@@ -27,7 +27,7 @@ public class CustomDateTimeFormatter {
         DATE_TIME_FORMATTER = builder.toFormatter();
     }
     
-    public static DateTimeFormatter getInstance() {
+    public static DateTimeFormatter getRFC3339Formatter() {
         return DATE_TIME_FORMATTER;
     }
 }
