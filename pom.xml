@@ -61,6 +61,8 @@
         <wiremock.version>2.1.7</wiremock.version>
         <guava.version>18.0</guava.version>
         <jackson.version>2.6.3</jackson.version>
+        <spring.version>4.3.7.RELEASE</spring.version>
+        <servlet.api.version>3.1.0</servlet.api.version>
 
         <license-maven-plugin.version>1.9</license-maven-plugin.version>
         <maven-checkstyle-plugin.version>2.17</maven-checkstyle-plugin.version>
@@ -72,6 +74,7 @@
         <module>swagger-request-validator-pact</module>
         <module>swagger-request-validator-wiremock</module>
         <module>swagger-request-validator-restassured</module>
+        <module>swagger-request-validator-mockmvc</module>
         <module>swagger-request-validator-examples</module>
     </modules>
 
@@ -95,6 +98,11 @@
             <dependency>
                 <groupId>com.atlassian.oai</groupId>
                 <artifactId>swagger-request-validator-restassured</artifactId>
+                <version>${version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.atlassian.oai</groupId>
+                <artifactId>swagger-request-validator-mockmvc</artifactId>
                 <version>${version}</version>
             </dependency>
 
@@ -149,6 +157,11 @@
                 <version>${slf4j.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>jcl-over-slf4j</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
                 <version>${logback.version}</version>
@@ -182,6 +195,26 @@
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-annotations</artifactId>
                 <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>javax.servlet-api</artifactId>
+                <version>${servlet.api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-test</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-web</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-webmvc</artifactId>
+                <version>${spring.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
