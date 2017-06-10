@@ -10,7 +10,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.util.Optional;
 
 import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -43,40 +42,8 @@ public class MockMvcRequestTest {
         assertThat(classUnderTest.getHeaderValue("not-a-header").isPresent(), is(false));
     }
 
-    //    @Test
-    //    public void mapsRequestComponentsCorrectly2() throws Exception {
-    //        final MvcResult mvcResult = this.mvc
-    //                .perform(get("/path").header("X-My-Header", "foo", "bar"))
-    //                .andExpect(status().isOk())
-    //                .andReturn();
-    //
-    //        final MockMvcRequest classUnderTest = new MockMvcRequest(mvcResult.getRequest());
-    //
-    //        assertThat(classUnderTest.getPath(), is("/path"));
-    //        assertThat(classUnderTest.getMethod(), is(Request.Method.GET));
-    //        assertThat(classUnderTest.getBody().isPresent(), is(false));
-    //        assertThat(classUnderTest.getHeaderValues("x-my-header"), contains("foo", "bar"));
-    //        assertThat(classUnderTest.getHeaderValue("x-my-HEADER").isPresent(), is(true));
-    //        assertThat(classUnderTest.getHeaderValue("not-a-header").isPresent(), is(false));
-    //    }
-    //
-    //    @Test
-    //    public void mapsQueryAndRequestParams_whenGet() throws Exception {
-    //
-    //        final MvcResult mvcResult = this.mvc
-    //                .perform(get("/path").param("queryParam", "value1"))
-    //                .andExpect(status().isOk())
-    //                .andReturn();
-    //
-    //        final MockMvcRequest classUnderTest = new MockMvcRequest(mvcResult.getRequest());
-    //
-    //        assertThat(classUnderTest.getQueryParameters(), contains("queryParam", "requestParam"));
-    //        assertThat(classUnderTest.getQueryParameterValues("queryParam"), contains("value1"));
-    //        assertThat(classUnderTest.getQueryParameterValues("requestParam"), contains("value2"));
-    //    }
-
     @Test
-    public void mapsQueryParamsOnly_whenPost() throws Exception {
+    public void mapsQueryParams() throws Exception {
         final MockHttpServletRequest mockHttpServletRequest = MockMvcRequestBuilders
                 .get("/path")
                 .param("queryParam", "value1")
@@ -86,52 +53,19 @@ public class MockMvcRequestTest {
 
         assertThat(classUnderTest.getQueryParameters(), contains("queryParam"));
         assertThat(classUnderTest.getQueryParameterValues("queryParam"), contains("value1"));
-        assertThat(classUnderTest.getQueryParameterValues("requestParam"), empty());
 
     }
-
-    //    @Test
-    //    public void mapsQueryParamsOnly_whenPost2() throws Exception {
-    //        final MvcResult mvcResult = this.mvc
-    //                .perform(post("/path").param("queryParam", "value1"))
-    //                .andExpect(status().isOk())
-    //                .andReturn();
-    //
-    //        final MockMvcRequest classUnderTest = new MockMvcRequest(mvcResult.getRequest());
-    //
-    //        assertThat(classUnderTest.getQueryParameters(), contains("queryParam"));
-    //        assertThat(classUnderTest.getQueryParameterValues("queryParam"), contains("value1"));
-    //        assertThat(classUnderTest.getQueryParameterValues("requestParam"), empty());
-    //
-    //    }
 
     @Test
     public void getBody_returnsEmpty_whenNoBodyInRequest() throws Exception {
         final MockHttpServletRequest mockHttpServletRequest = MockMvcRequestBuilders
                 .get("/path")
                 .buildRequest(new MockServletConfig().getServletContext());
-        //
-        //        final MvcResult mvcResult = this.mvc
-        //                .perform(get("/path"))
-        //                .andExpect(status().isOk())
-        //                .andReturn();
 
         final MockMvcRequest classUnderTest = new MockMvcRequest(mockHttpServletRequest);
 
         assertThat(classUnderTest.getBody(), is(Optional.empty()));
     }
-    //
-    //    @Test
-    //    public void getBody_returnsEmpty_whenNoBodyInRequest2() throws Exception {
-    //        final MvcResult mvcResult = this.mvc
-    //                .perform(get("/path"))
-    //                .andExpect(status().isOk())
-    //                .andReturn();
-    //
-    //        final MockMvcRequest classUnderTest = new MockMvcRequest(mvcResult.getRequest());
-    //
-    //        assertThat(classUnderTest.getBody(), is(Optional.empty()));
-    //    }
 
     @Test
     public void getBody_returnsBody_whenBodyInRequest() throws Exception {
@@ -145,33 +79,6 @@ public class MockMvcRequestTest {
         assertThat(classUnderTest.getBody().get(), is("The body"));
     }
 
-    //    @Test
-    //    public void getBody_returnsBody_whenBodyInRequest2() throws Exception {
-    //        final MvcResult mvcResult = this.mvc
-    //                .perform(get("/path").content("The body"))
-    //                .andExpect(status().isOk())
-    //                .andReturn();
-    //
-    //        final MockMvcRequest classUnderTest = new MockMvcRequest(mvcResult.getRequest());
-    //
-    //        assertThat(classUnderTest.getBody().get(), is("The body"));
-    //    }
-
-    @Test
-    public void supportsAllRequestMethods2() throws Exception {
-        captureRequest(get("/path"), Request.Method.GET);
-        captureRequest(delete("/path"), Request.Method.DELETE);
-        captureRequest(head("/path"), Request.Method.HEAD);
-        captureRequest(options("/path"), Request.Method.OPTIONS);
-        captureRequest(patch("/path"), Request.Method.PATCH);
-        captureRequest(post("/path"), Request.Method.POST);
-        captureRequest(put("/path"), Request.Method.PUT);
-
-        //        stream(io.restassured.http.Method.values()).forEach(m -> {
-        //            assertThat(captureRequest(m).getMethod(), is(Request.Method.valueOf(m.name())));
-        //        });
-    }
-
     @Test
     public void supportsAllRequestMethods() throws Exception {
         captureRequest(get("/path"), Request.Method.GET);
@@ -181,10 +88,6 @@ public class MockMvcRequestTest {
         captureRequest(patch("/path"), Request.Method.PATCH);
         captureRequest(post("/path"), Request.Method.POST);
         captureRequest(put("/path"), Request.Method.PUT);
-
-        //        stream(io.restassured.http.Method.values()).forEach(m -> {
-        //            assertThat(captureRequest(m).getMethod(), is(Request.Method.valueOf(m.name())));
-        //        });
     }
 
     private void captureRequest(final MockHttpServletRequestBuilder mockHttpServletRequestBuilder,
@@ -193,26 +96,8 @@ public class MockMvcRequestTest {
         final MockHttpServletRequest mockHttpServletRequest = mockHttpServletRequestBuilder
                 .buildRequest(new MockServletConfig().getServletContext());
 
-        //        final MvcResult mvcResult = this.mvc
-        //                .perform(mockHttpServletRequestBuilder)
-        //                .andExpect(status().isOk())
-        //                .andReturn();
-
         final MockMvcRequest classUnderTest = new MockMvcRequest(mockHttpServletRequest);
 
         assertThat(classUnderTest.getMethod(), is(httpMethod));
     }
-    //    private void captureRequest2(final MockHttpServletRequestBuilder mockHttpServletRequestBuilder,
-    //            final Request.Method httpMethod) throws Exception {
-    //
-    //        final MvcResult mvcResult = this.mvc
-    //                .perform(mockHttpServletRequestBuilder)
-    //                .andExpect(status().isOk())
-    //                .andReturn();
-    //
-    //        final MockMvcRequest classUnderTest = new MockMvcRequest(mvcResult.getRequest());
-    //
-    //        assertThat(classUnderTest.getMethod(), is(httpMethod));
-    //    }
-
 }
