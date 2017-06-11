@@ -23,7 +23,7 @@ public class MessageResolver {
 
     private static final Logger log = getLogger(MessageResolver.class);
 
-    private final ResourceBundle messages = ResourceBundle.getBundle("messages");
+    private final ResourceBundle messages = ResourceBundle.getBundle("swagger/validation/messages");
     private final LevelResolver levelResolver;
 
     /**
