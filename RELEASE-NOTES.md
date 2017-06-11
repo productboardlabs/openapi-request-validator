@@ -1,3 +1,7 @@
+#v1.0.18
+* Fixed a bug with Pact validation not treating header names as case-insensitive
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/35)
+
 #v1.0.17
 * Added support for additional HTTP methods
 [[#42]](https://bitbucket.org/atlassian/swagger-request-validator/issues/42)

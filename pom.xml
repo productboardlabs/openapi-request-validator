@@ -10,7 +10,7 @@
 
     <groupId>com.atlassian.oai</groupId>
     <artifactId>swagger-request-validator</artifactId>
-    <version>1.0.18-SNAPSHOT</version>
+    <version>1.0.19-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Swagger Request Validator</name>
