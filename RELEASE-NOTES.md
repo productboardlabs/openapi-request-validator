@@ -1,3 +1,9 @@
+#v1.0.19
+* Added support for RFC3339 timestamp validation
+[[#48]](https://bitbucket.org/atlassian/swagger-request-validator/issues/48)
+* Moved message bundle to avoid collision with parent project
+[[#49]](https://bitbucket.org/atlassian/swagger-request-validator/issues/49)
+
 #v1.0.18
 * Fixed a bug with Pact validation not treating header names as case-insensitive
 [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/35)
