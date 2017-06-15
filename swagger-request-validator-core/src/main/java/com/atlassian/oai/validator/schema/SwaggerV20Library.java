@@ -36,8 +36,10 @@ import com.github.fge.msgsimple.load.MessageBundles;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static com.atlassian.oai.validator.util.StreamUtils.stream;
 import static com.github.fge.msgsimple.load.MessageBundles.getBundle;
@@ -214,6 +216,8 @@ public class SwaggerV20Library {
      */
     public static class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
 
+        private final ThreadLocal<Set<ObjectNode>> visitedNodes = ThreadLocal.withInitial(HashSet::new);
+
         private final String fieldName;
 
         public DiscriminatorKeywordValidator(final JsonNode digest) {
@@ -227,9 +231,10 @@ public class SwaggerV20Library {
                              final MessageBundle bundle,
                              final FullData data) throws ProcessingException {
 
-            if (!data.getSchema().getNode().has(keyword)) {
-                // If the discriminator keyword has been removed we are in a validation loop
-                // We need to bail out early in this case
+            if (visitedNodes.get().contains(data.getSchema().getNode())) {
+                // We have already validated the discriminator of this node.
+                // We need to bail out to avoid a validation loop.
+                visitedNodes.get().remove(data.getSchema().getNode());
                 return;
             }
 
@@ -287,8 +292,8 @@ public class SwaggerV20Library {
             final JsonPointer ptr = JsonPointer.of("definitions", discriminatorNode.textValue());
             final FullData newData = data.withSchema(schemaTree.setPointer(ptr));
 
-            // Remove the discriminator keyword to prevent validation loops
-            ((ObjectNode) schemaTree.getNode()).remove(keyword);
+            // Mark the node to ensure we don't get in a validation loop
+            visitedNodes.get().add((ObjectNode) schemaTree.getNode());
 
             // Validate against the sub-schema
             processor.process(subReport, newData);
