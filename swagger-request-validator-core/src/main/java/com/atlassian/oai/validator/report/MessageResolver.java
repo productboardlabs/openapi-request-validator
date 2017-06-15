@@ -1,11 +1,14 @@
 package com.atlassian.oai.validator.report;
 
+import org.slf4j.Logger;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ResourceBundle;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  * Resolves a message key to a {@link ValidationReport.Message} object.
@@ -18,7 +21,9 @@ import static java.util.Objects.requireNonNull;
  */
 public class MessageResolver {
 
-    private final ResourceBundle messages = ResourceBundle.getBundle("messages");
+    private static final Logger log = getLogger(MessageResolver.class);
+
+    private final ResourceBundle messages = ResourceBundle.getBundle("swagger/validation/messages");
     private final LevelResolver levelResolver;
 
     /**
@@ -52,6 +57,7 @@ public class MessageResolver {
         requireNonNull(key, "A message key is required.");
         final ValidationReport.Level level = levelResolver.getLevel(key);
         if (!messages.containsKey(key)) {
+            log.warn("No message key found for '{}'", key);
             return null;
         }
         return new ImmutableMessage(key, level, format(messages.getString(key), args));
@@ -85,6 +91,7 @@ public class MessageResolver {
      * Used in a small number of places where optimisations can be made if a validation will be ignored.
      *
      * @param key The message key to test
+     *
      * @return The level the given message key will be resolved at, as determined by the configured {@link LevelResolver}.
      */
     public ValidationReport.Level getLevel(@Nonnull final String key) {
@@ -97,6 +104,7 @@ public class MessageResolver {
      * Used in a small number of places where optimisations can be made if a validation will be ignored.
      *
      * @param key The message key to test
+     *
      * @return <code>true</code> if the given message key will be ignored; <code>false</code> otherwise.
      */
     public boolean isIgnored(@Nonnull final String key) {

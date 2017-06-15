@@ -49,9 +49,9 @@ public class RequestValidationTest {
         final Request request = SimpleRequest.Builder.patch("/peoples/1").build();
 
         assertFail(classUnderTest.validate(request, okResponse),
-            "validation.request.path.missing");
+                "validation.request.path.missing");
         assertFail(classUnderTest.validateRequest(request),
-            "validation.request.path.missing");
+                "validation.request.path.missing");
     }
 
     @Test
@@ -412,4 +412,24 @@ public class RequestValidationTest {
                 "validation.request.parameter.invalidFormat");
     }
 
+    @Test
+    public void validate_withRequiredHeader_shouldFail_whenMissing() {
+        final Request request = SimpleRequest.Builder
+                .get("/headers")
+                .withHeader("x-not-listed", "30")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.parameter.header.missing");
+    }
+
+    @Test
+    public void validate_withRequiredHeader_shouldPass_whenSupplied() {
+        final Request request = SimpleRequest.Builder
+                .get("/headers")
+                .withHeader("X-Required-Header", "30")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
 }

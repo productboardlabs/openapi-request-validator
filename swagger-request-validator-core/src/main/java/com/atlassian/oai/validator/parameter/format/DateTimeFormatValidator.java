@@ -22,6 +22,6 @@ public class DateTimeFormatValidator extends BaseDateFormatValidator {
 
     @Override
     protected DateTimeFormatter getFormatter() {
-        return DateTimeFormatter.ISO_DATE_TIME;
+        return CustomDateTimeFormatter.getRFC3339Formatter();
     }
 }

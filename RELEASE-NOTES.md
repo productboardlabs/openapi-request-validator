@@ -1,3 +1,28 @@
+#v1.0.19
+* Added support for RFC3339 timestamp validation
+[[#48]](https://bitbucket.org/atlassian/swagger-request-validator/issues/48)
+* Moved message bundle to avoid collision with parent project
+[[#49]](https://bitbucket.org/atlassian/swagger-request-validator/issues/49)
+
+#v1.0.18
+* Fixed a bug with Pact validation not treating header names as case-insensitive
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/35)
+
+#v1.0.17
+* Added support for additional HTTP methods
+[[#42]](https://bitbucket.org/atlassian/swagger-request-validator/issues/42)
+* Fixed NPE when missing required header parameters
+[[#43]](https://bitbucket.org/atlassian/swagger-request-validator/issues/43)
+
+#v1.0.16
+* Removed `MutableValidationReport` and improved validation report behavior
+[[#35]](https://bitbucket.org/atlassian/swagger-request-validator/issues/35)
+[[#14]](https://bitbucket.org/atlassian/swagger-request-validator/issues/14)
+
+#v1.0.15
+* Added support for providing auth data when retrieving remote Swagger API documents 
+[[#41]](https://bitbucket.org/atlassian/swagger-request-validator/issues/41)
+
 #v1.0.14
 * Fixed a bug where API path prefix is not used in operation lookup 
 [[#40]](https://bitbucket.org/atlassian/swagger-request-validator/issues/40)

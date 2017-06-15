@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.restassured;
 
+import java.util.Objects;
 import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReportFormatter;
@@ -35,7 +36,14 @@ public class SwaggerValidationFilter implements Filter {
 
     public SwaggerValidationFilter(final String swaggerJsonUrl) {
         requireNonEmpty(swaggerJsonUrl, "A Swagger URL is required");
+
         this.validator = SwaggerRequestResponseValidator.createFor(swaggerJsonUrl).build();
+    }
+
+    public SwaggerValidationFilter(final SwaggerRequestResponseValidator validator) {
+        Objects.requireNonNull(validator, "A validator is required");
+
+        this.validator = validator;
     }
 
     @Override

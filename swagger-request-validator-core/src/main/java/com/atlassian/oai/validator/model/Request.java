@@ -18,7 +18,10 @@ public interface Request {
         POST,
         PUT,
         PATCH,
-        DELETE
+        DELETE,
+        HEAD,
+        OPTIONS,
+        TRACE
     }
 
     /**

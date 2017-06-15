@@ -4,10 +4,10 @@ import com.atlassian.oai.validator.model.Request;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
@@ -26,6 +26,13 @@ public class PactRequest implements Request {
     public PactRequest(@Nonnull final au.com.dius.pact.model.Request internalRequest) {
         requireNonNull(internalRequest, "An Pact request is required");
         this.internalRequest = internalRequest;
+
+        if (this.internalRequest.getHeaders() != null) {
+            final TreeMap<String, String> caseInsensitiveHeaders = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            caseInsensitiveHeaders.putAll(internalRequest.getHeaders());
+            this.internalRequest.setHeaders(caseInsensitiveHeaders);
+        }
+
         if (this.internalRequest.getQuery() == null) {
             this.internalRequest.setQuery(new HashMap<>());
         }
@@ -58,7 +65,7 @@ public class PactRequest implements Request {
     @Nonnull
     @Override
     public Collection<String> getQueryParameterValues(final String name) {
-        return internalRequest.getQuery().getOrDefault(name, Collections.emptyList());
+        return internalRequest.getQuery().getOrDefault(name, emptyList());
     }
 
     @Nonnull

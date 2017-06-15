@@ -1,13 +1,15 @@
 package com.atlassian.oai.validator.report;
 
-import java.util.List;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.List;
+
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -23,11 +25,6 @@ public class SingletonValidationReportTest {
         this.classUnderTest = new SingletonValidationReport(message);
     }
 
-    private void assertHasErrors(final ValidationReport.Level level, final boolean expectedResult) {
-        when(message.getLevel()).thenReturn(level);
-        Assert.assertEquals(expectedResult, classUnderTest.hasErrors());
-    }
-
     @Test
     public void test_hasErrors() {
         assertHasErrors(ValidationReport.Level.ERROR, true);
@@ -40,12 +37,22 @@ public class SingletonValidationReportTest {
     public void test_getMessages() {
         final List<ValidationReport.Message> messages = classUnderTest.getMessages();
 
-        Assert.assertThat(messages, hasSize(1));
-        Assert.assertThat(messages, contains(message));
+        assertThat(messages, hasSize(1));
+        assertThat(messages, contains(message));
     }
 
     @Test(expected = UnsupportedOperationException.class)
     public void test_getMessages_cantBeModified() {
         classUnderTest.getMessages().add(mock(ValidationReport.Message.class));
+    }
+
+    @Test
+    public void test_acceptsNull() {
+        assertThat(new SingletonValidationReport(null), notNullValue());
+    }
+
+    private void assertHasErrors(final ValidationReport.Level level, final boolean expectedResult) {
+        when(message.getLevel()).thenReturn(level);
+        Assert.assertEquals(expectedResult, classUnderTest.hasErrors());
     }
 }
