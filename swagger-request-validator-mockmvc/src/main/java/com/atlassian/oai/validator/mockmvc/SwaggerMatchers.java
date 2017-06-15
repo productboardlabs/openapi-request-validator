@@ -2,17 +2,41 @@ package com.atlassian.oai.validator.mockmvc;
 
 import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
 import com.atlassian.oai.validator.report.ValidationReport;
+import com.atlassian.oai.validator.report.ValidationReportFormatter;
+
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.ResultMatcher;
 
 /**
- *
+ * Factory for Swagger assertions.
  */
 public class SwaggerMatchers {
-    public ResultMatcher isValid(final String swaggerJsonUrl) {
+
+    /**
+     * Assert the result can be validated against the Swagger JSON specification at the given location OR actual swagger JSON String payload.
+     * <p>
+     * The URL can be an absolute HTTP/HTTPS URL, a File URL or a classpath location (without the classpath: scheme).
+     * <p>
+     * For example:
+     * <pre>
+     *     // Create from a publicly hosted HTTP location
+     *     .createFor("http://api.myservice.com/swagger.json")
+     *
+     *     // Create from a file on the local filesystem
+     *     .createFor("file://Users/myuser/tmp/swagger.json");
+     *
+     *     // Create from a classpath resource in the /api package
+     *     .createFor("/api/swagger.json");
+     *
+     *     // Create from a swagger JSON payload
+     *     .createFor("{\"swagger\": \"2.0\", ...}")
+     * </pre>
+     * @param swaggerJsonUrlOrPayload The location of the Swagger JSON specification to use in the validator.
+     */
+    public ResultMatcher isValid(final String swaggerJsonUrlOrPayload) {
         final SwaggerRequestResponseValidator validator = SwaggerRequestResponseValidator
-                .createFor(swaggerJsonUrl)
+                .createFor(swaggerJsonUrlOrPayload)
                 .build();
 
         return result -> {
@@ -24,4 +48,12 @@ public class SwaggerMatchers {
             }
         };
     }
+
+    public static class SwaggerValidationException extends RuntimeException {
+
+        public SwaggerValidationException(final ValidationReport report) {
+            super(ValidationReportFormatter.format(report));
+        }
+    }
+
 }

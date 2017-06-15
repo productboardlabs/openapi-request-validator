@@ -11,7 +11,7 @@ import java.util.Optional;
 import static java.util.Objects.requireNonNull;
 
 /**
- *
+ * An adapter for using spring-test {@link MockHttpServletResponse} with the Swagger Request Validator.
  */
 public class MockMvcResponse implements Response {
 

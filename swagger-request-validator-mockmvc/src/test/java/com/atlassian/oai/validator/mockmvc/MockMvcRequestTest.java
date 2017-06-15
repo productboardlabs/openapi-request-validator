@@ -20,9 +20,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
-/**
- *
- */
 public class MockMvcRequestTest {
 
     @Test
@@ -53,7 +50,7 @@ public class MockMvcRequestTest {
 
         assertThat(classUnderTest.getQueryParameters(), contains("queryParam"));
         assertThat(classUnderTest.getQueryParameterValues("queryParam"), contains("value1"));
-
+        assertThat(classUnderTest.getQueryParameterValues("queryparam"), contains("value1"));
     }
 
     @Test

@@ -71,6 +71,16 @@ against a Swagger/OAI specification.
 
 Useful for e.g. ensuring your service implementation matches its API specification.
 
+###swagger-request-validator-mockmvc 
+
+[![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-mockmvc/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-mockmvc)
+
+Adapters for validating interactions using the [Spring MVC Test Framework](http://docs.spring.io/spring-framework/docs/current/spring-framework-reference/html/integration-testing.html#spring-mvc-test-framework)
+against a Swagger/OAI specification.
+
+Includes a [ResultMatcher](http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/test/web/servlet/ResultMatcher.html) that 
+allows you to assert your service implementation matches its API specification.
+
 ###swagger-request-validator-examples
 
 Working code samples that demonstrate the features of the `swagger-request-validator` and its various adapters.

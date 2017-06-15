@@ -13,12 +13,13 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 
 /**
- *
+ * An adapter for using spring-test {@link MockHttpServletRequest} with the Swagger Request Validator.
  */
 public class MockMvcRequest implements Request {
     private final MockHttpServletRequest internalRequest;
@@ -65,8 +66,10 @@ public class MockMvcRequest implements Request {
 
     @Nonnull @Override
     public Collection<String> getQueryParameterValues(final String name) {
-        if (internalRequest.getParameterMap().containsKey(name)) {
-            return Arrays.asList(internalRequest.getParameterMap().get(name));
+        final TreeMap<String, String[]> caseInsensitiveParameterMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        caseInsensitiveParameterMap.putAll(internalRequest.getParameterMap());
+        if (caseInsensitiveParameterMap.containsKey(name)) {
+            return Arrays.asList(caseInsensitiveParameterMap.get(name));
         }
         return emptyList();
     }

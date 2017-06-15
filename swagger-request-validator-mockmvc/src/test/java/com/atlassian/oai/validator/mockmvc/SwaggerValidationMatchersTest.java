@@ -1,5 +1,7 @@
 package com.atlassian.oai.validator.mockmvc;
 
+import com.atlassian.oai.validator.mockmvc.SwaggerMatchers.SwaggerValidationException;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.test.web.servlet.MockMvc;
@@ -39,15 +41,6 @@ public class SwaggerValidationMatchersTest {
 
     @Test
     public void match_returnsResponse_ifValidationSucceeds() throws Exception {
-        this.mvc
-                .perform(get("/hello/bob"))
-                .andExpect(status().isOk())
-                .andExpect(swagger().isValid("api.json"))
-                .andExpect(content().string("{\"message\":\"Hello bob!\"}"));
-    }
-
-    @Test
-    public void testGetValidPet() throws Exception {
         this.mvc
                 .perform(get("/hello/bob"))
                 .andExpect(status().isOk())
