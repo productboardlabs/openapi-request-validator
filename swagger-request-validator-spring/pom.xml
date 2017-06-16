@@ -7,17 +7,13 @@
     <parent>
         <groupId>com.atlassian.oai</groupId>
         <artifactId>swagger-request-validator</artifactId>
-        <version>1.0.20-SNAPSHOT</version>
+        <version>1.1.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>swagger-request-validator-spring</artifactId>
 
     <properties>
-        <!--
-            It does not need to be the latest release. It is just used at compile or test runtime.
-            Later versions will work and earlier versions might work, too.
-         -->
         <spring-boot.version>1.4.0.RELEASE</spring-boot.version>
     </properties>
 
@@ -27,15 +23,27 @@
             <artifactId>swagger-request-validator-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-            <version>${spring-boot.version}</version>
-            <scope>compile</scope>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
         </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <version>${spring-boot.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web-services</artifactId>
             <version>${spring-boot.version}</version>
             <scope>test</scope>
         </dependency>

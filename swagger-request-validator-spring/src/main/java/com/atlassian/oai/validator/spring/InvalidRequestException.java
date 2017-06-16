@@ -26,7 +26,7 @@ public class InvalidRequestException extends RuntimeException {
         if (message == null) {
             final StringBuilder sb = new StringBuilder();
             for (final ValidationReport.Message message : validationReport.getMessages()) {
-                sb.append(MESSAGE_DELIMETER).append(message.toString());
+                sb.append(MESSAGE_DELIMETER).append(message.getMessage());
             }
             message = sb.substring(Math.min(sb.length(), MESSAGE_DELIMETER.length()));
         }

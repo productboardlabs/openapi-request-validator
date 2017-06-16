@@ -13,12 +13,12 @@ import javax.servlet.Filter;
 import java.io.IOException;
 
 @Configuration
-public class SwaggerRequestValidationConfig extends WebMvcConfigurerAdapter {
+public class SwaggerRequestValidationApplicationConfig extends WebMvcConfigurerAdapter {
 
     private final SwaggerValidationInterceptor swaggerValidationInterceptor;
 
     @Autowired
-    public SwaggerRequestValidationConfig(@Value("classpath:swagger-api.json") final Resource swaggerSchema) throws IOException {
+    public SwaggerRequestValidationApplicationConfig(@Value("classpath:api-spring-test.json") final Resource swaggerSchema) throws IOException {
         final EncodedResource swaggerResource = new EncodedResource(swaggerSchema, "UTF-8");
         this.swaggerValidationInterceptor = new SwaggerValidationInterceptor(swaggerResource);
     }

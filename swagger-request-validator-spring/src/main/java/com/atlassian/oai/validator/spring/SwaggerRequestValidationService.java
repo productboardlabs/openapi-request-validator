@@ -4,6 +4,7 @@ import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.report.ValidationReport;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.support.EncodedResource;
@@ -41,10 +42,18 @@ class SwaggerRequestValidationService {
         return s.hasNext() ? s.next() : "";
     }
 
+    private static String getCompleteRequestUri(final HttpServletRequest servletRequest) {
+        if (StringUtils.isBlank(servletRequest.getQueryString())) {
+            return servletRequest.getRequestURI();
+        }
+        return servletRequest.getRequestURI() + "?" + servletRequest.getQueryString();
+    }
+
     private static Request buildRequest(final HttpServletRequest servletRequest) throws IOException {
         final Request.Method method = Request.Method.valueOf(servletRequest.getMethod());
+        final String requestUrl = getCompleteRequestUri(servletRequest);
         final UriComponents uriComponents = UriComponentsBuilder
-                .fromUriString(servletRequest.getRequestURI())
+                .fromUriString(requestUrl)
                 .build();
         final String path = uriComponents.getPath();
         final String body = readReader(servletRequest.getReader());
