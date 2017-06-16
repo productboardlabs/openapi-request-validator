@@ -57,24 +57,23 @@ public class SwaggerV20Library {
 
     public static final String DISCRIMINATOR_KEYWORD = "discriminator";
 
-    private static final Library LIBRARY =
-            DraftV4Library.get().thaw()
-            .addFormatAttribute("int32", Int32Attribute.getInstance())
-            .addFormatAttribute("int64", Int64Attribute.getInstance())
-            .addFormatAttribute("float", FloatAttribute.getInstance())
-            .addFormatAttribute("double", DoubleAttribute.getInstance())
-            .addFormatAttribute("date", DateAttribute.getInstance())
-            .addFormatAttribute("byte", Base64Attribute.getInstance())
-            .addKeyword(
-                    Keyword.newBuilder(DISCRIMINATOR_KEYWORD)
-                            .withSyntaxChecker(DiscriminatorSyntaxChecker.getInstance())
-                            .withDigester(DiscriminatorDigester.getInstance())
-                            .withValidatorClass(DiscriminatorKeywordValidator.class)
-                            .freeze())
-            .freeze();
-
     static Library get() {
-        return LIBRARY;
+        // The discriminator validator holds state that may persist in the event of a runtime exception etc.
+        // Re-create the library to ensure this state doesn't persist between validations.
+        return DraftV4Library.get().thaw()
+                .addFormatAttribute("int32", Int32Attribute.getInstance())
+                .addFormatAttribute("int64", Int64Attribute.getInstance())
+                .addFormatAttribute("float", FloatAttribute.getInstance())
+                .addFormatAttribute("double", DoubleAttribute.getInstance())
+                .addFormatAttribute("date", DateAttribute.getInstance())
+                .addFormatAttribute("byte", Base64Attribute.getInstance())
+                .addKeyword(
+                        Keyword.newBuilder(DISCRIMINATOR_KEYWORD)
+                                .withSyntaxChecker(DiscriminatorSyntaxChecker.getInstance())
+                                .withDigester(DiscriminatorDigester.getInstance())
+                                .withValidatorClass(DiscriminatorKeywordValidator.class)
+                                .freeze())
+                .freeze();
     }
 
     /**

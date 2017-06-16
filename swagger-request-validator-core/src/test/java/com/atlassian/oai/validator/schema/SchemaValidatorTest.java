@@ -289,6 +289,10 @@ public class SchemaValidatorTest {
 
         assertFail(classUnderTest.validate(value, schema), "validation.schema.discriminator");
         assertFail(classUnderTest.validate(value, schema), "validation.schema.discriminator");
+        assertFail(classUnderTest.validate(value, schema), "validation.schema.discriminator");
+        assertFail(classUnderTest.validate(value, schema), "validation.schema.discriminator");
+        assertFail(classUnderTest.validate(value, schema), "validation.schema.discriminator");
+        assertFail(classUnderTest.validate(value, schema), "validation.schema.discriminator");
     }
 
     private SchemaValidator validatorWithAdditionalPropertiesIgnored(final String api) {
