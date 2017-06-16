@@ -50,7 +50,7 @@
         <pact-jvm.version>3.2.6</pact-jvm.version>
         <junit.version>4.12</junit.version>
         <swagger-parser.version>1.0.26</swagger-parser.version>
-        <json-schema-validator.version>2.2.6</json-schema-validator.version>
+        <json-schema-validator.version>2.2.8</json-schema-validator.version>
         <jdk.version>1.8</jdk.version>
         <source.encoding>UTF-8</source.encoding>
         <mockito.version>1.10.19</mockito.version>
@@ -63,6 +63,7 @@
         <jackson.version>2.6.3</jackson.version>
         <spring.version>4.3.7.RELEASE</spring.version>
         <servlet.api.version>3.1.0</servlet.api.version>
+        <jsr305.version>3.0.2</jsr305.version>
 
         <license-maven-plugin.version>1.9</license-maven-plugin.version>
         <maven-checkstyle-plugin.version>2.17</maven-checkstyle-plugin.version>
@@ -112,7 +113,7 @@
                 <version>${swagger-parser.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.github.fge</groupId>
+                <groupId>com.github.java-json-tools</groupId>
                 <artifactId>json-schema-validator</artifactId>
                 <version>${json-schema-validator.version}</version>
             </dependency>
@@ -180,6 +181,11 @@
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>${guava.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.code.findbugs</groupId>
+                <artifactId>jsr305</artifactId>
+                <version>${jsr305.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
