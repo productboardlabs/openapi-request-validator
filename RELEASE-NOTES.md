@@ -1,3 +1,10 @@
+#v1.1.0
+* Added support for Spring MockMvc
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/37/integrate-validator-with-spring-mockmvc/diff)
+* Fixed a bug where subsequent validations of 'discriminator' changed behavior
+[[#46]](https://bitbucket.org/atlassian/swagger-request-validator/issues/46)
+* Bumped version of `json-schema-validator` and switched to new groupId
+
 #v1.0.19
 * Added support for RFC3339 timestamp validation
 [[#48]](https://bitbucket.org/atlassian/swagger-request-validator/issues/48)
