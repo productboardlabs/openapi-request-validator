@@ -1,5 +1,7 @@
-package com.atlassian.oai.validator.spring;
+package com.atlassian.oai.validator.springmvc.example;
 
+import com.atlassian.oai.validator.springmvc.SwaggerValidationFilter;
+import com.atlassian.oai.validator.springmvc.SwaggerValidationInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

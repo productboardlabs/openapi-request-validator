@@ -1,5 +1,5 @@
-//CHECKSTYLE:OFF // HideUtilityClassConstructor: this "utility" class has to have a public constructor for starting the test web service
-package com.atlassian.oai.validator.spring;
+//CHECKSTYLE:OFF // HideUtilityClassConstructor: this is no utility class
+package com.atlassian.oai.validator.springmvc.example;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

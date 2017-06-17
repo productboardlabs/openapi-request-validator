@@ -1,4 +1,4 @@
-package com.atlassian.oai.validator.spring;
+package com.atlassian.oai.validator.springmvc.example;
 
 import com.google.common.collect.ImmutableMap;
 import org.springframework.http.HttpStatus;

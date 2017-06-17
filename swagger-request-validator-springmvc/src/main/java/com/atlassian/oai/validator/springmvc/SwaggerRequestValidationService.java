@@ -1,4 +1,4 @@
-package com.atlassian.oai.validator.spring;
+package com.atlassian.oai.validator.springmvc;
 
 import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
 import com.atlassian.oai.validator.model.Request;

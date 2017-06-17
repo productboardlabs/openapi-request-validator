@@ -1,4 +1,4 @@
-package com.atlassian.oai.validator.spring;
+package com.atlassian.oai.validator.springmvc;
 
 import org.springframework.web.util.ContentCachingRequestWrapper;
 

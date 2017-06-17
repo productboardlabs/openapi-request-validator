@@ -11,9 +11,10 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>swagger-request-validator-spring</artifactId>
+    <artifactId>swagger-request-validator-springmvc</artifactId>
 
     <properties>
+        <!-- Spring Boot is only used for testing -->
         <spring-boot.version>1.4.0.RELEASE</spring-boot.version>
     </properties>
 
@@ -24,15 +25,13 @@
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
