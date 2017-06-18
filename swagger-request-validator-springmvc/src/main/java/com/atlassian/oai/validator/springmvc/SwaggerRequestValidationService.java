@@ -49,16 +49,28 @@ class SwaggerRequestValidationService {
         return servletRequest.getRequestURI() + "?" + servletRequest.getQueryString();
     }
 
-    private static Request buildRequest(final HttpServletRequest servletRequest) throws IOException {
+    /**
+     * @param servletRequest the {@link HttpServletRequest}
+     * @return the build {@link Request} created out of given {@link HttpServletRequest}
+     * @throws IOException if the request body can't be read
+     */
+    Request buildRequest(final HttpServletRequest servletRequest) throws IOException {
         final Request.Method method = Request.Method.valueOf(servletRequest.getMethod());
-        final String requestUrl = getCompleteRequestUri(servletRequest);
+        final String requestUri = getCompleteRequestUri(servletRequest);
         final UriComponents uriComponents = UriComponentsBuilder
-                .fromUriString(requestUrl)
+                .fromUriString(requestUri)
                 .build();
         final String path = uriComponents.getPath();
+        final SimpleRequest.Builder builder = new SimpleRequest.Builder(method, path);
         final String body = readReader(servletRequest.getReader());
-        final SimpleRequest.Builder builder = new SimpleRequest.Builder(method, path)
-                .withBody(body);
+        if (servletRequest.getContentLength() < 0 && (body == null || body.isEmpty())) {
+            // The content length suggests that there is no body - but this is only
+            // a hint that there might be no body. But if the body itself is empty
+            // (or null) it was truly not set.
+        } else {
+            // yes, there was a body - even though it might be empty
+            builder.withBody(body);
+        }
         for (final Map.Entry<String, List<String>> entry : uriComponents.getQueryParams().entrySet()) {
             builder.withQueryParam(entry.getKey(), entry.getValue());
         }
@@ -69,18 +81,11 @@ class SwaggerRequestValidationService {
     }
 
     /**
-     * @param servletRequest the {@link HttpServletRequest} to validate against the Swagger schema
-     * @return the {@link ValidationReport} for the validated {@link HttpServletRequest}
+     * @param request the {@link Request} to validate against the Swagger schema
+     * @return the {@link ValidationReport} for the validated {@link Request}
      */
-    ValidationReport validateRequest(final HttpServletRequest servletRequest) throws IOException {
-        try {
-            final Request request = buildRequest(servletRequest);
-            return requestValidator.validateRequest(request);
-        } catch (final RuntimeException e) {
-            // if you encounter this error please create an issue on: https://bitbucket.org/atlassian/swagger-request-validator
-            LOG.error("Unexpected error during request validation.", e);
-            throw e;
-        }
+    ValidationReport validateRequest(final Request request) {
+        return requestValidator.validateRequest(request);
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.springmvc;
 
+import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.report.ValidationReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,19 +52,19 @@ public class SwaggerValidationInterceptor extends HandlerInterceptorAdapter {
 
         // validate the request
         final ResettableRequestServletWrapper resettableRequest = (ResettableRequestServletWrapper) servletRequest;
-        final String requestUri = servletRequest.getRequestURI();
-        LOG.debug("Swagger validation: {}", requestUri);
+        final String requestLoggingKey = servletRequest.getMethod() + "#" + servletRequest.getRequestURI();
+        LOG.debug("Swagger validation: {}", requestLoggingKey);
 
-        final ValidationReport validationReport = swaggerRequestValidationService
-                .validateRequest(resettableRequest);
+        final Request request = swaggerRequestValidationService.buildRequest(resettableRequest);
+        final ValidationReport validationReport = swaggerRequestValidationService.validateRequest(request);
         if (!validationReport.hasErrors()) {
-            LOG.debug("Swagger validation: {} - The request is valid.", requestUri);
+            LOG.debug("Swagger validation: {} - The request is valid.", requestLoggingKey);
         } else if (!swaggerRequestValidationService.isDefinedSwaggerRequest(validationReport)) {
             LOG.info("Swagger validation: {} - The request is not defined in the Swagger schema. Ignoring it.",
-                    requestUri);
+                    requestLoggingKey);
         } else {
             final InvalidRequestException invalidRequestException = new InvalidRequestException(validationReport);
-            LOG.info("Swagger validation: {} - The REST request is invalid: {}", requestUri,
+            LOG.info("Swagger validation: {} - The REST request is invalid: {}", requestLoggingKey,
                     invalidRequestException.getMessage());
             throw invalidRequestException;
         }
