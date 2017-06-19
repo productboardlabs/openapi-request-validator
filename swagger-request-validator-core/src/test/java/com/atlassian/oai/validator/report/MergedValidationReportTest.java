@@ -1,88 +1,99 @@
 package com.atlassian.oai.validator.report;
 
-import java.util.Arrays;
-import java.util.List;
-
-import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
+
+import java.util.List;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class MergedValidationReportTest {
 
-    private ValidationReport classUnderTest;
+    private static final ValidationReport.Message ERROR_MSG = new ImmutableMessage("foo", ValidationReport.Level.ERROR, "A message");
+    private static final ValidationReport.Message NON_ERROR_MSG = new ImmutableMessage("foo", ValidationReport.Level.WARN, "A message");
 
-    private ValidationReport validationReport1;
-    private ValidationReport validationReport2;
+    @Test
+    public void hasErrors_returnsFalse_whenNoErrors() {
 
-    @Before
-    public void setUp() {
-        this.validationReport1 = mock(ValidationReport.class);
-        this.validationReport2 = mock(ValidationReport.class);
-        this.classUnderTest = new MergedValidationReport(validationReport1, validationReport2);
+        final MergedValidationReport classUnderTest = new MergedValidationReport(
+                ValidationReport.singleton(NON_ERROR_MSG),
+                ValidationReport.singleton(NON_ERROR_MSG)
+        );
+
+        assertFalse(classUnderTest.hasErrors());
     }
 
     @Test
-    public void test_hasErrors_noErrors() {
-        when(validationReport1.hasErrors()).thenReturn(false);
-        when(validationReport2.hasErrors()).thenReturn(false);
+    public void hasErrors_returnsTrue_whenErrors() {
+        final MergedValidationReport classUnderTest = new MergedValidationReport(
+                ValidationReport.singleton(ERROR_MSG),
+                ValidationReport.singleton(NON_ERROR_MSG)
+        );
 
-        Assert.assertFalse(classUnderTest.hasErrors());
+        assertTrue(classUnderTest.hasErrors());
     }
 
     @Test
-    public void test_hasErrors_withErrors() {
-        when(validationReport1.hasErrors()).thenReturn(false);
-        when(validationReport2.hasErrors()).thenReturn(true);
-
-        Assert.assertTrue(classUnderTest.hasErrors());
-    }
-
-    @Test
-    public void test_getMessages() {
+    public void getMessages_returnsAllMessages() {
         final ValidationReport.Message message1_1 = mock(ValidationReport.Message.class);
         final ValidationReport.Message message1_2 = mock(ValidationReport.Message.class);
         final ValidationReport.Message message2_1 = mock(ValidationReport.Message.class);
         final ValidationReport.Message message2_2 = mock(ValidationReport.Message.class);
         final ValidationReport.Message message2_3 = mock(ValidationReport.Message.class);
-        when(validationReport1.getMessages()).thenReturn(Arrays.asList(message1_1, message1_2));
-        when(validationReport2.getMessages()).thenReturn(Arrays.asList(message2_1, message2_2, message2_3));
+
+        final ValidationReport validationReport1 = ValidationReport.from(message1_1, message1_2);
+        final ValidationReport validationReport2 = ValidationReport.from(message2_1, message2_2, message2_3);
+
+        final MergedValidationReport classUnderTest = new MergedValidationReport(validationReport1, validationReport2);
 
         final List<ValidationReport.Message> messages = classUnderTest.getMessages();
-        Assert.assertThat(messages, hasSize(5));
-        Assert.assertThat(messages, containsInAnyOrder(message1_1, message1_2, message2_1, message2_2, message2_3));
+        assertThat(messages, hasSize(5));
+        assertThat(messages, containsInAnyOrder(message1_1, message1_2, message2_1, message2_2, message2_3));
     }
 
     @Test(expected = UnsupportedOperationException.class)
-    public void test_getMessages_cantBeModified() {
+    public void getMessages_result_cantBeModified() {
+        final MergedValidationReport classUnderTest = new MergedValidationReport(
+                ValidationReport.singleton(ERROR_MSG),
+                ValidationReport.singleton(NON_ERROR_MSG)
+        );
+
         classUnderTest.getMessages().add(mock(ValidationReport.Message.class));
     }
 
     @Test
-    public void test_merge() {
-        final ValidationReport validationReport3 = mock(ValidationReport.class);
-        final ValidationReport mergedValidationReport = classUnderTest.merge(validationReport3);
+    public void merge_mergesAllSubReports() {
+        final MergedValidationReport mergedReport1 = new MergedValidationReport(
+                ValidationReport.singleton(ERROR_MSG),
+                ValidationReport.singleton(NON_ERROR_MSG)
+        );
 
-        // the merged ValidationReport is a new created one
-        Assert.assertNotSame(mergedValidationReport, validationReport1);
-        Assert.assertNotSame(mergedValidationReport, validationReport2);
-        Assert.assertNotSame(mergedValidationReport, validationReport3);
+        final MergedValidationReport mergedReport2 = new MergedValidationReport(
+                mergedReport1,
+                ValidationReport.singleton(NON_ERROR_MSG)
+        );
 
-        // indirect check that the new created ValidationReport contains all other reports - by getting
-        // the messages which will collect all messages of all containing ValidationReports
-        final ValidationReport.Message message1 = mock(ValidationReport.Message.class);
-        final ValidationReport.Message message2 = mock(ValidationReport.Message.class);
-        final ValidationReport.Message message3 = mock(ValidationReport.Message.class);
-        when(validationReport1.getMessages()).thenReturn(Arrays.asList(message1));
-        when(validationReport2.getMessages()).thenReturn(Arrays.asList(message2));
-        when(validationReport3.getMessages()).thenReturn(Arrays.asList(message3));
+        assertNotSame(mergedReport1, mergedReport2);
 
-        final List<ValidationReport.Message> messages = mergedValidationReport.getMessages();
-        Assert.assertThat(messages, hasSize(3));
-        Assert.assertThat(messages, containsInAnyOrder(message1, message2, message3));
+        final List<ValidationReport.Message> messages = mergedReport2.getMessages();
+        assertThat(messages, hasSize(3));
+        assertThat(mergedReport2.hasErrors(), is(true));
+    }
+
+    @Test
+    public void merge_withLotsOfReports_works() {
+        final int numMessages = 1000;
+        ValidationReport report = ValidationReport.empty();
+        for (int i = 0; i < numMessages; i++) {
+            report = report.merge(ValidationReport.singleton(ERROR_MSG));
+        }
+        assertThat(report.hasErrors(), is(true));
+        assertThat(report.getMessages(), hasSize(numMessages));
     }
 }

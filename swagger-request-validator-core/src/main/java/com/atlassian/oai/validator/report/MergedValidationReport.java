@@ -12,22 +12,24 @@ import java.util.List;
  */
 public class MergedValidationReport implements ValidationReport {
 
-    private final List<ValidationReport> validationReports;
+    private final ImmutableList<ValidationReport.Message> messages;
 
     MergedValidationReport(final ValidationReport validationReport1, final ValidationReport validationReport2) {
-        this.validationReports = ImmutableList.of(validationReport1, validationReport2);
+        this.messages = new ImmutableList
+                .Builder<ValidationReport.Message>()
+                .addAll(validationReport1.getMessages())
+                .addAll(validationReport2.getMessages())
+                .build();
     }
 
     @Nonnull
     @Override
     public List<ValidationReport.Message> getMessages() {
-        final ImmutableList.Builder<ValidationReport.Message> builder = ImmutableList.builder();
-        validationReports.forEach(report -> builder.addAll(report.getMessages()));
-        return builder.build();
+        return messages;
     }
 
     @Override
     public boolean hasErrors() {
-        return validationReports.stream().anyMatch(report -> report.hasErrors());
+        return messages.stream().anyMatch(m -> m.getLevel() == Level.ERROR);
     }
 }
