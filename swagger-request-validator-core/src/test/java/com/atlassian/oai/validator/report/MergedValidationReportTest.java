@@ -88,7 +88,7 @@ public class MergedValidationReportTest {
 
     @Test
     public void merge_withLotsOfReports_works() {
-        final int numMessages = 1000;
+        final int numMessages = 7500;
         ValidationReport report = ValidationReport.empty();
         for (int i = 0; i < numMessages; i++) {
             report = report.merge(ValidationReport.singleton(ERROR_MSG));
