@@ -2,7 +2,6 @@ package com.atlassian.oai.validator.report;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Collection;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
@@ -71,20 +70,6 @@ public interface ValidationReport {
      */
     static ValidationReport from(final Message... messages) {
         if (messages == null || messages.length == 0) {
-            return empty();
-        }
-        return new ImmutableValidationReport(messages);
-    }
-
-    /**
-     * Return an unmodifiable report containing all the provided messages
-     *
-     * @param messages The messages to add to the report
-     *
-     * @return an unmodifiable report containing all the provided messages
-     */
-    static ValidationReport from(final Collection<Message> messages) {
-        if (messages == null || messages.isEmpty()) {
             return empty();
         }
         return new ImmutableValidationReport(messages);

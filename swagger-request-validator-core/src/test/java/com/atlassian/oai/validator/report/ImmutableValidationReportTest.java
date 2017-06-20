@@ -6,7 +6,6 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
@@ -59,17 +58,6 @@ public class ImmutableValidationReportTest {
                         mock(ValidationReport.Message.class),
                         mock(ValidationReport.Message.class),
                         null).getMessages(),
-                hasSize(2)
-        );
-    }
-
-    @Test
-    public void test_filtersNullValues_fromCollectionCtor() {
-        assertThat(
-                new ImmutableValidationReport(asList(
-                        mock(ValidationReport.Message.class),
-                        mock(ValidationReport.Message.class),
-                        null)).getMessages(),
                 hasSize(2)
         );
     }
