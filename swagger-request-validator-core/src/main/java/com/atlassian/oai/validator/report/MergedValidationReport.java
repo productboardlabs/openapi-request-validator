@@ -18,7 +18,6 @@ public class MergedValidationReport implements ValidationReport {
     private final ImmutableList<ValidationReport> reports;
 
     MergedValidationReport(final ValidationReport validationReport1, final ValidationReport validationReport2) {
-
         final ImmutableList.Builder<ValidationReport> reportsBuilder = new ImmutableList.Builder<>();
         collect(reportsBuilder, validationReport1);
         collect(reportsBuilder, validationReport2);
@@ -36,7 +35,7 @@ public class MergedValidationReport implements ValidationReport {
         return reports.stream().anyMatch(ValidationReport::hasErrors);
     }
 
-    ImmutableList<ValidationReport> getReports() {
+    private ImmutableList<ValidationReport> getReports() {
         return reports;
     }
 
