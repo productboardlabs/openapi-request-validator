@@ -49,6 +49,7 @@ public class SwaggerRequestValidationConfig extends WebMvcConfigurerAdapter {
      */
     @Autowired
     public SwaggerRequestValidationConfig(@Value("classpath:swagger-api.json") final Resource swaggerApi) throws IOException {
+        final EncodedResource swaggerResource = new EncodedResource(swaggerSchema, "UTF-8");
         this.swaggerValidationInterceptor = new SwaggerValidationInterceptor(swaggerApi);
     }
 
