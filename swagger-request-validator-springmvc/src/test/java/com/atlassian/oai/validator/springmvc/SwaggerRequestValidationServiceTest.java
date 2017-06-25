@@ -33,6 +33,11 @@ public class SwaggerRequestValidationServiceTest {
         this.classUnderTest = new SwaggerRequestValidationService(requestValidator);
     }
 
+    @Test(expected = NullPointerException.class)
+    public void constructor_failsWithoutRequiredValidator() throws IOException {
+        new SwaggerRequestValidationService((SwaggerRequestResponseValidator) null);
+    }
+
     @Test
     public void constructor_withEncodedResource() throws IOException {
         final EncodedResource encodedResource = Mockito.mock(EncodedResource.class);
@@ -40,6 +45,11 @@ public class SwaggerRequestValidationServiceTest {
 
         final SwaggerRequestValidationService service = new SwaggerRequestValidationService(encodedResource);
         Assert.assertThat(service, notNullValue());
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void buildRequest_failsWithoutRequiredRequest() throws IOException {
+        classUnderTest.buildRequest(null);
     }
 
     @Test
@@ -60,6 +70,24 @@ public class SwaggerRequestValidationServiceTest {
         Assert.assertThat(result.getBody().isPresent(), equalTo(false));
         Assert.assertThat(result.getHeaders().size(), equalTo(0));
         Assert.assertThat(result.getQueryParameters().size(), equalTo(0));
+    }
+
+    @Test
+    public void buildRequest_withEmptyBody() throws IOException {
+        final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
+        Mockito.when(servletRequest.getMethod()).thenReturn("PUT");
+        Mockito.when(servletRequest.getQueryString()).thenReturn("");
+        Mockito.when(servletRequest.getRequestURI()).thenReturn("/swagger-request-validator");
+        Mockito.when(servletRequest.getContentLength()).thenReturn(0);
+        final BufferedReader reader = new BufferedReader(new StringReader(""));
+        Mockito.when(servletRequest.getReader()).thenReturn(reader);
+        Mockito.when(servletRequest.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
+
+        final Request result = classUnderTest.buildRequest(servletRequest);
+
+        Assert.assertThat(result.getPath(), equalTo("/swagger-request-validator"));
+        Assert.assertThat(result.getMethod(), equalTo(Request.Method.PUT));
+        Assert.assertThat(result.getBody().isPresent(), equalTo(true));
     }
 
     @Test

@@ -5,8 +5,6 @@ import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.report.ValidationReport;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -17,11 +15,10 @@ import java.io.Reader;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Scanner;
 
 class SwaggerRequestValidationService {
-
-    private static final Logger LOG = LoggerFactory.getLogger(SwaggerRequestValidationService.class);
 
     private static final String MESSAGE_REQUEST_PATH_MISSING = "validation.request.path.missing";
 
@@ -34,19 +31,8 @@ class SwaggerRequestValidationService {
     }
 
     SwaggerRequestValidationService(final SwaggerRequestResponseValidator requestValidator) {
+        Objects.requireNonNull(requestValidator, "A request validator is required.");
         this.requestValidator = requestValidator;
-    }
-
-    private static String readReader(final Reader reader) {
-        final Scanner s = new Scanner(reader).useDelimiter("\\A");
-        return s.hasNext() ? s.next() : "";
-    }
-
-    private static String getCompleteRequestUri(final HttpServletRequest servletRequest) {
-        if (StringUtils.isBlank(servletRequest.getQueryString())) {
-            return servletRequest.getRequestURI();
-        }
-        return servletRequest.getRequestURI() + "?" + servletRequest.getQueryString();
     }
 
     /**
@@ -55,6 +41,7 @@ class SwaggerRequestValidationService {
      * @throws IOException if the request body can't be read
      */
     Request buildRequest(final HttpServletRequest servletRequest) throws IOException {
+        Objects.requireNonNull(servletRequest, "A request is required.");
         final Request.Method method = Request.Method.valueOf(servletRequest.getMethod());
         final String requestUri = getCompleteRequestUri(servletRequest);
         final UriComponents uriComponents = UriComponentsBuilder
@@ -63,12 +50,10 @@ class SwaggerRequestValidationService {
         final String path = uriComponents.getPath();
         final SimpleRequest.Builder builder = new SimpleRequest.Builder(method, path);
         final String body = readReader(servletRequest.getReader());
-        if (servletRequest.getContentLength() < 0 && (body == null || body.isEmpty())) {
-            // The content length suggests that there is no body - but this is only
-            // a hint that there might be no body. But if the body itself is empty
-            // (or null) it was truly not set.
-        } else {
-            // yes, there was a body - even though it might be empty
+        // The content length of a request does not need to be set. It might by "-1" and
+        // there is still a body. Only in conjunction with an empty / unset body it was
+        // really empty.
+        if (servletRequest.getContentLength() >= 0 || (body != null && !body.isEmpty())) {
             builder.withBody(body);
         }
         for (final Map.Entry<String, List<String>> entry : uriComponents.getQueryParams().entrySet()) {
@@ -99,5 +84,17 @@ class SwaggerRequestValidationService {
             }
         }
         return true;
+    }
+
+    private static String readReader(final Reader reader) {
+        final Scanner s = new Scanner(reader).useDelimiter("\\A");
+        return s.hasNext() ? s.next() : "";
+    }
+
+    private static String getCompleteRequestUri(final HttpServletRequest servletRequest) {
+        if (StringUtils.isBlank(servletRequest.getQueryString())) {
+            return servletRequest.getRequestURI();
+        }
+        return servletRequest.getRequestURI() + "?" + servletRequest.getQueryString();
     }
 }
