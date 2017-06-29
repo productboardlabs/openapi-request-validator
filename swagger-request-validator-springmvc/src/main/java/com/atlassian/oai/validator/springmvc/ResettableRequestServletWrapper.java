@@ -7,7 +7,6 @@ import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * A {@link javax.servlet.http.HttpServletRequestWrapper} those {@link ServletInputStream} can
@@ -17,11 +16,10 @@ import java.io.InputStream;
  */
 class ResettableRequestServletWrapper extends ContentCachingRequestWrapper {
 
-    private ServletInputStream servletInputStream;
+    private CachedServletInputStream servletInputStream;
 
     ResettableRequestServletWrapper(final HttpServletRequest request) {
         super(request);
-        this.servletInputStream = null;
     }
 
     /**
@@ -33,11 +31,9 @@ class ResettableRequestServletWrapper extends ContentCachingRequestWrapper {
      * that stream.
      */
     void resetInputStream() throws IOException {
-        final InputStream inputStream = getInputStream();
-
-        if (inputStream instanceof CachedServletInputStream) {
-            // reset the cached stream
-            ((CachedServletInputStream) inputStream).reset();
+        if (servletInputStream != null) {
+            // just reset the cached stream
+            servletInputStream.reset();
         } else {
             // replace the original ServletInputStream with a CachedServletInputStream
             // using the already read bytes from the original
@@ -48,10 +44,7 @@ class ResettableRequestServletWrapper extends ContentCachingRequestWrapper {
 
     @Override
     public ServletInputStream getInputStream() throws IOException {
-        if (servletInputStream == null) {
-            this.servletInputStream = super.getInputStream();
-        }
-        return servletInputStream;
+        return servletInputStream != null ? servletInputStream : super.getInputStream();
     }
 
     /**
