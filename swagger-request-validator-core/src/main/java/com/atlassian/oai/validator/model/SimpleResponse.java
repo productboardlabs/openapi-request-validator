@@ -6,8 +6,10 @@ import com.google.common.collect.MultimapBuilder;
 import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import static java.util.Arrays.asList;
 
@@ -95,9 +97,20 @@ public class SimpleResponse implements Response {
             return this;
         }
 
-        public SimpleResponse build() {
-            return new SimpleResponse(status, Optional.ofNullable(body), headers.asMap());
+        public Builder withHeader(final String name, final List<String> values) {
+            if (values == null || values.isEmpty()) {
+                headers.put(name, null);
+            } else {
+                headers.putAll(name, values);
+            }
+            return this;
         }
 
+        public SimpleResponse build() {
+            final TreeMap<String, Collection<String>> caseInsensitiveHeaders = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            caseInsensitiveHeaders.putAll(headers.asMap());
+
+            return new SimpleResponse(status, Optional.ofNullable(body), caseInsensitiveHeaders);
+        }
     }
 }

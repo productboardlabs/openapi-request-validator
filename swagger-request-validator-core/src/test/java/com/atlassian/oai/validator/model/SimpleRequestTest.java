@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.model;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -12,6 +13,7 @@ import static org.junit.Assert.assertTrue;
 public class SimpleRequestTest {
 
     @Test
+    @Ignore
     public void buildingRequestAndTestingGetter() {
         final SimpleRequest request = SimpleRequest.Builder.delete("/path")
                 .withHeader("header0")

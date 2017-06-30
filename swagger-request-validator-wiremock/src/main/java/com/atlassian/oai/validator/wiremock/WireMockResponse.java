@@ -1,44 +1,29 @@
 package com.atlassian.oai.validator.wiremock;
 
 import com.atlassian.oai.validator.model.Response;
-import com.github.tomakehurst.wiremock.http.HttpHeader;
+import com.atlassian.oai.validator.model.SimpleResponse;
 
 import javax.annotation.Nonnull;
-import java.util.Collection;
-import java.util.Optional;
 
-import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 
-/**
- * Adapter for using WireMock responses in the Swagger Request Validator
- */
-public class WireMockResponse implements Response {
+public class WireMockResponse {
 
-    private final com.github.tomakehurst.wiremock.http.Response internalResponse;
-
-    public WireMockResponse(@Nonnull final com.github.tomakehurst.wiremock.http.Response internalResponse) {
-        this.internalResponse = requireNonNull(internalResponse, "A WireMock response is required.");
+    private WireMockResponse() {
     }
 
-    @Override
-    public int getStatus() {
-        return internalResponse.getStatus();
-    }
-
+    /**
+     * Builds a {@link Response} for the Swagger validator out of the
+     * original {@link com.github.tomakehurst.wiremock.http.Response}.
+     *
+     * @param originalResponse the original {@link com.github.tomakehurst.wiremock.http.Response}
+     */
     @Nonnull
-    @Override
-    public Optional<String> getBody() {
-        return Optional.ofNullable(internalResponse.getBodyAsString());
-    }
-
-    @Nonnull
-    @Override
-    public Collection<String> getHeaderValues(final String name) {
-        final HttpHeader header = internalResponse.getHeaders().getHeader(name);
-        if (header.isPresent()) {
-            return header.values();
-        }
-        return emptyList();
+    static Response of(@Nonnull final com.github.tomakehurst.wiremock.http.Response originalResponse) {
+        requireNonNull(originalResponse, "An original response is required");
+        final SimpleResponse.Builder builder = new SimpleResponse.Builder(originalResponse.getStatus())
+                .withBody(originalResponse.getBodyAsString());
+        originalResponse.getHeaders().all().forEach(header -> builder.withHeader(header.key(), header.values()));
+        return builder.build();
     }
 }

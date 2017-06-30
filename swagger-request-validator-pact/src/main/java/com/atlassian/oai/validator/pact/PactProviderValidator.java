@@ -38,7 +38,7 @@ import static java.util.stream.Collectors.toList;
  *                                                  .withPactsFrom(BROKER_URL, PROVIDER_ID)
  *                                                  .build();
  * </pre>
- *
+ * <p>
  * To validate against specific Consumer Pact files:
  * <pre>
  *     final PactProviderValidator validator = PactProviderValidator
@@ -46,7 +46,6 @@ import static java.util.stream.Collectors.toList;
  *                                                  .withConsumer(CONSUMER_ID, CONSUMER_PACT_URL)
  *                                                  .build();
  * </pre>
- *
  *
  * @see <a href="https://docs.pact.io/documentation/sharings_pacts.html">Pact broker</a>
  * @see SwaggerRequestResponseValidator
@@ -77,7 +76,6 @@ public class PactProviderValidator {
      * Create a new {@link PactProviderValidator} that validates Consumers against the given Swagger API specification.
      *
      * @param swaggerJsonUrl The URL of the Swagger API specification to use
-     *
      * @return A builder that can create configured {@link PactProviderValidator} instances.
      */
     public static Builder createFor(@Nonnull final String swaggerJsonUrl) {
@@ -119,8 +117,8 @@ public class PactProviderValidator {
 
         pact.getInteractions().forEach(i -> {
             final ValidationReport report = validator.validate(
-                    new PactRequest(((RequestResponseInteraction) i).getRequest()),
-                    new PactResponse(((RequestResponseInteraction) i).getResponse()));
+                    PactRequest.of(((RequestResponseInteraction) i).getRequest()),
+                    PactResponse.of(((RequestResponseInteraction) i).getResponse()));
             result.addInteractionResult(i.getDescription(), report);
         });
 
@@ -163,8 +161,8 @@ public class PactProviderValidator {
          *     // Create from a classpath resource in the /api package
          *     .withSwaggerJsonUrl("/api/swagger.json");
          * </pre>
-         * @param swaggerJsonUrl The location of the Swagger JSON specification to use in the validator.
          *
+         * @param swaggerJsonUrl The location of the Swagger JSON specification to use in the validator.
          * @return this builder instance.
          */
         public Builder withSwaggerJsonUrl(final String swaggerJsonUrl) {
@@ -178,7 +176,6 @@ public class PactProviderValidator {
          * Note that each supplied consumer must have a <code>name</code> and <code>pactFile</code> configured.
          *
          * @param consumers The consumers to include
-         *
          * @return this builder instance.
          */
         public Builder withConsumers(final ConsumerInfo... consumers) {
@@ -190,8 +187,7 @@ public class PactProviderValidator {
          * Add a Consumer that will be included in the validation.
          *
          * @param consumerName The name of the Consumer
-         * @param pactFileUrl The location of the Consumer Pact file to validate against
-         *
+         * @param pactFileUrl  The location of the Consumer Pact file to validate against
          * @return this builder instance.
          */
         public Builder withConsumer(final String consumerName, final String pactFileUrl) {
@@ -203,8 +199,7 @@ public class PactProviderValidator {
          * Add a Consumer that will be included in the validation.
          *
          * @param consumerName The name of the Consumer
-         * @param pactFileUrl The location of the Consumer Pact file to validate against
-         *
+         * @param pactFileUrl  The location of the Consumer Pact file to validate against
          * @return this builder instance.
          */
         public Builder withConsumer(final String consumerName, final URL pactFileUrl) {
@@ -216,9 +211,8 @@ public class PactProviderValidator {
          * Configure the validator to validate against all Consumer Pacts retrieved from the given
          * broker for the given Provider.
          *
-         * @param brokerUrl the URL of the Pact Broker to retrieve Consumer Pacts from
+         * @param brokerUrl    the URL of the Pact Broker to retrieve Consumer Pacts from
          * @param providerName The ID of the Provider to retrieve Pacts for
-         *
          * @return this builder instance.
          */
         public Builder withPactsFrom(final String brokerUrl, final String providerName) {
@@ -257,7 +251,7 @@ public class PactProviderValidator {
                 return result;
             } catch (final Exception e) {
                 log.error(format("Exception occurred while retrieving consumers for provider '%s' from broker '%s'",
-                                providerName, brokerUrl), e);
+                        providerName, brokerUrl), e);
                 return emptyList();
             }
 

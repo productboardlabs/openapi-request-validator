@@ -1,86 +1,39 @@
 package com.atlassian.oai.validator.wiremock;
 
 import com.atlassian.oai.validator.model.Request;
+import com.atlassian.oai.validator.model.SimpleRequest;
 import com.github.tomakehurst.wiremock.common.Urls;
-import com.github.tomakehurst.wiremock.http.HttpHeader;
-import com.github.tomakehurst.wiremock.http.MultiValue;
 import com.github.tomakehurst.wiremock.http.QueryParameter;
 
 import javax.annotation.Nonnull;
 import java.net.URI;
-import java.util.Collection;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
-import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
-import static java.util.Optional.ofNullable;
 
-/**
- * Adapter for using WireMock requests in the Swagger Request Validator
- */
-public class WireMockRequest implements Request {
+public class WireMockRequest {
 
-    private final com.github.tomakehurst.wiremock.http.Request internalRequest;
-    private final String requestPath;
-    private final Map<String, QueryParameter> queryParameterMap;
-
-    public WireMockRequest(@Nonnull final com.github.tomakehurst.wiremock.http.Request internalRequest) {
-        this.internalRequest = requireNonNull(internalRequest, "A WireMock request is required.");
-
-        final URI uri = URI.create(internalRequest.getUrl());
-        this.queryParameterMap = Urls.splitQuery(uri);
-        this.requestPath = uri.getPath();
+    private WireMockRequest() {
     }
 
+    /**
+     * Builds a {@link Request} for the swagger validator out of the
+     * original {@link com.github.tomakehurst.wiremock.http.Request}.
+     *
+     * @param originalRequest the original {@link com.github.tomakehurst.wiremock.http.Request}
+     */
     @Nonnull
-    @Override
-    public String getPath() {
-        return requestPath;
-    }
+    static Request of(@Nonnull final com.github.tomakehurst.wiremock.http.Request originalRequest) {
+        requireNonNull(originalRequest, "An original request is required");
 
-    @Nonnull
-    @Override
-    public Method getMethod() {
-        return Method.valueOf(internalRequest.getMethod().getName());
-    }
+        final URI uri = URI.create(originalRequest.getUrl());
+        final Map<String, QueryParameter> queryParameterMap = Urls.splitQuery(uri);
 
-    @Nonnull
-    @Override
-    public Optional<String> getBody() {
-        return ofNullable(internalRequest.getBodyAsString());
+        final SimpleRequest.Builder builder =
+                new SimpleRequest.Builder(originalRequest.getMethod().getName(), uri.getPath())
+                        .withBody(originalRequest.getBodyAsString());
+        originalRequest.getHeaders().all().forEach(header -> builder.withHeader(header.key(), header.values()));
+        queryParameterMap.forEach((key, value) -> builder.withQueryParam(key, value.values()));
+        return builder.build();
     }
-
-    @Nonnull
-    @Override
-    public Collection<String> getQueryParameters() {
-        return queryParameterMap.keySet();
-    }
-
-    @Nonnull
-    @Override
-    public Collection<String> getQueryParameterValues(final String name) {
-        if (queryParameterMap.containsKey(name)) {
-            return queryParameterMap.get(name).values();
-        }
-        return emptyList();
-    }
-
-    @Nonnull
-    @Override
-    public Map<String, Collection<String>> getHeaders() {
-        return internalRequest.getHeaders().all().stream().collect(Collectors.toMap(MultiValue::key, MultiValue::values));
-    }
-
-    @Nonnull
-    @Override
-    public Collection<String> getHeaderValues(final String name) {
-        final HttpHeader header = internalRequest.getHeaders().getHeader(name);
-        if (header.isPresent()) {
-            return header.values();
-        }
-        return emptyList();
-    }
-
 }

@@ -65,12 +65,12 @@ public class SimpleRequest implements Request {
     @Override
     @Nonnull
     public Collection<String> getQueryParameterValues(final String name) {
-        if (name == null || !queryParams.containsKey(name.toLowerCase())) {
+        if (name == null || !queryParams.containsKey(name)) {
             return emptyList();
         }
 
         return unmodifiableList(
-                queryParams.get(name.toLowerCase()).stream().filter(Objects::nonNull).collect(toList())
+                queryParams.get(name).stream().filter(Objects::nonNull).collect(toList())
         );
     }
 
@@ -129,6 +129,12 @@ public class SimpleRequest implements Request {
             return new Builder(Method.POST, path);
         }
 
+        public Builder(final String method, final String path) {
+            requireNonNull(method, "A method is required");
+            this.method = Method.valueOf(method.toUpperCase());
+            this.path = requireNonNull(path, "A path is required");
+        }
+
         public Builder(final Method method, final String path) {
             this.method = requireNonNull(method, "A method is required");
             this.path = requireNonNull(path, "A path is required");
@@ -156,7 +162,7 @@ public class SimpleRequest implements Request {
             if (values == null || values.isEmpty()) {
                 queryParams.put(name, null);
             } else {
-                queryParams.putAll(name.toLowerCase(), values);
+                queryParams.putAll(name, values);
             }
             return this;
         }

@@ -1,42 +1,47 @@
 package com.atlassian.oai.validator.mockmvc;
 
 import com.atlassian.oai.validator.model.Response;
+import com.atlassian.oai.validator.model.SimpleResponse;
+import org.slf4j.Logger;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import javax.annotation.Nonnull;
 import java.io.UnsupportedEncodingException;
-import java.util.Collection;
-import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
+import static org.slf4j.LoggerFactory.getLogger;
 
-/**
- * An adapter for using spring-test {@link MockHttpServletResponse} with the Swagger Request Validator.
- */
-public class MockMvcResponse implements Response {
+public class MockMvcResponse {
 
-    private final MockHttpServletResponse internalResponse;
+    private static final Logger LOGGER = getLogger(MockMvcResponse.class);
 
-    public MockMvcResponse(@Nonnull final MockHttpServletResponse internalResponse) {
-        this.internalResponse = requireNonNull(internalResponse, "A response is required");
+    private MockMvcResponse() {
     }
 
-    @Override
-    public int getStatus() {
-        return internalResponse.getStatus();
+    /**
+     * Builds a {@link Response} for the Swagger validator out of the
+     * original {@link MockHttpServletResponse}.
+     *
+     * @param originalResponse the original {@link MockHttpServletResponse}
+     */
+    @Nonnull
+    static Response of(@Nonnull final MockHttpServletResponse originalResponse) {
+        requireNonNull(originalResponse, "An original response is required");
+        final SimpleResponse.Builder builder = new SimpleResponse.Builder(originalResponse.getStatus())
+                .withBody(getBody(originalResponse));
+        originalResponse.getHeaderNames()
+                .forEach(header -> builder.withHeader(header, originalResponse.getHeaders(header)));
+        return builder.build();
     }
 
-    @Nonnull @Override
-    public Optional<String> getBody() {
+    private static String getBody(@Nonnull final MockHttpServletResponse originalResponse) {
         try {
-            return (internalResponse.getContentAsByteArray().length > 0) ? Optional.of(internalResponse.getContentAsString()) : Optional.empty();
+            if (originalResponse.getContentAsByteArray().length > 0) {
+                return originalResponse.getContentAsString();
+            }
         } catch (final UnsupportedEncodingException e) {
-            return Optional.empty();
+            LOGGER.warn("Can't read request body.", e);
         }
-    }
-
-    @Nonnull @Override
-    public Collection<String> getHeaderValues(final String name) {
-        return internalResponse.getHeaders(name);
+        return null;
     }
 }
