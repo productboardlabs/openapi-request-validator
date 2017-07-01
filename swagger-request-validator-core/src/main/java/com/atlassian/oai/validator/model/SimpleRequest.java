@@ -11,12 +11,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.TreeMap;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -26,22 +25,22 @@ import static java.util.stream.Collectors.toList;
  */
 public class SimpleRequest implements Request {
 
-    private final String path;
     private final Method method;
-    private final Optional<String> requestBody;
-    private final Map<String, Collection<String>> queryParams;
+    private final String path;
     private final Map<String, Collection<String>> headers;
+    private final Map<String, Collection<String>> queryParams;
+    private final Optional<String> requestBody;
 
     private SimpleRequest(@Nonnull final Method method,
                           @Nonnull final String path,
-                          @Nullable final String body,
+                          @Nonnull final Map<String, Collection<String>> headers,
                           @Nonnull final Map<String, Collection<String>> queryParams,
-                          @Nonnull final Map<String, Collection<String>> headers) {
+                          @Nullable final String body) {
         this.method = requireNonNull(method, "A method is required");
         this.path = requireNonNull(path, "A request path is required");
-        this.requestBody = Optional.ofNullable(body);
         this.queryParams = requireNonNull(queryParams);
-        this.headers = headers;
+        this.headers = requireNonNull(headers);
+        this.requestBody = Optional.ofNullable(body);
     }
 
     @Nonnull
@@ -65,13 +64,7 @@ public class SimpleRequest implements Request {
     @Override
     @Nonnull
     public Collection<String> getQueryParameterValues(final String name) {
-        if (name == null || !queryParams.containsKey(name)) {
-            return emptyList();
-        }
-
-        return unmodifiableList(
-                queryParams.get(name).stream().filter(Objects::nonNull).collect(toList())
-        );
+        return getFromMapOrEmptyList(name, queryParams);
     }
 
     @Override
@@ -89,13 +82,16 @@ public class SimpleRequest implements Request {
     @Nonnull
     @Override
     public Collection<String> getHeaderValues(final String name) {
-        if (name == null || !headers.containsKey(name)) {
+        return getFromMapOrEmptyList(name, headers);
+    }
+
+    private static Collection<String> getFromMapOrEmptyList(String name, Map<String, Collection<String>> queryParams) {
+        if (name == null || !queryParams.containsKey(name)) {
             return emptyList();
         }
 
-        return unmodifiableList(
-                headers.get(name).stream().filter(Objects::nonNull).collect(toList())
-        );
+        return queryParams.get(name).stream().filter(Objects::nonNull)
+                .collect(collectingAndThen(toList(), Collections::unmodifiableList));
     }
 
     /**
@@ -103,11 +99,11 @@ public class SimpleRequest implements Request {
      */
     public static class Builder {
 
-        private String path;
-        private Method method;
+        private final Method method;
+        private final String path;
+        private final Multimap<String, String> headers;
+        private final Multimap<String, String> queryParams;
         private String body;
-        private Multimap<String, String> queryParams = MultimapBuilder.hashKeys().arrayListValues().build();
-        private Multimap<String, String> headers = MultimapBuilder.hashKeys().arrayListValues().build();
 
         public static Builder get(final String path) {
             return new Builder(Method.GET, path);
@@ -126,18 +122,40 @@ public class SimpleRequest implements Request {
         }
 
         public static Builder patch(final String path) {
-            return new Builder(Method.POST, path);
+            return new Builder(Method.PATCH, path);
+        }
+
+        public static Builder head(final String path) {
+            return new Builder(Method.HEAD, path);
+        }
+
+        public static Builder options(final String path) {
+            return new Builder(Method.OPTIONS, path);
+        }
+
+        public static Builder trace(final String path) {
+            return new Builder(Method.TRACE, path);
         }
 
         public Builder(final String method, final String path) {
-            requireNonNull(method, "A method is required");
-            this.method = Method.valueOf(method.toUpperCase());
-            this.path = requireNonNull(path, "A path is required");
+            this(method, path, true);
         }
 
         public Builder(final Method method, final String path) {
+            this(method, path, true);
+        }
+
+        public Builder(final String method, final String path, final boolean queryParametersCaseSensitive) {
+            this(Method.valueOf(requireNonNull(method, "A method is required").toUpperCase()),
+                    path, queryParametersCaseSensitive);
+        }
+
+        public Builder(final Method method, final String path, final boolean queryParametersCaseSensitive) {
             this.method = requireNonNull(method, "A method is required");
             this.path = requireNonNull(path, "A path is required");
+
+            this.headers = multimapBuilder(false /* header are always case insensitive */);
+            this.queryParams = multimapBuilder(queryParametersCaseSensitive);
         }
 
         public Builder withBody(final String body) {
@@ -147,7 +165,8 @@ public class SimpleRequest implements Request {
 
         public Builder withHeader(final String name, final List<String> values) {
             if (values == null || values.isEmpty()) {
-                headers.put(name, null);
+                // available but not set headers are considered as empty
+                headers.put(name, "");
             } else {
                 headers.putAll(name, values);
             }
@@ -160,6 +179,7 @@ public class SimpleRequest implements Request {
 
         public Builder withQueryParam(final String name, final List<String> values) {
             if (values == null || values.isEmpty()) {
+                // available but not set query parameters are considered as available but with no value
                 queryParams.put(name, null);
             } else {
                 queryParams.putAll(name, values);
@@ -172,10 +192,12 @@ public class SimpleRequest implements Request {
         }
 
         public SimpleRequest build() {
-            final TreeMap<String, Collection<String>> caseInsensitiveHeaders = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-            caseInsensitiveHeaders.putAll(headers.asMap());
+            return new SimpleRequest(method, path, headers.asMap(), queryParams.asMap(), body);
+        }
 
-            return new SimpleRequest(method, path, body, queryParams.asMap(), caseInsensitiveHeaders);
+        private static Multimap<String, String> multimapBuilder(final boolean caseSensitive) {
+            return caseSensitive ? MultimapBuilder.hashKeys().arrayListValues().build() :
+                    MultimapBuilder.treeKeys(String.CASE_INSENSITIVE_ORDER).arrayListValues().build();
         }
     }
 }
