@@ -7,13 +7,64 @@ import com.github.tomakehurst.wiremock.http.QueryParameter;
 
 import javax.annotation.Nonnull;
 import java.net.URI;
+import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
 
-public class WireMockRequest {
+public class WireMockRequest implements Request {
 
-    private WireMockRequest() {
+    private final Request delegate;
+
+    /**
+     * @deprecated Use: {@link WireMockRequest#of(com.github.tomakehurst.wiremock.http.Request)}
+     */
+    @Deprecated
+    public WireMockRequest(@Nonnull final com.github.tomakehurst.wiremock.http.Request originalRequest) {
+        this.delegate = WireMockRequest.of(originalRequest);
+    }
+
+    @Nonnull
+    @Override
+    public String getPath() {
+        return delegate.getPath();
+    }
+
+    @Nonnull
+    @Override
+    public Request.Method getMethod() {
+        return delegate.getMethod();
+    }
+
+    @Nonnull
+    @Override
+    public Optional<String> getBody() {
+        return delegate.getBody();
+    }
+
+    @Nonnull
+    @Override
+    public Collection<String> getQueryParameters() {
+        return delegate.getQueryParameters();
+    }
+
+    @Nonnull
+    @Override
+    public Collection<String> getQueryParameterValues(final String name) {
+        return delegate.getQueryParameterValues(name);
+    }
+
+    @Nonnull
+    @Override
+    public Map<String, Collection<String>> getHeaders() {
+        return delegate.getHeaders();
+    }
+
+    @Nonnull
+    @Override
+    public Collection<String> getHeaderValues(final String name) {
+        return delegate.getHeaderValues(name);
     }
 
     /**
@@ -23,7 +74,7 @@ public class WireMockRequest {
      * @param originalRequest the original {@link com.github.tomakehurst.wiremock.http.Request}
      */
     @Nonnull
-    static Request of(@Nonnull final com.github.tomakehurst.wiremock.http.Request originalRequest) {
+    public static Request of(@Nonnull final com.github.tomakehurst.wiremock.http.Request originalRequest) {
         requireNonNull(originalRequest, "An original request is required");
 
         final URI uri = URI.create(originalRequest.getUrl());

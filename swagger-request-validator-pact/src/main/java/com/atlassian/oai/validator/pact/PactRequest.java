@@ -4,12 +4,64 @@ import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.SimpleRequest;
 
 import javax.annotation.Nonnull;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
 
-public class PactRequest {
+public class PactRequest implements Request {
 
-    private PactRequest() {
+    private final Request delegate;
+
+    /**
+     * @deprecated Use: {@link PactRequest#of(au.com.dius.pact.model.Request)}
+     */
+    @Deprecated
+    public PactRequest(@Nonnull final au.com.dius.pact.model.Request originalRequest) {
+        this.delegate = PactRequest.of(originalRequest);
+    }
+
+    @Nonnull
+    @Override
+    public String getPath() {
+        return delegate.getPath();
+    }
+
+    @Nonnull
+    @Override
+    public Request.Method getMethod() {
+        return delegate.getMethod();
+    }
+
+    @Nonnull
+    @Override
+    public Optional<String> getBody() {
+        return delegate.getBody();
+    }
+
+    @Nonnull
+    @Override
+    public Collection<String> getQueryParameters() {
+        return delegate.getQueryParameters();
+    }
+
+    @Nonnull
+    @Override
+    public Collection<String> getQueryParameterValues(final String name) {
+        return delegate.getQueryParameterValues(name);
+    }
+
+    @Nonnull
+    @Override
+    public Map<String, Collection<String>> getHeaders() {
+        return delegate.getHeaders();
+    }
+
+    @Nonnull
+    @Override
+    public Collection<String> getHeaderValues(final String name) {
+        return delegate.getHeaderValues(name);
     }
 
     /**
@@ -19,7 +71,7 @@ public class PactRequest {
      * @param originalRequest the original {@link au.com.dius.pact.model.Request}
      */
     @Nonnull
-    static Request of(@Nonnull final au.com.dius.pact.model.Request originalRequest) {
+    public static Request of(@Nonnull final au.com.dius.pact.model.Request originalRequest) {
         requireNonNull(originalRequest, "An original request is required");
         final SimpleRequest.Builder builder =
                 new SimpleRequest.Builder(originalRequest.getMethod(), originalRequest.getPath());

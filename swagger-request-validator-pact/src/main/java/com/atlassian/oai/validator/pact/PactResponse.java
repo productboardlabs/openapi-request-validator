@@ -4,12 +4,38 @@ import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleResponse;
 
 import javax.annotation.Nonnull;
+import java.util.Collection;
+import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
 
-public class PactResponse {
+public class PactResponse implements Response {
 
-    private PactResponse() {
+    private final Response delegate;
+
+    /**
+     * @deprecated Use: {@link PactResponse#of(au.com.dius.pact.model.Response)}
+     */
+    @Deprecated
+    public PactResponse(@Nonnull final au.com.dius.pact.model.Response originalResponse) {
+        this.delegate = PactResponse.of(originalResponse);
+    }
+
+    @Override
+    public int getStatus() {
+        return delegate.getStatus();
+    }
+
+    @Nonnull
+    @Override
+    public Optional<String> getBody() {
+        return delegate.getBody();
+    }
+
+    @Nonnull
+    @Override
+    public Collection<String> getHeaderValues(final String name) {
+        return delegate.getHeaderValues(name);
     }
 
     /**
@@ -19,7 +45,7 @@ public class PactResponse {
      * @param originalResponse the original {@link au.com.dius.pact.model.Response}
      */
     @Nonnull
-    static Response of(@Nonnull final au.com.dius.pact.model.Response originalResponse) {
+    public static Response of(@Nonnull final au.com.dius.pact.model.Response originalResponse) {
         requireNonNull(originalResponse, "An original response is required");
         final SimpleResponse.Builder builder = new SimpleResponse.Builder(originalResponse.getStatus());
         if (originalResponse.getBody().isPresent()) {

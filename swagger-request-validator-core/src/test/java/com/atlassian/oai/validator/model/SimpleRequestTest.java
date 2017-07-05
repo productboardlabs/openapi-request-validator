@@ -97,8 +97,8 @@ public class SimpleRequestTest {
     }
 
     @Test
-    public void queryParameter_namesCanBeCaseSensitive_whichIsTheDefault() {
-        final Request request = new SimpleRequest.Builder(Request.Method.GET, "/path")
+    public void queryParameter_namesCanBeCaseSensitive() {
+        final Request request = new SimpleRequest.Builder(Request.Method.GET, "/path", true)
                 .withQueryParam("foo")
                 .withQueryParam("Foo", "bar0")
                 .withQueryParam("fOO", "bar1", "bar2")
@@ -114,8 +114,8 @@ public class SimpleRequestTest {
     }
 
     @Test
-    public void queryParameter_namesCanBeCaseInsensitive() {
-        final Request request = new SimpleRequest.Builder(Request.Method.GET, "/path", false)
+    public void queryParameter_namesCanBeCaseInsensitive_whichIsTheDefault() {
+        final Request request = new SimpleRequest.Builder(Request.Method.GET, "/path")
                 .withQueryParam("foo")
                 .withQueryParam("Foo", "bar0")
                 .withQueryParam("fOO", "bar1", "bar2")

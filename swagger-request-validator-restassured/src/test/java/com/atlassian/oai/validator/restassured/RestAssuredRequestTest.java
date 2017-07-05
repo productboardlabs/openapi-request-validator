@@ -88,11 +88,9 @@ public class RestAssuredRequestTest {
                 .statusCode(200);
 
         final Request classUnderTest = requestCaptor.getRequest();
-        assertThat(classUnderTest.getQueryParameters(), containsInAnyOrder("queryParam", "queryparam"));
-        assertThat(classUnderTest.getQueryParameterValues("queryParam"), containsInAnyOrder("value0", "value1"));
-        assertThat(classUnderTest.getQueryParameterValues("queryparam"), containsInAnyOrder("VALUE0"));
+        assertThat(classUnderTest.getQueryParameters(), containsInAnyOrder("queryparam"));
+        assertThat(classUnderTest.getQueryParameterValues("queryParam"), containsInAnyOrder("value0", "value1", "VALUE0"));
         assertThat(classUnderTest.getQueryParameterValues("requestParam"), empty());
-
     }
 
     @Test

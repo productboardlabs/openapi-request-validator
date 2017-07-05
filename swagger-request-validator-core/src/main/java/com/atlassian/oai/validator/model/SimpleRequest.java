@@ -201,7 +201,7 @@ public class SimpleRequest implements Request {
          * @return a prepared {@link SimpleRequest.Builder}
          */
         public Builder(final String method, final String path) {
-            this(method, path, true);
+            this(method, path, false);
         }
 
         /**
@@ -212,7 +212,7 @@ public class SimpleRequest implements Request {
          * @return a prepared {@link SimpleRequest.Builder}
          */
         public Builder(final Method method, final String path) {
-            this(method, path, true);
+            this(method, path, false);
         }
 
         /**

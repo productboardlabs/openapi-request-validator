@@ -5,14 +5,66 @@ import com.atlassian.oai.validator.model.SimpleRequest;
 import io.restassured.specification.FilterableRequestSpecification;
 
 import javax.annotation.Nonnull;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
 
-public class RestAssuredRequest {
+public class RestAssuredRequest implements Request {
 
-    private RestAssuredRequest() {
+    private final Request delegate;
+
+    /**
+     * @deprecated Use: {@link RestAssuredRequest#of(FilterableRequestSpecification)}
+     */
+    @Deprecated
+    public RestAssuredRequest(@Nonnull final FilterableRequestSpecification originalRequest) {
+        this.delegate = RestAssuredRequest.of(originalRequest);
+    }
+
+    @Nonnull
+    @Override
+    public String getPath() {
+        return delegate.getPath();
+    }
+
+    @Nonnull
+    @Override
+    public Request.Method getMethod() {
+        return delegate.getMethod();
+    }
+
+    @Nonnull
+    @Override
+    public Optional<String> getBody() {
+        return delegate.getBody();
+    }
+
+    @Nonnull
+    @Override
+    public Collection<String> getQueryParameters() {
+        return delegate.getQueryParameters();
+    }
+
+    @Nonnull
+    @Override
+    public Collection<String> getQueryParameterValues(final String name) {
+        return delegate.getQueryParameterValues(name);
+    }
+
+    @Nonnull
+    @Override
+    public Map<String, Collection<String>> getHeaders() {
+        return delegate.getHeaders();
+    }
+
+    @Nonnull
+    @Override
+    public Collection<String> getHeaderValues(final String name) {
+        return delegate.getHeaderValues(name);
     }
 
     /**
@@ -22,7 +74,7 @@ public class RestAssuredRequest {
      * @param originalRequest the original {@link FilterableRequestSpecification}
      */
     @Nonnull
-    static Request of(@Nonnull final FilterableRequestSpecification originalRequest) {
+    public static Request of(@Nonnull final FilterableRequestSpecification originalRequest) {
         requireNonNull(originalRequest, "An original request is required");
         final SimpleRequest.Builder builder =
                 new SimpleRequest.Builder(originalRequest.getMethod(), originalRequest.getDerivedPath())
