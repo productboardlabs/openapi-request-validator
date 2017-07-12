@@ -1,88 +1,89 @@
 package com.atlassian.oai.validator.pact;
 
 import com.atlassian.oai.validator.model.Request;
+import com.atlassian.oai.validator.model.SimpleRequest;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.TreeMap;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singleton;
 import static java.util.Objects.requireNonNull;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.stream.Collectors.toMap;
 
-/**
- * Adapter for using Pact requests in the Swagger validator
- */
 public class PactRequest implements Request {
 
-    private final au.com.dius.pact.model.Request internalRequest;
+    private final Request delegate;
 
-    public PactRequest(@Nonnull final au.com.dius.pact.model.Request internalRequest) {
-        requireNonNull(internalRequest, "An Pact request is required");
-        this.internalRequest = internalRequest;
-
-        if (this.internalRequest.getHeaders() != null) {
-            final TreeMap<String, String> caseInsensitiveHeaders = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-            caseInsensitiveHeaders.putAll(internalRequest.getHeaders());
-            this.internalRequest.setHeaders(caseInsensitiveHeaders);
-        }
-
-        if (this.internalRequest.getQuery() == null) {
-            this.internalRequest.setQuery(new HashMap<>());
-        }
+    /**
+     * @deprecated Use: {@link PactRequest#of(au.com.dius.pact.model.Request)}
+     */
+    @Deprecated
+    public PactRequest(@Nonnull final au.com.dius.pact.model.Request originalRequest) {
+        this.delegate = PactRequest.of(originalRequest);
     }
 
     @Nonnull
     @Override
     public String getPath() {
-        return internalRequest.getPath();
+        return delegate.getPath();
     }
 
     @Nonnull
     @Override
-    public Method getMethod() {
-        return Method.valueOf(internalRequest.getMethod().toUpperCase());
+    public Request.Method getMethod() {
+        return delegate.getMethod();
     }
 
     @Nonnull
     @Override
     public Optional<String> getBody() {
-        return internalRequest.getBody().isPresent() ? of(internalRequest.getBody().getValue()) : empty();
+        return delegate.getBody();
     }
 
     @Nonnull
     @Override
     public Collection<String> getQueryParameters() {
-        return internalRequest.getQuery().keySet();
+        return delegate.getQueryParameters();
     }
 
     @Nonnull
     @Override
     public Collection<String> getQueryParameterValues(final String name) {
-        return internalRequest.getQuery().getOrDefault(name, emptyList());
+        return delegate.getQueryParameterValues(name);
     }
 
     @Nonnull
     @Override
     public Map<String, Collection<String>> getHeaders() {
-        return internalRequest.getHeaders().entrySet()
-                .stream()
-                .collect(toMap(Map.Entry::getKey, v -> singleton(v.getValue())));
+        return delegate.getHeaders();
     }
 
     @Nonnull
     @Override
     public Collection<String> getHeaderValues(final String name) {
-        final Map<String, String> headers = internalRequest.getHeaders();
-        if (headers != null && headers.containsKey(name.toLowerCase())) {
-            return singleton(headers.get(name.toLowerCase()));
+        return delegate.getHeaderValues(name);
+    }
+
+    /**
+     * Builds a {@link Request} for the swagger validator out of the
+     * original {@link au.com.dius.pact.model.Request}.
+     *
+     * @param originalRequest the original {@link au.com.dius.pact.model.Request}
+     */
+    @Nonnull
+    public static Request of(@Nonnull final au.com.dius.pact.model.Request originalRequest) {
+        requireNonNull(originalRequest, "An original request is required");
+        final SimpleRequest.Builder builder =
+                new SimpleRequest.Builder(originalRequest.getMethod(), originalRequest.getPath());
+        if (originalRequest.getBody().isPresent()) {
+            builder.withBody(originalRequest.getBody().getValue());
         }
-        return emptyList();
+        if (originalRequest.getHeaders() != null) {
+            originalRequest.getHeaders().forEach((key, value) -> builder.withHeader(key, value));
+        }
+        if (originalRequest.getQuery() != null) {
+            originalRequest.getQuery().forEach((key, value) -> builder.withQueryParam(key, value));
+        }
+        return builder.build();
     }
 }

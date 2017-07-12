@@ -11,12 +11,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.TreeMap;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -26,22 +25,22 @@ import static java.util.stream.Collectors.toList;
  */
 public class SimpleRequest implements Request {
 
-    private final String path;
     private final Method method;
-    private final Optional<String> requestBody;
-    private final Map<String, Collection<String>> queryParams;
+    private final String path;
     private final Map<String, Collection<String>> headers;
+    private final Map<String, Collection<String>> queryParams;
+    private final Optional<String> requestBody;
 
     private SimpleRequest(@Nonnull final Method method,
                           @Nonnull final String path,
-                          @Nullable final String body,
+                          @Nonnull final Map<String, Collection<String>> headers,
                           @Nonnull final Map<String, Collection<String>> queryParams,
-                          @Nonnull final Map<String, Collection<String>> headers) {
+                          @Nullable final String body) {
         this.method = requireNonNull(method, "A method is required");
         this.path = requireNonNull(path, "A request path is required");
-        this.requestBody = Optional.ofNullable(body);
         this.queryParams = requireNonNull(queryParams);
-        this.headers = headers;
+        this.headers = requireNonNull(headers);
+        this.requestBody = Optional.ofNullable(body);
     }
 
     @Nonnull
@@ -65,13 +64,7 @@ public class SimpleRequest implements Request {
     @Override
     @Nonnull
     public Collection<String> getQueryParameterValues(final String name) {
-        if (name == null || !queryParams.containsKey(name.toLowerCase())) {
-            return emptyList();
-        }
-
-        return unmodifiableList(
-                queryParams.get(name.toLowerCase()).stream().filter(Objects::nonNull).collect(toList())
-        );
+        return getFromMapOrEmptyList(queryParams, name);
     }
 
     @Override
@@ -89,13 +82,16 @@ public class SimpleRequest implements Request {
     @Nonnull
     @Override
     public Collection<String> getHeaderValues(final String name) {
-        if (name == null || !headers.containsKey(name)) {
+        return getFromMapOrEmptyList(headers, name);
+    }
+
+    static Collection<String> getFromMapOrEmptyList(final Map<String, Collection<String>> map, final String name) {
+        if (name == null || !map.containsKey(name)) {
             return emptyList();
         }
 
-        return unmodifiableList(
-                headers.get(name).stream().filter(Objects::nonNull).collect(toList())
-        );
+        return map.get(name).stream().filter(Objects::nonNull)
+                .collect(collectingAndThen(toList(), Collections::unmodifiableList));
     }
 
     /**
@@ -103,73 +99,247 @@ public class SimpleRequest implements Request {
      */
     public static class Builder {
 
-        private String path;
-        private Method method;
+        private final Method method;
+        private final String path;
+        private final Multimap<String, String> headers;
+        private final Multimap<String, String> queryParams;
         private String body;
-        private Multimap<String, String> queryParams = MultimapBuilder.hashKeys().arrayListValues().build();
-        private Multimap<String, String> headers = MultimapBuilder.hashKeys().arrayListValues().build();
 
+        /**
+         * A convenience method for creating a {@link SimpleRequest.Builder} with
+         * HTTP method GET and the given path.
+         *
+         * @param path the requests path
+         * @return a prepared {@link SimpleRequest.Builder}
+         */
         public static Builder get(final String path) {
             return new Builder(Method.GET, path);
         }
 
+        /**
+         * A convenience method for creating a {@link SimpleRequest.Builder} with
+         * HTTP method PUT and the given path.
+         *
+         * @param path the requests path
+         * @return a prepared {@link SimpleRequest.Builder}
+         */
         public static Builder put(final String path) {
             return new Builder(Method.PUT, path);
         }
 
+        /**
+         * A convenience method for creating a {@link SimpleRequest.Builder} with
+         * HTTP method POST and the given path.
+         *
+         * @param path the requests path
+         * @return a prepared {@link SimpleRequest.Builder}
+         */
         public static Builder post(final String path) {
             return new Builder(Method.POST, path);
         }
 
+        /**
+         * A convenience method for creating a {@link SimpleRequest.Builder} with
+         * HTTP method DELETE and the given path.
+         *
+         * @param path the requests path
+         * @return a prepared {@link SimpleRequest.Builder}
+         */
         public static Builder delete(final String path) {
             return new Builder(Method.DELETE, path);
         }
 
+        /**
+         * A convenience method for creating a {@link SimpleRequest.Builder} with
+         * HTTP method PATCH and the given path.
+         *
+         * @param path the requests path
+         * @return a prepared {@link SimpleRequest.Builder}
+         */
         public static Builder patch(final String path) {
-            return new Builder(Method.POST, path);
+            return new Builder(Method.PATCH, path);
         }
 
+        /**
+         * A convenience method for creating a {@link SimpleRequest.Builder} with
+         * HTTP method HEAD and the given path.
+         *
+         * @param path the requests path
+         * @return a prepared {@link SimpleRequest.Builder}
+         */
+        public static Builder head(final String path) {
+            return new Builder(Method.HEAD, path);
+        }
+
+        /**
+         * A convenience method for creating a {@link SimpleRequest.Builder} with
+         * HTTP method OPTIONS and the given path.
+         *
+         * @param path the requests path
+         * @return a prepared {@link SimpleRequest.Builder}
+         */
+        public static Builder options(final String path) {
+            return new Builder(Method.OPTIONS, path);
+        }
+
+        /**
+         * A convenience method for creating a {@link SimpleRequest.Builder} with
+         * HTTP method TRACE and the given path.
+         *
+         * @param path the requests path
+         * @return a prepared {@link SimpleRequest.Builder}
+         */
+        public static Builder trace(final String path) {
+            return new Builder(Method.TRACE, path);
+        }
+
+        /**
+         * Creates a {@link SimpleRequest.Builder} with the given HTTP method and path.
+         *
+         * @param method the HTTP method
+         * @param path   the requests path
+         * @return a prepared {@link SimpleRequest.Builder}
+         */
+        public Builder(final String method, final String path) {
+            this(method, path, false);
+        }
+
+        /**
+         * Creates a {@link SimpleRequest.Builder} with the given HTTP {@link Request.Method} and path.
+         *
+         * @param method the HTTP method
+         * @param path   the requests path
+         * @return a prepared {@link SimpleRequest.Builder}
+         */
         public Builder(final Method method, final String path) {
+            this(method, path, false);
+        }
+
+        /**
+         * Creates a {@link SimpleRequest.Builder} with the given HTTP method and path including
+         * the specification if the query parameters are handled case sensitive or not.
+         *
+         * @param method                       the HTTP method
+         * @param path                         the requests path
+         * @param queryParametersCaseSensitive flag if the query parameters are handled case sensitive or not
+         * @return a prepared {@link SimpleRequest.Builder}
+         */
+        public Builder(final String method, final String path, final boolean queryParametersCaseSensitive) {
+            this(Method.valueOf(requireNonNull(method, "A method is required").toUpperCase()),
+                    path, queryParametersCaseSensitive);
+        }
+
+        /**
+         * Creates a {@link SimpleRequest.Builder} with the given HTTP {@link Request.Method} and path including
+         * the specification if the query parameters are handled case sensitive or not.
+         *
+         * @param method                       the HTTP method
+         * @param path                         the requests path
+         * @param queryParametersCaseSensitive flag if the query parameters are handled case sensitive or not
+         * @return a prepared {@link SimpleRequest.Builder}
+         */
+        public Builder(final Method method, final String path, final boolean queryParametersCaseSensitive) {
             this.method = requireNonNull(method, "A method is required");
             this.path = requireNonNull(path, "A path is required");
+
+            this.headers = multimapBuilder(false /* header are always case insensitive */);
+            this.queryParams = multimapBuilder(queryParametersCaseSensitive);
         }
 
+        /**
+         * Adds a request body to this builder.
+         *
+         * @param body the request body
+         * @return this builder
+         */
         public Builder withBody(final String body) {
             this.body = body;
             return this;
         }
 
+        /**
+         * Adds a request header to this builder. If there was already a header with this
+         * name the values will be added.
+         * <p>
+         * Headers are treated case insensitive.
+         *
+         * @param name   the header name
+         * @param values the values for this header
+         * @return this builder
+         */
         public Builder withHeader(final String name, final List<String> values) {
-            if (values == null || values.isEmpty()) {
-                headers.put(name, null);
-            } else {
-                headers.putAll(name, values);
-            }
+            // available but not set headers are considered as empty
+            putValuesToMapOrDefault(headers, name, values, "");
             return this;
         }
 
+        /**
+         * Adds a request header to this builder. If there was already a header with this
+         * name the values will be added.
+         * <p>
+         * Headers are treated case insensitive.
+         *
+         * @param name   the header name
+         * @param values the values for this header
+         * @return this builder
+         */
         public Builder withHeader(final String name, final String... values) {
             return withHeader(name, asList(values));
         }
 
+        /**
+         * Adds a query parameter to this request builder. If there was already a query
+         * parameter with this name the values will be added.
+         * <p>
+         * The case sensitivity can be set by this builders
+         * {@linkplain SimpleRequest.Builder#Builder(Method, String, boolean) constructor}.
+         *
+         * @param name   the header name
+         * @param values the values for this header
+         * @return this builder
+         */
         public Builder withQueryParam(final String name, final List<String> values) {
-            if (values == null || values.isEmpty()) {
-                queryParams.put(name, null);
-            } else {
-                queryParams.putAll(name.toLowerCase(), values);
-            }
+            // available but not set query parameters are considered as available but with no value
+            putValuesToMapOrDefault(queryParams, name, values, null);
             return this;
         }
 
+        /**
+         * Adds a query parameter to this request builder. If there was already a query
+         * parameter with this name the values will be added.
+         * <p>
+         * The case sensitivity can be set by this builders
+         * {@linkplain SimpleRequest.Builder#Builder(String, String, boolean) constructor}.
+         *
+         * @param name   the header name
+         * @param values the values for this header
+         * @return this builder
+         */
         public Builder withQueryParam(final String name, final String... values) {
             return withQueryParam(name, asList(values));
         }
 
+        /**
+         * Builds a {@link SimpleRequest} out of this builder.
+         *
+         * @return the build {@link SimpleRequest}
+         */
         public SimpleRequest build() {
-            final TreeMap<String, Collection<String>> caseInsensitiveHeaders = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-            caseInsensitiveHeaders.putAll(headers.asMap());
+            return new SimpleRequest(method, path, headers.asMap(), queryParams.asMap(), body);
+        }
 
-            return new SimpleRequest(method, path, body, queryParams.asMap(), caseInsensitiveHeaders);
+        static Multimap<String, String> multimapBuilder(final boolean caseSensitive) {
+            return caseSensitive ? MultimapBuilder.hashKeys().arrayListValues().build() :
+                    MultimapBuilder.treeKeys(String.CASE_INSENSITIVE_ORDER).arrayListValues().build();
+        }
+
+        static void putValuesToMapOrDefault(final Multimap<String, String> map, final String name,
+                                            final List<String> values, final String defaultIfNotSet) {
+            if (values == null || values.isEmpty()) {
+                map.put(name, defaultIfNotSet);
+            } else {
+                map.putAll(name, values);
+            }
         }
     }
 }

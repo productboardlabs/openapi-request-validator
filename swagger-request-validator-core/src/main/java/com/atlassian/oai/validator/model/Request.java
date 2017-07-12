@@ -51,7 +51,7 @@ public interface Request {
     /**
      * Get the collection of query parameter values for the query param with the given name.
      *
-     * @param name The (case insensitive) name of the parameter to retrieve
+     * @param name The name of the parameter to retrieve. If not differently specified this name is case insensitive.
      *
      * @return The query parameter values for that param; or empty list
      */

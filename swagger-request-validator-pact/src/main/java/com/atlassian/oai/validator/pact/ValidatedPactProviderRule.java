@@ -20,7 +20,7 @@ import java.util.Optional;
 /**
  * An extension to the PactProviderRule that additionally validates the consumer expectations against an
  * API specification for the Provider API.
- *
+ * <p>
  * This gives consumers fast feedback if their expectations fail to meet the format expected by the Provider API.
  */
 public class ValidatedPactProviderRule implements TestRule {
@@ -69,7 +69,7 @@ public class ValidatedPactProviderRule implements TestRule {
         final ValidationReport report = pactFragment.get().toPact()
                 .getInteractions()
                 .stream()
-                .map(i -> validator.validate(new PactRequest(i.getRequest()), new PactResponse(i.getResponse())))
+                .map(i -> validator.validate(PactRequest.of(i.getRequest()), PactResponse.of(i.getResponse())))
                 .reduce(ValidationReport.empty(), ValidationReport::merge);
 
         if (report.hasErrors()) {

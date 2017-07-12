@@ -1,55 +1,59 @@
 package com.atlassian.oai.validator.pact;
 
 import com.atlassian.oai.validator.model.Response;
+import com.atlassian.oai.validator.model.SimpleResponse;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Optional;
-import java.util.TreeMap;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singleton;
 import static java.util.Objects.requireNonNull;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
 
-/**
- * Adapter for using Pact responses in the Swagger validator
- */
 public class PactResponse implements Response {
 
-    private final au.com.dius.pact.model.Response internalResponse;
+    private final Response delegate;
 
-    public PactResponse(@Nonnull final au.com.dius.pact.model.Response pactResponse) {
-        requireNonNull(pactResponse, "A Pact response is required");
-        this.internalResponse = pactResponse;
-
-        if (this.internalResponse.getHeaders() != null) {
-            final TreeMap<String, String> caseInsensitiveHeaders = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-            caseInsensitiveHeaders.putAll(internalResponse.getHeaders());
-            this.internalResponse.setHeaders(caseInsensitiveHeaders);
-        }
+    /**
+     * @deprecated Use: {@link PactResponse#of(au.com.dius.pact.model.Response)}
+     */
+    @Deprecated
+    public PactResponse(@Nonnull final au.com.dius.pact.model.Response originalResponse) {
+        this.delegate = PactResponse.of(originalResponse);
     }
 
     @Override
     public int getStatus() {
-        return internalResponse.getStatus();
+        return delegate.getStatus();
     }
 
     @Nonnull
     @Override
     public Optional<String> getBody() {
-        return internalResponse.getBody().isPresent() ? of(internalResponse.getBody().getValue()) : empty();
+        return delegate.getBody();
     }
 
     @Nonnull
     @Override
     public Collection<String> getHeaderValues(final String name) {
-        final Map<String, String> headers = internalResponse.getHeaders();
-        if (headers != null && headers.containsKey(name.toLowerCase())) {
-            return singleton(headers.get(name.toLowerCase()));
+        return delegate.getHeaderValues(name);
+    }
+
+    /**
+     * Builds a {@link Response} for the Swagger validator out of the
+     * original {@link au.com.dius.pact.model.Response}.
+     *
+     * @param originalResponse the original {@link au.com.dius.pact.model.Response}
+     */
+    @Nonnull
+    public static Response of(@Nonnull final au.com.dius.pact.model.Response originalResponse) {
+        requireNonNull(originalResponse, "An original response is required");
+        final SimpleResponse.Builder builder = new SimpleResponse.Builder(originalResponse.getStatus());
+        if (originalResponse.getBody().isPresent()) {
+            builder.withBody(originalResponse.getBody().getValue());
         }
-        return emptyList();
+        if (originalResponse.getHeaders() != null) {
+            originalResponse.getHeaders().forEach((key, value) -> builder.withHeader(key, value));
+        }
+        return builder.build();
     }
 }

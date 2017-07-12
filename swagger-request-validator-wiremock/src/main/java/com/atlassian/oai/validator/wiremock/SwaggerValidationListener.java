@@ -63,7 +63,7 @@ public class SwaggerValidationListener implements RequestListener {
     @Override
     public void requestReceived(final Request request, final Response response) {
         try {
-            report = report.merge(validator.validate(new WireMockRequest(request), new WireMockResponse(response)));
+            report = report.merge(validator.validate(WireMockRequest.of(request), WireMockResponse.of(response)));
         } catch (final Exception e) {
             log.error("Exception occurred while validating request", e);
             throw e;

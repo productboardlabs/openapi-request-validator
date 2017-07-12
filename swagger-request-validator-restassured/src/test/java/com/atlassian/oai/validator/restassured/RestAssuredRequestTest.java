@@ -6,14 +6,13 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.util.Optional;
-
 import static com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder.responseDefinition;
 import static com.github.tomakehurst.wiremock.client.WireMock.any;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
 import static io.restassured.RestAssured.given;
 import static java.util.Arrays.stream;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -42,7 +41,7 @@ public class RestAssuredRequestTest {
                 .assertThat()
                 .statusCode(200);
 
-        final RestAssuredRequest classUnderTest = requestCaptor.getRequest();
+        final Request classUnderTest = requestCaptor.getRequest();
         assertThat(classUnderTest.getPath(), is("/path"));
         assertThat(classUnderTest.getMethod(), is(Request.Method.GET));
         assertThat(classUnderTest.getBody().isPresent(), is(false));
@@ -66,8 +65,7 @@ public class RestAssuredRequestTest {
                 .assertThat()
                 .statusCode(200);
 
-        final RestAssuredRequest classUnderTest = requestCaptor.getRequest();
-
+        final Request classUnderTest = requestCaptor.getRequest();
         assertThat(classUnderTest.getQueryParameters(), contains("queryParam", "requestParam"));
         assertThat(classUnderTest.getQueryParameterValues("queryParam"), contains("value1"));
         assertThat(classUnderTest.getQueryParameterValues("requestParam"), contains("value2"));
@@ -79,7 +77,8 @@ public class RestAssuredRequestTest {
         final CapturingFilter requestCaptor = new CapturingFilter();
         given()
                 .port(wireMock.port())
-                .queryParam("queryParam", "value1")
+                .queryParam("queryParam", "value0", "value1")
+                .queryParam("queryparam", "VALUE0")
                 .param("requestParam", "value2")
                 .filter(requestCaptor)
                 .when()
@@ -88,56 +87,19 @@ public class RestAssuredRequestTest {
                 .assertThat()
                 .statusCode(200);
 
-        final RestAssuredRequest classUnderTest = requestCaptor.getRequest();
-
-        assertThat(classUnderTest.getQueryParameters(), contains("queryParam"));
-        assertThat(classUnderTest.getQueryParameterValues("queryParam"), contains("value1"));
+        final Request classUnderTest = requestCaptor.getRequest();
+        assertThat(classUnderTest.getQueryParameters(), containsInAnyOrder("queryparam"));
+        assertThat(classUnderTest.getQueryParameterValues("queryParam"), containsInAnyOrder("value0", "value1", "VALUE0"));
         assertThat(classUnderTest.getQueryParameterValues("requestParam"), empty());
-
-    }
-
-    @Test
-    public void getBody_returnsEmpty_whenNoBodyInRequest() {
-        final CapturingFilter requestCaptor = new CapturingFilter();
-        given()
-                .port(wireMock.port())
-                .filter(requestCaptor)
-                .when()
-                .get("/path")
-                .then()
-                .assertThat()
-                .statusCode(200);
-
-        final RestAssuredRequest classUnderTest = requestCaptor.getRequest();
-
-        assertThat(classUnderTest.getBody(), is(Optional.empty()));
-    }
-
-    @Test
-    public void getBody_returnsBody_whenBodyInRequest() {
-        final CapturingFilter requestCaptor = new CapturingFilter();
-        given()
-                .port(wireMock.port())
-                .body("The body")
-                .filter(requestCaptor)
-                .when()
-                .post("/path")
-                .then()
-                .assertThat()
-                .statusCode(200);
-
-        final RestAssuredRequest classUnderTest = requestCaptor.getRequest();
-        assertThat(classUnderTest.getBody().get(), is("The body"));
     }
 
     @Test
     public void supportsAllRequestMethods() {
-        stream(io.restassured.http.Method.values()).forEach(m -> {
-            assertThat(captureRequest(m).getMethod(), is(Request.Method.valueOf(m.name())));
-        });
+        stream(io.restassured.http.Method.values())
+                .forEach(m -> assertThat(captureRequest(m).getMethod(), is(Request.Method.valueOf(m.name()))));
     }
 
-    private RestAssuredRequest captureRequest(final io.restassured.http.Method method) {
+    private Request captureRequest(final io.restassured.http.Method method) {
         final CapturingFilter requestCaptor = new CapturingFilter();
         given()
                 .port(wireMock.port())

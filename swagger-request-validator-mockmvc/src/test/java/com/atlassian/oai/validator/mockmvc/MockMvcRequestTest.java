@@ -29,7 +29,7 @@ public class MockMvcRequestTest {
                 .header("X-My-Header", "foo", "bar")
                 .buildRequest(new MockServletConfig().getServletContext());
 
-        final MockMvcRequest classUnderTest = new MockMvcRequest(mockHttpServletRequest);
+        final Request classUnderTest = MockMvcRequest.of(mockHttpServletRequest);
 
         assertThat(classUnderTest.getPath(), is("/path"));
         assertThat(classUnderTest.getMethod(), is(Request.Method.GET));
@@ -46,11 +46,10 @@ public class MockMvcRequestTest {
                 .param("queryParam", "value1")
                 .buildRequest(new MockServletConfig().getServletContext());
 
-        final MockMvcRequest classUnderTest = new MockMvcRequest(mockHttpServletRequest);
+        final Request classUnderTest = MockMvcRequest.of(mockHttpServletRequest);
 
         assertThat(classUnderTest.getQueryParameters(), contains("queryParam"));
         assertThat(classUnderTest.getQueryParameterValues("queryParam"), contains("value1"));
-        assertThat(classUnderTest.getQueryParameterValues("queryparam"), contains("value1"));
     }
 
     @Test
@@ -59,7 +58,7 @@ public class MockMvcRequestTest {
                 .get("/path")
                 .buildRequest(new MockServletConfig().getServletContext());
 
-        final MockMvcRequest classUnderTest = new MockMvcRequest(mockHttpServletRequest);
+        final Request classUnderTest = MockMvcRequest.of(mockHttpServletRequest);
 
         assertThat(classUnderTest.getBody(), is(Optional.empty()));
     }
@@ -71,7 +70,7 @@ public class MockMvcRequestTest {
                 .content("The body")
                 .buildRequest(new MockServletConfig().getServletContext());
 
-        final MockMvcRequest classUnderTest = new MockMvcRequest(mockHttpServletRequest);
+        final Request classUnderTest = MockMvcRequest.of(mockHttpServletRequest);
 
         assertThat(classUnderTest.getBody().get(), is("The body"));
     }
@@ -88,12 +87,12 @@ public class MockMvcRequestTest {
     }
 
     private void captureRequest(final MockHttpServletRequestBuilder mockHttpServletRequestBuilder,
-            final Request.Method httpMethod) throws Exception {
+                                final Request.Method httpMethod) throws Exception {
 
         final MockHttpServletRequest mockHttpServletRequest = mockHttpServletRequestBuilder
                 .buildRequest(new MockServletConfig().getServletContext());
 
-        final MockMvcRequest classUnderTest = new MockMvcRequest(mockHttpServletRequest);
+        final Request classUnderTest = MockMvcRequest.of(mockHttpServletRequest);
 
         assertThat(classUnderTest.getMethod(), is(httpMethod));
     }
