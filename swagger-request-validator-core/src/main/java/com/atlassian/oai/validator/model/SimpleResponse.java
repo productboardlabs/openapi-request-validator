@@ -119,7 +119,6 @@ public class SimpleResponse implements Response {
          * Creates a {@link SimpleResponse.Builder} with the given HTTP status code.
          *
          * @param status the responses HTTP status code
-         * @return a prepared {@link SimpleResponse.Builder}
          */
         public Builder(final int status) {
             this.status = status;

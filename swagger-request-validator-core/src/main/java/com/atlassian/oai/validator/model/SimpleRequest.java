@@ -198,7 +198,6 @@ public class SimpleRequest implements Request {
          *
          * @param method the HTTP method
          * @param path   the requests path
-         * @return a prepared {@link SimpleRequest.Builder}
          */
         public Builder(final String method, final String path) {
             this(method, path, false);
@@ -209,7 +208,6 @@ public class SimpleRequest implements Request {
          *
          * @param method the HTTP method
          * @param path   the requests path
-         * @return a prepared {@link SimpleRequest.Builder}
          */
         public Builder(final Method method, final String path) {
             this(method, path, false);
@@ -222,7 +220,6 @@ public class SimpleRequest implements Request {
          * @param method                       the HTTP method
          * @param path                         the requests path
          * @param queryParametersCaseSensitive flag if the query parameters are handled case sensitive or not
-         * @return a prepared {@link SimpleRequest.Builder}
          */
         public Builder(final String method, final String path, final boolean queryParametersCaseSensitive) {
             this(Method.valueOf(requireNonNull(method, "A method is required").toUpperCase()),
@@ -236,7 +233,6 @@ public class SimpleRequest implements Request {
          * @param method                       the HTTP method
          * @param path                         the requests path
          * @param queryParametersCaseSensitive flag if the query parameters are handled case sensitive or not
-         * @return a prepared {@link SimpleRequest.Builder}
          */
         public Builder(final Method method, final String path, final boolean queryParametersCaseSensitive) {
             this.method = requireNonNull(method, "A method is required");
@@ -291,8 +287,8 @@ public class SimpleRequest implements Request {
          * Adds a query parameter to this request builder. If there was already a query
          * parameter with this name the values will be added.
          * <p>
-         * The case sensitivity can be set by this builders
-         * {@linkplain SimpleRequest.Builder#Builder(Method, String, boolean) constructor}.
+         * The case sensitivity can be set by this builder's
+         * {@linkplain SimpleRequest.Builder#Builder(Method, String, boolean)} constructor.
          *
          * @param name   the header name
          * @param values the values for this header
@@ -308,8 +304,8 @@ public class SimpleRequest implements Request {
          * Adds a query parameter to this request builder. If there was already a query
          * parameter with this name the values will be added.
          * <p>
-         * The case sensitivity can be set by this builders
-         * {@linkplain SimpleRequest.Builder#Builder(String, String, boolean) constructor}.
+         * The case sensitivity can be set by this builder's
+         * {@linkplain SimpleRequest.Builder#Builder(String, String, boolean)} constructor.
          *
          * @param name   the header name
          * @param values the values for this header
