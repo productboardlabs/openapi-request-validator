@@ -58,7 +58,21 @@ public interface ValidationReport {
         if (message == null) {
             return empty();
         }
-        return new SingletonValidationReport(message);
+        return new ImmutableValidationReport(message);
+    }
+
+    /**
+     * Return an unmodifiable report containing all the provided messages
+     *
+     * @param messages The messages to add to the report
+     *
+     * @return an unmodifiable report containing all the provided messages
+     */
+    static ValidationReport from(final Message... messages) {
+        if (messages == null || messages.length == 0) {
+            return empty();
+        }
+        return new ImmutableValidationReport(messages);
     }
 
     /**

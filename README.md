@@ -83,6 +83,8 @@ allows you to assert your service implementation matches its API specification.
 
 ###swagger-request-validator-examples
 
+[![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-examples/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-examples)
+
 Working code samples that demonstrate the features of the `swagger-request-validator` and its various adapters.
 
 ## Building and testing ##

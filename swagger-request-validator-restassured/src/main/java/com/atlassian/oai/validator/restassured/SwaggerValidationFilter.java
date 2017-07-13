@@ -1,6 +1,5 @@
 package com.atlassian.oai.validator.restassured;
 
-import java.util.Objects;
 import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReportFormatter;
@@ -9,6 +8,8 @@ import io.restassured.filter.FilterContext;
 import io.restassured.response.Response;
 import io.restassured.specification.FilterableRequestSpecification;
 import io.restassured.specification.FilterableResponseSpecification;
+
+import java.util.Objects;
 
 import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
 
@@ -54,7 +55,7 @@ public class SwaggerValidationFilter implements Filter {
         final Response response = ctx.next(requestSpec, responseSpec);
 
         final ValidationReport validationReport =
-                validator.validate(new RestAssuredRequest(requestSpec), new RestAssuredResponse(response));
+                validator.validate(RestAssuredRequest.of(requestSpec), RestAssuredResponse.of(response));
 
         if (validationReport.hasErrors()) {
             throw new SwaggerValidationException(validationReport);

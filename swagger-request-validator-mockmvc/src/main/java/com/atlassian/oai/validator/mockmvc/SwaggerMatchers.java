@@ -3,7 +3,6 @@ package com.atlassian.oai.validator.mockmvc;
 import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReportFormatter;
-
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -32,6 +31,7 @@ public class SwaggerMatchers {
      *     // Create from a swagger JSON payload
      *     .createFor("{\"swagger\": \"2.0\", ...}")
      * </pre>
+     *
      * @param swaggerJsonUrlOrPayload The location of the Swagger JSON specification to use in the validator.
      */
     public ResultMatcher isValid(final String swaggerJsonUrlOrPayload) {
@@ -42,7 +42,7 @@ public class SwaggerMatchers {
         return result -> {
             final MockHttpServletRequest request = result.getRequest();
             final MockHttpServletResponse response = result.getResponse();
-            final ValidationReport validationReport = validator.validate(new MockMvcRequest(request), new MockMvcResponse(response));
+            final ValidationReport validationReport = validator.validate(MockMvcRequest.of(request), MockMvcResponse.of(response));
             if (validationReport.hasErrors()) {
                 throw new SwaggerValidationException(validationReport);
             }

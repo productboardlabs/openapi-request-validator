@@ -13,16 +13,16 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class SingletonValidationReportTest {
+public class ImmutableValidationReportTest {
 
-    private ValidationReport classUnderTest;
+    private ImmutableValidationReport classUnderTest;
 
     private ValidationReport.Message message;
 
     @Before
     public void setUp() {
         this.message = mock(ValidationReport.Message.class);
-        this.classUnderTest = new SingletonValidationReport(message);
+        this.classUnderTest = new ImmutableValidationReport(message);
     }
 
     @Test
@@ -48,7 +48,18 @@ public class SingletonValidationReportTest {
 
     @Test
     public void test_acceptsNull() {
-        assertThat(new SingletonValidationReport(null), notNullValue());
+        assertThat(new ImmutableValidationReport((ValidationReport.Message) null), notNullValue());
+    }
+
+    @Test
+    public void test_filtersNullValues_fromVarargsCtor() {
+        assertThat(
+                new ImmutableValidationReport(
+                        mock(ValidationReport.Message.class),
+                        mock(ValidationReport.Message.class),
+                        null).getMessages(),
+                hasSize(2)
+        );
     }
 
     private void assertHasErrors(final ValidationReport.Level level, final boolean expectedResult) {

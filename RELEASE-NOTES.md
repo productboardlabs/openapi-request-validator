@@ -1,3 +1,7 @@
+#v1.1.1
+* Fixed a bug where a `StackOverflowError` occurs when there are too many messages in a report
+[[#52]](https://bitbucket.org/atlassian/swagger-request-validator/issues/52)
+
 #v1.1.0
 * Added support for Spring MockMvc
 [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/37/integrate-validator-with-spring-mockmvc/diff)
