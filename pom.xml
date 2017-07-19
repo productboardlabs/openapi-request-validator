@@ -10,7 +10,7 @@
 
     <groupId>com.atlassian.oai</groupId>
     <artifactId>swagger-request-validator</artifactId>
-    <version>1.1.2-SNAPSHOT</version>
+    <version>1.2.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Swagger Request Validator</name>
@@ -76,6 +76,7 @@
         <module>swagger-request-validator-wiremock</module>
         <module>swagger-request-validator-restassured</module>
         <module>swagger-request-validator-mockmvc</module>
+        <module>swagger-request-validator-springmvc</module>
         <module>swagger-request-validator-examples</module>
     </modules>
 
@@ -104,6 +105,11 @@
             <dependency>
                 <groupId>com.atlassian.oai</groupId>
                 <artifactId>swagger-request-validator-mockmvc</artifactId>
+                <version>${version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.atlassian.oai</groupId>
+                <artifactId>swagger-request-validator-springmvc</artifactId>
                 <version>${version}</version>
             </dependency>
 

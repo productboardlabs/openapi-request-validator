@@ -232,6 +232,7 @@ public class RequestValidator {
 
         final Multimap<String, String> formData = parseFormData(requestBody.get());
         return apiOperation.getOperation().getParameters().stream()
+                .filter(p -> p.getIn().equalsIgnoreCase("formData"))
                 .flatMap(parameter ->
                         prepareFormDataForParameter(formData, parameter).stream()
                                 .map(value -> parameterValidators.validate(value, parameter))

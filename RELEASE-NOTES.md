@@ -1,3 +1,12 @@
+#v1.2.0
+* Refactored request/response adapters to use Builders that create `SimpleRequest` and `SimpleResponse`
+instances. The module-specific adapter constructors are now deprecated and will be removed in a future release.
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/43)
+* Added support for Spring MVC. Requests can now be validated at runtime in production.
+[[#51]](https://bitbucket.org/atlassian/swagger-request-validator/issues/51)
+* Fixed a bug where non-form params were validated as form params
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/45)
+
 #v1.1.1
 * Fixed a bug where a `StackOverflowError` occurs when there are too many messages in a report
 [[#52]](https://bitbucket.org/atlassian/swagger-request-validator/issues/52)

@@ -182,6 +182,13 @@
         ],
         "parameters": [
           {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the user to get",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }, {
             "name": "email",
             "in": "formData",
             "description": "The new email to set",
