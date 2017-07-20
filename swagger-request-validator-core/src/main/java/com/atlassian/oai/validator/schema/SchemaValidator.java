@@ -11,6 +11,8 @@ import com.github.fge.jsonschema.core.report.ListProcessingReport;
 import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import io.swagger.models.Model;
 import io.swagger.models.Swagger;
+import io.swagger.models.properties.DateProperty;
+import io.swagger.models.properties.DateTimeProperty;
 import io.swagger.models.properties.Property;
 import io.swagger.models.properties.StringProperty;
 import io.swagger.util.Json;
@@ -178,7 +180,9 @@ public class SchemaValidator {
 
     private JsonNode readContent(@Nonnull final String value, @Nonnull final Object schema) throws IOException {
         String normalisedValue = value;
-        if (schema instanceof StringProperty) {
+        if (schema instanceof StringProperty
+                || schema instanceof DateProperty
+                || schema instanceof DateTimeProperty) {
             normalisedValue = quote(value);
         }
         return removeNullValuesFromTree(Json.mapper().readTree(normalisedValue));
