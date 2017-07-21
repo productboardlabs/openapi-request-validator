@@ -81,6 +81,15 @@ against a Swagger/OAI specification.
 Includes a [ResultMatcher](http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/test/web/servlet/ResultMatcher.html) that 
 allows you to assert your service implementation matches its API specification.
 
+###swagger-request-validator-springmvc 
+
+[![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-mockmvc/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-mockmvc)
+
+Adapter for validating interactions using the [Spring Web MVC framework](https://docs.spring.io/spring/docs/current/spring-framework-reference/html/mvc.html)
+against a Swagger/OAI specification during runtime in a production environment.
+
+Useful for ensuring that the client requests matching the API specification.
+
 ###swagger-request-validator-examples
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-examples/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-examples)

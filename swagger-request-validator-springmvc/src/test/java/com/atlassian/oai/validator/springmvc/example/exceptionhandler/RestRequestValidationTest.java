@@ -1,6 +1,8 @@
-package com.atlassian.oai.validator.springmvc.example;
+package com.atlassian.oai.validator.springmvc.example.exceptionhandler;
 
+import com.atlassian.oai.validator.springmvc.example.simple.RestServiceApplication;
 import com.google.common.collect.ImmutableMap;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,13 +20,15 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class SwaggerRequestValidationApplicationTest {
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        classes = {RestServiceApplication.class, RestServiceExceptionHandler.class})
+public class RestRequestValidationTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -48,9 +52,8 @@ public class SwaggerRequestValidationApplicationTest {
         final ResponseEntity<HashMap> response = restRequest("/spring/variablePath", HttpMethod.GET);
 
         // then: 'invalid request, the header and query parameter is missing'
-        assertBadRequest(response,
-                "Header parameter 'headerValue' is required on path '/spring/{pathVariable}' but not found in request., " +
-                        "Query parameter 'requestParam' is required on path '/spring/{pathVariable}' but not found in request.");
+        assertBadRequest(response, "validation.request.parameter.header.missing",
+                "validation.request.parameter.query.missing");
     }
 
     @Test
@@ -71,9 +74,7 @@ public class SwaggerRequestValidationApplicationTest {
                 HttpMethod.POST, sendBody);
 
         // then: 'invalid request, all required request fields are missing'
-        assertBadRequest(response,
-                "Object has missing required properties ([\"object\",\"string\"]), " +
-                        "[Path '/integer'] Instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])");
+        assertBadRequest(response, "validation.schema.required", "validation.schema.type");
     }
 
     @Test
@@ -93,8 +94,7 @@ public class SwaggerRequestValidationApplicationTest {
         final ResponseEntity<HashMap> response = restRequest("/spring/variablePath", HttpMethod.PUT);
 
         // then: 'invalid request, missing body'
-        assertBadRequest(response,
-                "PUT on path '/spring/{pathVariable}' requires a request body. None found.");
+        assertBadRequest(response, "validation.request.body.missing");
     }
 
     @Test
@@ -110,8 +110,7 @@ public class SwaggerRequestValidationApplicationTest {
         final ResponseEntity<HashMap> response = restRequest("/spring/noInteger", HttpMethod.DELETE);
 
         // then: 'invalid request, the path variable is no integer'
-        assertBadRequest(response,
-                "Value 'noInteger' for parameter 'pathVariable' does not match type 'integer' with format 'null'.");
+        assertBadRequest(response, "validation.request.parameter.invalidFormat");
     }
 
     private ResponseEntity<HashMap> restRequest(final String uri, final HttpMethod method) {
@@ -138,8 +137,11 @@ public class SwaggerRequestValidationApplicationTest {
         assertThat(response.getBody().entrySet(), equalTo(body.entrySet()));
     }
 
-    private void assertBadRequest(final ResponseEntity<HashMap> response, final String message) {
-        assertThat(response.getStatusCode(), equalTo(HttpStatus.BAD_REQUEST));
-        assertThat(response.getBody().get("message"), equalTo(message));
+    private void assertBadRequest(final ResponseEntity<HashMap> response, final String... expectedMessageKeys) {
+        assertThat(response.getStatusCode(), equalTo(HttpStatus.UNPROCESSABLE_ENTITY));
+        final List<String> messageKeys = ((List<HashMap>) response.getBody().get("messages")).stream()
+                .map(map -> (String) map.get("key"))
+                .collect(Collectors.toList());
+        assertThat(messageKeys, Matchers.containsInAnyOrder(expectedMessageKeys));
     }
 }
