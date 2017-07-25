@@ -188,21 +188,25 @@ public class SchemaValidator {
                 || schema instanceof DateProperty) {
             normalisedValue = quote(value);
         } else if (schema instanceof DateTimeProperty) {
-            // Re-format DateTime since Schema validator doesn't accept some valid RFC3339 date-times and throws:
-            // ERROR - String "1996-12-19T16:39:57-08:00" is invalid against requested date format(s)
-            // [yyyy-MM-dd'T'HH:mm:ssZ, yyyy-MM-dd'T'HH:mm:ss.[0-9]{1,12}Z]: []
-            String formatedDateTime = value;
-            try {
-                final LocalDateTime rfc3339dt = LocalDateTime.parse(value, CustomDateTimeFormatter.getRFC3339Formatter());
-                formatedDateTime = rfc3339dt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"));
-                //CHECKSTYLE:OFF EmptyCatchBlock
-            } catch (final DateTimeParseException e) {
-                // Could not parse to RFC3339 format. Schema validator will throw the appropriate error
-            }
-            //CHECKSTYLE:ON
-            normalisedValue = quote(formatedDateTime);
+            normalisedValue = quote(normaliseDateTime(value));
         }
         return removeNullValuesFromTree(Json.mapper().readTree(normalisedValue));
+    }
+
+    private String normaliseDateTime(final String dateTime) {
+        // Re-format DateTime since Schema validator doesn't accept some valid RFC3339 date-times and throws:
+        // ERROR - String "1996-12-19T16:39:57-08:00" is invalid against requested date format(s)
+        // [yyyy-MM-dd'T'HH:mm:ssZ, yyyy-MM-dd'T'HH:mm:ss.[0-9]{1,12}Z]: []
+        String formatedDateTime = dateTime;
+        try {
+            final LocalDateTime rfc3339dt = LocalDateTime.parse(dateTime, CustomDateTimeFormatter.getRFC3339Formatter());
+            formatedDateTime = rfc3339dt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"));
+            //CHECKSTYLE:OFF EmptyCatchBlock
+        } catch (final DateTimeParseException e) {
+            // Could not parse to RFC3339 format. Schema validator will throw the appropriate error
+        }
+        //CHECKSTYLE:ON
+        return formatedDateTime;
     }
 
     /**
