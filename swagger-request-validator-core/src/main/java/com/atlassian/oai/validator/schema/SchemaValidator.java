@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.schema;
 
+import com.atlassian.oai.validator.parameter.format.CustomDateTimeFormatter;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -16,6 +17,9 @@ import io.swagger.models.properties.DateTimeProperty;
 import io.swagger.models.properties.Property;
 import io.swagger.models.properties.StringProperty;
 import io.swagger.util.Json;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -181,9 +185,22 @@ public class SchemaValidator {
     private JsonNode readContent(@Nonnull final String value, @Nonnull final Object schema) throws IOException {
         String normalisedValue = value;
         if (schema instanceof StringProperty
-                || schema instanceof DateProperty
-                || schema instanceof DateTimeProperty) {
+                || schema instanceof DateProperty) {
             normalisedValue = quote(value);
+        } else if (schema instanceof DateTimeProperty) {
+            // Re-format DateTime since Schema validator doesn't accept some valid RFC3339 date-times and throws:
+            // ERROR - String "1996-12-19T16:39:57-08:00" is invalid against requested date format(s)
+            // [yyyy-MM-dd'T'HH:mm:ssZ, yyyy-MM-dd'T'HH:mm:ss.[0-9]{1,12}Z]: []
+            String formatedDateTime = value;
+            try {
+                final LocalDateTime rfc3339dt = LocalDateTime.parse(value, CustomDateTimeFormatter.getRFC3339Formatter());
+                formatedDateTime = rfc3339dt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"));
+                //CHECKSTYLE:OFF EmptyCatchBlock
+            } catch (final DateTimeParseException e) {
+                // Could not parse to RFC3339 format. Schema validator will throw the appropriate error
+            }
+            //CHECKSTYLE:ON
+            normalisedValue = quote(formatedDateTime);
         }
         return removeNullValuesFromTree(Json.mapper().readTree(normalisedValue));
     }
