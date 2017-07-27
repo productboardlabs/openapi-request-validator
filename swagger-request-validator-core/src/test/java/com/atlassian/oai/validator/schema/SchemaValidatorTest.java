@@ -16,7 +16,6 @@ import io.swagger.models.properties.ObjectProperty;
 import io.swagger.models.properties.Property;
 import io.swagger.models.properties.StringProperty;
 import io.swagger.parser.SwaggerParser;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static com.atlassian.oai.validator.schema.SchemaValidator.ADDITIONAL_PROPERTIES_KEY;
@@ -322,10 +321,9 @@ public class SchemaValidatorTest {
         assertPass(classUnderTest.validate(value, schema));
     }
 
-    @Ignore("Valid datetime throws exception when being parsed to JSON. Issue #22 should solve this.")
     @Test
     public void validate_withDateTimeProperty_shouldPass_withTimezone() {
-        final String value = "1990-12-31T15:59:60+08:00";
+        final String value = "1990-12-31T15:59:59+08:00";
         final Property schema = new DateTimeProperty();
 
         assertPass(classUnderTest.validate(value, schema));
