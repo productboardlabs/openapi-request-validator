@@ -1,4 +1,4 @@
-package com.atlassian.oai.validator.springmvc.example;
+package com.atlassian.oai.validator.springmvc.example.simple;
 
 import com.atlassian.oai.validator.springmvc.SwaggerValidationFilter;
 import com.atlassian.oai.validator.springmvc.SwaggerValidationInterceptor;
@@ -15,12 +15,12 @@ import javax.servlet.Filter;
 import java.io.IOException;
 
 @Configuration
-public class SwaggerRequestValidationApplicationConfig extends WebMvcConfigurerAdapter {
+public class RestRequestValidationConfig extends WebMvcConfigurerAdapter {
 
     private final SwaggerValidationInterceptor swaggerValidationInterceptor;
 
     @Autowired
-    public SwaggerRequestValidationApplicationConfig(@Value("classpath:api-spring-test.json") final Resource swaggerSchema) throws IOException {
+    public RestRequestValidationConfig(@Value("classpath:api-spring-test.json") final Resource swaggerSchema) throws IOException {
         final EncodedResource swaggerResource = new EncodedResource(swaggerSchema, "UTF-8");
         this.swaggerValidationInterceptor = new SwaggerValidationInterceptor(swaggerResource);
     }

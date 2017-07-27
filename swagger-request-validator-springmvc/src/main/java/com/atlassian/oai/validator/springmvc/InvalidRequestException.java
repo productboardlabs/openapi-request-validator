@@ -32,4 +32,8 @@ public class InvalidRequestException extends RuntimeException {
         }
         return message;
     }
+
+    public ValidationReport getValidationReport() {
+        return validationReport;
+    }
 }

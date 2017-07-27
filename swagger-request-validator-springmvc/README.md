@@ -69,7 +69,10 @@ You might want to add logging for the package: ```com.atlassian.oai.validator.sp
 
 ## Example ##
 
-Please see [SwaggerRequestValidationApplication](https://bitbucket.org/atlassian/swagger-request-validator/src/master/swagger-request-validator-springmvc/src/test/java/com/atlassian/oai/validator/springmvc/example/?at=master) for a working example.
+Please see [the tests](https://bitbucket.org/atlassian/swagger-request-validator/src/master/swagger-request-validator-springmvc/src/test/java/com/atlassian/oai/validator/springmvc/example/?at=master) for working examples.
+
+* There is a simple example that shows how to add the Swagger Request Validation adapter.
+* An advanced example shows how to additionally add an ExceptionHandler to map the `InvalidRequestException` to a custom response.
 
 ## Caveats ##
 

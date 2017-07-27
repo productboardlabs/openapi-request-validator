@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 
 public class InvalidRequestExceptionTest {
 
@@ -32,5 +33,13 @@ public class InvalidRequestExceptionTest {
 
         final InvalidRequestException classUnderTest = new InvalidRequestException(validationReport);
         Assert.assertThat(classUnderTest.getMessage(), equalTo(""));
+    }
+
+    @Test
+    public void getValidationReport() {
+        final ValidationReport validationReport = Mockito.mock(ValidationReport.class);
+
+        final InvalidRequestException classUnderTest = new InvalidRequestException(validationReport);
+        Assert.assertThat(classUnderTest.getValidationReport(), is(validationReport));
     }
 }
