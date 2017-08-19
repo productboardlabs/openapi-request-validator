@@ -1,3 +1,10 @@
+#v1.2.1
+* Fixed a bug where RFC3339 timestamps in headers could cause validation to fail even if they are valid
+[[#54]](https://bitbucket.org/atlassian/swagger-request-validator/issues/54)
+[[#63]](https://bitbucket.org/atlassian/swagger-request-validator/issues/63)
+* Added examples of using Spring MVC exception resolvers with the request validator
+[[#56]](https://bitbucket.org/atlassian/swagger-request-validator/issues/54)
+
 #v1.2.0
 * Refactored request/response adapters to use Builders that create `SimpleRequest` and `SimpleResponse`
 instances. The module-specific adapter constructors are now deprecated and will be removed in a future release.

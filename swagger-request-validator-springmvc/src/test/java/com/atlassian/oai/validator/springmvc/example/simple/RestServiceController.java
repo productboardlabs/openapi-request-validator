@@ -1,4 +1,4 @@
-package com.atlassian.oai.validator.springmvc.example;
+package com.atlassian.oai.validator.springmvc.example.simple;
 
 import com.google.common.collect.ImmutableMap;
 import org.springframework.http.HttpStatus;
@@ -15,7 +15,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/spring")
-public class SwaggerRequestValidationApplicationController {
+public class RestServiceController {
 
     @RequestMapping(method = RequestMethod.GET, value = "/{pathVariable}")
     public Map<String, Object> get(@RequestHeader("headerValue") final String headerValue,

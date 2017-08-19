@@ -8,6 +8,8 @@ import io.swagger.models.ModelImpl;
 import io.swagger.models.RefModel;
 import io.swagger.models.Swagger;
 import io.swagger.models.properties.ArrayProperty;
+import io.swagger.models.properties.DateProperty;
+import io.swagger.models.properties.DateTimeProperty;
 import io.swagger.models.properties.FloatProperty;
 import io.swagger.models.properties.IntegerProperty;
 import io.swagger.models.properties.ObjectProperty;
@@ -293,6 +295,46 @@ public class SchemaValidatorTest {
         assertFail(classUnderTest.validate(value, schema), "validation.schema.discriminator");
         assertFail(classUnderTest.validate(value, schema), "validation.schema.discriminator");
         assertFail(classUnderTest.validate(value, schema), "validation.schema.discriminator");
+    }
+
+    @Test
+    public void validate_withDateProperty_shouldPass() {
+        final String value = "1985-04-12";
+        final Property schema = new DateProperty();
+
+        assertPass(classUnderTest.validate(value, schema));
+    }
+
+    @Test
+    public void validate_withDateProperty_shouldFail() {
+        final String value = "1985-99-99";
+        final Property schema = new DateProperty();
+
+        assertFail(classUnderTest.validate(value, schema));
+    }
+
+    @Test
+    public void validate_withDateTimeProperty_shouldPass() {
+        final String value = "1985-04-12T23:20:50.52Z";
+        final Property schema = new DateTimeProperty();
+
+        assertPass(classUnderTest.validate(value, schema));
+    }
+
+    @Test
+    public void validate_withDateTimeProperty_shouldPass_withTimezone() {
+        final String value = "1990-12-31T15:59:59+08:00";
+        final Property schema = new DateTimeProperty();
+
+        assertPass(classUnderTest.validate(value, schema));
+    }
+
+    @Test
+    public void validate_withDateTimeProperty_shouldFail_withWrongFormat() {
+        final String value = "Wed Jul 19 14:21:33 UTC 2017";
+        final Property schema = new DateTimeProperty();
+
+        assertFail(classUnderTest.validate(value, schema), "validation.schema.format");
     }
 
     private SchemaValidator validatorWithAdditionalPropertiesIgnored(final String api) {
