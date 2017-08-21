@@ -4,7 +4,7 @@
 
 Integrations between the Swagger Request Validator with the [Spring Web MVC framework](https://docs.spring.io/spring/docs/current/spring-framework-reference/html/mvc.html).
 
-This module includes a `SwaggerValidationFilter` and a `SwaggerValidationInterceptor` that can be used to add request validation to a REST web service utilizing Spring MVC v4.1.3 or later. Including Spring Boot Starter applications utilizing Spring MVC with said version, e.g. spring-boot-starter-web-services or spring-boot-starter-web.
+This module includes a `SwaggerValidationFilter` and a `SwaggerValidationInterceptor` that can be used to add request validation to a REST web service utilizing Spring MVC v4.2.0 or later. Including Spring Boot Starter applications utilizing Spring MVC with said version, e.g. spring-boot-starter-web-services or spring-boot-starter-web.
 
 In case of invalid requests against the REST web service a `InvalidRequestException` is thrown containing the `ValidationReport`.
 
