@@ -17,7 +17,7 @@ e.g. for Maven in your pom.xml:
 ```xml
 <dependency>
     <groupId>com.atlassian.oai</groupId>
-    <artifactId>swagger-request-validator-spring</artifactId>
+    <artifactId>swagger-request-validator-springmvc</artifactId>
     <version>${swagger-request-validator.version}</version>
 </dependency>
 ```
@@ -49,8 +49,8 @@ public class SwaggerRequestValidationConfig extends WebMvcConfigurerAdapter {
      */
     @Autowired
     public SwaggerRequestValidationConfig(@Value("classpath:swagger-api.json") final Resource swaggerApi) throws IOException {
-        final EncodedResource swaggerResource = new EncodedResource(swaggerSchema, "UTF-8");
-        this.swaggerValidationInterceptor = new SwaggerValidationInterceptor(swaggerApi);
+        final EncodedResource swaggerResource = new EncodedResource(swaggerApi, "UTF-8");
+        this.swaggerValidationInterceptor = new SwaggerValidationInterceptor(swaggerResource);
     }
 
     @Bean
