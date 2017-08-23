@@ -26,6 +26,11 @@ public class ArrayParameterValidatorTest {
     }
 
     @Test
+    public void validate_withValidCsvFormatAndNoCollectionFormat_shouldPass() {
+        assertPass(classUnderTest.validate("1,2,3", intArrayParam(true, null)));
+    }
+
+    @Test
     public void validate_withValidPipesFormat_shouldPass() {
         assertPass(classUnderTest.validate("1|2|3", intArrayParam(true, "pipes")));
     }
