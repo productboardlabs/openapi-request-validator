@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -50,7 +51,11 @@ public class ArrayParameterValidator extends BaseParameterValidator {
         @Nonnull
         static CollectionFormat from(@Nonnull final SerializableParameter parameter) {
             requireNonNull(parameter, "A parameter is required");
-            return valueOf(parameter.getCollectionFormat().toUpperCase());
+
+            return Optional.ofNullable(parameter.getCollectionFormat())
+                    .map(String::toUpperCase)
+                    .map(CollectionFormat::valueOf)
+                    .orElse(CSV);
         }
     }
 
