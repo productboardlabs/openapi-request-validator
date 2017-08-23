@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.springmvc;
 
+import org.springframework.web.cors.CorsUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
@@ -34,7 +35,7 @@ public class SwaggerValidationFilter extends OncePerRequestFilter {
     private HttpServletRequest wrapValidatableServletRequest(final HttpServletRequest servletRequest) {
         // wrap only validatable requests
         final boolean doValidationStep = servletRequest.getContentLengthLong() <= Integer.MAX_VALUE &&
-                !isAsyncDispatch(servletRequest);
+                !isAsyncDispatch(servletRequest) && !CorsUtils.isPreFlightRequest(servletRequest);
         return doValidationStep ? new ResettableRequestServletWrapper(servletRequest) : servletRequest;
     }
 }

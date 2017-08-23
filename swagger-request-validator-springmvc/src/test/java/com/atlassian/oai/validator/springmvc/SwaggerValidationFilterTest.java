@@ -30,6 +30,7 @@ public class SwaggerValidationFilterTest {
         final HttpServletResponse servletResponse = Mockito.mock(HttpServletResponse.class);
         final FilterChain filterChain = Mockito.mock(FilterChain.class);
         Mockito.when(servletRequest.getContentLengthLong()).thenReturn(24L);
+        Mockito.when(servletRequest.getMethod()).thenReturn("OPTIONS");
 
         // when:
         classUnderTest.doFilterInternal(servletRequest, servletResponse, filterChain);
@@ -71,6 +72,23 @@ public class SwaggerValidationFilterTest {
                 return null;
             }
         }).when(servletRequest).setAttribute(eq(WebAsyncUtils.WEB_ASYNC_MANAGER_ATTRIBUTE), any(WebAsyncManager.class));
+
+        // when:
+        classUnderTest.doFilterInternal(servletRequest, servletResponse, filterChain);
+
+        // then: the request wasn't wrapped
+        Mockito.verify(filterChain, times(1)).doFilter(servletRequest, servletResponse);
+    }
+
+    @Test
+    public void doFilterInternal_noWrappingIfCorsPreflight() throws ServletException, IOException {
+        final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
+        final HttpServletResponse servletResponse = Mockito.mock(HttpServletResponse.class);
+        final FilterChain filterChain = Mockito.mock(FilterChain.class);
+        Mockito.when(servletRequest.getContentLengthLong()).thenReturn(24L);
+        Mockito.when(servletRequest.getHeader("Origin")).thenReturn("https://bitbucket.org");
+        Mockito.when(servletRequest.getHeader("Access-Control-Request-Method")).thenReturn("POST");
+        Mockito.when(servletRequest.getMethod()).thenReturn("OPTIONS");
 
         // when:
         classUnderTest.doFilterInternal(servletRequest, servletResponse, filterChain);
