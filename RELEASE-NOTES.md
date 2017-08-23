@@ -1,3 +1,9 @@
+#v1.2.2
+* Default collection format to CSV when not provided
+[[#68]](https://bitbucket.org/atlassian/swagger-request-validator/issues/68)
+* SpringMVC filter now ignores CORS pre-flight requests during validation
+[[#67]](https://bitbucket.org/atlassian/swagger-request-validator/issues/67)
+
 #v1.2.1
 * Fixed a bug where RFC3339 timestamps in headers could cause validation to fail even if they are valid
 [[#54]](https://bitbucket.org/atlassian/swagger-request-validator/issues/54)
