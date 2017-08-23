@@ -4,6 +4,7 @@ import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.report.ValidationReport;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.web.util.UriComponents;
@@ -16,7 +17,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Scanner;
 
 class SwaggerRequestValidationService {
 
@@ -86,9 +86,8 @@ class SwaggerRequestValidationService {
         return true;
     }
 
-    private static String readReader(final Reader reader) {
-        final Scanner s = new Scanner(reader).useDelimiter("\\A");
-        return s.hasNext() ? s.next() : "";
+    private static String readReader(final Reader reader) throws IOException {
+        return IOUtils.toString(reader);
     }
 
     private static String getCompleteRequestUri(final HttpServletRequest servletRequest) {
