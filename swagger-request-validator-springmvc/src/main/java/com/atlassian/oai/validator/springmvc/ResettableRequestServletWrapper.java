@@ -14,7 +14,7 @@ import java.io.InputStreamReader;
  * A {@link javax.servlet.http.HttpServletRequestWrapper} those {@link ServletInputStream} is
  * cached and can be reset and read again as often as necessary.
  */
-class ResettableRequestServletWrapper extends HttpServletRequestWrapper {
+public class ResettableRequestServletWrapper extends HttpServletRequestWrapper {
 
     private ServletInputStream servletInputStream;
     private BufferedReader reader;
@@ -35,7 +35,7 @@ class ResettableRequestServletWrapper extends HttpServletRequestWrapper {
      * that stream.
      * If the stream wasn't read at all the content will be empty.
      */
-    void resetInputStream() throws IOException {
+    public void resetInputStream() throws IOException {
         if (servletInputStream == null) {
             this.servletInputStream = new CachedServletInputStream(new byte[0]);
         } else if (servletInputStream instanceof WrappedOriginalServletInputStream) {
