@@ -1,3 +1,7 @@
+#v1.2.3
+* Fixed an NPE with Spring MockMVC when no body
+[[#71]](https://bitbucket.org/atlassian/swagger-request-validator/issues/71)
+
 #v1.2.2
 * Default collection format to CSV when not provided
 [[#68]](https://bitbucket.org/atlassian/swagger-request-validator/issues/68)
