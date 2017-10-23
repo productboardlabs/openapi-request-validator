@@ -3,6 +3,7 @@ package com.atlassian.oai.validator.schema;
 import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
+import com.google.common.collect.ImmutableList;
 import io.swagger.models.Model;
 import io.swagger.models.ModelImpl;
 import io.swagger.models.RefModel;
@@ -18,12 +19,15 @@ import io.swagger.models.properties.StringProperty;
 import io.swagger.parser.SwaggerParser;
 import org.junit.Test;
 
+import java.util.List;
+
 import static com.atlassian.oai.validator.schema.SchemaValidator.ADDITIONAL_PROPERTIES_KEY;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.iterableWithSize;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -48,20 +52,17 @@ public class SchemaValidatorTest {
         classUnderTest.validate(value, schema);
     }
 
-    @Test(expected = NullPointerException.class)
-    public void validate_withNullModel_shouldThrowNPE() {
-        final String value = "1";
-        final Model schema = null;
+    @Test
+    public void validate_withNullSchema_shouldValidateAnyJson() {
+        final List<String> values = ImmutableList.of("1", "\"string\"", "{\"prop\":3}", "[1,2,3]", "null");
 
-        classUnderTest.validate(value, schema);
-    }
+        values.forEach(v -> {
+            final ValidationReport propertyValidationResult = classUnderTest.validate(v, (Property) null);
+            assertFalse(propertyValidationResult.hasErrors());
 
-    @Test(expected = NullPointerException.class)
-    public void validate_withNullProperty_shouldThrowNPE() {
-        final String value = "1";
-        final Property schema = null;
-
-        classUnderTest.validate(value, schema);
+            final ValidationReport modelValidationResult = classUnderTest.validate(v, (Model) null);
+            assertFalse(modelValidationResult.hasErrors());
+        });
     }
 
     @Test
