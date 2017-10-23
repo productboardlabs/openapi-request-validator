@@ -27,7 +27,6 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.iterableWithSize;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -57,11 +56,8 @@ public class SchemaValidatorTest {
         final List<String> values = ImmutableList.of("1", "\"string\"", "{\"prop\":3}", "[1,2,3]", "null");
 
         values.forEach(v -> {
-            final ValidationReport propertyValidationResult = classUnderTest.validate(v, (Property) null);
-            assertFalse(propertyValidationResult.hasErrors());
-
-            final ValidationReport modelValidationResult = classUnderTest.validate(v, (Model) null);
-            assertFalse(modelValidationResult.hasErrors());
+            assertPass(classUnderTest.validate(v, (Property) null));
+            assertPass(classUnderTest.validate(v, (Model) null));
         });
     }
 
@@ -208,10 +204,10 @@ public class SchemaValidatorTest {
     public void validate_withValidModel_shouldPass_whenContainsNullValues() {
         final String value =
                 "{\"foo\":\"bar\"," +
-                "\"baz\": null," +
-                "\"int\": null," +
-                "\"obj\":{\"obj1\": null, \"obj2\": null, \"obj3\": \"val3\"}," +
-                "\"arr\":[null, \"val1\", \"val2\"]}";
+                        "\"baz\": null," +
+                        "\"int\": null," +
+                        "\"obj\":{\"obj1\": null, \"obj2\": null, \"obj3\": \"val3\"}," +
+                        "\"arr\":[null, \"val1\", \"val2\"]}";
         final Model schema = new ModelImpl()
                 .property("foo", new StringProperty())
                 .property("baz", new StringProperty())
@@ -236,10 +232,10 @@ public class SchemaValidatorTest {
     public void validate_withValidModel_shouldPass_whenContainsNullValues_inObjects_inArrays() {
         final String value =
                 "{\"arr\": [" +
-                    "{\"int\":null}," +
-                    "{\"str\":null}," +
-                    "{\"flt\":null}" +
-                "]}";
+                        "{\"int\":null}," +
+                        "{\"str\":null}," +
+                        "{\"flt\":null}" +
+                        "]}";
 
         final Model schema = new ModelImpl()
                 .property("arr", new ArrayProperty().items(
