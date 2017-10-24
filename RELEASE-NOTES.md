@@ -1,3 +1,7 @@
+#v1.2.4
+* Fixed NPE when using an 'anything' request schema. Validation with the `{}` schema will now accept any JSON value.
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/57)
+
 #v1.2.3
 * Fixed an NPE with Spring MockMVC when no body
 [[#71]](https://bitbucket.org/atlassian/swagger-request-validator/issues/71)
