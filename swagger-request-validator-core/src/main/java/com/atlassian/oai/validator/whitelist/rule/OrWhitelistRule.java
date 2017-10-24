@@ -9,7 +9,7 @@ import java.util.List;
 
 import static java.util.stream.Collectors.joining;
 
-public class OrWhitelistRule implements WhitelistRule {
+class OrWhitelistRule implements WhitelistRule {
     private final List<WhitelistRule> rules;
 
     @Override

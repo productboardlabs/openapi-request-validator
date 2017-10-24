@@ -7,6 +7,9 @@ import com.atlassian.oai.validator.report.ValidationReport.Message;
 
 import javax.annotation.Nullable;
 
+/**
+ * A utility interface making whitelist rules that operate on either request or response data easier to implement.
+ */
 interface RequestOrResponseWhitelistRule extends WhitelistRule {
     default boolean matches(Message message, ApiOperation operation, @Nullable Request request, @Nullable Response response) {
         return request != null && matches(message, operation, request) ||

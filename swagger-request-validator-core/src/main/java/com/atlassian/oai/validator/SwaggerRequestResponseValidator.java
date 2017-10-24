@@ -205,7 +205,7 @@ public class SwaggerRequestResponseValidator {
                 .apply(apiOperation);
     }
 
-    private ValidationReport withWhitelistApplied(ValidationReport report, ApiOperation operation, Request request, Response response) {
+    private ValidationReport withWhitelistApplied(ValidationReport report, @Nullable ApiOperation operation, @Nullable Request request, @Nullable Response response) {
         return ValidationReport.from(
                 report.getMessages().stream()
                         .map(message -> whitelist
@@ -283,7 +283,8 @@ public class SwaggerRequestResponseValidator {
         }
 
         /**
-         * A whitelist for error messages. Whitelisted error messages will still be returned, but turned into IGNORE level.
+         * A whitelist for error messages. Whitelisted error messages will still be returned, but their level will be
+         * changed to IGNORE and additional information about whitelisting will be added.
          *
          * @param whitelist The whitelist to use.
          * @return this builder instance

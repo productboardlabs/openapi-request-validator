@@ -7,6 +7,9 @@ import com.atlassian.oai.validator.report.ValidationReport;
 
 import java.util.Objects;
 
+/**
+ * A whitelist rule with a human-readable text representation (returned by {@code toString}).
+ */
 class PrintableWhitelistRule implements WhitelistRule {
     private final String representation;
     private final WhitelistRule function;
@@ -21,7 +24,7 @@ class PrintableWhitelistRule implements WhitelistRule {
         }
     }
 
-    public PrintableWhitelistRule(String representation, WhitelistRule function) {
+    PrintableWhitelistRule(String representation, WhitelistRule function) {
         this.representation = Objects.requireNonNull(representation);
         this.function = Objects.requireNonNull(function);
     }

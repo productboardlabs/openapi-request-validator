@@ -17,28 +17,37 @@ public final class ValidationWhitelist {
 
     private final List<NamedWhitelistRule> rules;
 
+    /**
+     * Creates an empty validation whitelist. Start with this method when creating a new whitelist from scratch.
+     */
     public static ValidationWhitelist empty() {
         return new ValidationWhitelist(Collections.emptyList());
     }
 
-    public ValidationWhitelist withRule(String name, WhitelistRule rule) {
+    /**
+     * Creates a new whitelist with all rules of this and with a new rule.
+     *
+     * @param title A human-readable name of the new rule.
+     * @param rule A new rule to be added.
+     * @return A new instance with the added rule.
+     */
+    public ValidationWhitelist withRule(String title, WhitelistRule rule) {
         return new ValidationWhitelist(
                 ImmutableList.<NamedWhitelistRule>builder()
                         .addAll(rules)
-                        .add(new NamedWhitelistRule(name, rule))
+                        .add(new NamedWhitelistRule(title, rule))
                         .build());
     }
 
     /**
      * Returns a whitelist rule that is applicable for the given parameters.
-     * <p>
-     *     Either request or response should be nonnull.
+     * If a non-empty value is returned then the error message should be whitelisted.
      *
-     * @param message message report that could be whitelisted
-     * @param operation api operation which is being validated
+     * @param message report message that can be whitelisted
+     * @param operation validated api operation
      * @param request validated request
      * @param response validated response
-     * @return a rule that matches the arguments or empty
+     * @return a rule that matches the arguments, or empty
      */
     public Optional<NamedWhitelistRule> whitelistedBy(ValidationReport.Message message, @Nullable ApiOperation operation, @Nullable Request request, @Nullable Response response) {
         return rules.stream()
@@ -46,7 +55,7 @@ public final class ValidationWhitelist {
                 .findFirst();
     }
 
-    public ValidationWhitelist(Iterable<NamedWhitelistRule> rules) {
+    private ValidationWhitelist(Iterable<NamedWhitelistRule> rules) {
         this.rules = ImmutableList.copyOf(rules);
     }
 
