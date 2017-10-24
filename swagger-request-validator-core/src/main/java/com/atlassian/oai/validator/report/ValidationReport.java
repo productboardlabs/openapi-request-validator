@@ -3,6 +3,7 @@ package com.atlassian.oai.validator.report;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
@@ -29,6 +30,10 @@ public interface ValidationReport {
      * A single message in the validation report
      */
     interface Message {
+
+        static Message create(String key, String message) {
+            return new ImmutableMessage(key, Level.ERROR, message, Collections.emptyList());
+        }
 
         String getKey();
 

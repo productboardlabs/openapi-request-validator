@@ -27,10 +27,10 @@ public final class WhitelistRules {
         return new PrintableWhitelistRule(
                 "Message with key: " + key,
                 (message, operation, request, response) ->
-                        message.getKey().toLowerCase().contains(key.toLowerCase()));
+                        key.equalsIgnoreCase(message.getKey()));
     }
 
-    public static WhitelistRule massageContains(String regexp) {
+    public static WhitelistRule messageContains(String regexp) {
         return new PrintableWhitelistRule(
                 "Message contains: " + regexp,
                 (message, operation, request, response) -> message.getMessage().toLowerCase()
