@@ -206,7 +206,10 @@ public class SwaggerRequestResponseValidator {
                 .apply(apiOperation);
     }
 
-    private ValidationReport withWhitelistApplied(final ValidationReport report, @Nullable final ApiOperation operation, @Nullable final Request request, @Nullable final Response response) {
+    private ValidationReport withWhitelistApplied(final ValidationReport report,
+                                                  @Nullable final ApiOperation operation,
+                                                  @Nullable final Request request,
+                                                  @Nullable final Response response) {
         return ValidationReport.from(
                 report.getMessages().stream()
                         .map(message -> whitelist

@@ -49,7 +49,10 @@ public final class ValidationWhitelist {
      * @param response validated response
      * @return a rule that matches the arguments, or empty
      */
-    public Optional<NamedWhitelistRule> whitelistedBy(final ValidationReport.Message message, @Nullable final ApiOperation operation, @Nullable final Request request, @Nullable final Response response) {
+    public Optional<NamedWhitelistRule> whitelistedBy(final ValidationReport.Message message,
+                                                      @Nullable final ApiOperation operation,
+                                                      @Nullable final Request request,
+                                                      @Nullable final Response response) {
         return rules.stream()
                 .filter(rule -> rule.getRule().matches(message, operation, request, response))
                 .findFirst();
@@ -61,8 +64,12 @@ public final class ValidationWhitelist {
 
     @Override
     public boolean equals(final Object o) {
-        if (this == o) { return true; }
-        if (o == null || getClass() != o.getClass()) { return false; }
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         final ValidationWhitelist that = (ValidationWhitelist) o;
 

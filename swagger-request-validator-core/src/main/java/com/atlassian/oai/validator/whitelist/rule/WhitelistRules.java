@@ -9,7 +9,8 @@ import io.swagger.models.HttpMethod;
  */
 public final class WhitelistRules {
 
-    private WhitelistRules() {}
+    private WhitelistRules() {
+    }
 
     public static WhitelistRule allOf(final WhitelistRule... rules) {
         return new AndWhitelistRule(ImmutableList.copyOf(rules));
