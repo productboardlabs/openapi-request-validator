@@ -3,7 +3,6 @@ package com.atlassian.oai.validator.report;
 import com.google.common.collect.ImmutableList;
 
 import javax.annotation.Nonnull;
-import java.util.Collection;
 import java.util.List;
 
 import static java.util.Arrays.asList;
@@ -28,12 +27,12 @@ class ImmutableMessage implements ValidationReport.Message {
     ImmutableMessage(@Nonnull final String key,
                      @Nonnull final ValidationReport.Level level,
                      @Nonnull final String message,
-                     @Nonnull final Collection<String> additionalInfo) {
+                     @Nonnull final List<String> additionalInfo) {
 
         this.key = requireNonNull(key, "A key is required");
         this.level = requireNonNull(level, "A level is required");
         this.message = requireNonNull(message, "A message is required");
-        this.additionalInfo = ImmutableList.copyOf(requireNonNull(additionalInfo));
+        this.additionalInfo = unmodifiableList(requireNonNull(additionalInfo));
     }
 
     @Override
