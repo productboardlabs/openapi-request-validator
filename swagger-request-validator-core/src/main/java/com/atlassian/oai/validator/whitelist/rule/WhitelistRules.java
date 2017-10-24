@@ -11,33 +11,33 @@ public final class WhitelistRules {
 
     private WhitelistRules() {}
 
-    public static WhitelistRule allOf(WhitelistRule... rules) {
+    public static WhitelistRule allOf(final WhitelistRule... rules) {
         return new AndWhitelistRule(ImmutableList.copyOf(rules));
     }
 
-    public static WhitelistRule anyOf(WhitelistRule... rules) {
+    public static WhitelistRule anyOf(final WhitelistRule... rules) {
         return new OrWhitelistRule(ImmutableList.copyOf(rules));
     }
 
-    public static WhitelistRule isEntity(String entityName) {
+    public static WhitelistRule isEntity(final String entityName) {
         return new IsEntityWhitelistRule(entityName);
     }
 
-    public static WhitelistRule messageHasKey(String key) {
+    public static WhitelistRule messageHasKey(final String key) {
         return new PrintableWhitelistRule(
                 "Message with key: '" + key + "'",
                 (message, operation, request, response) ->
                         key.equalsIgnoreCase(message.getKey()));
     }
 
-    public static WhitelistRule messageContains(String regexp) {
+    public static WhitelistRule messageContains(final String regexp) {
         return new PrintableWhitelistRule(
                 "Message contains: '" + regexp + "'",
                 (message, operation, request, response) -> message.getMessage().toLowerCase()
                         .matches(".*" + regexp.toLowerCase() + ".*"));
     }
 
-    public static WhitelistRule pathContains(String regexp) {
+    public static WhitelistRule pathContains(final String regexp) {
         return new PrintableWhitelistRule(
                 "Api path contains: '" + regexp + "'",
                 (message, operation, request, response) -> operation != null &&
@@ -56,19 +56,19 @@ public final class WhitelistRules {
                 (message, operation, request, response) -> response != null);
     }
 
-    public static WhitelistRule responseStatusIs(int status) {
+    public static WhitelistRule responseStatusIs(final int status) {
         return new PrintableWhitelistRule(
                 "Response status is " + status,
                 (message, operation, request, response) -> response != null && response.getStatus() == status);
     }
 
-    public static WhitelistRule responseStatusTypeIs(StatusType statusType) {
+    public static WhitelistRule responseStatusTypeIs(final StatusType statusType) {
         return new PrintableWhitelistRule(
                 "Response status is " + statusType,
                 (message, operation, request, response) -> response != null && statusType.matches(response.getStatus()));
     }
 
-    public static WhitelistRule methodIs(HttpMethod method) {
+    public static WhitelistRule methodIs(final HttpMethod method) {
         return new PrintableWhitelistRule(
                 "Method is " + method,
                 (message, operation, request, response) -> operation != null && operation.getMethod() == method);

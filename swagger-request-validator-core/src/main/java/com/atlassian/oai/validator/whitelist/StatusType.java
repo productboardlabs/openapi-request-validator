@@ -20,11 +20,11 @@ public enum StatusType {
 
     private final String pattern;
 
-    StatusType(String pattern) {
+    StatusType(final String pattern) {
         this.pattern = pattern;
     }
 
-    public boolean matches(int status) {
+    public boolean matches(final int status) {
         return String.valueOf(status).matches(pattern);
     }
 

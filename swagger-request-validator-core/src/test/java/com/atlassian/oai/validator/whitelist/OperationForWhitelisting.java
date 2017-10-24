@@ -34,29 +34,29 @@ public class OperationForWhitelisting {
     private Response response;
     private Operation operation = new Operation();
 
-    public OperationForWhitelisting(Request request, Response response) {
+    public OperationForWhitelisting(final Request request, final Response response) {
         this.request = request;
         this.response = response;
     }
 
-    private static NormalisedPath path(String path) {
-        NormalisedPath result = mock(NormalisedPath.class);
+    private static NormalisedPath path(final String path) {
+        final NormalisedPath result = mock(NormalisedPath.class);
         when(result.normalised()).thenReturn(path);
         return result;
     }
 
-    public OperationForWhitelisting withResponse(int status, String entityReference) {
+    public OperationForWhitelisting withResponse(final int status, final String entityReference) {
         operation.addResponse(String.valueOf(status), new io.swagger.models.Response().schema(
                 new RefProperty("#/definitions/" + entityReference)));
         return this;
     }
 
-    public OperationForWhitelisting withRequestParameter(String entityReference) {
+    public OperationForWhitelisting withRequestParameter(final String entityReference) {
         operation.addParameter(new BodyParameter().schema(new RefModel("#/definitions/" + entityReference)));
         return this;
     }
 
-    public boolean isMatchedBy(WhitelistRule rule) {
+    public boolean isMatchedBy(final WhitelistRule rule) {
         return rule.matches(message, new ApiOperation(path, path, method, operation), request, response);
     }
 
@@ -65,22 +65,22 @@ public class OperationForWhitelisting {
         return method + " " + path.normalised() + ": " + message;
     }
 
-    public OperationForWhitelisting withMessage(ValidationReport.Message message) {
+    public OperationForWhitelisting withMessage(final ValidationReport.Message message) {
         this.message = message;
         return this;
     }
 
-    public OperationForWhitelisting withPath(String path) {
+    public OperationForWhitelisting withPath(final String path) {
         this.path = path(path);
         return this;
     }
 
-    public OperationForWhitelisting withStatus(int status) {
+    public OperationForWhitelisting withStatus(final int status) {
         this.response = new SimpleResponse.Builder(status).build();
         return this;
     }
 
-    public OperationForWhitelisting withMethod(HttpMethod method) {
+    public OperationForWhitelisting withMethod(final HttpMethod method) {
         this.method = method;
         return this;
     }

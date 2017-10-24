@@ -31,7 +31,7 @@ public final class ValidationWhitelist {
      * @param rule A new rule to be added.
      * @return A new instance with the added rule.
      */
-    public ValidationWhitelist withRule(String title, WhitelistRule rule) {
+    public ValidationWhitelist withRule(final String title, final WhitelistRule rule) {
         return new ValidationWhitelist(
                 ImmutableList.<NamedWhitelistRule>builder()
                         .addAll(rules)
@@ -49,22 +49,22 @@ public final class ValidationWhitelist {
      * @param response validated response
      * @return a rule that matches the arguments, or empty
      */
-    public Optional<NamedWhitelistRule> whitelistedBy(ValidationReport.Message message, @Nullable ApiOperation operation, @Nullable Request request, @Nullable Response response) {
+    public Optional<NamedWhitelistRule> whitelistedBy(final ValidationReport.Message message, @Nullable final ApiOperation operation, @Nullable final Request request, @Nullable final Response response) {
         return rules.stream()
                 .filter(rule -> rule.getRule().matches(message, operation, request, response))
                 .findFirst();
     }
 
-    private ValidationWhitelist(Iterable<NamedWhitelistRule> rules) {
+    private ValidationWhitelist(final Iterable<NamedWhitelistRule> rules) {
         this.rules = ImmutableList.copyOf(rules);
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) { return true; }
         if (o == null || getClass() != o.getClass()) { return false; }
 
-        ValidationWhitelist that = (ValidationWhitelist) o;
+        final ValidationWhitelist that = (ValidationWhitelist) o;
 
         return Objects.equals(this.rules, that.rules);
     }

@@ -29,7 +29,7 @@ public class WhitelistRulesTest {
 
     @Test
     public void testAllOf() throws Exception {
-        WhitelistRule andRule = allOf(isEntity("MyEntity"),
+        final WhitelistRule andRule = allOf(isEntity("MyEntity"),
                 messageHasKey("my.key"),
                 messageContains("\"value\""));
 
@@ -52,7 +52,7 @@ public class WhitelistRulesTest {
 
     @Test
     public void testAnyOf() throws Exception {
-        WhitelistRule orRule = anyOf(isEntity("MyEntity"), isEntity("AnotherEntity"));
+        final WhitelistRule orRule = anyOf(isEntity("MyEntity"), isEntity("AnotherEntity"));
         assertThat(orRule, matches(request().withRequestParameter("MyEntity")));
         assertThat(orRule, matches(request().withRequestParameter("AnotherEntity")));
 
@@ -60,7 +60,7 @@ public class WhitelistRulesTest {
 
     @Test
     public void testIsEntity() throws Exception {
-        WhitelistRule rule = WhitelistRules.isEntity("MyEntity");
+        final WhitelistRule rule = WhitelistRules.isEntity("MyEntity");
         assertThat(rule, matches(response().withResponse(200, "MyEntity")));
         assertThat(rule, not(matches(response()
                 .withStatus(201)
@@ -77,7 +77,7 @@ public class WhitelistRulesTest {
 
     @Test
     public void testMessageHasKey() throws Exception {
-        WhitelistRule rule = WhitelistRules.messageHasKey("my.key");
+        final WhitelistRule rule = WhitelistRules.messageHasKey("my.key");
         assertThat(rule, matches(response().withMessage(Message.create("my.key", "key: my.key"))));
         assertThat(rule, matches(response().withMessage(Message.create("MY.KEY", "key: MY.KEY"))));
         assertThat(rule, not(matches(response().withMessage(Message.create("not.my.key", "key: not.my.key")))));
@@ -135,15 +135,15 @@ public class WhitelistRulesTest {
         assertThat(methodIs(HttpMethod.PUT), not(matches(response().withMethod(HttpMethod.DELETE))));
     }
 
-    private Matcher<WhitelistRule> matches(OperationForWhitelisting operation) {
+    private Matcher<WhitelistRule> matches(final OperationForWhitelisting operation) {
         return new TypeSafeMatcher<WhitelistRule>() {
             @Override
-            protected boolean matchesSafely(WhitelistRule whitelistRule) {
+            protected boolean matchesSafely(final WhitelistRule whitelistRule) {
                 return operation.isMatchedBy(whitelistRule);
             }
 
             @Override
-            public void describeTo(Description description) {
+            public void describeTo(final Description description) {
                 description.appendText("A rule that matches: " + operation);
             }
         };

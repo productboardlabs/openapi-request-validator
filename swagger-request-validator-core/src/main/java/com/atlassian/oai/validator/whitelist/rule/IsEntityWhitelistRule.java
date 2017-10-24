@@ -15,7 +15,7 @@ class IsEntityWhitelistRule implements RequestOrResponseWhitelistRule {
     private final String entityName;
 
     @Override
-    public boolean matches(Message message, ApiOperation operation, Request request) {
+    public boolean matches(final Message message, final ApiOperation operation, final Request request) {
         return operation != null && operation.getOperation().getParameters().stream()
                 .filter(BodyParameter.class::isInstance)
                 .map(BodyParameter.class::cast)
@@ -26,7 +26,7 @@ class IsEntityWhitelistRule implements RequestOrResponseWhitelistRule {
     }
 
     @Override
-    public boolean matches(Message message, ApiOperation operation, Response response) {
+    public boolean matches(final Message message, final ApiOperation operation, final Response response) {
         return operation != null && operation.getOperation().getResponses().entrySet()
                 .stream()
                 .filter(entry -> entry.getKey().equals(String.valueOf(response.getStatus())))
@@ -42,7 +42,7 @@ class IsEntityWhitelistRule implements RequestOrResponseWhitelistRule {
         return "Is entity: " + entityName;
     }
 
-    public IsEntityWhitelistRule(String entityName) {
+    public IsEntityWhitelistRule(final String entityName) {
         this.entityName = Objects.requireNonNull(entityName);
     }
 
@@ -51,11 +51,15 @@ class IsEntityWhitelistRule implements RequestOrResponseWhitelistRule {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) { return true; }
-        if (o == null || getClass() != o.getClass()) { return false; }
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
-        IsEntityWhitelistRule that = (IsEntityWhitelistRule) o;
+        final IsEntityWhitelistRule that = (IsEntityWhitelistRule) o;
 
         return Objects.equals(this.getEntityName(), that.getEntityName());
     }

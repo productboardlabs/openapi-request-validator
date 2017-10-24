@@ -13,11 +13,11 @@ class OrWhitelistRule implements WhitelistRule {
     private final List<WhitelistRule> rules;
 
     @Override
-    public boolean matches(ValidationReport.Message message, ApiOperation operation, Request request, Response response) {
+    public boolean matches(final ValidationReport.Message message, final ApiOperation operation, final Request request, final Response response) {
         return rules.stream().anyMatch(r -> r.matches(message, operation, request, response));
     }
 
-    public OrWhitelistRule(List<WhitelistRule> rules) {
+    public OrWhitelistRule(final List<WhitelistRule> rules) {
         this.rules = rules;
     }
 

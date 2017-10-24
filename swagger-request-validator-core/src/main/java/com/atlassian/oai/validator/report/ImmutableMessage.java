@@ -37,12 +37,12 @@ class ImmutableMessage implements ValidationReport.Message {
     }
 
     @Override
-    public ValidationReport.Message withLevel(ValidationReport.Level level) {
+    public ValidationReport.Message withLevel(final ValidationReport.Level level) {
         return new ImmutableMessage(key, level, message, additionalInfo.toArray(new String[additionalInfo.size()]));
     }
 
     @Override
-    public ValidationReport.Message withAdditionalInfo(String info) {
+    public ValidationReport.Message withAdditionalInfo(final String info) {
         return new ImmutableMessage(
                 key, level, message,
                 ImmutableList.<String>builder().addAll(additionalInfo).add(info).build()

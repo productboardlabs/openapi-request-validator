@@ -13,7 +13,7 @@ public class NamedWhitelistRule {
         return name + " (" + rule + ")";
     }
 
-    NamedWhitelistRule(String name, WhitelistRule rule) {
+    NamedWhitelistRule(final String name, final WhitelistRule rule) {
         this.name = Objects.requireNonNull(name);
         this.rule = Objects.requireNonNull(rule);
     }
@@ -27,11 +27,11 @@ public class NamedWhitelistRule {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) { return true; }
         if (o == null || getClass() != o.getClass()) { return false; }
 
-        NamedWhitelistRule that = (NamedWhitelistRule) o;
+        final NamedWhitelistRule that = (NamedWhitelistRule) o;
 
         return Objects.equals(this.getName(), that.getName()) &&
                 Objects.equals(this.getRule(), that.getRule());

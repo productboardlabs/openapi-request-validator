@@ -26,10 +26,10 @@ public class ValidationErrorWhitelistingTest {
                         .withRule("Ignore NewUser entity errors", WhitelistRules.isEntity("NewUser")))
                 .build();
 
-        ValidationReport report = classUnderTest.validateRequest(SimpleRequest.Builder.get("/non-existent-path").build());
+        final ValidationReport report = classUnderTest.validateRequest(SimpleRequest.Builder.get("/non-existent-path").build());
         assertThat(report.getMessages(), hasItem(whitelisted("No API path found that matches request", "Ignore paths")));
 
-        ValidationReport report2 = classUnderTest.validateRequest(SimpleRequest.Builder.post("/users").withBody("{}").build());
+        final ValidationReport report2 = classUnderTest.validateRequest(SimpleRequest.Builder.post("/users").withBody("{}").build());
         assertThat(report2.getMessages(), hasItem(whitelisted("Object has missing required properties", "Ignore NewUser entity errors")));
     }
 
@@ -42,24 +42,24 @@ public class ValidationErrorWhitelistingTest {
                         .withRule("Ignore schema type", WhitelistRules.messageHasKey("validation.schema.type")))
                 .build();
 
-        ValidationReport report = classUnderTest.validateResponse("/users", Request.Method.PATCH, SimpleResponse.Builder.serverError().build());
+        final ValidationReport report = classUnderTest.validateResponse("/users", Request.Method.PATCH, SimpleResponse.Builder.serverError().build());
         assertThat(report.getMessages(), hasItem(whitelisted("PATCH operation not allowed on path '/users'", "Ignore PATCH operation missing")));
 
-        ValidationReport report2 = classUnderTest.validateResponse("/users", Request.Method.GET, SimpleResponse.Builder.ok().withBody("{}").build());
+        final ValidationReport report2 = classUnderTest.validateResponse("/users", Request.Method.GET, SimpleResponse.Builder.ok().withBody("{}").build());
         assertThat(report2.getMessages(), hasItem(whitelisted("Instance type (object) does not match any allowed primitive type", "Ignore schema type")));
     }
 
-    private Matcher<ValidationReport.Message> whitelisted(String messageText, String whitelistRule) {
+    private Matcher<ValidationReport.Message> whitelisted(final String messageText, final String whitelistRule) {
         return new TypeSafeMatcher<ValidationReport.Message>() {
             @Override
-            protected boolean matchesSafely(ValidationReport.Message message) {
+            protected boolean matchesSafely(final ValidationReport.Message message) {
                 return message.getMessage().contains(messageText) &&
                         message.getLevel() == IGNORE &&
                         message.getAdditionalInfo().stream().anyMatch(info -> info.toLowerCase().startsWith("whitelisted by: " + whitelistRule.toLowerCase()));
             }
 
             @Override
-            public void describeTo(Description description) {
+            public void describeTo(final Description description) {
                 description.appendText("a message whitelisted by '" + whitelistRule + "'");
             }
         };

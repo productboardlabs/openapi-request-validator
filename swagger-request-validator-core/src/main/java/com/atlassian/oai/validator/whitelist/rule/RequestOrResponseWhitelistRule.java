@@ -11,12 +11,12 @@ import javax.annotation.Nullable;
  * A utility interface making whitelist rules that operate on either request or response data easier to implement.
  */
 interface RequestOrResponseWhitelistRule extends WhitelistRule {
-    default boolean matches(Message message, ApiOperation operation, @Nullable Request request, @Nullable Response response) {
+    default boolean matches(final Message message, final ApiOperation operation, @Nullable final Request request, @Nullable final Response response) {
         return request != null && matches(message, operation, request) ||
                 response != null && matches(message, operation, response);
     }
 
-    boolean matches(Message message, ApiOperation operation, Request request);
+    boolean matches(final Message message, final ApiOperation operation, final Request request);
 
-    boolean matches(Message message, ApiOperation operation, Response response);
+    boolean matches(final Message message, final ApiOperation operation, final Response response);
 }

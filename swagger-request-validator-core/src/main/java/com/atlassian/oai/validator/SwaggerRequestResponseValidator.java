@@ -83,7 +83,7 @@ public class SwaggerRequestResponseValidator {
     private SwaggerRequestResponseValidator(@Nonnull final String swaggerJsonUrlOrPayload,
                                             @Nullable final String basePathOverride,
                                             @Nonnull final MessageResolver messages,
-                                            @Nonnull ValidationWhitelist whitelist) {
+                                            @Nonnull final ValidationWhitelist whitelist) {
         this(swaggerJsonUrlOrPayload, basePathOverride, messages, whitelist, null);
     }
 
@@ -98,7 +98,7 @@ public class SwaggerRequestResponseValidator {
     private SwaggerRequestResponseValidator(@Nonnull final String swaggerJsonUrlOrPayload,
                                             @Nullable final String basePathOverride,
                                             @Nonnull final MessageResolver messages,
-                                            @Nonnull ValidationWhitelist whitelist,
+                                            @Nonnull final ValidationWhitelist whitelist,
                                             @Nullable final List<AuthorizationValue> authData) {
         requireNonNull(swaggerJsonUrlOrPayload, "A Swagger JSON URL or payload is required");
 
@@ -185,9 +185,10 @@ public class SwaggerRequestResponseValidator {
                 (apiOperation, report) -> withWhitelistApplied(report, apiOperation, null, response));
     }
 
-    private ValidationReport validateOnApiOperation(@Nonnull final String path, @Nonnull final Request.Method method,
+    private ValidationReport validateOnApiOperation(@Nonnull final String path,
+                                                    @Nonnull final Request.Method method,
                                                     @Nonnull final Function<ApiOperation, ValidationReport> validationFunction,
-                                                    @Nonnull BiFunction<ApiOperation, ValidationReport, ValidationReport> whitelistingFunction) {
+                                                    @Nonnull final BiFunction<ApiOperation, ValidationReport, ValidationReport> whitelistingFunction) {
         final ApiOperationMatch apiOperationMatch = apiOperationResolver.findApiOperation(path, method);
         if (!apiOperationMatch.isPathFound()) {
             return whitelistingFunction.apply(null, ValidationReport.singleton(
@@ -199,13 +200,13 @@ public class SwaggerRequestResponseValidator {
                     messages.get("validation.request.operation.notAllowed", method, path)));
         }
 
-        ApiOperation apiOperation = apiOperationMatch.getApiOperation();
+        final ApiOperation apiOperation = apiOperationMatch.getApiOperation();
         return validationFunction
                 .andThen(report -> whitelistingFunction.apply(apiOperation, report))
                 .apply(apiOperation);
     }
 
-    private ValidationReport withWhitelistApplied(ValidationReport report, @Nullable ApiOperation operation, @Nullable Request request, @Nullable Response response) {
+    private ValidationReport withWhitelistApplied(final ValidationReport report, @Nullable final ApiOperation operation, @Nullable final Request request, @Nullable final Response response) {
         return ValidationReport.from(
                 report.getMessages().stream()
                         .map(message -> whitelist
@@ -289,7 +290,7 @@ public class SwaggerRequestResponseValidator {
          * @param whitelist The whitelist to use.
          * @return this builder instance
          */
-        public Builder withWhitelist(ValidationWhitelist whitelist) {
+        public Builder withWhitelist(final ValidationWhitelist whitelist) {
             this.whitelist = whitelist;
             return this;
         }
