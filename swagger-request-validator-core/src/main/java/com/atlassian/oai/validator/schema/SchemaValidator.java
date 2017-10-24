@@ -17,15 +17,15 @@ import io.swagger.models.properties.DateTimeProperty;
 import io.swagger.models.properties.Property;
 import io.swagger.models.properties.StringProperty;
 import io.swagger.util.Json;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -89,33 +89,36 @@ public class SchemaValidator {
     }
 
     /**
-     * Validate the given value against the given property schema.
+     * Validate the given value against the given property schema. If the schema is null then any json is valid.
      *
      * @param value  The value to validate
      * @param schema The property schema to validate the value against
      * @return A validation report containing accumulated validation errors
      */
     @Nonnull
-    public ValidationReport validate(@Nonnull final String value, @Nonnull final Property schema) {
+    public ValidationReport validate(@Nonnull final String value, @Nullable final Property schema) {
         return doValidate(value, schema);
     }
 
     /**
-     * Validate the given value against the given model schema.
+     * Validate the given value against the given model schema. If the schema is null then any json is valid.
      *
      * @param value  The value to validate
      * @param schema The model schema to validate the value against
      * @return A validation report containing accumulated validation errors
      */
     @Nonnull
-    public ValidationReport validate(@Nonnull final String value, @Nonnull final Model schema) {
+    public ValidationReport validate(@Nonnull final String value, @Nullable final Model schema) {
         return doValidate(value, schema);
     }
 
     @Nonnull
-    private ValidationReport doValidate(@Nonnull final String value, @Nonnull final Object schema) {
+    private ValidationReport doValidate(@Nonnull final String value, @Nullable final Object schema) {
         requireNonEmpty(value, "A value is required");
-        requireNonNull(schema, "A schema is required");
+
+        if (schema == null) {
+            return ValidationReport.empty();
+        }
 
         try {
             final JsonNode schemaObject, content;

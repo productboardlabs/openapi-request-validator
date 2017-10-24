@@ -3,6 +3,7 @@ package com.atlassian.oai.validator.schema;
 import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
+import com.google.common.collect.ImmutableList;
 import io.swagger.models.Model;
 import io.swagger.models.ModelImpl;
 import io.swagger.models.RefModel;
@@ -17,6 +18,8 @@ import io.swagger.models.properties.Property;
 import io.swagger.models.properties.StringProperty;
 import io.swagger.parser.SwaggerParser;
 import org.junit.Test;
+
+import java.util.List;
 
 import static com.atlassian.oai.validator.schema.SchemaValidator.ADDITIONAL_PROPERTIES_KEY;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
@@ -48,20 +51,14 @@ public class SchemaValidatorTest {
         classUnderTest.validate(value, schema);
     }
 
-    @Test(expected = NullPointerException.class)
-    public void validate_withNullModel_shouldThrowNPE() {
-        final String value = "1";
-        final Model schema = null;
+    @Test
+    public void validate_withNullSchema_shouldValidateAnyJson() {
+        final List<String> values = ImmutableList.of("1", "\"string\"", "{\"prop\":3}", "[1,2,3]", "null");
 
-        classUnderTest.validate(value, schema);
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void validate_withNullProperty_shouldThrowNPE() {
-        final String value = "1";
-        final Property schema = null;
-
-        classUnderTest.validate(value, schema);
+        values.forEach(v -> {
+            assertPass(classUnderTest.validate(v, (Property) null));
+            assertPass(classUnderTest.validate(v, (Model) null));
+        });
     }
 
     @Test
@@ -207,10 +204,10 @@ public class SchemaValidatorTest {
     public void validate_withValidModel_shouldPass_whenContainsNullValues() {
         final String value =
                 "{\"foo\":\"bar\"," +
-                "\"baz\": null," +
-                "\"int\": null," +
-                "\"obj\":{\"obj1\": null, \"obj2\": null, \"obj3\": \"val3\"}," +
-                "\"arr\":[null, \"val1\", \"val2\"]}";
+                        "\"baz\": null," +
+                        "\"int\": null," +
+                        "\"obj\":{\"obj1\": null, \"obj2\": null, \"obj3\": \"val3\"}," +
+                        "\"arr\":[null, \"val1\", \"val2\"]}";
         final Model schema = new ModelImpl()
                 .property("foo", new StringProperty())
                 .property("baz", new StringProperty())
@@ -235,10 +232,10 @@ public class SchemaValidatorTest {
     public void validate_withValidModel_shouldPass_whenContainsNullValues_inObjects_inArrays() {
         final String value =
                 "{\"arr\": [" +
-                    "{\"int\":null}," +
-                    "{\"str\":null}," +
-                    "{\"flt\":null}" +
-                "]}";
+                        "{\"int\":null}," +
+                        "{\"str\":null}," +
+                        "{\"flt\":null}" +
+                        "]}";
 
         final Model schema = new ModelImpl()
                 .property("arr", new ArrayProperty().items(
