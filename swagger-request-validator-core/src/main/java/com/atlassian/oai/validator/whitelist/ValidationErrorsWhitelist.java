@@ -13,15 +13,15 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public final class ValidationWhitelist {
+public final class ValidationErrorsWhitelist {
 
     private final List<NamedWhitelistRule> rules;
 
     /**
      * Creates an empty validation whitelist. Start with this method when creating a new whitelist from scratch.
      */
-    public static ValidationWhitelist empty() {
-        return new ValidationWhitelist(Collections.emptyList());
+    public static ValidationErrorsWhitelist create() {
+        return new ValidationErrorsWhitelist(Collections.emptyList());
     }
 
     /**
@@ -31,8 +31,8 @@ public final class ValidationWhitelist {
      * @param rule A new rule to be added.
      * @return A new instance with the added rule.
      */
-    public ValidationWhitelist withRule(final String title, final WhitelistRule rule) {
-        return new ValidationWhitelist(
+    public ValidationErrorsWhitelist withRule(final String title, final WhitelistRule rule) {
+        return new ValidationErrorsWhitelist(
                 ImmutableList.<NamedWhitelistRule>builder()
                         .addAll(rules)
                         .add(new NamedWhitelistRule(title, rule))
@@ -58,7 +58,7 @@ public final class ValidationWhitelist {
                 .findFirst();
     }
 
-    private ValidationWhitelist(final Iterable<NamedWhitelistRule> rules) {
+    private ValidationErrorsWhitelist(final Iterable<NamedWhitelistRule> rules) {
         this.rules = ImmutableList.copyOf(rules);
     }
 
@@ -71,7 +71,7 @@ public final class ValidationWhitelist {
             return false;
         }
 
-        final ValidationWhitelist that = (ValidationWhitelist) o;
+        final ValidationErrorsWhitelist that = (ValidationErrorsWhitelist) o;
 
         return Objects.equals(this.rules, that.rules);
     }
