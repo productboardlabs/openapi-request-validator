@@ -1,4 +1,4 @@
-package com.atlassian.oai.validator.whitelist.rule;
+package com.atlassian.oai.validator.whitelist;
 
 import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.NormalisedPath;
@@ -7,6 +7,7 @@ import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.ValidationReport;
+import com.atlassian.oai.validator.whitelist.rule.WhitelistRule;
 import io.swagger.models.HttpMethod;
 import io.swagger.models.Operation;
 import io.swagger.models.RefModel;

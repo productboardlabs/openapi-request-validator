@@ -1,15 +1,16 @@
-package com.atlassian.oai.validator.whitelist.rule;
+package com.atlassian.oai.validator.whitelist;
 
 import com.atlassian.oai.validator.report.ValidationReport.Message;
-import com.atlassian.oai.validator.whitelist.StatusType;
+import com.atlassian.oai.validator.whitelist.rule.WhitelistRule;
+import com.atlassian.oai.validator.whitelist.rule.WhitelistRules;
 import io.swagger.models.HttpMethod;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 import org.junit.Test;
 
-import static com.atlassian.oai.validator.whitelist.rule.OperationForWhitelisting.request;
-import static com.atlassian.oai.validator.whitelist.rule.OperationForWhitelisting.response;
+import static com.atlassian.oai.validator.whitelist.OperationForWhitelisting.request;
+import static com.atlassian.oai.validator.whitelist.OperationForWhitelisting.response;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.allOf;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.anyOf;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.isEntity;

@@ -4,7 +4,6 @@ import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.report.ValidationReport.Message;
-import com.google.common.base.Preconditions;
 import io.swagger.models.RefModel;
 import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.properties.RefProperty;
@@ -17,7 +16,7 @@ class IsEntityWhitelistRule implements RequestOrResponseWhitelistRule {
 
     @Override
     public boolean matches(Message message, ApiOperation operation, Request request) {
-        return operation.getOperation().getParameters().stream()
+        return operation != null && operation.getOperation().getParameters().stream()
                 .filter(BodyParameter.class::isInstance)
                 .map(BodyParameter.class::cast)
                 .map(BodyParameter::getSchema)
@@ -28,7 +27,7 @@ class IsEntityWhitelistRule implements RequestOrResponseWhitelistRule {
 
     @Override
     public boolean matches(Message message, ApiOperation operation, Response response) {
-        return operation.getOperation().getResponses().entrySet()
+        return operation != null && operation.getOperation().getResponses().entrySet()
                 .stream()
                 .filter(entry -> entry.getKey().equals(String.valueOf(response.getStatus())))
                 .map(Map.Entry::getValue)
@@ -40,7 +39,7 @@ class IsEntityWhitelistRule implements RequestOrResponseWhitelistRule {
 
     @Override
     public String toString() {
-        return "<Is entity: " + entityName + ">";
+        return "Is entity: " + entityName;
     }
 
     // Everything after this comment will be regenerated if you invoke Bob again.
@@ -48,7 +47,7 @@ class IsEntityWhitelistRule implements RequestOrResponseWhitelistRule {
     // If you don't know who Bob the Builder of Beans is, you can find him here: https://bitbucket.org/atlassian/bob
 
     public IsEntityWhitelistRule(String entityName) {
-        this.entityName = Preconditions.checkNotNull(entityName);
+        this.entityName = Objects.requireNonNull(entityName);
     }
 
     public String getEntityName() {

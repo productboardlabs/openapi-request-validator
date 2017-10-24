@@ -21,6 +21,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -133,10 +134,12 @@ public class SwaggerRequestResponseValidator {
         requireNonNull(request, "A request is required");
         requireNonNull(response, "A response is required");
 
-        return validateOnApiOperation(request.getPath(), request.getMethod(),
+        return validateOnApiOperation(
+                request.getPath(),
+                request.getMethod(),
                 apiOperation -> requestValidator.validateRequest(request, apiOperation)
-                        .merge(responseValidator.validateResponse(response, apiOperation))
-        );
+                        .merge(responseValidator.validateResponse(response, apiOperation)),
+                (apiOperation, report) -> withWhitelistApplied(report, apiOperation, request, response));
     }
 
     /**
@@ -151,12 +154,11 @@ public class SwaggerRequestResponseValidator {
     public ValidationReport validateRequest(@Nonnull final Request request) {
         requireNonNull(request, "A request is required");
 
-        return validateOnApiOperation(request.getPath(), request.getMethod(),
-                apiOperation -> whitelisted(
-                        requestValidator.validateRequest(request, apiOperation),
-                        apiOperation,
-                        request,
-                        null));
+        return validateOnApiOperation(
+                request.getPath(),
+                request.getMethod(),
+                apiOperation -> requestValidator.validateRequest(request, apiOperation),
+                (apiOperation, report) -> withWhitelistApplied(report, apiOperation, request, null));
     }
 
     /**
@@ -176,33 +178,34 @@ public class SwaggerRequestResponseValidator {
         requireNonNull(method, "A method is required");
         requireNonNull(response, "A response is required");
 
-        return validateOnApiOperation(path, method, apiOperation ->
-                whitelisted(
-                        responseValidator.validateResponse(response, apiOperation),
-                        apiOperation,
-                        null,
-                        response));
+        return validateOnApiOperation(
+                path,
+                method,
+                apiOperation -> responseValidator.validateResponse(response, apiOperation),
+                (apiOperation, report) -> withWhitelistApplied(report, apiOperation, null, response));
     }
 
     private ValidationReport validateOnApiOperation(@Nonnull final String path, @Nonnull final Request.Method method,
-                                                    @Nonnull final Function<ApiOperation, ValidationReport> validationFunction) {
+                                                    @Nonnull final Function<ApiOperation, ValidationReport> validationFunction,
+                                                    @Nonnull BiFunction<ApiOperation, ValidationReport, ValidationReport> whitelistingFunction) {
         final ApiOperationMatch apiOperationMatch = apiOperationResolver.findApiOperation(path, method);
         if (!apiOperationMatch.isPathFound()) {
-            return ValidationReport.singleton(
-                    messages.get("validation.request.path.missing", path)
-            );
+            return whitelistingFunction.apply(null, ValidationReport.singleton(
+                    messages.get("validation.request.path.missing", path)));
         }
 
         if (!apiOperationMatch.isOperationAllowed()) {
-            return ValidationReport.singleton(
-                    messages.get("validation.request.operation.notAllowed", method, path)
-            );
+            return whitelistingFunction.apply(null, ValidationReport.singleton(
+                    messages.get("validation.request.operation.notAllowed", method, path)));
         }
 
-        return validationFunction.apply(apiOperationMatch.getApiOperation());
+        ApiOperation apiOperation = apiOperationMatch.getApiOperation();
+        return validationFunction
+                .andThen(report -> whitelistingFunction.apply(apiOperation, report))
+                .apply(apiOperation);
     }
 
-    private ValidationReport whitelisted(ValidationReport report, ApiOperation operation, Request request, Response response) {
+    private ValidationReport withWhitelistApplied(ValidationReport report, ApiOperation operation, Request request, Response response) {
         return ValidationReport.from(
                 report.getMessages().stream()
                         .map(message -> whitelist

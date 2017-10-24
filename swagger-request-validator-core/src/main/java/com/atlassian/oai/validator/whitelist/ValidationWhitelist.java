@@ -7,6 +7,7 @@ import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.whitelist.rule.WhitelistRule;
 import com.google.common.collect.ImmutableList;
 
+import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -14,28 +15,38 @@ import java.util.Optional;
 
 public final class ValidationWhitelist {
 
-    private final List<WhitelistRule> rules;
+    private final List<NamedWhitelistRule> rules;
 
     public static ValidationWhitelist empty() {
         return new ValidationWhitelist(Collections.emptyList());
     }
 
-    public ValidationWhitelist withRule(WhitelistRule rule) {
+    public ValidationWhitelist withRule(String name, WhitelistRule rule) {
         return new ValidationWhitelist(
-                ImmutableList.<WhitelistRule>builder().addAll(rules).add(rule).build());
+                ImmutableList.<NamedWhitelistRule>builder()
+                        .addAll(rules)
+                        .add(new NamedWhitelistRule(name, rule))
+                        .build());
     }
 
-    public boolean isWhitelisted(ValidationReport.Message message, ApiOperation operation, Request request, Response response) {
-        return whitelistedBy(message, operation, request, response).isPresent();
-    }
-
-    public Optional<WhitelistRule> whitelistedBy(ValidationReport.Message message, ApiOperation operation, Request request, Response response) {
+    /**
+     * Returns a whitelist rule that is applicable for the given parameters.
+     * <p>
+     *     Either request or response should be nonnull.
+     *
+     * @param message message report that could be whitelisted
+     * @param operation api operation which is being validated
+     * @param request validated request
+     * @param response validated response
+     * @return a rule that matches the arguments or empty
+     */
+    public Optional<NamedWhitelistRule> whitelistedBy(ValidationReport.Message message, @Nullable ApiOperation operation, @Nullable Request request, @Nullable Response response) {
         return rules.stream()
-                .filter(rule -> rule.matches(message, operation, request, response))
+                .filter(rule -> rule.getRule().matches(message, operation, request, response))
                 .findFirst();
     }
 
-    public ValidationWhitelist(Iterable<WhitelistRule> rules) {
+    public ValidationWhitelist(Iterable<NamedWhitelistRule> rules) {
         this.rules = ImmutableList.copyOf(rules);
     }
 

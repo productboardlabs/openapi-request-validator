@@ -4,7 +4,6 @@ import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.report.ValidationReport;
-import com.google.common.base.Preconditions;
 
 import java.util.Objects;
 
@@ -23,13 +22,13 @@ class PrintableWhitelistRule implements WhitelistRule {
     }
 
     public PrintableWhitelistRule(String representation, WhitelistRule function) {
-        this.representation = Preconditions.checkNotNull(representation);
-        this.function = Preconditions.checkNotNull(function);
+        this.representation = Objects.requireNonNull(representation);
+        this.function = Objects.requireNonNull(function);
     }
 
     @Override
     public String toString() {
-        return "<" + representation + ">";
+        return representation;
     }
 
     @Override

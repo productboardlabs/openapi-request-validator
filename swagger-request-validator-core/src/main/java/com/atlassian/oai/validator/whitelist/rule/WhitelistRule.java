@@ -10,7 +10,7 @@ import javax.annotation.Nullable;
 
 public interface WhitelistRule {
 
-    boolean matches(Message message, ApiOperation operation, @Nullable Request request, @Nullable Response response);
+    boolean matches(Message message, @Nullable ApiOperation operation, @Nullable Request request, @Nullable Response response);
 
     default WhitelistRule and(WhitelistRule rule) {
         return new AndWhitelistRule(ImmutableList.of(this, rule));

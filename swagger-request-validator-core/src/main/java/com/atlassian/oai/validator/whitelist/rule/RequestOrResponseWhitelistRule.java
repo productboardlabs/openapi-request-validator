@@ -9,13 +9,8 @@ import javax.annotation.Nullable;
 
 interface RequestOrResponseWhitelistRule extends WhitelistRule {
     default boolean matches(Message message, ApiOperation operation, @Nullable Request request, @Nullable Response response) {
-        if (request != null) {
-            return matches(message, operation, request);
-        } else if (response != null) {
-            return matches(message, operation, response);
-        } else {
-            return false;
-        }
+        return request != null && matches(message, operation, request) ||
+                response != null && matches(message, operation, response);
     }
 
     boolean matches(Message message, ApiOperation operation, Request request);

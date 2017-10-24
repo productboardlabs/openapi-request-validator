@@ -23,7 +23,7 @@ public class OrWhitelistRule implements WhitelistRule {
 
     @Override
     public String toString() {
-        return "(" + rules.stream().map(Object::toString).collect(joining(" OR ")) + ")";
+        return rules.stream().map(Object::toString).collect(joining(" OR ", "(", ")"));
     }
 }
 

@@ -23,6 +23,6 @@ class AndWhitelistRule implements WhitelistRule {
 
     @Override
     public String toString() {
-        return "(" + rules.stream().map(Object::toString).collect(joining(" AND ")) + ")";
+        return rules.stream().map(Object::toString).collect(joining(" AND ", "(", ")"));
     }
 }

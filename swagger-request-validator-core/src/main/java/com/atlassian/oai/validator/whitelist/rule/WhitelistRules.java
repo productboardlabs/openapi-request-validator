@@ -25,23 +25,23 @@ public final class WhitelistRules {
 
     public static WhitelistRule messageHasKey(String key) {
         return new PrintableWhitelistRule(
-                "Message with key: " + key,
+                "Message with key: '" + key + "'",
                 (message, operation, request, response) ->
                         key.equalsIgnoreCase(message.getKey()));
     }
 
     public static WhitelistRule messageContains(String regexp) {
         return new PrintableWhitelistRule(
-                "Message contains: " + regexp,
+                "Message contains: '" + regexp + "'",
                 (message, operation, request, response) -> message.getMessage().toLowerCase()
                         .matches(".*" + regexp.toLowerCase() + ".*"));
     }
 
     public static WhitelistRule pathContains(String regexp) {
         return new PrintableWhitelistRule(
-                "Api path containing: " + regexp,
-                (message, operation, request, response) -> operation.getRequestPath().normalised()
-                        .matches(".*" + regexp.toLowerCase() + ".*"));
+                "Api path contains: '" + regexp + "'",
+                (message, operation, request, response) -> operation != null &&
+                        operation.getRequestPath().normalised().matches(".*" + regexp.toLowerCase() + ".*"));
     }
 
     public static WhitelistRule isRequest() {
@@ -71,7 +71,7 @@ public final class WhitelistRules {
     public static WhitelistRule methodIs(HttpMethod method) {
         return new PrintableWhitelistRule(
                 "Method is " + method,
-                (message, operation, request, response) -> operation.getMethod() == method);
+                (message, operation, request, response) -> operation != null && operation.getMethod() == method);
     }
 
 }
