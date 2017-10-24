@@ -1,8 +1,5 @@
 package com.atlassian.oai.validator;
 
-import java.util.Arrays;
-import java.util.List;
-
 import com.atlassian.oai.validator.interaction.ApiOperationResolver;
 import com.atlassian.oai.validator.interaction.RequestValidator;
 import com.atlassian.oai.validator.interaction.ResponseValidator;
@@ -14,7 +11,7 @@ import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.SchemaValidator;
-
+import com.atlassian.oai.validator.whitelist.ValidationWhitelist;
 import io.swagger.models.Swagger;
 import io.swagger.models.auth.AuthorizationValue;
 import io.swagger.parser.SwaggerParser;
@@ -22,7 +19,10 @@ import io.swagger.parser.util.SwaggerDeserializationResult;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -43,6 +43,7 @@ public class SwaggerRequestResponseValidator {
     private final ApiOperationResolver apiOperationResolver;
     private final RequestValidator requestValidator;
     private final ResponseValidator responseValidator;
+    private final ValidationWhitelist whitelist;
 
     /**
      * Create a new instance using the Swagger JSON specification at the given location OR actual swagger JSON String payload.
@@ -73,30 +74,31 @@ public class SwaggerRequestResponseValidator {
 
     /**
      * Construct a new validator for the specification at the given URL.
-     *
-     * @param swaggerJsonUrlOrPayload   The location of the Swagger JSON specification to use in this validator.
+     *  @param swaggerJsonUrlOrPayload   The location of the Swagger JSON specification to use in this validator.
      * @param basePathOverride (Optional) override for the base path defined in the Swagger specification.
      * @param messages         The message resolver to use for resolving validation messages.
+     * @param whitelist
      */
     private SwaggerRequestResponseValidator(@Nonnull final String swaggerJsonUrlOrPayload,
                                             @Nullable final String basePathOverride,
-                                            @Nonnull final MessageResolver messages) {
-        this(swaggerJsonUrlOrPayload, basePathOverride, messages, null);
+                                            @Nonnull final MessageResolver messages,
+                                            @Nonnull ValidationWhitelist whitelist) {
+        this(swaggerJsonUrlOrPayload, basePathOverride, messages, whitelist, null);
     }
-    
+
     /**
      * Construct a new validator for the specification at the given URL with authentication data.
-     *
-     * @param swaggerJsonUrlOrPayload   The location of the Swagger JSON specification to use in this validator.
+     *  @param swaggerJsonUrlOrPayload   The location of the Swagger JSON specification to use in this validator.
      * @param basePathOverride (Optional) override for the base path defined in the Swagger specification.
      * @param messages         The message resolver to use for resolving validation messages.
+     * @param whitelist
      * @param authData         (Optional) A List of authentication data to add to swagger spec retrieval request.
      */
     private SwaggerRequestResponseValidator(@Nonnull final String swaggerJsonUrlOrPayload,
-            @Nullable final String basePathOverride,
-            @Nonnull final MessageResolver messages,
-            @Nullable final List<AuthorizationValue> authData) {
-
+                                            @Nullable final String basePathOverride,
+                                            @Nonnull final MessageResolver messages,
+                                            @Nonnull ValidationWhitelist whitelist,
+                                            @Nullable final List<AuthorizationValue> authData) {
         requireNonNull(swaggerJsonUrlOrPayload, "A Swagger JSON URL or payload is required");
 
         final SwaggerDeserializationResult swaggerParseResult =
@@ -114,6 +116,7 @@ public class SwaggerRequestResponseValidator {
         final SchemaValidator schemaValidator = new SchemaValidator(api, messages);
         this.requestValidator = new RequestValidator(schemaValidator, messages, api);
         this.responseValidator = new ResponseValidator(schemaValidator, messages, api);
+        this.whitelist = whitelist;
     }
 
     /**
@@ -131,8 +134,8 @@ public class SwaggerRequestResponseValidator {
         requireNonNull(response, "A response is required");
 
         return validateOnApiOperation(request.getPath(), request.getMethod(),
-            apiOperation -> requestValidator.validateRequest(request, apiOperation)
-                    .merge(responseValidator.validateResponse(response, apiOperation))
+                apiOperation -> requestValidator.validateRequest(request, apiOperation)
+                        .merge(responseValidator.validateResponse(response, apiOperation))
         );
     }
 
@@ -149,8 +152,11 @@ public class SwaggerRequestResponseValidator {
         requireNonNull(request, "A request is required");
 
         return validateOnApiOperation(request.getPath(), request.getMethod(),
-            apiOperation -> requestValidator.validateRequest(request, apiOperation)
-        );
+                apiOperation -> whitelisted(
+                        requestValidator.validateRequest(request, apiOperation),
+                        apiOperation,
+                        request,
+                        null));
     }
 
     /**
@@ -170,9 +176,12 @@ public class SwaggerRequestResponseValidator {
         requireNonNull(method, "A method is required");
         requireNonNull(response, "A response is required");
 
-        return validateOnApiOperation(path, method,
-            apiOperation -> responseValidator.validateResponse(response, apiOperation)
-        );
+        return validateOnApiOperation(path, method, apiOperation ->
+                whitelisted(
+                        responseValidator.validateResponse(response, apiOperation),
+                        apiOperation,
+                        null,
+                        response));
     }
 
     private ValidationReport validateOnApiOperation(@Nonnull final String path, @Nonnull final Request.Method method,
@@ -186,11 +195,23 @@ public class SwaggerRequestResponseValidator {
 
         if (!apiOperationMatch.isOperationAllowed()) {
             return ValidationReport.singleton(
-               messages.get("validation.request.operation.notAllowed", method, path)
+                    messages.get("validation.request.operation.notAllowed", method, path)
             );
         }
 
         return validationFunction.apply(apiOperationMatch.getApiOperation());
+    }
+
+    private ValidationReport whitelisted(ValidationReport report, ApiOperation operation, Request request, Response response) {
+        return ValidationReport.from(
+                report.getMessages().stream()
+                        .map(message -> whitelist
+                                .whitelistedBy(message, operation, request, response)
+                                .map(rule -> message
+                                        .withLevel(ValidationReport.Level.IGNORE)
+                                        .withAdditionalInfo("Whitelisted by: " + rule))
+                                .orElse(message))
+                        .collect(Collectors.toList()));
     }
 
     /**
@@ -201,6 +222,7 @@ public class SwaggerRequestResponseValidator {
         private String basePathOverride;
         private LevelResolver levelResolver = LevelResolver.defaultResolver();
         private List<AuthorizationValue> authData;
+        private ValidationWhitelist whitelist = ValidationWhitelist.empty();
 
         /**
          * The location of the Swagger JSON specification to use in the validator.
@@ -258,6 +280,17 @@ public class SwaggerRequestResponseValidator {
         }
 
         /**
+         * A whitelist for error messages. Whitelisted error messages will still be returned, but turned into IGNORE level.
+         *
+         * @param whitelist The whitelist to use.
+         * @return this builder instance
+         */
+        public Builder withWhitelist(ValidationWhitelist whitelist) {
+            this.whitelist = whitelist;
+            return this;
+        }
+
+        /**
          * An optional key value header to add to the Swagger spec retrieval request.
          * <p>
          * This is necessary if e.g. your Swagger specification is retrieved from a remote host and the path to retrieve is secured by an api key in the request header.
@@ -279,7 +312,7 @@ public class SwaggerRequestResponseValidator {
          * @return The configured {@link SwaggerRequestResponseValidator} instance.
          */
         public SwaggerRequestResponseValidator build() {
-            return new SwaggerRequestResponseValidator(swaggerJsonUrlOrPayload, basePathOverride, new MessageResolver(levelResolver), authData);
+            return new SwaggerRequestResponseValidator(swaggerJsonUrlOrPayload, basePathOverride, new MessageResolver(levelResolver), whitelist, authData);
         }
     }
 }
