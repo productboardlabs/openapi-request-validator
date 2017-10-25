@@ -22,8 +22,8 @@ public interface WhitelistRule {
 
     default WhitelistRule not() {
         return new PrintableWhitelistRule(
-                "Not " + this,
-                (message, operation, request, response) -> !this.matches(message, operation, request, response)
+            "Not " + this,
+            (message, operation, request, response) -> !this.matches(message, operation, request, response)
         );
     }
 }

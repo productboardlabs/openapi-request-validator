@@ -103,14 +103,14 @@ public class SwaggerRequestResponseValidator {
         requireNonNull(swaggerJsonUrlOrPayload, "A Swagger JSON URL or payload is required");
 
         final SwaggerDeserializationResult swaggerParseResult =
-                swaggerJsonUrlOrPayload.startsWith("{") ?
-                        new SwaggerParser().readWithInfo(swaggerJsonUrlOrPayload) :
-                        new SwaggerParser().readWithInfo(swaggerJsonUrlOrPayload, authData, true);
+            swaggerJsonUrlOrPayload.startsWith("{") ?
+                new SwaggerParser().readWithInfo(swaggerJsonUrlOrPayload) :
+                new SwaggerParser().readWithInfo(swaggerJsonUrlOrPayload, authData, true);
         final Swagger api = swaggerParseResult.getSwagger();
         if (api == null) {
             throw new IllegalArgumentException(
-                    format("Unable to load API descriptor from provided %s:\n\t%s",
-                            swaggerJsonUrlOrPayload, swaggerParseResult.getMessages().toString().replace("\n", "\n\t")));
+                format("Unable to load API descriptor from provided %s:\n\t%s",
+                    swaggerJsonUrlOrPayload, swaggerParseResult.getMessages().toString().replace("\n", "\n\t")));
         }
         this.messages = messages;
         this.apiOperationResolver = new ApiOperationResolver(api, basePathOverride);
@@ -135,11 +135,11 @@ public class SwaggerRequestResponseValidator {
         requireNonNull(response, "A response is required");
 
         return validateOnApiOperation(
-                request.getPath(),
-                request.getMethod(),
-                apiOperation -> requestValidator.validateRequest(request, apiOperation)
-                        .merge(responseValidator.validateResponse(response, apiOperation)),
-                (apiOperation, report) -> withWhitelistApplied(report, apiOperation, request, response));
+            request.getPath(),
+            request.getMethod(),
+            apiOperation -> requestValidator.validateRequest(request, apiOperation)
+                .merge(responseValidator.validateResponse(response, apiOperation)),
+            (apiOperation, report) -> withWhitelistApplied(report, apiOperation, request, response));
     }
 
     /**
@@ -155,10 +155,10 @@ public class SwaggerRequestResponseValidator {
         requireNonNull(request, "A request is required");
 
         return validateOnApiOperation(
-                request.getPath(),
-                request.getMethod(),
-                apiOperation -> requestValidator.validateRequest(request, apiOperation),
-                (apiOperation, report) -> withWhitelistApplied(report, apiOperation, request, null));
+            request.getPath(),
+            request.getMethod(),
+            apiOperation -> requestValidator.validateRequest(request, apiOperation),
+            (apiOperation, report) -> withWhitelistApplied(report, apiOperation, request, null));
     }
 
     /**
@@ -179,10 +179,10 @@ public class SwaggerRequestResponseValidator {
         requireNonNull(response, "A response is required");
 
         return validateOnApiOperation(
-                path,
-                method,
-                apiOperation -> responseValidator.validateResponse(response, apiOperation),
-                (apiOperation, report) -> withWhitelistApplied(report, apiOperation, null, response));
+            path,
+            method,
+            apiOperation -> responseValidator.validateResponse(response, apiOperation),
+            (apiOperation, report) -> withWhitelistApplied(report, apiOperation, null, response));
     }
 
     private ValidationReport validateOnApiOperation(@Nonnull final String path,
@@ -192,18 +192,18 @@ public class SwaggerRequestResponseValidator {
         final ApiOperationMatch apiOperationMatch = apiOperationResolver.findApiOperation(path, method);
         if (!apiOperationMatch.isPathFound()) {
             return whitelistingFunction.apply(null, ValidationReport.singleton(
-                    messages.get("validation.request.path.missing", path)));
+                messages.get("validation.request.path.missing", path)));
         }
 
         if (!apiOperationMatch.isOperationAllowed()) {
             return whitelistingFunction.apply(null, ValidationReport.singleton(
-                    messages.get("validation.request.operation.notAllowed", method, path)));
+                messages.get("validation.request.operation.notAllowed", method, path)));
         }
 
         final ApiOperation apiOperation = apiOperationMatch.getApiOperation();
         return validationFunction
-                .andThen(report -> whitelistingFunction.apply(apiOperation, report))
-                .apply(apiOperation);
+            .andThen(report -> whitelistingFunction.apply(apiOperation, report))
+            .apply(apiOperation);
     }
 
     private ValidationReport withWhitelistApplied(final ValidationReport report,
@@ -211,14 +211,14 @@ public class SwaggerRequestResponseValidator {
                                                   @Nullable final Request request,
                                                   @Nullable final Response response) {
         return ValidationReport.from(
-                report.getMessages().stream()
-                        .map(message -> whitelist
-                                .whitelistedBy(message, operation, request, response)
-                                .map(rule -> message
-                                        .withLevel(ValidationReport.Level.IGNORE)
-                                        .withAdditionalInfo("Whitelisted by: " + rule))
-                                .orElse(message))
-                        .collect(Collectors.toList()));
+            report.getMessages().stream()
+                .map(message -> whitelist
+                    .whitelistedBy(message, operation, request, response)
+                    .map(rule -> message
+                        .withLevel(ValidationReport.Level.IGNORE)
+                        .withAdditionalInfo("Whitelisted by: " + rule))
+                    .orElse(message))
+                .collect(Collectors.toList()));
     }
 
     /**
