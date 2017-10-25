@@ -3,6 +3,7 @@ package com.atlassian.oai.validator.whitelist;
 import com.atlassian.oai.validator.report.ValidationReport.Message;
 import com.atlassian.oai.validator.whitelist.rule.WhitelistRule;
 import com.atlassian.oai.validator.whitelist.rule.WhitelistRules;
+import com.google.common.collect.ImmutableMap;
 import io.swagger.models.HttpMethod;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -13,6 +14,7 @@ import static com.atlassian.oai.validator.whitelist.OperationForWhitelisting.req
 import static com.atlassian.oai.validator.whitelist.OperationForWhitelisting.response;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.allOf;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.anyOf;
+import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.headerContains;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.isEntity;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.isRequest;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.isResponse;
@@ -22,6 +24,7 @@ import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.methodIs
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.pathContains;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.responseStatusIs;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.responseStatusTypeIs;
+import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
@@ -38,23 +41,23 @@ public class WhitelistRulesTest {
                 .withMessage(Message.create("my.key", "Object instance has properties which are not allowed by the schema: [\"value\"]"))));
 
         assertThat(andRule, matches(request()
-                .withRequestParameter("MyEntity")
+            .withRequestBodyParameter("MyEntity")
                 .withMessage(Message.create("my.key", "Object instance has properties which are not allowed by the schema: [\"value\"]"))));
 
         assertThat(andRule, not(matches(request()
-                .withRequestParameter("AnotherEntity")
+            .withRequestBodyParameter("AnotherEntity")
                 .withMessage(Message.create("my.key", "Object instance has properties which are not allowed by the schema: [\"value\"]")))));
 
         assertThat(andRule, not(matches(request()
-                .withRequestParameter("MyEntity")
+            .withRequestBodyParameter("MyEntity")
                 .withMessage(Message.create("my.key", "Another message")))));
     }
 
     @Test
     public void testAnyOf() throws Exception {
         final WhitelistRule orRule = anyOf(isEntity("MyEntity"), isEntity("AnotherEntity"));
-        assertThat(orRule, matches(request().withRequestParameter("MyEntity")));
-        assertThat(orRule, matches(request().withRequestParameter("AnotherEntity")));
+        assertThat(orRule, matches(request().withRequestBodyParameter("MyEntity")));
+        assertThat(orRule, matches(request().withRequestBodyParameter("AnotherEntity")));
 
     }
 
@@ -71,8 +74,8 @@ public class WhitelistRulesTest {
                 .withResponse(201, "MyEntity")
                 .withResponse(200, "AnotherEntity")));
         assertThat(rule, not(matches(response().withResponse(200, "NotMyEntity"))));
-        assertThat(rule, matches(request().withRequestParameter("MyEntity")));
-        assertThat(rule, not(matches(request().withRequestParameter("NotMyEntity"))));
+        assertThat(rule, matches(request().withRequestBodyParameter("MyEntity")));
+        assertThat(rule, not(matches(request().withRequestBodyParameter("NotMyEntity"))));
     }
 
     @Test
@@ -133,6 +136,18 @@ public class WhitelistRulesTest {
         assertThat(methodIs(HttpMethod.PUT), matches(request().withMethod(HttpMethod.PUT)));
         assertThat(methodIs(HttpMethod.PUT), matches(response().withMethod(HttpMethod.PUT)));
         assertThat(methodIs(HttpMethod.PUT), not(matches(response().withMethod(HttpMethod.DELETE))));
+    }
+
+    @Test
+    public void testHeaderContains() throws Exception {
+        final WhitelistRule notJson = headerContains("Content-Type", "application/json").not();
+        assertThat(notJson, matches(request().withRequestHeaders(ImmutableMap.of())));
+        assertThat(notJson, matches(request().withRequestHeaders(ImmutableMap.of("content-type", singletonList("multipart/form-data")))));
+        assertThat(notJson, not(matches(request().withRequestHeaders(ImmutableMap.of("content-type", singletonList("application/json"))))));
+
+        assertThat(notJson, matches(response().withResponseHeaders(ImmutableMap.of())));
+        assertThat(notJson, matches(response().withResponseHeaders(ImmutableMap.of("content-type", singletonList("multipart/form-data")))));
+        assertThat(notJson, not(matches(response().withResponseHeaders(ImmutableMap.of("content-type", singletonList("application/json"))))));
     }
 
     private Matcher<WhitelistRule> matches(final OperationForWhitelisting operation) {

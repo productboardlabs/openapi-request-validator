@@ -8,11 +8,14 @@ import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.whitelist.rule.WhitelistRule;
+import com.google.common.collect.ImmutableMap;
 import io.swagger.models.HttpMethod;
 import io.swagger.models.Operation;
 import io.swagger.models.RefModel;
 import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.properties.RefProperty;
+
+import java.util.List;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -51,7 +54,7 @@ public class OperationForWhitelisting {
         return this;
     }
 
-    public OperationForWhitelisting withRequestParameter(final String entityReference) {
+    public OperationForWhitelisting withRequestBodyParameter(final String entityReference) {
         operation.addParameter(new BodyParameter().schema(new RefModel("#/definitions/" + entityReference)));
         return this;
     }
@@ -82,6 +85,20 @@ public class OperationForWhitelisting {
 
     public OperationForWhitelisting withMethod(final HttpMethod method) {
         this.method = method;
+        return this;
+    }
+
+    public OperationForWhitelisting withRequestHeaders(final ImmutableMap<String, List<String>> headers) {
+        final SimpleRequest.Builder request = new SimpleRequest.Builder(this.request.getMethod(), this.request.getPath());
+        headers.forEach(request::withHeader);
+        this.request = request.build();
+        return this;
+    }
+
+    public OperationForWhitelisting withResponseHeaders(final ImmutableMap<String, List<String>> headers) {
+        final SimpleResponse.Builder response = new SimpleResponse.Builder(this.response.getStatus());
+        headers.forEach(response::withHeader);
+        this.response = response.build();
         return this;
     }
 }
