@@ -37,7 +37,7 @@ public class OperationForWhitelisting {
     private Response response;
     private Operation operation = new Operation();
 
-    public OperationForWhitelisting(final Request request, final Response response) {
+    private OperationForWhitelisting(final Request request, final Response response) {
         this.request = request;
         this.response = response;
     }
@@ -48,13 +48,13 @@ public class OperationForWhitelisting {
         return result;
     }
 
-    public OperationForWhitelisting withResponse(final int status, final String entityReference) {
+    public OperationForWhitelisting withDocumentedResponse(final int status, final String entityReference) {
         operation.addResponse(String.valueOf(status), new io.swagger.models.Response().schema(
                 new RefProperty("#/definitions/" + entityReference)));
         return this;
     }
 
-    public OperationForWhitelisting withRequestBodyParameter(final String entityReference) {
+    public OperationForWhitelisting withDocumentedRequestBodyParameter(final String entityReference) {
         operation.addParameter(new BodyParameter().schema(new RefModel("#/definitions/" + entityReference)));
         return this;
     }

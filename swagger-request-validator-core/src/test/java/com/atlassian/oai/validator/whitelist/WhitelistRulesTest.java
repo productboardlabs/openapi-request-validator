@@ -37,45 +37,45 @@ public class WhitelistRulesTest {
                 messageContains("\"value\""));
 
         assertThat(andRule, matches(response()
-                .withResponse(200, "MyEntity")
+            .withDocumentedResponse(200, "MyEntity")
                 .withMessage(Message.create("my.key", "Object instance has properties which are not allowed by the schema: [\"value\"]"))));
 
         assertThat(andRule, matches(request()
-            .withRequestBodyParameter("MyEntity")
+            .withDocumentedRequestBodyParameter("MyEntity")
                 .withMessage(Message.create("my.key", "Object instance has properties which are not allowed by the schema: [\"value\"]"))));
 
         assertThat(andRule, not(matches(request()
-            .withRequestBodyParameter("AnotherEntity")
+            .withDocumentedRequestBodyParameter("AnotherEntity")
                 .withMessage(Message.create("my.key", "Object instance has properties which are not allowed by the schema: [\"value\"]")))));
 
         assertThat(andRule, not(matches(request()
-            .withRequestBodyParameter("MyEntity")
+            .withDocumentedRequestBodyParameter("MyEntity")
                 .withMessage(Message.create("my.key", "Another message")))));
     }
 
     @Test
     public void testAnyOf() throws Exception {
         final WhitelistRule orRule = anyOf(isEntity("MyEntity"), isEntity("AnotherEntity"));
-        assertThat(orRule, matches(request().withRequestBodyParameter("MyEntity")));
-        assertThat(orRule, matches(request().withRequestBodyParameter("AnotherEntity")));
+        assertThat(orRule, matches(request().withDocumentedRequestBodyParameter("MyEntity")));
+        assertThat(orRule, matches(request().withDocumentedRequestBodyParameter("AnotherEntity")));
 
     }
 
     @Test
     public void testIsEntity() throws Exception {
         final WhitelistRule rule = WhitelistRules.isEntity("MyEntity");
-        assertThat(rule, matches(response().withResponse(200, "MyEntity")));
+        assertThat(rule, matches(response().withStatus(200).withDocumentedResponse(200, "MyEntity")));
         assertThat(rule, not(matches(response()
                 .withStatus(201)
-                .withResponse(201, "AnotherEntity")
-                .withResponse(200, "MyEntity"))));
+            .withDocumentedResponse(201, "AnotherEntity")
+            .withDocumentedResponse(200, "MyEntity"))));
         assertThat(rule, matches(response()
                 .withStatus(201)
-                .withResponse(201, "MyEntity")
-                .withResponse(200, "AnotherEntity")));
-        assertThat(rule, not(matches(response().withResponse(200, "NotMyEntity"))));
-        assertThat(rule, matches(request().withRequestBodyParameter("MyEntity")));
-        assertThat(rule, not(matches(request().withRequestBodyParameter("NotMyEntity"))));
+            .withDocumentedResponse(201, "MyEntity")
+            .withDocumentedResponse(200, "AnotherEntity")));
+        assertThat(rule, not(matches(response().withDocumentedResponse(200, "NotMyEntity"))));
+        assertThat(rule, matches(request().withDocumentedRequestBodyParameter("MyEntity")));
+        assertThat(rule, not(matches(request().withDocumentedRequestBodyParameter("NotMyEntity"))));
     }
 
     @Test
