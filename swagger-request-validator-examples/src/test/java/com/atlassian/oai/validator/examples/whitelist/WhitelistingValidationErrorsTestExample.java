@@ -65,7 +65,7 @@ public class WhitelistingValidationErrorsTestExample {
 
             @Override
             public void describeTo(final Description description) {
-                description.appendText("Report with all messages ignored");
+                description.appendText("Report with all messages ignored by the following rule: " + whitelistRule);
             }
         };
     }
