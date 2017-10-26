@@ -133,6 +133,67 @@ Finally, keys can be overridden via system properties of the form `swagger.{key}
 
 These keys will override any other key that has been set.
 
+### Whitelisting errors ###
+
+There are scenarios where simple control of message levels is not enough. 
+Perhaps you want to treat all messages of certain types as errors but not in this one 
+particular endpoint. Or maybe the validator reports some errors incorrectly in a few obscure edge
+cases. Or maybe your swagger spec is not really that precise but for whatever reason you can't
+make it 100% correct.
+
+If that's the case, you can define whitelists to ignore messages based on fine-grained rules, 
+defined using a declarative fluent interface.  
+
+#### Example
+
+Let's say that:
+ 1. We have beans with properties of schema types valid in OpenApi 3.0 spec, but not 2.0, currently
+supported by this validator. Because of this, it incorrectly reports "validation.schema.additionalProperties"
+for these beans errors, which we would very much like to ignore. 
+ 2. What's more, we don't want to document 401 or 403 responses at all, and so we don't care about  
+"validation.response.status.unknown" errors for theses codes.
+ 3. Also, we have some endpoints that don't return or accept "application/json", and we don't want validation to run in this case.
+ 
+ Here is a whitelist definition that we would create to rule out all the above:
+ 
+```java
+    ValidationErrorsWhitelist whitelist = ValidationErrorsWhitelist.create()
+        .withRule(
+            "1. Ignore additional properties in EntityPropertyBean",
+            allOf( // logical AND: all conditions must be satisfied to whitelist a message
+                messageHasKey("validation.schema.additionalProperties"), // whitelist only this message type
+                entityIs("EntityPropertyBean"), // for the entity with problematic property
+                messageContains("[\"value\"]")) // and only if it's this particular property that is additional
+        )
+        .withRule(
+            "2. Ignore 401 and 403 status codes",
+            allOf(
+                anyOf( // logical OR, we want to match errors for respones with either 401 or 403 status code
+                    responseStatusIs(401),
+                    responseStatusIs(403)),
+                messageHasKey("3. Validation.response.status.unknown"))
+        )
+        .withRule("3. Ignore validation altogether if Content-type is not JSON, no questions asked",
+            headerContains("Content-Type", "application/json").not()); // notice "not()" at the end
+```
+
+All rules (`allOf`, `messageHasKey`, `entityIs` etc.) available for creating whitelists are defined 
+in the `WhitelistRules` class as static factory methods. Additionally, each rule can be negated with `.not()`.
+
+Once you have a whitelist, simply pass it on to the validator builder:
+
+```java
+ValidationErrorsWhitelist whitelist = ...
+
+final SwaggerRequestResponseValidator swaggerValidator = SwaggerRequestResponseValidator.createFor(spec)
+                .withWhitelist(whitelist)
+                .build();
+```
+
+If a message is whitelisted, it will still remain in the validation report, but its level will be changed
+to IGNORE, and additional information with the matched rule name will be attached to it.  
+
+
 ## FAQ ##
 
 #### I use JSON schema composition with `allOf` and am getting unexpected validation errors. Whats going on?
