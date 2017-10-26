@@ -47,13 +47,13 @@ public class WhitelistingValidationErrorsTestExample {
     @Test
     public void whitelistedMessagesAreIgnored() {
         assertThat(validator.validateRequest(SimpleRequest.Builder.get("/v2/store/inventory").build()),
-            isIgnoredBy("Ignore missing security when getting store inventory"));
+            hasErrorsIgnoredBy("Ignore missing security when getting store inventory"));
 
         assertThat(validator.validateRequest(SimpleRequest.Builder.get("/v2/store/order/fhtagn").build()),
-            isIgnoredBy("Ignore invalid format of order id for GET and POST to /store/order/{orderId}"));
+            hasErrorsIgnoredBy("Ignore invalid format of order id for GET and POST to /store/order/{orderId}"));
     }
 
-    private Matcher<ValidationReport> isIgnoredBy(final String whitelistRule) {
+    private Matcher<ValidationReport> hasErrorsIgnoredBy(final String whitelistRule) {
         return new TypeSafeMatcher<ValidationReport>() {
             @Override
             protected boolean matchesSafely(final ValidationReport report) {
