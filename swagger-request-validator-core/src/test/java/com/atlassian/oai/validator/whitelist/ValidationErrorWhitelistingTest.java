@@ -23,7 +23,7 @@ public class ValidationErrorWhitelistingTest {
                 .createFor("/oai/api-users.json")
                 .withWhitelist(ValidationErrorsWhitelist.create()
                         .withRule("Ignore paths", WhitelistRules.messageContains("No API path"))
-                        .withRule("Ignore NewUser entity errors", WhitelistRules.isEntity("NewUser")))
+                    .withRule("Ignore NewUser entity errors", WhitelistRules.entityIs("NewUser")))
                 .build();
 
         final ValidationReport report = classUnderTest.validateRequest(SimpleRequest.Builder.get("/non-existent-path").build());

@@ -37,7 +37,7 @@ public final class WhitelistRules {
      * Matches if the given entity (identified by name) is sent in the request or returned in the response,
      * as specified in the spec (actual json payload are not inspected).
      */
-    public static WhitelistRule isEntity(final String entityName) {
+    public static WhitelistRule entityIs(final String entityName) {
         return new IsEntityWhitelistRule(entityName);
     }
 
@@ -60,13 +60,16 @@ public final class WhitelistRules {
     }
 
     /**
-     * Matches operations that contain the given regular expression in their path.
+     * Matches operations that contain the given regular expression in their API path.
+     * <p>
+     *     The tested path does not have parameters materialized, but is taken from the API
+     * definition, e.g. "/store/order/{orderId}".
      */
     public static WhitelistRule pathContains(final String regexp) {
         return new PrintableWhitelistRule(
             "Api path contains: '" + regexp + "'",
             (message, operation, request, response) -> operation != null &&
-                regexpContain(operation.getRequestPath().normalised(), regexp));
+                regexpContain(operation.getPathString().normalised(), regexp));
     }
 
     /**

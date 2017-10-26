@@ -14,8 +14,8 @@ import static com.atlassian.oai.validator.whitelist.OperationForWhitelisting.req
 import static com.atlassian.oai.validator.whitelist.OperationForWhitelisting.response;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.allOf;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.anyOf;
+import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.entityIs;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.headerContains;
-import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.isEntity;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.isRequest;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.isResponse;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.messageContains;
@@ -32,7 +32,7 @@ public class WhitelistRulesTest {
 
     @Test
     public void testAllOf() throws Exception {
-        final WhitelistRule andRule = allOf(isEntity("MyEntity"),
+        final WhitelistRule andRule = allOf(entityIs("MyEntity"),
                 messageHasKey("my.key"),
                 messageContains("\"value\""));
 
@@ -55,7 +55,7 @@ public class WhitelistRulesTest {
 
     @Test
     public void testAnyOf() throws Exception {
-        final WhitelistRule orRule = anyOf(isEntity("MyEntity"), isEntity("AnotherEntity"));
+        final WhitelistRule orRule = anyOf(entityIs("MyEntity"), entityIs("AnotherEntity"));
         assertThat(orRule, matches(request().withDocumentedRequestBodyParameter("MyEntity")));
         assertThat(orRule, matches(request().withDocumentedRequestBodyParameter("AnotherEntity")));
 
@@ -63,7 +63,7 @@ public class WhitelistRulesTest {
 
     @Test
     public void testIsEntity() throws Exception {
-        final WhitelistRule rule = WhitelistRules.isEntity("MyEntity");
+        final WhitelistRule rule = WhitelistRules.entityIs("MyEntity");
         assertThat(rule, matches(response().withStatus(200).withDocumentedResponse(200, "MyEntity")));
         assertThat(rule, not(matches(response()
                 .withStatus(201)

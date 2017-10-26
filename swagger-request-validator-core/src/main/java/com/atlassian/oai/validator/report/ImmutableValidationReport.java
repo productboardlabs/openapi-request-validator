@@ -40,4 +40,9 @@ public class ImmutableValidationReport implements ValidationReport {
     public List<Message> getMessages() {
         return messages;
     }
+
+    @Override
+    public String toString() {
+        return getMessages().toString();
+    }
 }
