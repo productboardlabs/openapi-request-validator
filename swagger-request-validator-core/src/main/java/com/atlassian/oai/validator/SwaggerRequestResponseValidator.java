@@ -1,8 +1,5 @@
 package com.atlassian.oai.validator;
 
-import java.util.Arrays;
-import java.util.List;
-
 import com.atlassian.oai.validator.interaction.ApiOperationResolver;
 import com.atlassian.oai.validator.interaction.RequestValidator;
 import com.atlassian.oai.validator.interaction.ResponseValidator;
@@ -14,7 +11,7 @@ import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.SchemaValidator;
-
+import com.atlassian.oai.validator.whitelist.ValidationErrorsWhitelist;
 import io.swagger.models.Swagger;
 import io.swagger.models.auth.AuthorizationValue;
 import io.swagger.parser.SwaggerParser;
@@ -22,7 +19,11 @@ import io.swagger.parser.util.SwaggerDeserializationResult;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -43,6 +44,7 @@ public class SwaggerRequestResponseValidator {
     private final ApiOperationResolver apiOperationResolver;
     private final RequestValidator requestValidator;
     private final ResponseValidator responseValidator;
+    private final ValidationErrorsWhitelist whitelist;
 
     /**
      * Create a new instance using the Swagger JSON specification at the given location OR actual swagger JSON String payload.
@@ -73,47 +75,49 @@ public class SwaggerRequestResponseValidator {
 
     /**
      * Construct a new validator for the specification at the given URL.
-     *
      * @param swaggerJsonUrlOrPayload   The location of the Swagger JSON specification to use in this validator.
      * @param basePathOverride (Optional) override for the base path defined in the Swagger specification.
      * @param messages         The message resolver to use for resolving validation messages.
+     * @param whitelist        The validation errors whitelist.
      */
     private SwaggerRequestResponseValidator(@Nonnull final String swaggerJsonUrlOrPayload,
                                             @Nullable final String basePathOverride,
-                                            @Nonnull final MessageResolver messages) {
-        this(swaggerJsonUrlOrPayload, basePathOverride, messages, null);
+                                            @Nonnull final MessageResolver messages,
+                                            @Nonnull final ValidationErrorsWhitelist whitelist) {
+        this(swaggerJsonUrlOrPayload, basePathOverride, messages, whitelist, null);
     }
-    
+
     /**
      * Construct a new validator for the specification at the given URL with authentication data.
-     *
      * @param swaggerJsonUrlOrPayload   The location of the Swagger JSON specification to use in this validator.
      * @param basePathOverride (Optional) override for the base path defined in the Swagger specification.
      * @param messages         The message resolver to use for resolving validation messages.
+     * @param whitelist        The validation errors whitelist.
      * @param authData         (Optional) A List of authentication data to add to swagger spec retrieval request.
      */
     private SwaggerRequestResponseValidator(@Nonnull final String swaggerJsonUrlOrPayload,
-            @Nullable final String basePathOverride,
-            @Nonnull final MessageResolver messages,
-            @Nullable final List<AuthorizationValue> authData) {
-
+                                            @Nullable final String basePathOverride,
+                                            @Nonnull final MessageResolver messages,
+                                            @Nonnull final ValidationErrorsWhitelist whitelist,
+                                            @Nullable final List<AuthorizationValue> authData) {
         requireNonNull(swaggerJsonUrlOrPayload, "A Swagger JSON URL or payload is required");
 
         final SwaggerDeserializationResult swaggerParseResult =
-                swaggerJsonUrlOrPayload.startsWith("{") ?
-                        new SwaggerParser().readWithInfo(swaggerJsonUrlOrPayload) :
-                        new SwaggerParser().readWithInfo(swaggerJsonUrlOrPayload, authData, true);
+            swaggerJsonUrlOrPayload.startsWith("{") ?
+                new SwaggerParser().readWithInfo(swaggerJsonUrlOrPayload) :
+                new SwaggerParser().readWithInfo(swaggerJsonUrlOrPayload, authData, true);
         final Swagger api = swaggerParseResult.getSwagger();
         if (api == null) {
             throw new IllegalArgumentException(
-                    format("Unable to load API descriptor from provided %s:\n\t%s",
-                            swaggerJsonUrlOrPayload, swaggerParseResult.getMessages().toString().replace("\n", "\n\t")));
+                format("Unable to load API descriptor from provided %s:\n\t%s",
+                    swaggerJsonUrlOrPayload, swaggerParseResult.getMessages().toString().replace("\n", "\n\t")));
         }
         this.messages = messages;
         this.apiOperationResolver = new ApiOperationResolver(api, basePathOverride);
         final SchemaValidator schemaValidator = new SchemaValidator(api, messages);
         this.requestValidator = new RequestValidator(schemaValidator, messages, api);
         this.responseValidator = new ResponseValidator(schemaValidator, messages, api);
+        this.whitelist = whitelist;
     }
 
     /**
@@ -130,10 +134,12 @@ public class SwaggerRequestResponseValidator {
         requireNonNull(request, "A request is required");
         requireNonNull(response, "A response is required");
 
-        return validateOnApiOperation(request.getPath(), request.getMethod(),
+        return validateOnApiOperation(
+            request.getPath(),
+            request.getMethod(),
             apiOperation -> requestValidator.validateRequest(request, apiOperation)
-                    .merge(responseValidator.validateResponse(response, apiOperation))
-        );
+                .merge(responseValidator.validateResponse(response, apiOperation)),
+            (apiOperation, report) -> withWhitelistApplied(report, apiOperation, request, response));
     }
 
     /**
@@ -148,9 +154,11 @@ public class SwaggerRequestResponseValidator {
     public ValidationReport validateRequest(@Nonnull final Request request) {
         requireNonNull(request, "A request is required");
 
-        return validateOnApiOperation(request.getPath(), request.getMethod(),
-            apiOperation -> requestValidator.validateRequest(request, apiOperation)
-        );
+        return validateOnApiOperation(
+            request.getPath(),
+            request.getMethod(),
+            apiOperation -> requestValidator.validateRequest(request, apiOperation),
+            (apiOperation, report) -> withWhitelistApplied(report, apiOperation, request, null));
     }
 
     /**
@@ -170,27 +178,47 @@ public class SwaggerRequestResponseValidator {
         requireNonNull(method, "A method is required");
         requireNonNull(response, "A response is required");
 
-        return validateOnApiOperation(path, method,
-            apiOperation -> responseValidator.validateResponse(response, apiOperation)
-        );
+        return validateOnApiOperation(
+            path,
+            method,
+            apiOperation -> responseValidator.validateResponse(response, apiOperation),
+            (apiOperation, report) -> withWhitelistApplied(report, apiOperation, null, response));
     }
 
-    private ValidationReport validateOnApiOperation(@Nonnull final String path, @Nonnull final Request.Method method,
-                                                    @Nonnull final Function<ApiOperation, ValidationReport> validationFunction) {
+    private ValidationReport validateOnApiOperation(@Nonnull final String path,
+                                                    @Nonnull final Request.Method method,
+                                                    @Nonnull final Function<ApiOperation, ValidationReport> validationFunction,
+                                                    @Nonnull final BiFunction<ApiOperation, ValidationReport, ValidationReport> whitelistingFunction) {
         final ApiOperationMatch apiOperationMatch = apiOperationResolver.findApiOperation(path, method);
         if (!apiOperationMatch.isPathFound()) {
-            return ValidationReport.singleton(
-                    messages.get("validation.request.path.missing", path)
-            );
+            return whitelistingFunction.apply(null, ValidationReport.singleton(
+                messages.get("validation.request.path.missing", path)));
         }
 
         if (!apiOperationMatch.isOperationAllowed()) {
-            return ValidationReport.singleton(
-               messages.get("validation.request.operation.notAllowed", method, path)
-            );
+            return whitelistingFunction.apply(null, ValidationReport.singleton(
+                messages.get("validation.request.operation.notAllowed", method, path)));
         }
 
-        return validationFunction.apply(apiOperationMatch.getApiOperation());
+        final ApiOperation apiOperation = apiOperationMatch.getApiOperation();
+        return validationFunction
+            .andThen(report -> whitelistingFunction.apply(apiOperation, report))
+            .apply(apiOperation);
+    }
+
+    private ValidationReport withWhitelistApplied(final ValidationReport report,
+                                                  @Nullable final ApiOperation operation,
+                                                  @Nullable final Request request,
+                                                  @Nullable final Response response) {
+        return ValidationReport.from(
+            report.getMessages().stream()
+                .map(message -> whitelist
+                    .whitelistedBy(message, operation, request, response)
+                    .map(rule -> message
+                        .withLevel(ValidationReport.Level.IGNORE)
+                        .withAdditionalInfo("Whitelisted by: " + rule))
+                    .orElse(message))
+                .collect(Collectors.toList()));
     }
 
     /**
@@ -201,6 +229,7 @@ public class SwaggerRequestResponseValidator {
         private String basePathOverride;
         private LevelResolver levelResolver = LevelResolver.defaultResolver();
         private List<AuthorizationValue> authData;
+        private ValidationErrorsWhitelist whitelist = ValidationErrorsWhitelist.create();
 
         /**
          * The location of the Swagger JSON specification to use in the validator.
@@ -258,6 +287,18 @@ public class SwaggerRequestResponseValidator {
         }
 
         /**
+         * A whitelist for error messages. Whitelisted error messages will still be returned, but their level will be
+         * changed to IGNORE and additional information about whitelisting will be added.
+         *
+         * @param whitelist The whitelist to use.
+         * @return this builder instance
+         */
+        public Builder withWhitelist(final ValidationErrorsWhitelist whitelist) {
+            this.whitelist = whitelist;
+            return this;
+        }
+
+        /**
          * An optional key value header to add to the Swagger spec retrieval request.
          * <p>
          * This is necessary if e.g. your Swagger specification is retrieved from a remote host and the path to retrieve is secured by an api key in the request header.
@@ -279,7 +320,7 @@ public class SwaggerRequestResponseValidator {
          * @return The configured {@link SwaggerRequestResponseValidator} instance.
          */
         public SwaggerRequestResponseValidator build() {
-            return new SwaggerRequestResponseValidator(swaggerJsonUrlOrPayload, basePathOverride, new MessageResolver(levelResolver), authData);
+            return new SwaggerRequestResponseValidator(swaggerJsonUrlOrPayload, basePathOverride, new MessageResolver(levelResolver), whitelist, authData);
         }
     }
 }

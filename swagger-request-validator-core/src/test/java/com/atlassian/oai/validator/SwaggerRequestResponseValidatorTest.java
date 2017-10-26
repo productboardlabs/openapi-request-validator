@@ -5,9 +5,9 @@ import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.LevelResolver;
-import com.atlassian.oai.validator.report.ValidationReport;
 import org.junit.Test;
 
+import static com.atlassian.oai.validator.report.ValidationReport.Level.IGNORE;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 
 /**
@@ -45,7 +45,7 @@ public class SwaggerRequestResponseValidatorTest {
                         .withLevelResolver(LevelResolver
                                 .create()
                                 .withLoader(null)
-                                .withDefaultLevel(ValidationReport.Level.IGNORE)
+                                .withDefaultLevel(IGNORE)
                                 .build()
                         ).build();
 
@@ -68,27 +68,27 @@ public class SwaggerRequestResponseValidatorTest {
     @Test(expected = NullPointerException.class)
     public void validate_withNullAuthHeaderKey_throwsNPE() throws Exception {
         SwaggerRequestResponseValidator
-            .createFor("/oai/api-users.json")
-            .withAuthHeaderData(null, null)
-            .build();
+                .createFor("/oai/api-users.json")
+                .withAuthHeaderData(null, null)
+                .build();
     }
 
     @Test
     public void validate_withNullAuthHeaderValue() throws Exception {
         SwaggerRequestResponseValidator
-            .createFor("/oai/api-users.json")
-            .withAuthHeaderData("api-key", null)
-            .build();
+                .createFor("/oai/api-users.json")
+                .withAuthHeaderData("api-key", null)
+                .build();
     }
 
     @Test
     public void validate_withBasePathOverride() throws Exception {
-        final SwaggerRequestResponseValidator classUnderTest = 
+        final SwaggerRequestResponseValidator classUnderTest =
                 SwaggerRequestResponseValidator
                         .createFor("/oai/api-users.json")
                         .withBasePathOverride("/test")
                         .build();
-        
+
         final Request request = SimpleRequest.Builder.get("/test/users/1").build();
         final Response response = SimpleResponse.Builder.ok().withBody("{\"id\":1,\"name\":\"Max\",\"email\":\"max@example.com\"}").build();
 

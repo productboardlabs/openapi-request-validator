@@ -2,6 +2,8 @@ package com.atlassian.oai.validator.report;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
@@ -29,6 +31,10 @@ public interface ValidationReport {
      */
     interface Message {
 
+        static Message create(String key, String message) {
+            return new ImmutableMessage(key, Level.ERROR, message, Collections.emptyList());
+        }
+
         String getKey();
 
         String getMessage();
@@ -36,6 +42,16 @@ public interface ValidationReport {
         Level getLevel();
 
         List<String> getAdditionalInfo();
+
+        /**
+         * Returns a new instance, the same as this message, but, with level changed.
+         */
+        Message withLevel(Level level);
+
+        /**
+         * Returns a new instance, the same as this message, but with additional info attached.
+         */
+        Message withAdditionalInfo(String info);
     }
 
     /**
@@ -59,6 +75,17 @@ public interface ValidationReport {
             return empty();
         }
         return new ImmutableValidationReport(message);
+    }
+
+    /**
+     * Return an unmodifiable report containing all the provided messages
+     *
+     * @param messages The messages to add to the report
+     *
+     * @return an unmodifiable report containing all the provided messages
+     */
+    static ValidationReport from(final Collection<Message> messages) {
+        return from(messages.toArray(new Message[messages.size()]));
     }
 
     /**
