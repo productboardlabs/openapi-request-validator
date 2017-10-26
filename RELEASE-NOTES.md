@@ -1,3 +1,7 @@
+#v1.3.0
+* Added support for fine-grained whitelisting of validation errors based on user-defined rules.
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/58)
+
 #v1.2.4
 * Fixed NPE when using an 'anything' request schema. Validation with the `{}` schema will now accept any JSON value.
 [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/57)
