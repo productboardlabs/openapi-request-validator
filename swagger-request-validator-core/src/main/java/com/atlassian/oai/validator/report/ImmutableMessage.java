@@ -21,7 +21,7 @@ class ImmutableMessage implements ValidationReport.Message {
                      @Nonnull final ValidationReport.Level level,
                      @Nonnull final String message,
                      @Nonnull final String... additionalInfo) {
-        this(key, level, message, unmodifiableList(asList(additionalInfo)));
+        this(key, level, message, asList(additionalInfo));
     }
 
     ImmutableMessage(@Nonnull final String key,

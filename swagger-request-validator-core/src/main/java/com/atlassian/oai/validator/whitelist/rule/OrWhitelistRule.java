@@ -12,13 +12,13 @@ import static java.util.stream.Collectors.joining;
 class OrWhitelistRule implements WhitelistRule {
     private final List<WhitelistRule> rules;
 
+    public OrWhitelistRule(final List<WhitelistRule> rules) {
+        this.rules = rules;
+    }
+
     @Override
     public boolean matches(final ValidationReport.Message message, final ApiOperation operation, final Request request, final Response response) {
         return rules.stream().anyMatch(r -> r.matches(message, operation, request, response));
-    }
-
-    public OrWhitelistRule(final List<WhitelistRule> rules) {
-        this.rules = rules;
     }
 
     @Override

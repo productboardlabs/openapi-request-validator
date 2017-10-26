@@ -5,11 +5,11 @@ import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.whitelist.StatusType;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import io.swagger.models.HttpMethod;
 
 import java.util.Collections;
+import java.util.regex.Pattern;
 
 /**
  * Static factory methods for creating {@link WhitelistRule} instances.
@@ -83,7 +83,7 @@ public final class WhitelistRules {
      */
     public static WhitelistRule isResponse() {
         return new PrintableWhitelistRule(
-            "Is request",
+            "Is response",
             (message, operation, request, response) -> response != null);
     }
 
@@ -140,6 +140,6 @@ public final class WhitelistRules {
     }
 
     private static boolean regexpContain(final String value, final String regexp) {
-        return Strings.nullToEmpty(value).trim().toLowerCase().matches(".*" + regexp.toLowerCase() + ".*");
+        return Pattern.compile(regexp, Pattern.CASE_INSENSITIVE).matcher(value).find();
     }
 }
