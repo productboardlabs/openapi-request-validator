@@ -1,0 +1,53 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "sample-ref-params",
+    "description": "API that has $ref params",
+    "version": "v1"
+  },
+  "host": "localhost:8082",
+  "basePath": "/",
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/myresource": {
+      "get": {
+        "description": "Get the resource",
+        "parameters": [
+          {
+            "$ref": "#/parameters/queryparam"
+          },
+          {
+            "$ref": "#/parameters/headerparam"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "ok"
+          }
+        }
+      }
+    }
+  },
+  "parameters": {
+    "queryparam": {
+      "name": "queryparam",
+      "in": "query",
+      "description": "A common param referenced by a $ref",
+      "type": "string",
+      "required": true
+    },
+    "headerparam": {
+      "name": "headerparam",
+      "in": "header",
+      "description": "A header param referenced by a $ref",
+      "type": "string",
+      "required": true
+    }
+  }
+}
+
