@@ -52,6 +52,7 @@ public class ValidatorTestUtil {
      * Assert that validation has passed.
      */
     public static void assertPass(final ValidationReport report) {
+        log.trace(ValidationReportFormatter.format(report));
         assertTrue(report.getMessages().isEmpty() ||
             report.getMessages().stream().allMatch(m -> m.getLevel() == ValidationReport.Level.IGNORE));
     }
