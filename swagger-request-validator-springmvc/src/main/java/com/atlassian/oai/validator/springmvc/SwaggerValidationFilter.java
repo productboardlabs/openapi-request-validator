@@ -19,9 +19,7 @@ import java.io.IOException;
  * needs the pure request body to unmarshal the JSON.
  * <p>
  * But a {@link javax.servlet.ServletInputStream} can only be read once and needs to be rewind after
- * successful validation against the Swagger definition. The controller can then access it again.
- * <p>
- * Asynchronous requests are not supported.
+ * successful validation against the Swagger definition. So the controller can then access it again.
  */
 public class SwaggerValidationFilter extends OncePerRequestFilter {
 
@@ -35,7 +33,7 @@ public class SwaggerValidationFilter extends OncePerRequestFilter {
     private HttpServletRequest wrapValidatableServletRequest(final HttpServletRequest servletRequest) {
         // wrap only validatable requests
         final boolean doValidationStep = servletRequest.getContentLengthLong() <= Integer.MAX_VALUE &&
-                !isAsyncDispatch(servletRequest) && !CorsUtils.isPreFlightRequest(servletRequest);
+                !CorsUtils.isPreFlightRequest(servletRequest);
         return doValidationStep ? new ResettableRequestServletWrapper(servletRequest) : servletRequest;
     }
 }

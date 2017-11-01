@@ -76,8 +76,8 @@ Please see [the tests](https://bitbucket.org/atlassian/swagger-request-validator
 
 ## Caveats ##
 
-Asynchronous requests are not supported. As well as requests with a content larger then 2GB, more specifically longer than 2147483647 bytes.
+Long requests with a content larger then 2GB are not supported. More specifically request with a content length longer than 2147483647 bytes. Those requests will not be validated at all.
 
-## No caveats ##
+## Not supported by now ##
 
-Although the request is validated against the Swagger schema the response is not. Please ensure valid responses with tests and not during runtime.
+Although the request is validated against the Swagger schema the response is not. Please ensure valid responses with tests.
