@@ -1,3 +1,12 @@
+#v1.3.1
+* Improved performance of the SpringMVC filter
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/52)
+* Fixed a bug where params with $ref would throw a NPE
+[[#59]](https://bitbucket.org/atlassian/swagger-request-validator/issues/59)
+* Fixed a bug where specs with a `definitions` block would fail validation
+[[#74]](https://bitbucket.org/atlassian/swagger-request-validator/issues/74)
+* Bumped version of `swagger-parser` to `1.0.32`
+
 #v1.3.0
 * Added support for fine-grained whitelisting of validation errors based on user-defined rules.
 [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/58)
