@@ -166,7 +166,9 @@ public class SchemaValidator {
 
         if (api != null) {
             if (this.definitions == null) {
-                this.definitions = Json.mapper().readTree(Json.pretty(api.getDefinitions()));
+                this.definitions = api.getDefinitions() == null ?
+                        Json.mapper().createObjectNode() :
+                        Json.mapper().readTree(Json.pretty(api.getDefinitions()));
                 this.definitions.forEach(n -> {
                     if (additionalPropertiesValidationEnabled()) {
                         // Explicitly disable additionalProperties

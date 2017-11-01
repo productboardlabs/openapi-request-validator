@@ -334,6 +334,16 @@ public class SchemaValidatorTest {
         assertFail(classUnderTest.validate(value, schema), "validation.schema.format");
     }
 
+    @Test
+    public void validate_withNoDefinitionsBlock_shouldPass_whenValid() {
+        final SchemaValidator classUnderTest = validator("/oai/api-no-definitions.json");
+
+        final String value = "{\"id\":123}";
+        final Model schema = new ModelImpl().property("id", new IntegerProperty());
+
+        assertPass(classUnderTest.validate(value, schema));
+    }
+
     private SchemaValidator validatorWithAdditionalPropertiesIgnored(final String api) {
         return new SchemaValidator(
                 new SwaggerParser().read(api),
