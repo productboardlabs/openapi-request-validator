@@ -9,6 +9,7 @@ import org.junit.Test;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadRequest;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadResource;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadResponse;
 
 /**
@@ -428,6 +429,47 @@ public class RequestValidationTest {
         final Request request = SimpleRequest.Builder
                 .get("/headers")
                 .withHeader("X-Required-Header", "30")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withRefParams_shouldPass_whenRequiredParamSupplied() {
+        final SwaggerRequestResponseValidator classUnderTest =
+                SwaggerRequestResponseValidator.createFor("/oai/api-ref-params.json").build();
+
+        final Request request = SimpleRequest.Builder
+                .get("/myresource")
+                .withQueryParam("queryparam", "value")
+                .withHeader("headerparam", "value")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withRefParams_shouldFail_whenRequiredParamMissing() {
+        final SwaggerRequestResponseValidator classUnderTest =
+                SwaggerRequestResponseValidator.createFor("/oai/api-ref-params.json").build();
+
+        final Request request = SimpleRequest.Builder
+                .get("/myresource")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.parameter.query.missing");
+    }
+
+    @Test
+    public void validate_withRefParams_shouldPass_whenSpecSuppliedAsString() {
+        final SwaggerRequestResponseValidator classUnderTest =
+                SwaggerRequestResponseValidator.createFor(loadResource("/oai/api-ref-params.json")).build();
+
+        final Request request = SimpleRequest.Builder
+                .get("/myresource")
+                .withQueryParam("queryparam", "value")
+                .withHeader("headerparam", "value")
                 .build();
 
         assertPass(classUnderTest.validateRequest(request));

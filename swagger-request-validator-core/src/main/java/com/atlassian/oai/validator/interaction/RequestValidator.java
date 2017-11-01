@@ -231,8 +231,9 @@ public class RequestValidator {
                                           @Nonnull final ApiOperation apiOperation) {
 
         final Multimap<String, String> formData = parseFormData(requestBody.get());
-        return apiOperation.getOperation().getParameters().stream()
-                .filter(p -> p.getIn().equalsIgnoreCase("formData"))
+        return apiOperation.getOperation().getParameters()
+                .stream()
+                .filter(RequestValidator::isFormDataParam)
                 .flatMap(parameter ->
                         prepareFormDataForParameter(formData, parameter).stream()
                                 .map(value -> parameterValidators.validate(value, parameter))
@@ -251,7 +252,9 @@ public class RequestValidator {
     private ValidationReport validateBody(@Nonnull final Optional<String> requestBody,
                                           @Nonnull final ApiOperation apiOperation) {
         final Optional<Parameter> bodyParameter = apiOperation.getOperation().getParameters()
-                .stream().filter(p -> p.getIn().equalsIgnoreCase("body")).findFirst();
+                .stream()
+                .filter(RequestValidator::isBodyParam)
+                .findFirst();
 
         if (requestBody.isPresent() && !requestBody.get().isEmpty() && !bodyParameter.isPresent()) {
             return ValidationReport.singleton(
@@ -292,7 +295,7 @@ public class RequestValidator {
 
             final Optional<Parameter> parameter = apiOperation.getOperation().getParameters()
                     .stream()
-                    .filter(p -> p.getIn().equalsIgnoreCase("PATH"))
+                    .filter(RequestValidator::isPathParam)
                     .filter(p -> p.getName().equalsIgnoreCase(paramName))
                     .findFirst();
 
@@ -310,7 +313,7 @@ public class RequestValidator {
                 .getOperation()
                 .getParameters()
                 .stream()
-                .filter(p -> p.getIn().equalsIgnoreCase("QUERY"))
+                .filter(RequestValidator::isQueryParam)
                 .map(p -> validateParameter(
                         apiOperation, p,
                         request.getQueryParameterValues(p.getName()),
@@ -326,7 +329,7 @@ public class RequestValidator {
                 .getOperation()
                 .getParameters()
                 .stream()
-                .filter(p -> p.getIn().equalsIgnoreCase("HEADER"))
+                .filter(RequestValidator::isHeaderParam)
                 .map(p -> validateParameter(
                         apiOperation, p,
                         request.getHeaderValues(p.getName()),
@@ -377,6 +380,30 @@ public class RequestValidator {
             throw new RuntimeException(ex);
         }
         return params;
+    }
+
+    private static boolean isBodyParam(final Parameter p) {
+        return isParam(p, "body");
+    }
+
+    private static boolean isPathParam(final Parameter p) {
+        return isParam(p, "path");
+    }
+
+    private static boolean isQueryParam(final Parameter p) {
+        return isParam(p, "query");
+    }
+
+    private static boolean isHeaderParam(final Parameter p) {
+        return isParam(p, "header");
+    }
+
+    private static boolean isFormDataParam(final Parameter p) {
+        return isParam(p, "formData");
+    }
+
+    private static boolean isParam(final Parameter p, final String type) {
+        return p != null && p.getIn() != null && p.getIn().equalsIgnoreCase(type);
     }
 
 }

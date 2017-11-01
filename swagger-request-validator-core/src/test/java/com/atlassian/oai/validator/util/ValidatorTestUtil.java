@@ -37,7 +37,7 @@ public class ValidatorTestUtil {
      */
     public static void assertFail(final ValidationReport report, final String... expectedKeys) {
         log.trace(ValidationReportFormatter.format(report));
-        assertThat(report.getMessages(), is(not(empty())));
+        assertThat("Expected validation errors but found none. Enable trace logging for more details.", report.getMessages(), is(not(empty())));
 
         final List<String> foundKeys = report.getMessages().stream().map(ValidationReport.Message::getKey).collect(toList());
 
@@ -53,7 +53,7 @@ public class ValidatorTestUtil {
      */
     public static void assertPass(final ValidationReport report) {
         log.trace(ValidationReportFormatter.format(report));
-        assertTrue(report.getMessages().isEmpty() ||
+        assertTrue("Expected no validation errors but found some. Enable trace logging for more details.", report.getMessages().isEmpty() ||
             report.getMessages().stream().allMatch(m -> m.getLevel() == ValidationReport.Level.IGNORE));
     }
 
@@ -77,7 +77,7 @@ public class ValidatorTestUtil {
         return loadResource("/requests/" + requestName + ".json");
     }
 
-    private static String loadResource(final String path) {
+    public static String loadResource(final String path) {
         try {
             final InputStream stream = ValidatorTestUtil.class.getResourceAsStream(path);
             final BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
