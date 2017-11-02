@@ -1,7 +1,5 @@
-package com.atlassian.oai.validator.interaction;
+package com.atlassian.oai.validator.model;
 
-import com.atlassian.oai.validator.model.ApiPath;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 
 import javax.annotation.Nonnull;
@@ -14,16 +12,12 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
-import static java.util.Collections.unmodifiableList;
-import static java.util.Objects.requireNonNull;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.regex.Pattern.compile;
 
-@VisibleForTesting
-class ApiPathImpl implements ApiPath {
+public class ApiPathImpl extends NormalisedPathImpl implements ApiPath {
 
     private static final String PARAM_REGEX = "\\{(.*?)}";
     private static final Pattern PARAM_PATTERN = compile(PARAM_REGEX);
@@ -31,29 +25,8 @@ class ApiPathImpl implements ApiPath {
     private static final char PARAM_START = '{';
     private static final char PARAM_END = '}';
 
-    private final List<String> pathParts;
-    private final String original;
-    private final String normalised;
-    private final String apiPrefix;
-
-    ApiPathImpl(@Nonnull final String path, @Nullable final String apiPrefix) {
-        this.original = requireNonNull(path, "A path is required");
-        this.apiPrefix = apiPrefix;
-        this.normalised = normalise(path);
-
-        // We have normalized to start with a leading "/"; this will result in an empty path element
-        this.pathParts = unmodifiableList(asList(normalised.substring(1).split("/")));
-    }
-
-    @Override
-    public int numberOfParts() {
-        return pathParts.size();
-    }
-
-    @Override
-    @Nonnull
-    public String part(final int index) {
-        return pathParts.get(index);
+    public ApiPathImpl(@Nonnull final String path, @Nullable final String apiPrefix) {
+        super(path, apiPrefix);
     }
 
     @Override
@@ -148,30 +121,4 @@ class ApiPathImpl implements ApiPath {
         return result;
     }
 
-    @Override
-    @Nonnull
-    public String original() {
-        return original;
-    }
-
-    @Override
-    @Nonnull
-    public String normalised() {
-        return normalised;
-    }
-
-    private String normalise(final String requestPath) {
-        final String trimmedPath = trimPrefix(requestPath);
-        if (!trimmedPath.startsWith("/")) {
-            return "/" + requestPath;
-        }
-        return trimmedPath;
-    }
-
-    private String trimPrefix(@Nonnull final String requestPath) {
-        if (apiPrefix == null || !requestPath.startsWith(apiPrefix)) {
-            return requestPath;
-        }
-        return requestPath.substring(apiPrefix.length());
-    }
 }

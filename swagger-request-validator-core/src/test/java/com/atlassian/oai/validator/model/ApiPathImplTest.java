@@ -1,4 +1,4 @@
-package com.atlassian.oai.validator.interaction;
+package com.atlassian.oai.validator.model;
 
 import org.junit.Test;
 

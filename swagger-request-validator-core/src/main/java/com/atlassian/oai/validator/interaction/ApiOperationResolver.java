@@ -3,6 +3,7 @@ package com.atlassian.oai.validator.interaction;
 import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.ApiOperationMatch;
 import com.atlassian.oai.validator.model.ApiPath;
+import com.atlassian.oai.validator.model.ApiPathImpl;
 import com.atlassian.oai.validator.model.NormalisedPath;
 import com.atlassian.oai.validator.model.Request;
 import com.google.common.collect.HashBasedTable;
