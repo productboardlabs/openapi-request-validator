@@ -2,6 +2,7 @@ package com.atlassian.oai.validator.interaction;
 
 import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.ApiOperationMatch;
+import com.atlassian.oai.validator.model.ApiPath;
 import com.atlassian.oai.validator.model.NormalisedPath;
 import com.atlassian.oai.validator.model.Request;
 import com.google.common.collect.HashBasedTable;
@@ -24,14 +25,13 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 
 /**
- * Resolver responsible for matching an incoming request path + method with an operation defined in the OAI spec.
- * <p>
+ * Component responsible for matching an incoming request path + method with an operation defined in the OAI spec.
  */
 public class ApiOperationResolver {
 
     private final String apiPrefix;
 
-    private final Map<Integer, List<NormalisedPath>> apiPathsGroupedByNumberOfParts;
+    private final Map<Integer, List<ApiPath>> apiPathsGroupedByNumberOfParts;
     private final Table<String, HttpMethod, Operation> operations;
 
     /**
@@ -46,7 +46,7 @@ public class ApiOperationResolver {
 
         // normalise all API paths and group them by their number of parts
         this.apiPathsGroupedByNumberOfParts = apiPaths.keySet().stream()
-                .map(p -> new ApiBasedNormalisedPath(p, apiPrefix))
+                .map(p -> new ApiPathImpl(p, apiPrefix))
                 .collect(groupingBy(NormalisedPath::numberOfParts));
 
         // create a operation mapping for the API path and HTTP method
@@ -69,8 +69,8 @@ public class ApiOperationResolver {
     public ApiOperationMatch findApiOperation(@Nonnull final String path, @Nonnull final Request.Method method) {
 
         // try to find possible matching paths regardless of HTTP method
-        final NormalisedPath requestPath = new ApiBasedNormalisedPath(path, apiPrefix);
-        final List<NormalisedPath> possibleMatches = apiPathsGroupedByNumberOfParts
+        final NormalisedPath requestPath = new ApiPathImpl(path, apiPrefix);
+        final List<ApiPath> possibleMatches = apiPathsGroupedByNumberOfParts
                 .getOrDefault(requestPath.numberOfParts(), emptyList()).stream()
                 .filter(p -> pathMatches(requestPath, p))
                 .collect(toList());
@@ -81,7 +81,7 @@ public class ApiOperationResolver {
 
         // try to find the operation which fits the HTTP method
         final HttpMethod httpMethod = HttpMethod.valueOf(method.name());
-        final Optional<NormalisedPath> pathOpt = possibleMatches.stream()
+        final Optional<ApiPath> pathOpt = possibleMatches.stream()
                 .filter(apiPath -> operations.contains(apiPath.original(), httpMethod))
                 .findFirst(); // if exists there can only be one path matching the path and method - overlapping paths+methods are not allowed
 
@@ -92,7 +92,7 @@ public class ApiOperationResolver {
     }
 
     private static boolean pathMatches(@Nonnull final NormalisedPath requestPath,
-                                       @Nonnull final NormalisedPath apiPath) {
+                                       @Nonnull final ApiPath apiPath) {
         if (requestPath.numberOfParts() != apiPath.numberOfParts()) {
             return false;
         }

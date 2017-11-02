@@ -1,6 +1,6 @@
 package com.atlassian.oai.validator.interaction;
 
-import com.atlassian.oai.validator.model.NormalisedPath;
+import com.atlassian.oai.validator.model.ApiPath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 
@@ -23,7 +23,7 @@ import static java.util.Optional.of;
 import static java.util.regex.Pattern.compile;
 
 @VisibleForTesting
-class ApiBasedNormalisedPath implements NormalisedPath {
+class ApiPathImpl implements ApiPath {
 
     private static final String PARAM_REGEX = "\\{(.*?)}";
     private static final Pattern PARAM_PATTERN = compile(PARAM_REGEX);
@@ -36,7 +36,7 @@ class ApiBasedNormalisedPath implements NormalisedPath {
     private final String normalised;
     private final String apiPrefix;
 
-    public ApiBasedNormalisedPath(@Nonnull final String path, @Nullable final String apiPrefix) {
+    ApiPathImpl(@Nonnull final String path, @Nullable final String apiPrefix) {
         this.original = requireNonNull(path, "A path is required");
         this.apiPrefix = apiPrefix;
         this.normalised = normalise(path);

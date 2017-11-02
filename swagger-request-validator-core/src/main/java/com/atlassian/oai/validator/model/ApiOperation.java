@@ -14,15 +14,17 @@ import static java.util.Objects.requireNonNull;
  * convenience to hold related information in one place.
  */
 public class ApiOperation {
-    private final NormalisedPath pathString;
+    private final ApiPath apiPath;
     private final NormalisedPath requestPath;
     private final HttpMethod method;
     private final Operation operation;
 
-    public ApiOperation(@Nonnull final NormalisedPath pathString, @Nonnull final NormalisedPath requestPath,
-                        @Nonnull final HttpMethod method, @Nonnull final Operation operation) {
+    public ApiOperation(@Nonnull final ApiPath apiPath,
+                        @Nonnull final NormalisedPath requestPath,
+                        @Nonnull final HttpMethod method,
+                        @Nonnull final Operation operation) {
 
-        this.pathString = requireNonNull(pathString, "A path string is required");
+        this.apiPath = requireNonNull(apiPath, "A path string is required");
         this.requestPath = requireNonNull(requestPath, "An api path is required");
         this.method = requireNonNull(method, "A request method is required");
         this.operation = requireNonNull(operation, "A operation object is required");
@@ -32,8 +34,8 @@ public class ApiOperation {
      * @return The path the operation is on
      */
     @Nonnull
-    public NormalisedPath getPathString() {
-        return pathString;
+    public ApiPath getApiPath() {
+        return apiPath;
     }
 
     /**

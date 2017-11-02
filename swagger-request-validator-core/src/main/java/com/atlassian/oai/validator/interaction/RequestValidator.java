@@ -260,7 +260,7 @@ public class RequestValidator {
         if (requestBody.isPresent() && !requestBody.get().isEmpty() && !bodyParameter.isPresent()) {
             return ValidationReport.singleton(
                     messages.get("validation.request.body.unexpected",
-                        apiOperation.getMethod(), apiOperation.getPathString().original())
+                            apiOperation.getMethod(), apiOperation.getApiPath().original())
             );
         }
 
@@ -272,7 +272,7 @@ public class RequestValidator {
             if (bodyParameter.get().getRequired()) {
                 return ValidationReport.singleton(
                         messages.get("validation.request.body.missing",
-                            apiOperation.getMethod(), apiOperation.getPathString().original())
+                                apiOperation.getMethod(), apiOperation.getApiPath().original())
                 );
             }
             return empty();
@@ -286,13 +286,13 @@ public class RequestValidator {
 
         ValidationReport validationReport = empty();
         final NormalisedPath requestPath = apiOperation.getRequestPath();
-        for (int i = 0; i < apiOperation.getPathString().numberOfParts(); i++) {
-            if (!apiOperation.getPathString().hasParams(i)) {
+        for (int i = 0; i < apiOperation.getApiPath().numberOfParts(); i++) {
+            if (!apiOperation.getApiPath().hasParams(i)) {
                 continue;
             }
 
             final ValidationReport pathPartValidation = apiOperation
-                    .getPathString()
+                    .getApiPath()
                     .paramValues(i, requestPath.part(i))
                     .entrySet()
                     .stream()
@@ -352,7 +352,7 @@ public class RequestValidator {
 
         if (parameterValues.isEmpty() && parameter.getRequired()) {
             return ValidationReport.singleton(
-                    messages.get(missingKey, parameter.getName(), apiOperation.getPathString().original())
+                    messages.get(missingKey, parameter.getName(), apiOperation.getApiPath().original())
             );
         }
 

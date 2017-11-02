@@ -1,7 +1,7 @@
 package com.atlassian.oai.validator.whitelist;
 
 import com.atlassian.oai.validator.model.ApiOperation;
-import com.atlassian.oai.validator.model.NormalisedPath;
+import com.atlassian.oai.validator.model.ApiPath;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleRequest;
@@ -31,7 +31,7 @@ public class OperationForWhitelisting {
     }
 
     private ValidationReport.Message message = ValidationReport.Message.create("message.key", "A default message");
-    private NormalisedPath path = path("/rest/api");
+    private ApiPath path = path("/rest/api");
     private HttpMethod method = HttpMethod.GET;
     private Request request;
     private Response response;
@@ -42,8 +42,8 @@ public class OperationForWhitelisting {
         this.response = response;
     }
 
-    private static NormalisedPath path(final String path) {
-        final NormalisedPath result = mock(NormalisedPath.class);
+    private static ApiPath path(final String path) {
+        final ApiPath result = mock(ApiPath.class);
         when(result.normalised()).thenReturn(path);
         return result;
     }

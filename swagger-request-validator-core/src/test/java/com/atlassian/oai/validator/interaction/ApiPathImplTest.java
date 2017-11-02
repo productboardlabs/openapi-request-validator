@@ -11,11 +11,11 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-public class ApiBasedNormalisedPathTest {
+public class ApiPathImplTest {
 
     @Test
     public void no_params_orNormalization() {
-        final ApiBasedNormalisedPath classUnderTest = new ApiBasedNormalisedPath("/p1/p2/p3", null);
+        final ApiPathImpl classUnderTest = new ApiPathImpl("/p1/p2/p3", null);
 
         assertThat(classUnderTest.numberOfParts(), is(3));
         assertThat(classUnderTest.normalised(), is("/p1/p2/p3"));
@@ -33,7 +33,7 @@ public class ApiBasedNormalisedPathTest {
 
     @Test
     public void normalization_addsLeadingSlash() {
-        final ApiBasedNormalisedPath classUnderTest = new ApiBasedNormalisedPath("p1/p2/p3", null);
+        final ApiPathImpl classUnderTest = new ApiPathImpl("p1/p2/p3", null);
 
         assertThat(classUnderTest.numberOfParts(), is(3));
         assertThat(classUnderTest.normalised(), is("/p1/p2/p3"));
@@ -42,7 +42,7 @@ public class ApiBasedNormalisedPathTest {
 
     @Test
     public void apiPrefix_isRemoved() {
-        final ApiBasedNormalisedPath classUnderTest = new ApiBasedNormalisedPath("p1/p2/p3", "p1");
+        final ApiPathImpl classUnderTest = new ApiPathImpl("p1/p2/p3", "p1");
 
         assertThat(classUnderTest.numberOfParts(), is(2));
         assertThat(classUnderTest.normalised(), is("/p2/p3"));
@@ -51,7 +51,7 @@ public class ApiBasedNormalisedPathTest {
 
     @Test
     public void pathParamsIdentified_whenWholePathPart() {
-        final ApiBasedNormalisedPath classUnderTest = new ApiBasedNormalisedPath("p1/{param1}/p3", null);
+        final ApiPathImpl classUnderTest = new ApiPathImpl("p1/{param1}/p3", null);
 
         assertThat(classUnderTest.numberOfParts(), is(3));
         assertThat(classUnderTest.normalised(), is("/p1/{param1}/p3"));
@@ -69,7 +69,7 @@ public class ApiBasedNormalisedPathTest {
 
     @Test
     public void pathParamsIdentified_whenPartPathPart() {
-        final ApiBasedNormalisedPath classUnderTest = new ApiBasedNormalisedPath("p1/p2/{param1}.json", null);
+        final ApiPathImpl classUnderTest = new ApiPathImpl("p1/p2/{param1}.json", null);
 
         assertThat(classUnderTest.hasParams(0), is(false));
         assertThat(classUnderTest.paramNames(0), is(empty()));
@@ -83,7 +83,7 @@ public class ApiBasedNormalisedPathTest {
 
     @Test
     public void pathParamsIdentified_whenMultipleParamsInOnePart() {
-        final ApiBasedNormalisedPath classUnderTest = new ApiBasedNormalisedPath("p1/p2/{param1}-{param2}.json", null);
+        final ApiPathImpl classUnderTest = new ApiPathImpl("p1/p2/{param1}-{param2}.json", null);
 
         assertThat(classUnderTest.hasParams(0), is(false));
         assertThat(classUnderTest.paramNames(0), is(empty()));
@@ -126,7 +126,7 @@ public class ApiBasedNormalisedPathTest {
     }
 
     private void testParamValueExtraction(final String expression, final String path, final String... expected) {
-        assertThat(new ApiBasedNormalisedPath(expression, null).paramValues(0, path).values(),
+        assertThat(new ApiPathImpl(expression, null).paramValues(0, path).values(),
                 containsInAnyOrder(stream(expected).map(e -> is(ofNullable(e))).collect(toList())));
     }
 }

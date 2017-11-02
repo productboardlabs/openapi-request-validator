@@ -69,7 +69,7 @@ public final class WhitelistRules {
         return new PrintableWhitelistRule(
             "Api path contains: '" + regexp + "'",
             (message, operation, request, response) -> operation != null &&
-                regexpContain(operation.getPathString().normalised(), regexp));
+                regexpContain(operation.getApiPath().normalised(), regexp));
     }
 
     /**
