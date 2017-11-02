@@ -1,6 +1,5 @@
 package com.atlassian.oai.validator.interaction;
 
-import com.atlassian.oai.validator.interaction.ApiOperationResolver.ApiBasedNormalisedPath;
 import org.junit.Test;
 
 import static java.util.Arrays.stream;
