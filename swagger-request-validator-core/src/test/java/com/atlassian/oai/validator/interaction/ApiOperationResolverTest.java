@@ -5,74 +5,115 @@ import com.atlassian.oai.validator.model.Request;
 import io.swagger.models.Swagger;
 import io.swagger.parser.SwaggerParser;
 import io.swagger.parser.util.SwaggerDeserializationResult;
-import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.function.BiConsumer;
 
+import static com.atlassian.oai.validator.model.Request.Method.DELETE;
+import static com.atlassian.oai.validator.model.Request.Method.GET;
+import static com.atlassian.oai.validator.model.Request.Method.PATCH;
+import static com.atlassian.oai.validator.model.Request.Method.POST;
+import static com.atlassian.oai.validator.model.Request.Method.PUT;
+import static java.lang.String.format;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+@RunWith(Parameterized.class)
 public class ApiOperationResolverTest {
 
-    private static final String FILENAME_API_WITH_POST = "schema/api-operation-finder-test.json";
+    private static final String FILENAME_API_WITH_POST = "oai/api-operation-finder-test.json";
 
-    private ApiOperationResolver classUnderTest;
+    private static ApiOperationResolver classUnderTest;
 
-    @Before
-    public void setup() throws IOException, URISyntaxException {
+    @BeforeClass
+    public static void init() throws IOException, URISyntaxException {
         final SwaggerDeserializationResult swaggerParseResult = new SwaggerParser().readWithInfo(FILENAME_API_WITH_POST, null, true);
         final Swagger swagger = swaggerParseResult.getSwagger();
-        this.classUnderTest = new ApiOperationResolver(swagger, null);
+        classUnderTest = new ApiOperationResolver(swagger, null);
     }
+
+    @Parameters(name = "{0}")
+    public static Collection<Object[]> data() {
+
+        // Assertions based on the description in the API spec
+        return Arrays.asList(new Object[][]{
+                {"matches_get_withPathParam", GET, "/Id", matches("GET:/{id}")},
+                {"matches_delete_withNoPathParam", DELETE, "/delete", matches("DELETE:/delete")},
+                {"matches_put_withPathParams", PUT, "/id/action", matches("PUT:/{id}/{action}")},
+
+                {"matches_whenMultipleOperations_onSamePath", POST, "/update/id", matches("POST:/update/{id}")},
+                {"matches_whenMultipleOperations_onSamePath", PATCH, "/update/id", matches("PATCH:/update/{id}")},
+                {"matches_whenPathsCollide_butOperationsDiffer", GET, "/delete", matches("GET:/{id}")},
+
+                {"matches_caseInsensitive_pathParts", POST, "/UPDaTE/id", matches("POST:/update/{id}")},
+
+                {"doesNotMatch_whenNoPathMatches", GET, "/", missingPath()},
+                {"doesNotMatch_whenNoPathMatches_whenSimilarToActualPath", POST, "/updates/{id}/{action}", missingPath()},
+
+                {"doesNotMatch_whenMethodNotAllowed", DELETE, "/id", operationNotAllowed()},
+                {"doesNotMatch_whenMethodNotAllowed_multiplePathParams", GET, "/update/id/action", operationNotAllowed()},
+        });
+    }
+
+    @Parameter
+    public String testName;
+
+    @Parameter(1)
+    public Request.Method requestMethod;
+
+    @Parameter(2)
+    public String requestPath;
+
+    @Parameter(3)
+    public BiConsumer<Request.Method, String> expectation;
 
     @Test
-    public void apiOperationFound() {
-        assertApiOperationFound("/Id", Request.Method.GET, "GET:/{id}");
-        assertApiOperationFound("/delete", Request.Method.GET, "GET:/{id}");
-        assertApiOperationFound("/delete", Request.Method.DELETE, "DELETE:/delete");
-        assertApiOperationFound("/Id/Action", Request.Method.PUT, "PUT:/{id}/{action}");
-        assertApiOperationFound("/update/Id", Request.Method.POST, "POST:/update/{id}");
-        assertApiOperationFound("/update/Id", Request.Method.PATCH, "PATCH:/update/{id}");
-        assertApiOperationFound("/update/Id/Action", Request.Method.POST, "POST:/update/{id}/{action}");
-
-        // request paths can be upper cased, too
-        assertApiOperationFound("/DELETE", Request.Method.DELETE, "DELETE:/delete");
-        assertApiOperationFound("/UPDATE/Id", Request.Method.POST, "POST:/update/{id}");
-        assertApiOperationFound("/UPDATE/Id/Action", Request.Method.POST, "POST:/update/{id}/{action}");
+    public void test() {
+        expectation.accept(requestMethod, requestPath);
     }
 
-    @Test
-    public void missingRequestPath() {
-        assertMissingRequestPath("/", Request.Method.GET);
-        assertMissingRequestPath("/modify/Id/Action", Request.Method.POST);
-        assertMissingRequestPath("/very/long/request/path", Request.Method.PATCH);
+    private static BiConsumer<Request.Method, String> matches(final String expectedMatch) {
+        return (operation, path) -> assertApiOperationFound(path, operation, expectedMatch);
     }
 
-    @Test
-    public void operationNotAllowed() {
-        assertOperationNotAllowed("/Id", Request.Method.DELETE);
-        assertOperationNotAllowed("/Id", Request.Method.PATCH);
-        assertOperationNotAllowed("/Id'/Action", Request.Method.GET);
-        assertOperationNotAllowed("/update/Id/Action", Request.Method.GET);
+    private static BiConsumer<Request.Method, String> missingPath() {
+        return (operation, path) -> assertMissingRequestPath(path, operation);
     }
 
-    private void assertApiOperationFound(final String requestPath, final Request.Method requestMethod,
-                                         final String expDescription) {
+    private static BiConsumer<Request.Method, String> operationNotAllowed() {
+        return (operation, path) -> assertOperationNotAllowed(path, operation);
+    }
+
+    private static void assertApiOperationFound(final String requestPath,
+                                                final Request.Method requestMethod,
+                                                final String expDescription) {
         final ApiOperationMatch apiOperationMatch = classUnderTest.findApiOperation(requestPath, requestMethod);
-        Assert.assertTrue(apiOperationMatch.isPathFound());
-        Assert.assertTrue(apiOperationMatch.isOperationAllowed());
-        Assert.assertEquals(apiOperationMatch.getApiOperation().getOperation().getDescription(), expDescription);
+        assertTrue(format("Path not found on %s", expDescription), apiOperationMatch.isPathFound());
+        assertTrue(format("Operation not allowed on %s", expDescription), apiOperationMatch.isOperationAllowed());
+        assertEquals(apiOperationMatch.getApiOperation().getOperation().getDescription(), expDescription);
     }
 
-    private void assertMissingRequestPath(final String requestPath, final Request.Method requestMethod) {
+    private static void assertMissingRequestPath(final String requestPath,
+                                                 final Request.Method requestMethod) {
         final ApiOperationMatch apiOperationMatch = classUnderTest.findApiOperation(requestPath, requestMethod);
-        Assert.assertFalse(apiOperationMatch.isPathFound());
-        Assert.assertFalse(apiOperationMatch.isOperationAllowed());
+        assertFalse(apiOperationMatch.isPathFound());
+        assertFalse(apiOperationMatch.isOperationAllowed());
     }
 
-    private void assertOperationNotAllowed(final String requestPath, final Request.Method requestMethod) {
+    private static void assertOperationNotAllowed(final String requestPath,
+                                                  final Request.Method requestMethod) {
         final ApiOperationMatch apiOperationMatch = classUnderTest.findApiOperation(requestPath, requestMethod);
-        Assert.assertTrue(apiOperationMatch.isPathFound());
-        Assert.assertFalse(apiOperationMatch.isOperationAllowed());
+        assertTrue(apiOperationMatch.isPathFound());
+        assertFalse(apiOperationMatch.isOperationAllowed());
     }
 }

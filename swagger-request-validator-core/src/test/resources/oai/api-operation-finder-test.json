@@ -108,6 +108,23 @@
           }
         }
       }
+    },
+    "/pathparams/withextension/{id}.json": {
+      "get": {
+        "description": "GET:/pathparams/withextension/{id}.json",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
     }
   }
 }
