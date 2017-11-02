@@ -200,10 +200,10 @@ public class ApiOperationResolver {
                     paramValueStart = requestScanner;
 
                     // Scan ahead in the template and find the terminal character
-                    while (template.charAt(templateScanner) != PARAM_END && templateScanner < template.length()) {
+                    while (templateScanner < template.length() && template.charAt(templateScanner) != PARAM_END) {
                         templateScanner++;
                     }
-                    if (template.charAt(templateScanner) != PARAM_END) {
+                    if (templateScanner == template.length() || template.charAt(templateScanner) != PARAM_END) {
                         // We must have reached the end without finding a close char
                         break;
                     }
@@ -216,7 +216,7 @@ public class ApiOperationResolver {
                     final char terminal = template.charAt(++templateScanner);
 
                     // Scan ahead in the request to find the terminal char
-                    while (requestPathPart.charAt(requestScanner) != terminal && requestScanner < requestPathPart.length()) {
+                    while (requestScanner < requestPathPart.length() && requestPathPart.charAt(requestScanner) != terminal) {
                         requestScanner++;
                     }
                     if (requestPathPart.charAt(requestScanner) == terminal) {

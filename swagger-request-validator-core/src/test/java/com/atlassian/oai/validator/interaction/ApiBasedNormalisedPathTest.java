@@ -3,9 +3,9 @@ package com.atlassian.oai.validator.interaction;
 import com.atlassian.oai.validator.interaction.ApiOperationResolver.ApiBasedNormalisedPath;
 import org.junit.Test;
 
-import java.util.Optional;
-
-import static java.util.Optional.of;
+import static java.util.Arrays.stream;
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
@@ -96,26 +96,37 @@ public class ApiBasedNormalisedPathTest {
     }
 
     @Test
-    public void canExtractParamValues_fromParam_whenWholePathPart() {
-        final ApiBasedNormalisedPath classUnderTest = new ApiBasedNormalisedPath("p1/p2/{param1}", null);
-        assertThat(classUnderTest.paramValues(2, "foop"), contains(of("foop")));
+    public void paramValues_canExtractParamValues_fromParam_whenWholePathPart() {
+        final String[] expected = {"foop"};
+        testParamValueExtraction("{param1}", "foop", expected);
     }
 
     @Test
-    public void canExtractParamValues_fromParam_whenPartPathPart_singleParam() {
-        final ApiBasedNormalisedPath classUnderTest = new ApiBasedNormalisedPath("p1/p2/{param1}.json", null);
-        assertThat(classUnderTest.paramValues(2, "foop.json"), contains(of("foop")));
+    public void paramValues_canExtractParamValues_fromParam_whenPartPathPart_singleParam() {
+        final String[] expected = {"foop"};
+        testParamValueExtraction("{param1}.json", "foop.json", expected);
     }
 
     @Test
-    public void canExtractParamValues_fromParam_whenPartPathPart_multipleParams() {
-        final ApiBasedNormalisedPath classUnderTest = new ApiBasedNormalisedPath("p1/p2/{param1}-{param2}:{param3}", null);
-        assertThat(classUnderTest.paramValues(2, "foop-b:blarp"), contains(of("foop"), of("b"), of("blarp")));
+    public void paramValues_canExtractParamValues_fromParam_whenPartPathPart_multipleParams() {
+        final String[] expected = {"foop", "b", "blarp"};
+        testParamValueExtraction("{param1}-{param2}:{param3}", "foop-b:blarp", expected);
     }
 
     @Test
-    public void addsEmpty_whenMissingParamValues() {
-        final ApiBasedNormalisedPath classUnderTest = new ApiBasedNormalisedPath("p1/p2/{param1}-{param2}", null);
-        assertThat(classUnderTest.paramValues(2, "foop-"), contains(of("foop"), Optional.empty()));
+    public void paramValues_addsEmpty_whenMissingParamValues() {
+        final String[] expected = {"foop", null};
+        testParamValueExtraction("{param1}-{param2}", "foop-", expected);
+    }
+
+    @Test
+    public void paramValues_handlesBadTemplate() {
+        final String[] expected = {"foop"};
+        testParamValueExtraction("{param1}-{param2", "foop-blarp", expected);
+    }
+
+    private void testParamValueExtraction(final String expression, final String path, final String... expected) {
+        assertThat(new ApiBasedNormalisedPath(expression, null).paramValues(0, path),
+                contains(stream(expected).map(e -> is(ofNullable(e))).collect(toList())));
     }
 }
