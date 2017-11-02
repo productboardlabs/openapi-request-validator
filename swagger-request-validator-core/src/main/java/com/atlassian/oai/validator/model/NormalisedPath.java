@@ -2,6 +2,7 @@ package com.atlassian.oai.validator.model;
 
 import javax.annotation.Nonnull;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -43,12 +44,11 @@ public interface NormalisedPath {
      * @param index The index of the path part to extract templated params with
      * @param requestPathPart The request path part to extract param values from
      *
-     * @return A list containing (in order) the value for each path param in the given part,
-     * or empty if one could not be found.
+     * @return The (name, value) for each path param in the given part. If the param could not be found, will be empty.
      *
      * @throws IndexOutOfBoundsException if the provided index is not a valid index
      */
-    List<Optional<String>> paramValues(int index, String requestPathPart);
+    Map<String, Optional<String>> paramValues(int index, String requestPathPart);
 
     /**
      * @return The original, un-normalised path string

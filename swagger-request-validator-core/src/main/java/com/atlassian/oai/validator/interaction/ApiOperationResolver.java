@@ -6,7 +6,7 @@ import com.atlassian.oai.validator.model.NormalisedPath;
 import com.atlassian.oai.validator.model.Request;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Table;
 import io.swagger.models.HttpMethod;
 import io.swagger.models.Operation;
@@ -16,6 +16,7 @@ import io.swagger.models.Swagger;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -168,10 +169,10 @@ public class ApiOperationResolver {
         }
 
         @Override
-        public List<Optional<String>> paramValues(final int index, final String requestPathPart) {
+        public Map<String, Optional<String>> paramValues(final int index, final String requestPathPart) {
             final List<String> paramNames = paramNames(index);
             if (paramNames.isEmpty()) {
-                return emptyList();
+                return emptyMap();
             }
 
             final String template = part(index);
@@ -182,18 +183,19 @@ public class ApiOperationResolver {
             if (paramNames.size() == 1
                     && template.indexOf(PARAM_START) == 0
                     && template.indexOf(PARAM_END) == template.length() - 1) {
-                return ImmutableList.of(of(requestPathPart));
+                return ImmutableMap.of(paramNames.get(0), of(requestPathPart));
             }
 
             // Using a scanning approach rather than regexes etc. because we want to get any matches
             // and then fill remaining with empties so we can validate on them later.
             // This is harder to do with regexes...
 
-            final List<Optional<String>> result = new ArrayList<>();
+            final Map<String, Optional<String>> result = new HashMap<>();
 
             int templateScanner = 0;
             int requestScanner = 0;
             int paramValueStart;
+            int paramIndex = 0;
 
             while (templateScanner < template.length() && requestScanner < requestPathPart.length()) {
                 if (template.charAt(templateScanner) == PARAM_START) {
@@ -209,7 +211,7 @@ public class ApiOperationResolver {
                     }
                     if (templateScanner == template.length() - 1) {
                         // Close char is the last char - value goes to end of string
-                        result.add(Optional.of(requestPathPart.substring(paramValueStart)));
+                        result.put(paramNames.get(paramIndex++), Optional.of(requestPathPart.substring(paramValueStart)));
                         break;
                     }
 
@@ -221,7 +223,7 @@ public class ApiOperationResolver {
                     }
                     if (requestPathPart.charAt(requestScanner) == terminal) {
                         // Found the terminal - construct the param value
-                        result.add(Optional.of(requestPathPart.substring(paramValueStart, requestScanner)));
+                        result.put(paramNames.get(paramIndex++), Optional.of(requestPathPart.substring(paramValueStart, requestScanner)));
                     } else {
                         // Must have reached the end without finding a terminal - no match
                         break;
@@ -235,8 +237,8 @@ public class ApiOperationResolver {
                     requestScanner++;
                 }
             }
-            while (result.size() < paramNames.size()) {
-                result.add(empty());
+            while (paramIndex < paramNames.size()) {
+                result.put(paramNames.get(paramIndex++), empty());
             }
             return result;
         }

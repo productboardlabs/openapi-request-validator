@@ -291,19 +291,18 @@ public class RequestValidator {
                 continue;
             }
 
-            final String paramValue = requestPath.part(i);
-
             final ValidationReport pathPartValidation = apiOperation
                     .getPathString()
-                    .paramNames(i)
+                    .paramValues(i, requestPath.part(i))
+                    .entrySet()
                     .stream()
-                    .map(paramName ->
+                    .map((param) ->
                             apiOperation.getOperation().getParameters()
                                     .stream()
                                     .filter(RequestValidator::isPathParam)
-                                    .filter(p -> p.getName().equalsIgnoreCase(paramName))
+                                    .filter(p -> p.getName().equalsIgnoreCase(param.getKey()))
                                     .findFirst()
-                                    .map(p -> parameterValidators.validate(paramValue, p))
+                                    .map(p -> parameterValidators.validate(param.getValue().orElse(null), p))
                                     .orElse(empty())
                     )
                     .reduce(empty(), ValidationReport::merge);
