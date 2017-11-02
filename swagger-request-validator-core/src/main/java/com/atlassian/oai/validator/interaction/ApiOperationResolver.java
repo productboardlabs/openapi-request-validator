@@ -4,7 +4,9 @@ import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.ApiOperationMatch;
 import com.atlassian.oai.validator.model.NormalisedPath;
 import com.atlassian.oai.validator.model.Request;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
 import io.swagger.models.HttpMethod;
 import io.swagger.models.Operation;
@@ -13,17 +15,29 @@ import io.swagger.models.Swagger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
+import static java.util.regex.Pattern.compile;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toList;
 
+/**
+ * Resolver responsible for matching an incoming request path + method with an operation defined in the OAI spec.
+ * <p>
+ */
 public class ApiOperationResolver {
 
     private final String apiPrefix;
@@ -38,20 +52,19 @@ public class ApiOperationResolver {
      * @param basePathOverride (Optional) override for the base path defined in the Swagger specification.
      */
     public ApiOperationResolver(@Nonnull final Swagger api, @Nullable final String basePathOverride) {
-        this.apiPrefix = Optional.ofNullable(basePathOverride).orElse(api.getBasePath());
-        final Map<String, Path> apiPaths = Optional.ofNullable(api.getPaths())
-            .orElse(Collections.emptyMap());
+        this.apiPrefix = ofNullable(basePathOverride).orElse(api.getBasePath());
+        final Map<String, Path> apiPaths = ofNullable(api.getPaths()).orElse(emptyMap());
 
         // normalise all API paths and group them by their number of parts
         this.apiPathsGroupedByNumberOfParts = apiPaths.keySet().stream()
-            .map(p -> new ApiBasedNormalisedPath(p, apiPrefix))
-            .collect(Collectors.groupingBy(p -> p.numberOfParts()));
+                .map(p -> new ApiBasedNormalisedPath(p, apiPrefix))
+                .collect(groupingBy(NormalisedPath::numberOfParts));
 
         // create a operation mapping for the API path and HTTP method
         this.operations = HashBasedTable.create();
-        apiPaths.forEach((apiPath, apiPathsPath) ->
-            apiPathsPath.getOperationMap().forEach((httpMethod, operation) ->
-                operations.put(apiPath, httpMethod, operation))
+        apiPaths.forEach((pathKey, apiPath) ->
+                apiPath.getOperationMap().forEach((httpMethod, operation) ->
+                        operations.put(pathKey, httpMethod, operation))
         );
     }
 
@@ -69,9 +82,9 @@ public class ApiOperationResolver {
         // try to find possible matching paths regardless of HTTP method
         final NormalisedPath requestPath = new ApiBasedNormalisedPath(path, apiPrefix);
         final List<NormalisedPath> possibleMatches = apiPathsGroupedByNumberOfParts
-            .getOrDefault(requestPath.numberOfParts(), emptyList()).stream()
-            .filter(p -> pathMatches(requestPath, p))
-            .collect(Collectors.toList());
+                .getOrDefault(requestPath.numberOfParts(), emptyList()).stream()
+                .filter(p -> pathMatches(requestPath, p))
+                .collect(toList());
 
         if (possibleMatches.isEmpty()) {
             return ApiOperationMatch.MISSING_PATH;
@@ -80,13 +93,13 @@ public class ApiOperationResolver {
         // try to find the operation which fits the HTTP method
         final HttpMethod httpMethod = HttpMethod.valueOf(method.name());
         final Optional<NormalisedPath> pathOpt = possibleMatches.stream()
-            .filter(apiPath -> operations.contains(apiPath.original(), httpMethod))
-            .findFirst(); // if exists there can only be one path matching the path and method - overlapping paths+methods are not allowed
+                .filter(apiPath -> operations.contains(apiPath.original(), httpMethod))
+                .findFirst(); // if exists there can only be one path matching the path and method - overlapping paths+methods are not allowed
 
         return pathOpt
-            .map(apiPath -> new ApiOperationMatch(new ApiOperation(apiPath, requestPath, httpMethod,
-                operations.get(apiPath.original(), httpMethod))))
-            .orElse(ApiOperationMatch.NOT_ALLOWED_OPERATION);
+                .map(apiPath -> new ApiOperationMatch(new ApiOperation(apiPath, requestPath, httpMethod,
+                        operations.get(apiPath.original(), httpMethod))))
+                .orElse(ApiOperationMatch.NOT_ALLOWED_OPERATION);
     }
 
     private static boolean pathMatches(@Nonnull final NormalisedPath requestPath,
@@ -95,7 +108,7 @@ public class ApiOperationResolver {
             return false;
         }
         for (int i = 0; i < requestPath.numberOfParts(); i++) {
-            if (requestPath.part(i).equalsIgnoreCase(apiPath.part(i)) || apiPath.isParam(i)) {
+            if (requestPath.part(i).equalsIgnoreCase(apiPath.part(i)) || apiPath.hasParams(i)) {
                 continue;
             }
             return false;
@@ -103,7 +116,14 @@ public class ApiOperationResolver {
         return true;
     }
 
-    private static class ApiBasedNormalisedPath implements NormalisedPath {
+    @VisibleForTesting
+    static class ApiBasedNormalisedPath implements NormalisedPath {
+
+        private static final String PARAM_REGEX = "\\{(.*?)}";
+        private static final Pattern PARAM_PATTERN = compile(PARAM_REGEX);
+
+        private static final char PARAM_START = '{';
+        private static final char PARAM_END = '}';
 
         private final List<String> pathParts;
         private final String original;
@@ -114,7 +134,9 @@ public class ApiOperationResolver {
             this.original = requireNonNull(path, "A path is required");
             this.apiPrefix = apiPrefix;
             this.normalised = normalise(path);
-            this.pathParts = unmodifiableList(asList(normalised.split("/")));
+
+            // We have normalized to start with a leading "/"; this will result in an empty path element
+            this.pathParts = unmodifiableList(asList(normalised.substring(1).split("/")));
         }
 
         @Override
@@ -129,19 +151,94 @@ public class ApiOperationResolver {
         }
 
         @Override
-        public boolean isParam(final int index) {
+        public boolean hasParams(final int index) {
             final String part = part(index);
-            return part.startsWith("{") && part.endsWith("}");
+            return PARAM_PATTERN.matcher(part).find();
         }
 
         @Override
-        @Nullable
-        public String paramName(final int index) {
-            if (!isParam(index)) {
-                return null;
-            }
+        public List<String> paramNames(final int index) {
             final String part = part(index);
-            return part.substring(1, part.length() - 1);
+            final Matcher matcher = PARAM_PATTERN.matcher(part);
+            final List<String> result = new ArrayList<>();
+            while (matcher.find()) {
+                result.add(matcher.group(1));
+            }
+            return result;
+        }
+
+        @Override
+        public List<Optional<String>> paramValues(final int index, final String requestPathPart) {
+            final List<String> paramNames = paramNames(index);
+            if (paramNames.isEmpty()) {
+                return emptyList();
+            }
+
+            final String template = part(index);
+
+            // This is a shortcut for the most common case where a single path param occupies the whole path part
+            // e.g. /foo/{param}/bar
+            // Avoids the need to scan strings etc.
+            if (paramNames.size() == 1
+                    && template.indexOf(PARAM_START) == 0
+                    && template.indexOf(PARAM_END) == template.length() - 1) {
+                return ImmutableList.of(of(requestPathPart));
+            }
+
+            // Using a scanning approach rather than regexes etc. because we want to get any matches
+            // and then fill remaining with empties so we can validate on them later.
+            // This is harder to do with regexes...
+
+            final List<Optional<String>> result = new ArrayList<>();
+
+            int templateScanner = 0;
+            int requestScanner = 0;
+            int paramValueStart;
+
+            while (templateScanner < template.length() && requestScanner < requestPathPart.length()) {
+                if (template.charAt(templateScanner) == PARAM_START) {
+                    paramValueStart = requestScanner;
+
+                    // Scan ahead in the template and find the terminal character
+                    while (template.charAt(templateScanner) != PARAM_END && templateScanner < template.length()) {
+                        templateScanner++;
+                    }
+                    if (template.charAt(templateScanner) != PARAM_END) {
+                        // We must have reached the end without finding a close char
+                        break;
+                    }
+                    if (templateScanner == template.length() - 1) {
+                        // Close char is the last char - value goes to end of string
+                        result.add(Optional.of(requestPathPart.substring(paramValueStart)));
+                        break;
+                    }
+
+                    final char terminal = template.charAt(++templateScanner);
+
+                    // Scan ahead in the request to find the terminal char
+                    while (requestPathPart.charAt(requestScanner) != terminal && requestScanner < requestPathPart.length()) {
+                        requestScanner++;
+                    }
+                    if (requestPathPart.charAt(requestScanner) == terminal) {
+                        // Found the terminal - construct the param value
+                        result.add(Optional.of(requestPathPart.substring(paramValueStart, requestScanner)));
+                    } else {
+                        // Must have reached the end without finding a terminal - no match
+                        break;
+                    }
+                } else {
+                    if (template.charAt(templateScanner) != requestPathPart.charAt(requestScanner)) {
+                        // Templates differ - no match
+                        break;
+                    }
+                    templateScanner++;
+                    requestScanner++;
+                }
+            }
+            while (result.size() < paramNames.size()) {
+                result.add(empty());
+            }
+            return result;
         }
 
         @Override

@@ -1,7 +1,8 @@
 package com.atlassian.oai.validator.model;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * A normalised representation of an API path.
@@ -24,18 +25,30 @@ public interface NormalisedPath {
     String part(int index);
 
     /**
-     * @return Whether the path part at the given index is a path param (e.g. "/my/{param}/")
+     * @return Whether the path part at the given index contains one or more path params (e.g. "/my/{param}/")
      * @throws IndexOutOfBoundsException if the provided index is not a valid index
      */
-    boolean isParam(int index);
+    boolean hasParams(int index);
 
     /**
-     * @return The parameter name of the path part at the given index, or <code>null</code> if the given
-     * part is not a parameter.
+     * @return The parameter name(s) in the path part at the given index, or an empty list if the given
+     * part does not have a parameter. Parameter names are returned in order.
      * @throws IndexOutOfBoundsException if the provided index is not a valid index
      */
-    @Nullable
-    String paramName(int index);
+    List<String> paramNames(int index);
+
+    /**
+     * Extract the param values for each param in the indexed path part, extracted from the given request path part.
+     *
+     * @param index The index of the path part to extract templated params with
+     * @param requestPathPart The request path part to extract param values from
+     *
+     * @return A list containing (in order) the value for each path param in the given part,
+     * or empty if one could not be found.
+     *
+     * @throws IndexOutOfBoundsException if the provided index is not a valid index
+     */
+    List<Optional<String>> paramValues(int index, String requestPathPart);
 
     /**
      * @return The original, un-normalised path string
@@ -44,7 +57,7 @@ public interface NormalisedPath {
     String original();
 
     /**
-     * @return The normalised path string, with prefixes removed and a standard treatment for leading/trailing slashed.
+     * @return The normalised path string, with prefixes removed and a standard treatment for leading/trailing slashes.
      */
     @Nonnull
     String normalised();

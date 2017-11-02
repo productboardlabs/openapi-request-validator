@@ -57,6 +57,9 @@ public class ApiOperationResolverTest {
 
                 {"matches_caseInsensitive_pathParts", POST, "/UPDaTE/id", matches("POST:/update/{id}")},
 
+                {"matches_whenPathParams_notWholePathPart", GET, "/pathparams/withextension/foop.json", matches("GET:/pathparams/withextension/{id}.json")},
+                {"matches_whenMultiplePathParams_inSamePart", GET, "/pathparams/withmultiple/foop-blarp.json", matches("GET:/pathparams/withmultiple/{id}-{name}.json")},
+
                 {"doesNotMatch_whenNoPathMatches", GET, "/", missingPath()},
                 {"doesNotMatch_whenNoPathMatches_whenSimilarToActualPath", POST, "/updates/{id}/{action}", missingPath()},
 
