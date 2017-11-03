@@ -13,9 +13,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.util.Collections.emptyMap;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.regex.Pattern.compile;
+import static java.util.regex.Pattern.quote;
 
 public class ApiPathImpl extends NormalisedPathImpl implements ApiPath {
 
@@ -27,6 +30,15 @@ public class ApiPathImpl extends NormalisedPathImpl implements ApiPath {
 
     public ApiPathImpl(@Nonnull final String path, @Nullable final String apiPrefix) {
         super(path, apiPrefix);
+    }
+
+
+    @Override
+    public boolean partMatches(int index, @Nonnull String requestPathPart) {
+        requireNonNull(requestPathPart, "A request path part is required");
+        final String template = part(index);
+        final Pattern templatePattern = compile(quote(template).replaceAll(PARAM_REGEX, "\\\\E(.*?)\\\\Q"), CASE_INSENSITIVE);
+        return templatePattern.matcher(requestPathPart).matches();
     }
 
     @Override

@@ -125,8 +125,47 @@ public class ApiPathImplTest {
         testParamValueExtraction("{param1}-{param2", "foop-blarp", expected);
     }
 
-    private void testParamValueExtraction(final String expression, final String path, final String... expected) {
+    @Test
+    public void partMatches_matches_whenLiteralMatch() {
+        assertThat(partMatches("foop", "foop"), is(true));
+    }
+
+    @Test
+    public void partMatches_matches_caseInsensitive() {
+        assertThat(partMatches("foop", "FOoP"), is(true));
+    }
+
+    @Test
+    public void partMatches_matches_whenWholePartParam() {
+        assertThat(partMatches("{param1}", "foop"), is(true));
+    }
+
+    @Test
+    public void partMatches_matches_whenPartialPartParam() {
+        assertThat(partMatches("{param1}.json", "foop.json"), is(true));
+    }
+
+    @Test
+    public void partMatches_matches_whenMultiplePartParam() {
+        assertThat(partMatches("{param1}.{param2}", "foop.json"), is(true));
+    }
+
+    @Test
+    public void partMatches_doesNotMatch_whenNoParams_andNoMatch() {
+        assertThat(partMatches("foop", "blarp"), is(false));
+    }
+
+    @Test
+    public void partMatches_doesNotMatch_whenPartialPartParams_andNoMatch() {
+        assertThat(partMatches("{param1}.json", "foop.html"), is(false));
+    }
+
+    private static void testParamValueExtraction(final String expression, final String path, final String... expected) {
         assertThat(new ApiPathImpl(expression, null).paramValues(0, path).values(),
                 containsInAnyOrder(stream(expected).map(e -> is(ofNullable(e))).collect(toList())));
+    }
+
+    private static boolean partMatches(final String expression, final String pathPart) {
+        return new ApiPathImpl(expression, null).partMatches(0, pathPart);
     }
 }

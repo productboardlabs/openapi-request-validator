@@ -98,7 +98,7 @@ public class ApiOperationResolver {
             return false;
         }
         for (int i = 0; i < requestPath.numberOfParts(); i++) {
-            if (requestPath.part(i).equalsIgnoreCase(apiPath.part(i)) || apiPath.hasParams(i)) {
+            if (apiPath.partMatches(i, requestPath.part(i))) {
                 continue;
             }
             return false;
