@@ -5,6 +5,7 @@ import com.atlassian.oai.validator.model.ApiOperationMatch;
 import com.atlassian.oai.validator.model.ApiPath;
 import com.atlassian.oai.validator.model.ApiPathImpl;
 import com.atlassian.oai.validator.model.NormalisedPath;
+import com.atlassian.oai.validator.model.NormalisedPathImpl;
 import com.atlassian.oai.validator.model.Request;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
@@ -70,10 +71,10 @@ public class ApiOperationResolver {
     public ApiOperationMatch findApiOperation(@Nonnull final String path, @Nonnull final Request.Method method) {
 
         // try to find possible matching paths regardless of HTTP method
-        final NormalisedPath requestPath = new ApiPathImpl(path, apiPrefix);
+        final NormalisedPath requestPath = new NormalisedPathImpl(path, apiPrefix);
         final List<ApiPath> possibleMatches = apiPathsGroupedByNumberOfParts
                 .getOrDefault(requestPath.numberOfParts(), emptyList()).stream()
-                .filter(p -> pathMatches(requestPath, p))
+                .filter(p -> p.matches(requestPath))
                 .collect(toList());
 
         if (possibleMatches.isEmpty()) {
@@ -90,20 +91,6 @@ public class ApiOperationResolver {
                 .map(apiPath -> new ApiOperationMatch(new ApiOperation(apiPath, requestPath, httpMethod,
                         operations.get(apiPath.original(), httpMethod))))
                 .orElse(ApiOperationMatch.NOT_ALLOWED_OPERATION);
-    }
-
-    private static boolean pathMatches(@Nonnull final NormalisedPath requestPath,
-                                       @Nonnull final ApiPath apiPath) {
-        if (requestPath.numberOfParts() != apiPath.numberOfParts()) {
-            return false;
-        }
-        for (int i = 0; i < requestPath.numberOfParts(); i++) {
-            if (apiPath.partMatches(i, requestPath.part(i))) {
-                continue;
-            }
-            return false;
-        }
-        return true;
     }
 
 }

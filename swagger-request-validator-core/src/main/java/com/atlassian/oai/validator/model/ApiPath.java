@@ -13,6 +13,18 @@ import java.util.Optional;
 public interface ApiPath extends NormalisedPath {
 
     /**
+     * Determine if the given request path matches this API path, taking into consideration path params.
+     * <p>
+     * Note that this method does not validate path params in the incoming request path part - it merely indicates
+     * that it matches the template described in the API path expression.
+     *
+     * @param requestPath The request path to test
+     *
+     * @return true if the incoming request path matches against the template defined in this API path; false otherwise.
+     */
+    boolean matches(NormalisedPath requestPath);
+
+    /**
      * Determine if the given request path part matches against the corresponding path part in this API path,
      * taking into consideration path params.
      * <p>

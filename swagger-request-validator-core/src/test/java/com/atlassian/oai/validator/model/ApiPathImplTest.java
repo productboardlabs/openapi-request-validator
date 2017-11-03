@@ -160,6 +160,31 @@ public class ApiPathImplTest {
         assertThat(partMatches("{param1}.json", "foop.html"), is(false));
     }
 
+    @Test
+    public void matches_matches_whenLiteralPath() {
+        assertThat(matches("/p1/p2/p3", "/p1/p2/p3"), is(true));
+    }
+
+    @Test
+    public void matches_matches_caseInsensitive() {
+        assertThat(matches("/p1/P2/p3", "/p1/p2/P3"), is(true));
+    }
+
+    @Test
+    public void matches_matches_whenPathParams() {
+        assertThat(matches("/p1/{param1}/p3/{param2}-{param3}.json", "/p1/p2/P3/foop-blarp.json"), is(true));
+    }
+
+    @Test
+    public void matches_doesNotMatches_whenBadLiteralMatch() {
+        assertThat(matches("/p1/p2/p3", "/p1/p2/floop"), is(false));
+    }
+
+    @Test
+    public void matches_doesNotMatches_whenBadParamMatch() {
+        assertThat(matches("/p1/p2/{param1}-{param2}", "/p1/p2/floop"), is(false));
+    }
+
     private static void testParamValueExtraction(final String expression, final String path, final String... expected) {
         assertThat(new ApiPathImpl(expression, null).paramValues(0, path).values(),
                 containsInAnyOrder(stream(expected).map(e -> is(ofNullable(e))).collect(toList())));
@@ -167,5 +192,9 @@ public class ApiPathImplTest {
 
     private static boolean partMatches(final String expression, final String pathPart) {
         return new ApiPathImpl(expression, null).partMatches(0, pathPart);
+    }
+
+    private static boolean matches(final String expression, final String path) {
+        return new ApiPathImpl(expression, null).matches(new NormalisedPathImpl(path, null));
     }
 }

@@ -32,9 +32,21 @@ public class ApiPathImpl extends NormalisedPathImpl implements ApiPath {
         super(path, apiPrefix);
     }
 
+    @Override
+    public boolean matches(final NormalisedPath requestPath) {
+        if (this.numberOfParts() != requestPath.numberOfParts()) {
+            return false;
+        }
+        for (int i = 0; i < this.numberOfParts(); i++) {
+            if (!this.partMatches(i, requestPath.part(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     @Override
-    public boolean partMatches(int index, @Nonnull String requestPathPart) {
+    public boolean partMatches(final int index, @Nonnull final String requestPathPart) {
         requireNonNull(requestPathPart, "A request path part is required");
         final String template = part(index);
         final Pattern templatePattern = compile(quote(template).replaceAll(PARAM_REGEX, "\\\\E(.*?)\\\\Q"), CASE_INSENSITIVE);
