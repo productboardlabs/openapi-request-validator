@@ -126,6 +126,12 @@ public class ApiPathImplTest {
     }
 
     @Test
+    public void paramValues_isCaseInsensitive() {
+        final String[] expected = {"foop", "plop"};
+        testParamValueExtraction("{param1}.BlARp.{param2}", "foop.blarp.plop", expected);
+    }
+
+    @Test
     public void partMatches_matches_whenLiteralMatch() {
         assertThat(partMatches("foop", "foop"), is(true));
     }

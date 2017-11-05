@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static java.lang.Character.toLowerCase;
 import static java.util.Collections.emptyMap;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.empty;
@@ -117,13 +118,14 @@ public class ApiPathImpl extends NormalisedPathImpl implements ApiPath {
                     break;
                 }
 
-                final char terminal = template.charAt(++templateScanner);
+                final char terminal = toLowerCase(template.charAt(++templateScanner));
 
                 // Scan ahead in the request to find the terminal char
-                while (requestScanner < requestPathPart.length() && requestPathPart.charAt(requestScanner) != terminal) {
+                while (requestScanner < requestPathPart.length() &&
+                        toLowerCase(requestPathPart.charAt(requestScanner)) != terminal) {
                     requestScanner++;
                 }
-                if (requestPathPart.charAt(requestScanner) == terminal) {
+                if (toLowerCase(requestPathPart.charAt(requestScanner)) == terminal) {
                     // Found the terminal - construct the param value
                     result.put(paramNames.get(paramIndex++), Optional.of(requestPathPart.substring(paramValueStart, requestScanner)));
                 } else {
@@ -131,7 +133,7 @@ public class ApiPathImpl extends NormalisedPathImpl implements ApiPath {
                     break;
                 }
             } else {
-                if (template.charAt(templateScanner) != requestPathPart.charAt(requestScanner)) {
+                if (toLowerCase(template.charAt(templateScanner)) != toLowerCase(requestPathPart.charAt(requestScanner))) {
                     // Templates differ - no match
                     break;
                 }
