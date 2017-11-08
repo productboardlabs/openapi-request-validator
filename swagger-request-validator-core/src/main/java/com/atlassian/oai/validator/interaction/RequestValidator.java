@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.atlassian.oai.validator.report.ValidationReport.empty;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -91,9 +92,9 @@ public class RequestValidator {
             }
 
             return filtered.entrySet().stream().map(e -> validateSingleSecurityParameter(request, e.getValue()))
-                    .reduce(ValidationReport.empty(), ValidationReport::merge);
+                    .reduce(empty(), ValidationReport::merge);
         }
-        return ValidationReport.empty();
+        return empty();
     }
 
     @Nonnull
@@ -109,10 +110,10 @@ public class RequestValidator {
                     case "query" :
                         return checkApiKeyAuthorizationByQueryParameter(request, apiKeyAuthDefinition);
                     default:
-                        return ValidationReport.empty();
+                        return empty();
                 }
             default:
-                return ValidationReport.empty();
+                return empty();
         }
     }
 
@@ -123,7 +124,7 @@ public class RequestValidator {
         if (!authQueryParam.isPresent()) {
             return ValidationReport.singleton(messages.get("validation.request.security.missing", request.getMethod(), request.getPath()));
         }
-        return ValidationReport.empty();
+        return empty();
     }
 
     @Nonnull
@@ -136,7 +137,7 @@ public class RequestValidator {
                          request.getMethod(), request.getPath())
             );
         }
-        return ValidationReport.empty();
+        return empty();
     }
 
     @Nonnull
@@ -168,7 +169,7 @@ public class RequestValidator {
 
         final Collection<String> requestHeaderValues = request.getHeaderValues(headerName);
         if (requestHeaderValues.isEmpty()) {
-            return ValidationReport.empty();
+            return empty();
         }
 
         final List<MediaType> requestMediaTypes = new ArrayList<>();
@@ -181,7 +182,7 @@ public class RequestValidator {
         }
 
         if (specMediaTypes.isEmpty()) {
-            return ValidationReport.empty();
+            return empty();
         }
 
         return specMediaTypes
@@ -194,7 +195,7 @@ public class RequestValidator {
                                 )
                 )
                 .findFirst()
-                .map(m -> ValidationReport.empty())
+                .map(m -> empty())
                 .orElse(ValidationReport.singleton(messages.get(notAllowedKey, requestHeaderValues, specMediaTypes)));
     }
 
@@ -238,7 +239,7 @@ public class RequestValidator {
                         prepareFormDataForParameter(formData, parameter).stream()
                                 .map(value -> parameterValidators.validate(value, parameter))
                 )
-                .reduce(ValidationReport.empty(), ValidationReport::merge);
+                .reduce(empty(), ValidationReport::merge);
     }
 
     @Nonnull
@@ -259,22 +260,22 @@ public class RequestValidator {
         if (requestBody.isPresent() && !requestBody.get().isEmpty() && !bodyParameter.isPresent()) {
             return ValidationReport.singleton(
                     messages.get("validation.request.body.unexpected",
-                        apiOperation.getMethod(), apiOperation.getPathString().original())
+                            apiOperation.getMethod(), apiOperation.getApiPath().original())
             );
         }
 
         if (!bodyParameter.isPresent()) {
-            return ValidationReport.empty();
+            return empty();
         }
 
         if (!requestBody.isPresent() || requestBody.get().isEmpty()) {
             if (bodyParameter.get().getRequired()) {
                 return ValidationReport.singleton(
                         messages.get("validation.request.body.missing",
-                            apiOperation.getMethod(), apiOperation.getPathString().original())
+                                apiOperation.getMethod(), apiOperation.getApiPath().original())
                 );
             }
-            return ValidationReport.empty();
+            return empty();
         }
 
         return schemaValidator.validate(requestBody.get(), ((BodyParameter) bodyParameter.get()).getSchema());
@@ -283,27 +284,37 @@ public class RequestValidator {
     @Nonnull
     private ValidationReport validatePathParameters(@Nonnull final ApiOperation apiOperation) {
 
-        ValidationReport validationReport = ValidationReport.empty();
+        ValidationReport validationReport = empty();
         final NormalisedPath requestPath = apiOperation.getRequestPath();
-        for (int i = 0; i < apiOperation.getPathString().numberOfParts(); i++) {
-            if (!apiOperation.getPathString().isParam(i)) {
+        for (int i = 0; i < apiOperation.getApiPath().numberOfParts(); i++) {
+            if (!apiOperation.getApiPath().hasParams(i)) {
                 continue;
             }
 
-            final String paramName = apiOperation.getPathString().paramName(i);
-            final String paramValue = requestPath.part(i);
-
-            final Optional<Parameter> parameter = apiOperation.getOperation().getParameters()
+            final ValidationReport pathPartValidation = apiOperation
+                    .getApiPath()
+                    .paramValues(i, requestPath.part(i))
+                    .entrySet()
                     .stream()
-                    .filter(RequestValidator::isPathParam)
-                    .filter(p -> p.getName().equalsIgnoreCase(paramName))
-                    .findFirst();
+                    .map((param) -> validatePathParameter(apiOperation, param.getKey(), param.getValue()))
+                    .reduce(empty(), ValidationReport::merge);
 
-            if (parameter.isPresent()) {
-                validationReport = validationReport.merge(parameterValidators.validate(paramValue, parameter.get()));
-            }
+            validationReport = validationReport.merge(pathPartValidation);
         }
         return validationReport;
+    }
+
+    @Nonnull
+    private ValidationReport validatePathParameter(@Nonnull final ApiOperation apiOperation,
+                                                   @Nonnull final String paramName,
+                                                   @Nonnull final Optional<String> paramValue) {
+        return apiOperation.getOperation().getParameters()
+                .stream()
+                .filter(RequestValidator::isPathParam)
+                .filter(p -> p.getName().equalsIgnoreCase(paramName))
+                .findFirst()
+                .map(p -> parameterValidators.validate(paramValue.orElse(null), p))
+                .orElse(empty());
     }
 
     @Nonnull
@@ -319,7 +330,7 @@ public class RequestValidator {
                         request.getQueryParameterValues(p.getName()),
                         "validation.request.parameter.query.missing")
                 )
-                .reduce(ValidationReport.empty(), ValidationReport::merge);
+                .reduce(empty(), ValidationReport::merge);
     }
 
     @Nonnull
@@ -335,7 +346,7 @@ public class RequestValidator {
                         request.getHeaderValues(p.getName()),
                         "validation.request.parameter.header.missing")
                 )
-                .reduce(ValidationReport.empty(), ValidationReport::merge);
+                .reduce(empty(), ValidationReport::merge);
     }
 
     @Nonnull
@@ -346,14 +357,14 @@ public class RequestValidator {
 
         if (parameterValues.isEmpty() && parameter.getRequired()) {
             return ValidationReport.singleton(
-                    messages.get(missingKey, parameter.getName(), apiOperation.getPathString().original())
+                    messages.get(missingKey, parameter.getName(), apiOperation.getApiPath().original())
             );
         }
 
         return parameterValues
                 .stream()
                 .map((v) -> parameterValidators.validate(v, parameter))
-                .reduce(ValidationReport.empty(), ValidationReport::merge);
+                .reduce(empty(), ValidationReport::merge);
     }
 
     @Nonnull

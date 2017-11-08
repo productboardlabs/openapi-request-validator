@@ -58,7 +58,7 @@ public class ResponseValidator {
         if (apiResponse == null) {
             return ValidationReport.singleton(
                     messages.get("validation.response.status.unknown",
-                            response.getStatus(), apiOperation.getPathString().original())
+                            response.getStatus(), apiOperation.getApiPath().original())
             );
         }
 
@@ -89,7 +89,7 @@ public class ResponseValidator {
         if (!response.getBody().isPresent() || response.getBody().get().isEmpty()) {
             return ValidationReport.singleton(
                     messages.get("validation.response.body.missing",
-                            apiOperation.getMethod(), apiOperation.getPathString().original())
+                            apiOperation.getMethod(), apiOperation.getApiPath().original())
             );
         }
 
@@ -161,7 +161,7 @@ public class ResponseValidator {
         if (propertyValues.isEmpty() && (property.getRequired() || Boolean.FALSE == property.getAllowEmptyValue())) {
             return ValidationReport.singleton(
                     messages.get("validation.response.header.missing",
-                            property.getName(), apiOperation.getPathString().original())
+                            property.getName(), apiOperation.getApiPath().original())
             );
         }
 

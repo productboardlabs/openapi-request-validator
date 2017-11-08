@@ -1,7 +1,6 @@
 package com.atlassian.oai.validator.model;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 /**
  * A normalised representation of an API path.
@@ -24,27 +23,13 @@ public interface NormalisedPath {
     String part(int index);
 
     /**
-     * @return Whether the path part at the given index is a path param (e.g. "/my/{param}/")
-     * @throws IndexOutOfBoundsException if the provided index is not a valid index
-     */
-    boolean isParam(int index);
-
-    /**
-     * @return The parameter name of the path part at the given index, or <code>null</code> if the given
-     * part is not a parameter.
-     * @throws IndexOutOfBoundsException if the provided index is not a valid index
-     */
-    @Nullable
-    String paramName(int index);
-
-    /**
      * @return The original, un-normalised path string
      */
     @Nonnull
     String original();
 
     /**
-     * @return The normalised path string, with prefixes removed and a standard treatment for leading/trailing slashed.
+     * @return The normalised path string, with prefixes removed and a standard treatment for leading/trailing slashes.
      */
     @Nonnull
     String normalised();

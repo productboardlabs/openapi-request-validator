@@ -474,4 +474,52 @@ public class RequestValidationTest {
 
         assertPass(classUnderTest.validateRequest(request));
     }
+
+    @Test
+    public void validate_withPartPathParams_shouldPass_whenValid() {
+        final SwaggerRequestResponseValidator classUnderTest =
+                SwaggerRequestResponseValidator.createFor("/oai/api-operation-finder-test.json").build();
+
+        final Request request = SimpleRequest.Builder
+                .get("/pathparams/withextension/theid.json")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withPartPathParams_shouldFail_whenMissing() {
+        final SwaggerRequestResponseValidator classUnderTest =
+                SwaggerRequestResponseValidator.createFor("/oai/api-operation-finder-test.json").build();
+
+        final Request request = SimpleRequest.Builder
+                .get("/pathparams/withextension/.json")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.missing");
+    }
+
+    @Test
+    public void validate_withMultiplePathParams_shouldPass_whenAllValid() {
+        final SwaggerRequestResponseValidator classUnderTest =
+                SwaggerRequestResponseValidator.createFor("/oai/api-operation-finder-test.json").build();
+
+        final Request request = SimpleRequest.Builder
+                .get("/pathparams/withmultiple/theid-thename")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withMultiplePathParams_shouldFail_whenMissing() {
+        final SwaggerRequestResponseValidator classUnderTest =
+                SwaggerRequestResponseValidator.createFor("/oai/api-operation-finder-test.json").build();
+
+        final Request request = SimpleRequest.Builder
+                .get("/pathparams/withmultiple/-thename")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.missing");
+    }
 }

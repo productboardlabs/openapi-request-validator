@@ -108,6 +108,46 @@
           }
         }
       }
+    },
+    "/pathparams/withextension/{id}.json": {
+      "get": {
+        "description": "GET:/pathparams/withextension/{id}.json",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/pathparams/withmultiple/{id}-{name}": {
+      "get": {
+        "description": "GET:/pathparams/withmultiple/{id}-{name}.json",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
     }
   }
 }
