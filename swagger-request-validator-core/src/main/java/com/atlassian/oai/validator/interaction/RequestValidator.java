@@ -296,20 +296,25 @@ public class RequestValidator {
                     .paramValues(i, requestPath.part(i))
                     .entrySet()
                     .stream()
-                    .map((param) ->
-                            apiOperation.getOperation().getParameters()
-                                    .stream()
-                                    .filter(RequestValidator::isPathParam)
-                                    .filter(p -> p.getName().equalsIgnoreCase(param.getKey()))
-                                    .findFirst()
-                                    .map(p -> parameterValidators.validate(param.getValue().orElse(null), p))
-                                    .orElse(empty())
-                    )
+                    .map((param) -> validatePathParameter(apiOperation, param.getKey(), param.getValue()))
                     .reduce(empty(), ValidationReport::merge);
 
             validationReport = validationReport.merge(pathPartValidation);
         }
         return validationReport;
+    }
+
+    @Nonnull
+    private ValidationReport validatePathParameter(@Nonnull final ApiOperation apiOperation,
+                                                   @Nonnull final String paramName,
+                                                   @Nonnull final Optional<String> paramValue) {
+        return apiOperation.getOperation().getParameters()
+                .stream()
+                .filter(RequestValidator::isPathParam)
+                .filter(p -> p.getName().equalsIgnoreCase(paramName))
+                .findFirst()
+                .map(p -> parameterValidators.validate(paramValue.orElse(null), p))
+                .orElse(empty());
     }
 
     @Nonnull
