@@ -1,3 +1,7 @@
+#v1.3.2
+* Added support for path params that aren't an entire path part, e.g. `/{param}.json`
+[[#81]](https://bitbucket.org/atlassian/swagger-request-validator/issues/81)
+
 #v1.3.1
 * Improved performance of the SpringMVC filter
 [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/52)
