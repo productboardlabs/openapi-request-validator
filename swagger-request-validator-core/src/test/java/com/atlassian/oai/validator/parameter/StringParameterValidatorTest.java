@@ -127,7 +127,19 @@ public class StringParameterValidatorTest {
     @Test
     public void validate_withUUIDFormat_shouldFail_whenInvalidUUID() {
         parameter.setFormat("uuid");
-        assertFail(classUnderTest.validate("notauuid", parameter));
+        assertFail(classUnderTest.validate("notauuid", parameter), "validation.request.parameter.string.uuid.invalid");
+    }
+
+    @Test
+    public void validate_withEmailFormat_shouldPass_whenAValidEmail() {
+        parameter.setFormat("email");
+        assertPass(classUnderTest.validate("some.body@somewhere.com", parameter));
+    }
+
+    @Test
+    public void validate_withEmailFormat_shouldFail_whenInvalidEmail() {
+        parameter.setFormat("email");
+        assertFail(classUnderTest.validate("notanemail", parameter), "validation.request.parameter.string.email.invalid");
     }
 
     @Test
