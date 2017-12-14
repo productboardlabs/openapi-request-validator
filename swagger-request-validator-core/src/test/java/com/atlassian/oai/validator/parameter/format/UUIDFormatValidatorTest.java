@@ -12,6 +12,8 @@ import static org.junit.Assert.assertThat;
 
 public class UUIDFormatValidatorTest {
 
+    private static final String EXPECTED_KEY = "validation.request.parameter.string.uuid.invalid";
+
     private final UUIDFormatValidator classUnderTest = new UUIDFormatValidator(new MessageResolver());
 
     @Test
@@ -21,18 +23,18 @@ public class UUIDFormatValidatorTest {
     }
 
     @Test
-    public void passes_whenValidUuid() {
+    public void passes_whenValid() {
         assertPass(classUnderTest.validate(UUID.randomUUID().toString()));
     }
 
     @Test
-    public void fails_whenInvalidUuid() {
-        assertFail(classUnderTest.validate("notauuid"), "validation.request.parameter.string.uuid.invalid");
+    public void fails_whenInvalid() {
+        assertFail(classUnderTest.validate("notauuid"), EXPECTED_KEY);
     }
 
     @Test
     public void fails_whenEmpty() {
-        assertFail(classUnderTest.validate(""), "validation.request.parameter.string.uuid.invalid");
+        assertFail(classUnderTest.validate(""), EXPECTED_KEY);
     }
 
 }

@@ -10,6 +10,8 @@ import static org.junit.Assert.assertThat;
 
 public class IPv6FormatValidatorTest {
 
+    private static final String EXPECTED_KEY = "validation.request.parameter.string.ipv6.invalid";
+    
     private final IPv6FormatValidator classUnderTest = new IPv6FormatValidator(new MessageResolver());
 
     @Test
@@ -28,15 +30,15 @@ public class IPv6FormatValidatorTest {
 
     @Test
     public void fails_whenInvalid() {
-        assertFail(classUnderTest.validate(":1"), "validation.request.parameter.string.ipv6.invalid");
-        assertFail(classUnderTest.validate("2001:db8:0:0:0:gf00:42:8329"), "validation.request.parameter.string.ipv6.invalid");
-        assertFail(classUnderTest.validate("192.168.0.1"), "validation.request.parameter.string.ipv6.invalid");
-        assertFail(classUnderTest.validate("floop"), "validation.request.parameter.string.ipv6.invalid");
+        assertFail(classUnderTest.validate(":1"), EXPECTED_KEY);
+        assertFail(classUnderTest.validate("2001:db8:0:0:0:gf00:42:8329"), EXPECTED_KEY);
+        assertFail(classUnderTest.validate("192.168.0.1"), EXPECTED_KEY);
+        assertFail(classUnderTest.validate("floop"), EXPECTED_KEY);
     }
 
     @Test
     public void fails_whenEmpty() {
-        assertFail(classUnderTest.validate(""), "validation.request.parameter.string.ipv6.invalid");
+        assertFail(classUnderTest.validate(""), EXPECTED_KEY);
     }
 
 }

@@ -167,6 +167,18 @@ public class StringParameterValidatorTest {
     }
 
     @Test
+    public void validate_withURIFormat_shouldPass_whenAValidURI() {
+        parameter.setFormat("uri");
+        assertPass(classUnderTest.validate("http://foo.com", parameter));
+    }
+
+    @Test
+    public void validate_withURIFormat_shouldFail_whenInvalidURI() {
+        parameter.setFormat("uri");
+        assertFail(classUnderTest.validate("http://<>.com", parameter), "validation.request.parameter.string.uri.invalid");
+    }
+
+    @Test
     public void validate_withUnsupportedFormat_shouldPass() {
         parameter.setFormat("unsupported");
         assertPass(classUnderTest.validate("should-pass", parameter));

@@ -10,6 +10,7 @@ import static org.junit.Assert.assertThat;
 
 public class IPv4FormatValidatorTest {
 
+    private static final String EXPECTED_KEY = "validation.request.parameter.string.ipv4.invalid";
     private final IPv4FormatValidator classUnderTest = new IPv4FormatValidator(new MessageResolver());
 
     @Test
@@ -27,14 +28,14 @@ public class IPv4FormatValidatorTest {
 
     @Test
     public void fails_whenInvalid() {
-        assertFail(classUnderTest.validate("123.456.789"), "validation.request.parameter.string.ipv4.invalid");
-        assertFail(classUnderTest.validate("2001:0db8:0000:0000:0000:ff00:0042:8329"), "validation.request.parameter.string.ipv4.invalid");
-        assertFail(classUnderTest.validate("floop"), "validation.request.parameter.string.ipv4.invalid");
+        assertFail(classUnderTest.validate("123.456.789"), EXPECTED_KEY);
+        assertFail(classUnderTest.validate("2001:0db8:0000:0000:0000:ff00:0042:8329"), EXPECTED_KEY);
+        assertFail(classUnderTest.validate("floop"), EXPECTED_KEY);
     }
 
     @Test
     public void fails_whenEmpty() {
-        assertFail(classUnderTest.validate(""), "validation.request.parameter.string.ipv4.invalid");
+        assertFail(classUnderTest.validate(""), EXPECTED_KEY);
     }
 
 }

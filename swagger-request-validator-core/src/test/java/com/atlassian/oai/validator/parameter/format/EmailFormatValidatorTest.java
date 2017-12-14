@@ -10,6 +10,8 @@ import static org.junit.Assert.assertThat;
 
 public class EmailFormatValidatorTest {
 
+    private static final String EXPECTED_KEY = "validation.request.parameter.string.email.invalid";
+
     private final EmailFormatValidator classUnderTest = new EmailFormatValidator(new MessageResolver());
 
     @Test
@@ -25,12 +27,14 @@ public class EmailFormatValidatorTest {
 
     @Test
     public void fails_whenInvalidEmail() {
-        assertFail(classUnderTest.validate("not@anemail@"), "validation.request.parameter.string.email.invalid");
+        assertFail(classUnderTest.validate("not@anemail@"), EXPECTED_KEY);
+        assertFail(classUnderTest.validate("notanemail"), EXPECTED_KEY);
+        assertFail(classUnderTest.validate("not@@anemail"), EXPECTED_KEY);
     }
 
     @Test
     public void fails_whenEmpty() {
-        assertFail(classUnderTest.validate(""), "validation.request.parameter.string.email.invalid");
+        assertFail(classUnderTest.validate(""), EXPECTED_KEY);
     }
 
 }

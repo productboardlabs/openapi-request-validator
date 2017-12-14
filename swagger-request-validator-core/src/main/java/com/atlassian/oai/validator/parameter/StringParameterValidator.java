@@ -7,6 +7,7 @@ import com.atlassian.oai.validator.parameter.format.FormatValidator;
 import com.atlassian.oai.validator.parameter.format.IPv4FormatValidator;
 import com.atlassian.oai.validator.parameter.format.IPv6FormatValidator;
 import com.atlassian.oai.validator.parameter.format.NoOpStringFormatValidator;
+import com.atlassian.oai.validator.parameter.format.URIFormatValidator;
 import com.atlassian.oai.validator.parameter.format.UUIDFormatValidator;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
@@ -34,7 +35,8 @@ public class StringParameterValidator extends BaseParameterValidator {
                 new UUIDFormatValidator(messages),
                 new EmailFormatValidator(messages),
                 new IPv4FormatValidator(messages),
-                new IPv6FormatValidator(messages)
+                new IPv6FormatValidator(messages),
+                new URIFormatValidator(messages)
         );
     }
 
