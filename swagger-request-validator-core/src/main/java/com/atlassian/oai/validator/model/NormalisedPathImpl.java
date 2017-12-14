@@ -57,9 +57,9 @@ public class NormalisedPathImpl implements NormalisedPath {
         return requestPath.substring(apiPrefix.length());
     }
 
-    private static String normaliseToLeadingSlash(@Nullable String pathPart) {
+    private static String normaliseToLeadingSlash(@Nullable final String pathPart) {
         if (pathPart == null) {
-            return pathPart;
+            return null;
         }
         if (!pathPart.startsWith("/")) {
             return "/" + pathPart;
