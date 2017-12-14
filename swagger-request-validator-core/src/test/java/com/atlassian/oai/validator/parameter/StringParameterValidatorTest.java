@@ -143,6 +143,30 @@ public class StringParameterValidatorTest {
     }
 
     @Test
+    public void validate_withIPv4Format_shouldPass_whenAValidIPAddress() {
+        parameter.setFormat("ipv4");
+        assertPass(classUnderTest.validate("192.168.0.1", parameter));
+    }
+
+    @Test
+    public void validate_withIPv4Format_shouldFail_whenInvalidIPAddress() {
+        parameter.setFormat("ipv4");
+        assertFail(classUnderTest.validate("192.0.0", parameter), "validation.request.parameter.string.ipv4.invalid");
+    }
+
+    @Test
+    public void validate_withIPv6Format_shouldPass_whenAValidIPAddress() {
+        parameter.setFormat("ipv6");
+        assertPass(classUnderTest.validate("::1", parameter));
+    }
+
+    @Test
+    public void validate_withIPv6Format_shouldFail_whenInvalidIPAddress() {
+        parameter.setFormat("ipv6");
+        assertFail(classUnderTest.validate(":1", parameter), "validation.request.parameter.string.ipv6.invalid");
+    }
+
+    @Test
     public void validate_withUnsupportedFormat_shouldPass() {
         parameter.setFormat("unsupported");
         assertPass(classUnderTest.validate("should-pass", parameter));

@@ -4,6 +4,8 @@ import com.atlassian.oai.validator.parameter.format.DateFormatValidator;
 import com.atlassian.oai.validator.parameter.format.DateTimeFormatValidator;
 import com.atlassian.oai.validator.parameter.format.EmailFormatValidator;
 import com.atlassian.oai.validator.parameter.format.FormatValidator;
+import com.atlassian.oai.validator.parameter.format.IPv4FormatValidator;
+import com.atlassian.oai.validator.parameter.format.IPv6FormatValidator;
 import com.atlassian.oai.validator.parameter.format.NoOpStringFormatValidator;
 import com.atlassian.oai.validator.parameter.format.UUIDFormatValidator;
 import com.atlassian.oai.validator.report.MessageResolver;
@@ -30,7 +32,9 @@ public class StringParameterValidator extends BaseParameterValidator {
                 new DateFormatValidator(messages),
                 new DateTimeFormatValidator(messages),
                 new UUIDFormatValidator(messages),
-                new EmailFormatValidator(messages)
+                new EmailFormatValidator(messages),
+                new IPv4FormatValidator(messages),
+                new IPv6FormatValidator(messages)
         );
     }
 
