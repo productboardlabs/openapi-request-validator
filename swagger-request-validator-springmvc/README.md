@@ -73,6 +73,7 @@ Please see [the tests](https://bitbucket.org/atlassian/swagger-request-validator
 
 * There is a simple example that shows how to add the Swagger Request Validation adapter.
 * An advanced example shows how to additionally add an ExceptionHandler to map the `InvalidRequestException` to a custom response.
+* Another example shows how to add custom request logging before each validation.
 
 ## Caveats ##
 
