@@ -46,11 +46,8 @@ public class NormalisedPathImpl implements NormalisedPath {
     }
 
     private static String normalise(@Nullable final String prefix, @Nonnull final String requestPath) {
-        final String trimmedPath = trimPrefix(prefix, requestPath);
-        if (!trimmedPath.startsWith("/")) {
-            return "/" + requestPath;
-        }
-        return trimmedPath;
+        final String trimmedPath = trimPrefix(normaliseToLeadingSlash(prefix), normaliseToLeadingSlash(requestPath));
+        return normaliseToLeadingSlash(trimmedPath);
     }
 
     private static String trimPrefix(@Nullable final String apiPrefix, @Nonnull final String requestPath) {
@@ -58,6 +55,16 @@ public class NormalisedPathImpl implements NormalisedPath {
             return requestPath;
         }
         return requestPath.substring(apiPrefix.length());
+    }
+
+    private static String normaliseToLeadingSlash(@Nullable String pathPart) {
+        if (pathPart == null) {
+            return pathPart;
+        }
+        if (!pathPart.startsWith("/")) {
+            return "/" + pathPart;
+        }
+        return pathPart;
     }
 
 }
