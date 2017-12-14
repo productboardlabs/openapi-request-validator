@@ -6,6 +6,8 @@ import io.swagger.models.parameters.SerializableParameter;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.UUID;
+
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.stringParam;
@@ -13,7 +15,7 @@ import static java.util.Arrays.asList;
 
 public class StringParameterValidatorTest {
 
-    private StringParameterValidator classUnderTest = new StringParameterValidator(new MessageResolver());
+    private final StringParameterValidator classUnderTest = new StringParameterValidator(new MessageResolver());
     private SerializableParameter parameter;
 
     @Before
@@ -114,6 +116,18 @@ public class StringParameterValidatorTest {
     public void validate_withDateTimeFormat_shouldPass_whenAValidISODate() {
         parameter.setFormat("date-time");
         assertPass(classUnderTest.validate("2016-09-28T11:22:33.111Z", parameter));
+    }
+
+    @Test
+    public void validate_withUUIDFormat_shouldPass_whenAValidUUID() {
+        parameter.setFormat("uuid");
+        assertPass(classUnderTest.validate(UUID.randomUUID().toString(), parameter));
+    }
+
+    @Test
+    public void validate_withUUIDFormat_shouldFail_whenInvalidUUID() {
+        parameter.setFormat("uuid");
+        assertFail(classUnderTest.validate("notauuid", parameter));
     }
 
     @Test
