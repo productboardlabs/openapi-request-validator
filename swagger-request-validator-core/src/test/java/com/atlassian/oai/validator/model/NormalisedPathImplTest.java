@@ -49,4 +49,16 @@ public class NormalisedPathImplTest {
         assertThat(normalisedPath.normalised(), is("/bar"));
     }
 
+    @Test
+    public void normalises_withPathPrefix_withWhitespace() {
+        final NormalisedPathImpl normalisedPath = new NormalisedPathImpl("foo/bar", " /foo ");
+        assertThat(normalisedPath.normalised(), is("/bar"));
+    }
+
+    @Test
+    public void normalises_withNullPathPrefix_withWhitespace() {
+        final NormalisedPathImpl normalisedPath = new NormalisedPathImpl("  foo/bar ", null);
+        assertThat(normalisedPath.normalised(), is("/foo/bar"));
+    }
+
 }
