@@ -7,6 +7,8 @@ import java.util.List;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.StringUtils.prependIfMissing;
+import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
 public class NormalisedPathImpl implements NormalisedPath {
 
@@ -15,11 +17,11 @@ public class NormalisedPathImpl implements NormalisedPath {
     private final String normalised;
 
     public NormalisedPathImpl(@Nonnull final String path, @Nullable final String apiPrefix) {
-        this.original = requireNonNull(path, "A path is required");
-        this.normalised = normalise(apiPrefix, path);
+        original = requireNonNull(path, "A path is required");
+        normalised = normalise(apiPrefix, path);
 
         // We have normalized to start with a leading "/"; this will result in an empty path element
-        this.pathParts = unmodifiableList(asList(normalised.substring(1).split("/")));
+        pathParts = unmodifiableList(asList(normalised.substring(1).split("/")));
     }
 
     @Override
@@ -46,11 +48,8 @@ public class NormalisedPathImpl implements NormalisedPath {
     }
 
     private static String normalise(@Nullable final String prefix, @Nonnull final String requestPath) {
-        final String trimmedPath = trimPrefix(prefix, requestPath);
-        if (!trimmedPath.startsWith("/")) {
-            return "/" + requestPath;
-        }
-        return trimmedPath;
+        final String trimmedPath = trimPrefix(normaliseToLeadingSlash(prefix), normaliseToLeadingSlash(requestPath));
+        return normaliseToLeadingSlash(trimmedPath);
     }
 
     private static String trimPrefix(@Nullable final String apiPrefix, @Nonnull final String requestPath) {
@@ -58,6 +57,10 @@ public class NormalisedPathImpl implements NormalisedPath {
             return requestPath;
         }
         return requestPath.substring(apiPrefix.length());
+    }
+
+    private static String normaliseToLeadingSlash(@Nullable final String pathPart) {
+        return prependIfMissing(trimToEmpty(pathPart), "/");
     }
 
 }
