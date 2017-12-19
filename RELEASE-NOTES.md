@@ -1,3 +1,9 @@
+#v1.3.3
+* Fixed a bug with handling of leading/trailing slashes in the api basePath
+[[#87]](https://bitbucket.org/atlassian/swagger-request-validator/issues/87)
+* Added support for `uri`, `ipv4`, `ipv6`, `email` and `uuid` format validation in query/path params 
+[[#85]](https://bitbucket.org/atlassian/swagger-request-validator/issues/85)
+
 #v1.3.2
 * Added support for path params that aren't an entire path part, e.g. `/{param}.json`
 [[#81]](https://bitbucket.org/atlassian/swagger-request-validator/issues/81)
