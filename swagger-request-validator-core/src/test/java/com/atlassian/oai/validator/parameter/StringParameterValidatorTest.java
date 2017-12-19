@@ -6,6 +6,8 @@ import io.swagger.models.parameters.SerializableParameter;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.UUID;
+
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.stringParam;
@@ -13,7 +15,7 @@ import static java.util.Arrays.asList;
 
 public class StringParameterValidatorTest {
 
-    private StringParameterValidator classUnderTest = new StringParameterValidator(new MessageResolver());
+    private final StringParameterValidator classUnderTest = new StringParameterValidator(new MessageResolver());
     private SerializableParameter parameter;
 
     @Before
@@ -114,6 +116,66 @@ public class StringParameterValidatorTest {
     public void validate_withDateTimeFormat_shouldPass_whenAValidISODate() {
         parameter.setFormat("date-time");
         assertPass(classUnderTest.validate("2016-09-28T11:22:33.111Z", parameter));
+    }
+
+    @Test
+    public void validate_withUUIDFormat_shouldPass_whenAValidUUID() {
+        parameter.setFormat("uuid");
+        assertPass(classUnderTest.validate(UUID.randomUUID().toString(), parameter));
+    }
+
+    @Test
+    public void validate_withUUIDFormat_shouldFail_whenInvalidUUID() {
+        parameter.setFormat("uuid");
+        assertFail(classUnderTest.validate("notauuid", parameter), "validation.request.parameter.string.uuid.invalid");
+    }
+
+    @Test
+    public void validate_withEmailFormat_shouldPass_whenAValidEmail() {
+        parameter.setFormat("email");
+        assertPass(classUnderTest.validate("some.body@somewhere.com", parameter));
+    }
+
+    @Test
+    public void validate_withEmailFormat_shouldFail_whenInvalidEmail() {
+        parameter.setFormat("email");
+        assertFail(classUnderTest.validate("notanemail", parameter), "validation.request.parameter.string.email.invalid");
+    }
+
+    @Test
+    public void validate_withIPv4Format_shouldPass_whenAValidIPAddress() {
+        parameter.setFormat("ipv4");
+        assertPass(classUnderTest.validate("192.168.0.1", parameter));
+    }
+
+    @Test
+    public void validate_withIPv4Format_shouldFail_whenInvalidIPAddress() {
+        parameter.setFormat("ipv4");
+        assertFail(classUnderTest.validate("192.0.0", parameter), "validation.request.parameter.string.ipv4.invalid");
+    }
+
+    @Test
+    public void validate_withIPv6Format_shouldPass_whenAValidIPAddress() {
+        parameter.setFormat("ipv6");
+        assertPass(classUnderTest.validate("::1", parameter));
+    }
+
+    @Test
+    public void validate_withIPv6Format_shouldFail_whenInvalidIPAddress() {
+        parameter.setFormat("ipv6");
+        assertFail(classUnderTest.validate(":1", parameter), "validation.request.parameter.string.ipv6.invalid");
+    }
+
+    @Test
+    public void validate_withURIFormat_shouldPass_whenAValidURI() {
+        parameter.setFormat("uri");
+        assertPass(classUnderTest.validate("http://foo.com", parameter));
+    }
+
+    @Test
+    public void validate_withURIFormat_shouldFail_whenInvalidURI() {
+        parameter.setFormat("uri");
+        assertFail(classUnderTest.validate("http://<>.com", parameter), "validation.request.parameter.string.uri.invalid");
     }
 
     @Test
