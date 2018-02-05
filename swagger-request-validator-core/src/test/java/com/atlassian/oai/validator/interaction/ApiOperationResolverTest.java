@@ -12,8 +12,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.BiConsumer;
@@ -24,8 +22,9 @@ import static com.atlassian.oai.validator.model.Request.Method.PATCH;
 import static com.atlassian.oai.validator.model.Request.Method.POST;
 import static com.atlassian.oai.validator.model.Request.Method.PUT;
 import static java.lang.String.format;
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
@@ -36,7 +35,7 @@ public class ApiOperationResolverTest {
     private static ApiOperationResolver classUnderTest;
 
     @BeforeClass
-    public static void init() throws IOException, URISyntaxException {
+    public static void init() {
         final SwaggerDeserializationResult swaggerParseResult = new SwaggerParser().readWithInfo(FILENAME_API_WITH_POST, null, true);
         final Swagger swagger = swaggerParseResult.getSwagger();
         classUnderTest = new ApiOperationResolver(swagger, null);
@@ -54,6 +53,8 @@ public class ApiOperationResolverTest {
                 {"matches_whenMultipleOperations_onSamePath", POST, "/update/id", matches("POST:/update/{id}")},
                 {"matches_whenMultipleOperations_onSamePath", PATCH, "/update/id", matches("PATCH:/update/{id}")},
                 {"matches_whenPathsCollide_butOperationsDiffer", GET, "/delete", matches("GET:/{id}")},
+
+                {"matches_mostSpecificPath_whenMultiplePotentialMatches", GET, "/pathparams/withmorespecific/id.json", matches("GET:/pathparams/withmorespecific/{id}.json")},
 
                 {"matches_caseInsensitive_pathParts", POST, "/UPDaTE/id", matches("POST:/update/{id}")},
 
@@ -103,7 +104,7 @@ public class ApiOperationResolverTest {
         final ApiOperationMatch apiOperationMatch = classUnderTest.findApiOperation(requestPath, requestMethod);
         assertTrue(format("Path not found on %s", expDescription), apiOperationMatch.isPathFound());
         assertTrue(format("Operation not allowed on %s", expDescription), apiOperationMatch.isOperationAllowed());
-        assertEquals(apiOperationMatch.getApiOperation().getOperation().getDescription(), expDescription);
+        assertThat(apiOperationMatch.getApiOperation().getOperation().getDescription(), is(expDescription));
     }
 
     private static void assertMissingRequestPath(final String requestPath,

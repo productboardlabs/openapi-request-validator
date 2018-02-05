@@ -148,6 +148,57 @@
           }
         }
       }
+    },
+    "/pathparams/{withmorespecific}/{id}.json": {
+      "get": {
+        "description": "GET:/pathparams/{withmorespecific}/{id}.json",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/pathparams/withmorespecific/{id}": {
+      "get": {
+        "description": "GET:/pathparams/withmorespecific/{id}",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/pathparams/withmorespecific/{id}.json": {
+      "get": {
+        "description": "GET:/pathparams/withmorespecific/{id}.json",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
     }
   }
 }
