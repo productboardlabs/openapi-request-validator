@@ -30,12 +30,12 @@ public class OperationForWhitelisting {
         return new OperationForWhitelisting(null, new SimpleResponse.Builder(200).build());
     }
 
-    private ValidationReport.Message message = ValidationReport.Message.create("message.key", "A default message");
+    private ValidationReport.Message message = ValidationReport.Message.create("message.key", "A default message").build();
     private ApiPath path = path("/rest/api");
     private HttpMethod method = HttpMethod.GET;
     private Request request;
     private Response response;
-    private Operation operation = new Operation();
+    private final Operation operation = new Operation();
 
     private OperationForWhitelisting(final Request request, final Response response) {
         this.request = request;
@@ -79,7 +79,7 @@ public class OperationForWhitelisting {
     }
 
     public OperationForWhitelisting withStatus(final int status) {
-        this.response = new SimpleResponse.Builder(status).build();
+        response = new SimpleResponse.Builder(status).build();
         return this;
     }
 

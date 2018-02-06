@@ -38,19 +38,19 @@ public class WhitelistRulesTest {
 
         assertThat(andRule, matches(response()
             .withDocumentedResponse(200, "MyEntity")
-                .withMessage(Message.create("my.key", "Object instance has properties which are not allowed by the schema: [\"value\"]"))));
+                .withMessage(Message.create("my.key", "Object instance has properties which are not allowed by the schema: [\"value\"]").build())));
 
         assertThat(andRule, matches(request()
             .withDocumentedRequestBodyParameter("MyEntity")
-                .withMessage(Message.create("my.key", "Object instance has properties which are not allowed by the schema: [\"value\"]"))));
+                .withMessage(Message.create("my.key", "Object instance has properties which are not allowed by the schema: [\"value\"]").build())));
 
         assertThat(andRule, not(matches(request()
             .withDocumentedRequestBodyParameter("AnotherEntity")
-                .withMessage(Message.create("my.key", "Object instance has properties which are not allowed by the schema: [\"value\"]")))));
+                .withMessage(Message.create("my.key", "Object instance has properties which are not allowed by the schema: [\"value\"]").build()))));
 
         assertThat(andRule, not(matches(request()
             .withDocumentedRequestBodyParameter("MyEntity")
-                .withMessage(Message.create("my.key", "Another message")))));
+                .withMessage(Message.create("my.key", "Another message").build()))));
     }
 
     @Test
@@ -81,17 +81,17 @@ public class WhitelistRulesTest {
     @Test
     public void testMessageHasKey() throws Exception {
         final WhitelistRule rule = WhitelistRules.messageHasKey("my.key");
-        assertThat(rule, matches(response().withMessage(Message.create("my.key", "key: my.key"))));
-        assertThat(rule, matches(response().withMessage(Message.create("MY.KEY", "key: MY.KEY"))));
-        assertThat(rule, not(matches(response().withMessage(Message.create("not.my.key", "key: not.my.key")))));
+        assertThat(rule, matches(response().withMessage(Message.create("my.key", "key: my.key").build())));
+        assertThat(rule, matches(response().withMessage(Message.create("MY.KEY", "key: MY.KEY").build())));
+        assertThat(rule, not(matches(response().withMessage(Message.create("not.my.key", "key: not.my.key").build()))));
     }
 
     @Test
     public void testMessageContains() throws Exception {
         assertThat(messageContains("not allowed.*\"value\""), matches(
-                response().withMessage(Message.create("my.key", "Object instance has properties which are not allowed by the schema: [\"value\"]"))));
+                response().withMessage(Message.create("my.key", "Object instance has properties which are not allowed by the schema: [\"value\"]").build())));
         assertThat(messageContains("not allowed.*\"value\""), not(matches(
-                response().withMessage(Message.create("my.key", "not allowed")))));
+                response().withMessage(Message.create("my.key", "not allowed").build()))));
     }
 
     @Test
