@@ -103,12 +103,12 @@ public class ApiOperationResolver {
      * that could be equivalent. For example, '{@code /{id}}' and '{@code /{id}.json}' could both match an incoming request on path
      * '{@code /foo.json}'; in that case we should match on '{@code /{id}.json}' as it is the most 'specific' match.
      *
-     * @return a score > 0 that indicates how 'specific' the path definition is. Higher numbers indicate more specific
+     * @return a score >= 0 that indicates how 'specific' the path definition is. Higher numbers indicate more specific
      * definitions (e.g. fewer path variables).
      */
     private static int specificityScore(@Nonnull final ApiPath apiPath) {
         // Return the length of the path, with path vars counting as 1.
-        return apiPath.normalised().replaceAll("\\{.+?}", "V").length();
+        return apiPath.normalised().replaceAll("\\{.+?}", "").length();
     }
 
 }
