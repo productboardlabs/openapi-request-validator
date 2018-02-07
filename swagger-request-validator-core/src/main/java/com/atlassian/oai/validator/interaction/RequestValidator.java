@@ -6,6 +6,7 @@ import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.parameter.ParameterValidators;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
+import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
 import com.atlassian.oai.validator.schema.SchemaValidator;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ArrayListMultimap;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.REQUEST;
 import static com.atlassian.oai.validator.report.ValidationReport.empty;
 import static java.util.Objects.requireNonNull;
 
@@ -52,7 +54,7 @@ public class RequestValidator {
                             @Nonnull final MessageResolver messages,
                             @Nonnull final Swagger swaggerDefinition) {
         this.schemaValidator = requireNonNull(schemaValidator, "A schema validator is required");
-        this.parameterValidators = new ParameterValidators(schemaValidator, messages);
+        parameterValidators = new ParameterValidators(schemaValidator, messages);
         this.messages = requireNonNull(messages, "A message resolver is required");
         this.swaggerDefinition = requireNonNull(swaggerDefinition, "A swagger definition required");
     }
@@ -71,13 +73,19 @@ public class RequestValidator {
         requireNonNull(request, "A request is required");
         requireNonNull(apiOperation, "An API operation is required");
 
+        final MessageContext context = MessageContext.create()
+                .in(REQUEST)
+                .withApiOperation(apiOperation)
+                .build();
+
         return  validateSecurity(request, apiOperation)
                 .merge(validateContentType(request, apiOperation))
                 .merge(validateAccepts(request, apiOperation))
                 .merge(validateHeaders(request, apiOperation))
                 .merge(validatePathParameters(apiOperation))
                 .merge(validateRequestBody(request.getBody(), apiOperation))
-                .merge(validateQueryParameters(request, apiOperation));
+                .merge(validateQueryParameters(request, apiOperation))
+                .withAdditionalContext(context);
     }
 
     @Nonnull
@@ -87,7 +95,7 @@ public class RequestValidator {
 
         if (null != securityRequired && !securityRequired.isEmpty()) {
             final Map<String, SecuritySchemeDefinition> filtered = new HashMap<>();
-            for (Map.Entry<String, SecuritySchemeDefinition> s: swaggerDefinition.getSecurityDefinitions().entrySet()) {
+            for (final Map.Entry<String, SecuritySchemeDefinition> s : swaggerDefinition.getSecurityDefinitions().entrySet()) {
                 securityRequired.stream().filter(item -> item.containsKey(s.getKey())).forEach(item -> filtered.put(s.getKey(), s.getValue()));
             }
 
@@ -257,11 +265,15 @@ public class RequestValidator {
                 .filter(RequestValidator::isBodyParam)
                 .findFirst();
 
+        final MessageContext context = MessageContext.create()
+                .withParameter(bodyParameter.orElse(null))
+                .build();
+
         if (requestBody.isPresent() && !requestBody.get().isEmpty() && !bodyParameter.isPresent()) {
             return ValidationReport.singleton(
                     messages.get("validation.request.body.unexpected",
                             apiOperation.getMethod(), apiOperation.getApiPath().original())
-            );
+            ).withAdditionalContext(context);
         }
 
         if (!bodyParameter.isPresent()) {
@@ -273,12 +285,14 @@ public class RequestValidator {
                 return ValidationReport.singleton(
                         messages.get("validation.request.body.missing",
                                 apiOperation.getMethod(), apiOperation.getApiPath().original())
-                );
+                ).withAdditionalContext(context);
             }
             return empty();
         }
 
-        return schemaValidator.validate(requestBody.get(), ((BodyParameter) bodyParameter.get()).getSchema());
+        return schemaValidator
+                .validate(requestBody.get(), ((BodyParameter) bodyParameter.get()).getSchema())
+                .withAdditionalContext(context);
     }
 
     @Nonnull
@@ -381,7 +395,7 @@ public class RequestValidator {
         final Multimap<String, String> params = ArrayListMultimap.create();
         final String[] pairs = formData.split("&");
         try {
-            for (String pair : pairs) {
+            for (final String pair : pairs) {
                 final String[] fields = pair.split("=");
                 final String name = URLDecoder.decode(fields[0], Charsets.UTF_8.name());
                 final String value = (fields.length > 1) ? URLDecoder.decode(fields[1], Charsets.UTF_8.name()) : null;

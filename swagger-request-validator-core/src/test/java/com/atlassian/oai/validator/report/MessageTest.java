@@ -5,6 +5,7 @@ import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
 import io.swagger.models.parameters.PathParameter;
 import org.junit.Test;
 
+import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.REQUEST;
 import static com.spotify.hamcrest.optional.OptionalMatchers.emptyOptional;
 import static com.spotify.hamcrest.optional.OptionalMatchers.optionalWithValue;
 import static org.hamcrest.Matchers.hasProperty;
@@ -20,11 +21,7 @@ public class MessageTest {
 
         final Message msg = Message
                 .create("test.key", "test.msg")
-                .withContext(
-                        MessageContext.create()
-                                .withRequestPath("request.path")
-                                .build()
-                )
+                .withContext(MessageContext.create().in(REQUEST).build())
                 .build();
 
         final Message enhancedMsg = msg.withAdditionalContext(
@@ -36,7 +33,7 @@ public class MessageTest {
 
         final MessageContext context = enhancedMsg.getContext().orElse(null);
         assertThat(context, is(notNullValue()));
-        assertThat(context.getRequestPath(), optionalWithValue(is("request.path")));
+        assertThat(context.getLocation(), optionalWithValue(is(REQUEST)));
         assertThat(context.getParameter(), optionalWithValue(hasProperty("name", is("test.param"))));
     }
 
@@ -47,16 +44,13 @@ public class MessageTest {
                 .create("test.key", "test.msg")
                 .build();
 
-        final Message enhancedMsg = msg.withAdditionalContext(
-                MessageContext.create()
-                        .withRequestPath("request.path")
-                        .build());
+        final Message enhancedMsg = msg.withAdditionalContext(MessageContext.create().in(REQUEST).build());
 
         assertThat(enhancedMsg, not(is(msg)));
 
         final MessageContext context = enhancedMsg.getContext().orElse(null);
         assertThat(context, is(notNullValue()));
-        assertThat(context.getRequestPath(), optionalWithValue(is("request.path")));
+        assertThat(context.getLocation(), optionalWithValue(is(REQUEST)));
         assertThat(context.getParameter(), emptyOptional());
     }
 

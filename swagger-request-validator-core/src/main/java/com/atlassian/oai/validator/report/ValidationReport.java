@@ -1,6 +1,7 @@
 package com.atlassian.oai.validator.report;
 
 import com.atlassian.oai.validator.model.ApiOperation;
+import io.swagger.models.Response;
 import io.swagger.models.parameters.Parameter;
 
 import javax.annotation.Nonnull;
@@ -118,6 +119,11 @@ public interface ValidationReport {
      */
     interface MessageContext {
 
+        enum Location {
+            REQUEST,
+            RESPONSE
+        }
+
         static MessageContext empty() {
             return create().build();
         }
@@ -130,11 +136,15 @@ public interface ValidationReport {
             return new Builder(other);
         }
 
-        Optional<String> getRequestPath();
-
         Optional<ApiOperation> getApiOperation();
 
         Optional<Parameter> getParameter();
+
+        Optional<Integer> getResponseStatus();
+
+        Optional<Response> getApiResponseDefinition();
+
+        Optional<Location> getLocation();
 
         /**
          * Return a new MessageContext instance that contains all of the data in this context,
@@ -147,7 +157,11 @@ public interface ValidationReport {
         class Builder {
             ApiOperation apiOperation;
             Parameter parameter;
-            String requestPath;
+
+            Integer responseStatus;
+            Response apiResponse;
+
+            Location location;
 
             private Builder() {
             }
@@ -155,7 +169,9 @@ public interface ValidationReport {
             private Builder(final MessageContext init) {
                 apiOperation = init.getApiOperation().orElse(null);
                 parameter = init.getParameter().orElse(null);
-                requestPath = init.getRequestPath().orElse(null);
+                responseStatus = init.getResponseStatus().orElse(null);
+                apiResponse = init.getApiResponseDefinition().orElse(null);
+                location = init.getLocation().orElse(null);
             }
 
             public Builder withApiOperation(final ApiOperation apiOperation) {
@@ -168,8 +184,18 @@ public interface ValidationReport {
                 return this;
             }
 
-            public Builder withRequestPath(final String path) {
-                requestPath = path;
+            public Builder withResponseStatus(final Integer status) {
+                responseStatus = status;
+                return this;
+            }
+
+            public Builder withApiResponseDefinition(final Response apiResponseDefinition) {
+                apiResponse = apiResponseDefinition;
+                return this;
+            }
+
+            public Builder in(final Location location) {
+                this.location = location;
                 return this;
             }
 
@@ -180,8 +206,14 @@ public interface ValidationReport {
                 if (parameter == null) {
                     parameter = other.getParameter().orElse(null);
                 }
-                if (requestPath == null) {
-                    requestPath = other.getRequestPath().orElse(null);
+                if (responseStatus == null) {
+                    responseStatus = other.getResponseStatus().orElse(null);
+                }
+                if (apiResponse == null) {
+                    apiResponse = other.getApiResponseDefinition().orElse(null);
+                }
+                if (location == null) {
+                    location = other.getLocation().orElse(null);
                 }
                 return this;
             }

@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import java.util.List;
 
+import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.REQUEST;
 import static com.spotify.hamcrest.optional.OptionalMatchers.emptyOptional;
 import static com.spotify.hamcrest.optional.OptionalMatchers.optionalWithValue;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -109,7 +110,7 @@ public class MergedValidationReportTest {
                 ValidationReport.from(NON_ERROR_MSG, ERROR_MSG)
         );
 
-        final MessageContext context = MessageContext.create().withRequestPath("request.path").build();
+        final MessageContext context = MessageContext.create().in(REQUEST).build();
         final ValidationReport contextualReport = report.withAdditionalContext(context);
 
         assertThat(contextualReport, not(is(report)));
@@ -126,7 +127,7 @@ public class MergedValidationReportTest {
     @Test
     public void withAdditionalContext_attachesAdditionalContext_toEachMessage_whenContext() {
 
-        final MessageContext baseContext = MessageContext.create().withRequestPath("request.path").build();
+        final MessageContext baseContext = MessageContext.create().in(REQUEST).build();
         final MergedValidationReport report = new MergedValidationReport(
                 ValidationReport.singleton(ERROR_MSG.withContext(baseContext)),
                 ValidationReport.from(NON_ERROR_MSG.withContext(baseContext), ERROR_MSG.withContext(baseContext))
@@ -142,7 +143,7 @@ public class MergedValidationReportTest {
 
             final MessageContext messageContext = m.getContext().get();
             assertThat(messageContext.getParameter(), emptyOptional());
-            assertThat(messageContext.getRequestPath(), optionalWithValue());
+            assertThat(messageContext.getLocation(), optionalWithValue());
             assertThat(messageContext.getApiOperation(), emptyOptional());
         });
         contextualReport.getMessages().forEach(m -> {
@@ -150,7 +151,7 @@ public class MergedValidationReportTest {
 
             final MessageContext messageContext = m.getContext().get();
             assertThat(messageContext.getParameter(), optionalWithValue());
-            assertThat(messageContext.getRequestPath(), optionalWithValue());
+            assertThat(messageContext.getLocation(), optionalWithValue());
             assertThat(messageContext.getApiOperation(), emptyOptional());
         });
     }

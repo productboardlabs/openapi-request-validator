@@ -80,15 +80,19 @@ public class ArrayParameterValidator extends BaseParameterValidator {
 
         final SerializableParameter parameter = (SerializableParameter) p;
 
+        final ValidationReport.MessageContext context = ValidationReport.MessageContext.create().withParameter(p).build();
+
         if (parameter.getRequired() && (value == null || value.trim().isEmpty())) {
-            return ValidationReport.singleton(messages.get("validation.request.parameter.missing", parameter.getName()));
+            return ValidationReport.singleton(
+                    messages.get("validation.request.parameter.missing", parameter.getName())
+            ).withAdditionalContext(context);
         }
 
         if (value == null || value.trim().isEmpty()) {
             return ValidationReport.empty();
         }
 
-        return doValidate(value, parameter);
+        return doValidate(value, parameter).withAdditionalContext(context);
     }
 
     public ValidationReport validate(@Nullable final Collection<String> values, @Nullable final Parameter p) {
