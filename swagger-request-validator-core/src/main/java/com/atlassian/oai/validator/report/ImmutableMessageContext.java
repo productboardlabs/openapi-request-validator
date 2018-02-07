@@ -32,4 +32,11 @@ class ImmutableMessageContext implements ValidationReport.MessageContext {
         return Optional.ofNullable(parameter);
     }
 
+    @Override
+    public ValidationReport.MessageContext enhanceWith(final ValidationReport.MessageContext other) {
+        return ValidationReport.MessageContext
+                .from(this)
+                .withAdditionalDataFrom(other)
+                .build();
+    }
 }

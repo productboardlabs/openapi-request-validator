@@ -68,6 +68,11 @@ public interface ValidationReport {
          */
         Message withContext(MessageContext context);
 
+        /**
+         * Returns a new instance, the same as this message, but additional context attached.
+         */
+        Message withAdditionalContext(MessageContext context);
+
         class Builder {
             private final String key;
             private final ValidationReport.Level level;
@@ -113,8 +118,16 @@ public interface ValidationReport {
      */
     interface MessageContext {
 
+        static MessageContext empty() {
+            return create().build();
+        }
+
         static Builder create() {
             return new Builder();
+        }
+
+        static Builder from(final MessageContext other) {
+            return new Builder(other);
         }
 
         Optional<String> getRequestPath();
@@ -123,12 +136,26 @@ public interface ValidationReport {
 
         Optional<Parameter> getParameter();
 
+        /**
+         * Return a new MessageContext instance that contains all of the data in this context,
+         * plus data from the incoming context where that data does not already exist on this context.
+         * <p>
+         * This is used to build a context up as more information becomes available.
+         */
+        MessageContext enhanceWith(MessageContext other);
+
         class Builder {
             ApiOperation apiOperation;
             Parameter parameter;
             String requestPath;
 
             private Builder() {
+            }
+
+            private Builder(final MessageContext init) {
+                apiOperation = init.getApiOperation().orElse(null);
+                parameter = init.getParameter().orElse(null);
+                requestPath = init.getRequestPath().orElse(null);
             }
 
             public Builder withApiOperation(final ApiOperation apiOperation) {
@@ -146,9 +173,23 @@ public interface ValidationReport {
                 return this;
             }
 
+            public Builder withAdditionalDataFrom(final MessageContext other) {
+                if (apiOperation == null) {
+                    apiOperation = other.getApiOperation().orElse(null);
+                }
+                if (parameter == null) {
+                    parameter = other.getParameter().orElse(null);
+                }
+                if (requestPath == null) {
+                    requestPath = other.getRequestPath().orElse(null);
+                }
+                return this;
+            }
+
             public MessageContext build() {
                 return new ImmutableMessageContext(this);
             }
+
         }
     }
 

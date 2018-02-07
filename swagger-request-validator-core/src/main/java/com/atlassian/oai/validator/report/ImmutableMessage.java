@@ -18,6 +18,8 @@ class ImmutableMessage implements ValidationReport.Message {
     private final ValidationReport.Level level;
     private final String message;
     private final List<String> additionalInfo;
+
+    @Nullable
     private final ValidationReport.MessageContext context;
 
     ImmutableMessage(@Nonnull final String key,
@@ -57,6 +59,11 @@ class ImmutableMessage implements ValidationReport.Message {
     @Override
     public ValidationReport.Message withContext(final ValidationReport.MessageContext context) {
         return new ImmutableMessage(key, level, message, additionalInfo, context);
+    }
+
+    @Override
+    public ValidationReport.Message withAdditionalContext(final ValidationReport.MessageContext context) {
+        return withContext(this.context == null ? context : this.context.enhanceWith(context));
     }
 
     @Override
