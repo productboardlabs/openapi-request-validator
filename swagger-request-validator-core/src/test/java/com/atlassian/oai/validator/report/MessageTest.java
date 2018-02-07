@@ -5,6 +5,9 @@ import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
 import io.swagger.models.parameters.PathParameter;
 import org.junit.Test;
 
+import static com.spotify.hamcrest.optional.OptionalMatchers.emptyOptional;
+import static com.spotify.hamcrest.optional.OptionalMatchers.optionalWithValue;
+import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
@@ -33,8 +36,8 @@ public class MessageTest {
 
         final MessageContext context = enhancedMsg.getContext().orElse(null);
         assertThat(context, is(notNullValue()));
-        assertThat(context.getRequestPath().orElse(null), is("request.path"));
-        assertThat(context.getParameter().isPresent(), is(true));
+        assertThat(context.getRequestPath(), optionalWithValue(is("request.path")));
+        assertThat(context.getParameter(), optionalWithValue(hasProperty("name", is("test.param"))));
     }
 
     @Test
@@ -53,8 +56,8 @@ public class MessageTest {
 
         final MessageContext context = enhancedMsg.getContext().orElse(null);
         assertThat(context, is(notNullValue()));
-        assertThat(context.getRequestPath().orElse(null), is("request.path"));
-        assertThat(context.getParameter().isPresent(), is(false));
+        assertThat(context.getRequestPath(), optionalWithValue(is("request.path")));
+        assertThat(context.getParameter(), emptyOptional());
     }
 
 }

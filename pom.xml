@@ -64,6 +64,7 @@
         <spring.version>4.3.7.RELEASE</spring.version>
         <servlet.api.version>3.1.0</servlet.api.version>
         <jsr305.version>3.0.2</jsr305.version>
+        <hamcrest-optional.version>1.1.1</hamcrest-optional.version>
 
         <license-maven-plugin.version>1.9</license-maven-plugin.version>
         <maven-checkstyle-plugin.version>2.17</maven-checkstyle-plugin.version>
@@ -227,6 +228,11 @@
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-webmvc</artifactId>
                 <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.spotify</groupId>
+                <artifactId>hamcrest-optional</artifactId>
+                <version>${hamcrest-optional.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

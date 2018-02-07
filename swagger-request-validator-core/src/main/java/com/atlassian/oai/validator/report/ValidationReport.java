@@ -271,4 +271,15 @@ public interface ValidationReport {
         requireNonNull(other, "A validation report is required");
         return new MergedValidationReport(this, other);
     }
+
+    /**
+     * Apply the given additional message context to each message in this validation report,
+     * returning a new unmodifiable report.
+     *
+     * @param context The additional context to apply to each message in the report
+     *
+     * @return A new, unmodifiable validation report containing all of the messages from this report,
+     * enhanced with the additional supplied context
+     */
+    ValidationReport withAdditionalContext(MessageContext context);
 }
