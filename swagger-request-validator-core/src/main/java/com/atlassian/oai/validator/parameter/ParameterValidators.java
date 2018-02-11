@@ -9,7 +9,6 @@ import io.swagger.models.parameters.SerializableParameter;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Optional;
 
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
@@ -39,10 +38,6 @@ public final class ParameterValidators {
 
     public ValidationReport validate(final String value, @Nonnull final Parameter parameter) {
         requireNonNull(parameter);
-
-        if (parameter.getRequired() && Optional.ofNullable(value).orElse("").trim().isEmpty()) {
-            return ValidationReport.singleton(messages.get("validation.request.parameter.missing", parameter.getName()));
-        }
 
         if ((parameter instanceof SerializableParameter) &&
                 ((SerializableParameter) parameter).getType().equalsIgnoreCase("array")) {
