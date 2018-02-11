@@ -22,6 +22,7 @@ import java.util.Optional;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
+import static java.util.Comparator.comparingInt;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
@@ -43,16 +44,16 @@ public class ApiOperationResolver {
      * @param basePathOverride (Optional) override for the base path defined in the Swagger specification.
      */
     public ApiOperationResolver(@Nonnull final Swagger api, @Nullable final String basePathOverride) {
-        this.apiPrefix = ofNullable(basePathOverride).orElse(api.getBasePath());
+        apiPrefix = ofNullable(basePathOverride).orElse(api.getBasePath());
         final Map<String, Path> apiPaths = ofNullable(api.getPaths()).orElse(emptyMap());
 
         // normalise all API paths and group them by their number of parts
-        this.apiPathsGroupedByNumberOfParts = apiPaths.keySet().stream()
+        apiPathsGroupedByNumberOfParts = apiPaths.keySet().stream()
                 .map(p -> new ApiPathImpl(p, apiPrefix))
                 .collect(groupingBy(NormalisedPath::numberOfParts));
 
         // create a operation mapping for the API path and HTTP method
-        this.operations = HashBasedTable.create();
+        operations = HashBasedTable.create();
         apiPaths.forEach((pathKey, apiPath) ->
                 apiPath.getOperationMap().forEach((httpMethod, operation) ->
                         operations.put(pathKey, httpMethod, operation))
@@ -72,25 +73,42 @@ public class ApiOperationResolver {
 
         // try to find possible matching paths regardless of HTTP method
         final NormalisedPath requestPath = new NormalisedPathImpl(path, apiPrefix);
-        final List<ApiPath> possibleMatches = apiPathsGroupedByNumberOfParts
+        final List<ApiPath> matchingPaths = apiPathsGroupedByNumberOfParts
                 .getOrDefault(requestPath.numberOfParts(), emptyList()).stream()
                 .filter(p -> p.matches(requestPath))
                 .collect(toList());
 
-        if (possibleMatches.isEmpty()) {
+        if (matchingPaths.isEmpty()) {
             return ApiOperationMatch.MISSING_PATH;
         }
 
-        // try to find the operation which fits the HTTP method
+        // try to find the operation which fits the HTTP method,
+        // choosing the most 'specific' path match from the candidates
         final HttpMethod httpMethod = HttpMethod.valueOf(method.name());
-        final Optional<ApiPath> pathOpt = possibleMatches.stream()
+        final Optional<ApiPath> matchingPathAndOperation = matchingPaths.stream()
                 .filter(apiPath -> operations.contains(apiPath.original(), httpMethod))
-                .findFirst(); // if exists there can only be one path matching the path and method - overlapping paths+methods are not allowed
+                .max(comparingInt(ApiOperationResolver::specificityScore));
 
-        return pathOpt
-                .map(apiPath -> new ApiOperationMatch(new ApiOperation(apiPath, requestPath, httpMethod,
-                        operations.get(apiPath.original(), httpMethod))))
+        return matchingPathAndOperation
+                .map(match ->
+                        new ApiOperationMatch(new ApiOperation(match, requestPath, httpMethod, operations.get(match.original(), httpMethod))))
                 .orElse(ApiOperationMatch.NOT_ALLOWED_OPERATION);
+    }
+
+    /**
+     * Get the 'specificity' score of the provided API path. This is used when selecting an API operation to validate against -
+     * where an incoming request matches multiple paths the 'most specific' one should win.
+     * <p>
+     * Note: This score is essentially meaningless across different paths - it should only be used to differentiate paths
+     * that could be equivalent. For example, '{@code /{id}}' and '{@code /{id}.json}' could both match an incoming request on path
+     * '{@code /foo.json}'; in that case we should match on '{@code /{id}.json}' as it is the most 'specific' match.
+     *
+     * @return a score >= 0 that indicates how 'specific' the path definition is. Higher numbers indicate more specific
+     * definitions (e.g. fewer path variables).
+     */
+    private static int specificityScore(@Nonnull final ApiPath apiPath) {
+        // Return the length of the path, with path vars counting as 1.
+        return apiPath.normalised().replaceAll("\\{.+?}", "").length();
     }
 
 }
