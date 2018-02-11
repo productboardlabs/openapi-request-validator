@@ -1,0 +1,19 @@
+-----------------------------012345678901234567890123456
+Content-Disposition: form-data; name="foo"
+
+foo value
+-----------------------------012345678901234567890123456
+Content-Disposition: form-data; name="bar"
+
+bar value
+-----------------------------012345678901234567890123456
+Content-Disposition: form-data; name="baz"; filename="myfile.txt"
+Content-Type: text/plain
+
+baz value
+-----------------------------012345678901234567890123456
+Content-Disposition: form-data; name="html"; filename="my.html"
+Content-Type: text/html
+
+<!DOCTYPE html><title></title>
+-----------------------------012345678901234567890123456--

@@ -38,7 +38,7 @@ public class SwaggerValidationFilter implements Filter {
     public SwaggerValidationFilter(final String swaggerJsonUrl) {
         requireNonEmpty(swaggerJsonUrl, "A Swagger URL is required");
 
-        validator = SwaggerRequestResponseValidator.createFor(swaggerJsonUrl).build();
+        this.validator = SwaggerRequestResponseValidator.createFor(swaggerJsonUrl).build();
     }
 
     public SwaggerValidationFilter(final SwaggerRequestResponseValidator validator) {
@@ -64,7 +64,7 @@ public class SwaggerValidationFilter implements Filter {
         return response;
     }
 
-    public static class SwaggerValidationException extends RuntimeException {
+    static class SwaggerValidationException extends RuntimeException {
         public SwaggerValidationException(final ValidationReport report) {
             super(ValidationReportFormatter.format(report));
         }

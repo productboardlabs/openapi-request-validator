@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static io.restassured.RestAssured.get;
+import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -50,7 +50,10 @@ public class SwaggerValidatedWireMockRuleTestExample {
                                 .withHeader("content-type", "application/json")
                                 .withBody("{\"name\":\"fido\", \"photoUrls\":[]}")));
 
-        final Response response = get(WIREMOCK_URL + "/pet/1");
+        final Response response =
+                given()
+                    .header("API_Key", "foobar")
+                    .get(WIREMOCK_URL + "/pet/1");
         assertThat(response.getStatusCode(), is(200));
     }
 
@@ -69,7 +72,30 @@ public class SwaggerValidatedWireMockRuleTestExample {
                                 .withHeader("content-type", "application/json")
                                 .withBody("{\"name\":\"fido\"}"))); // Missing required 'photoUrls' field
 
-        final Response response = get(WIREMOCK_URL + "/pet/1");
+        final Response response =
+                given()
+                    .header("API_Key", "foobar")
+                    .get(WIREMOCK_URL + "/pet/1");
+        assertThat(response.getStatusCode(), is(200));
+    }
+
+    /**
+     * Test a POST to the endpoint that consumes multipart/form-data
+     */
+    @Test
+    public void testMultipartFormdata() {
+        wireMockRule.stubFor(
+                WireMock.post(urlEqualTo("/pet/1/uploadImage"))
+                        .willReturn(aResponse()
+                                .withHeader("content-type", "application/json")
+                                .withStatus(200)
+                                .withBody("{}")));
+
+        final Response response =
+                given()
+                        .multiPart("additionalMetadata", "foobar")
+                        .multiPart("file", "somefile")
+                        .post(WIREMOCK_URL + "/pet/1/uploadImage");
         assertThat(response.getStatusCode(), is(200));
     }
 

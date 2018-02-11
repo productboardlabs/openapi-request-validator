@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadRequest;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadJsonRequest;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadResource;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadResponse;
 
@@ -78,14 +78,35 @@ public class RequestValidationTest {
     @Test
     public void validate_withRequestMissingRequiredFormDataBody_shouldFail() {
         final String formData = "fmail=abc%40gmail.com";
-        final Request request = SimpleRequest.Builder.put("/users/1").withBody(formData).build();
+        final Request request = SimpleRequest.Builder
+                .put("/users/1")
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody(formData).build();
+        assertFail(classUnderTest.validate(request, validUserResponse), "validation.request.parameter.missing");
+        assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.missing");
+    }
+
+    @Test
+    public void validate_withRequestMissingRequiredMultipartFormDataBody_shouldFail() {
+        final String formData =
+                "--------------------------3046b8889e52e808\r\n" +
+                "Content-Disposition: form-data; name=\"additionalMetadata\"\r\n" +
+                "\r\n" +
+                "abc@gmail.com\r\n" +
+                "--------------------------3046b8889e52e808";
+
+        final Request request = SimpleRequest.Builder
+                .post("/secure/users/1/upload")
+                .withHeader("content-type", "multipart/form-data; boundary=------------------------3046b8889e52e808")
+                .withBody(formData)
+                .build();
         assertFail(classUnderTest.validate(request, validUserResponse), "validation.request.parameter.missing");
         assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.missing");
     }
 
     @Test
     public void validate_withValidJsonBody_shouldPass() {
-        final Request request = SimpleRequest.Builder.post("/users").withBody(loadRequest("newuser-valid")).build();
+        final Request request = SimpleRequest.Builder.post("/users").withBody(loadJsonRequest("newuser-valid")).build();
 
         assertPass(classUnderTest.validate(request, validUserResponse));
         assertPass(classUnderTest.validateRequest(request));
@@ -94,7 +115,33 @@ public class RequestValidationTest {
     @Test
     public void validate_withValidFormDataBody_shouldPass() {
         final String formData = "email=abc%40gmail.com";
-        final Request request = SimpleRequest.Builder.put("/users/1").withBody(formData).build();
+        final Request request = SimpleRequest.Builder
+                .put("/users/1")
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody(formData)
+                .build();
+        assertPass(classUnderTest.validate(request, validUserResponse));
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withValidMultipartFormDataBody_shouldPass() {
+        final String formData =
+                "--------------------------3046b8889e52e808\r\n" +
+                "Content-Disposition: form-data; name=\"additionalMetadata\"\r\n" +
+                "\r\n" +
+                "abc@gmail.com\r\n" +
+                "--------------------------3046b8889e52e808\r\n" +
+                "Content-Disposition: form-data; name=\"imageFile\"; filename=\"myImageFile.jpg\"\r\n" +
+                "\r\n" +
+                "some content\r\n" +
+                "--------------------------3046b8889e52e808--";
+
+        final Request request = SimpleRequest.Builder
+                .post("/secure/users/1/upload")
+                .withHeader("content-type", "multipart/form-data; boundary=------------------------3046b8889e52e808")
+                .withBody(formData)
+                .build();
         assertPass(classUnderTest.validate(request, validUserResponse));
         assertPass(classUnderTest.validateRequest(request));
     }
@@ -102,7 +149,39 @@ public class RequestValidationTest {
     @Test
     public void validate_formData_manyValuesForSingleKey() {
         final String formData = "email=abc%40gmail.com&email=";
-        final Request request = SimpleRequest.Builder.put("/users/1").withBody(formData).build();
+        final Request request = SimpleRequest.Builder
+                .put("/users/1")
+                .withBody(formData)
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .build();
+        assertFail(classUnderTest.validate(request, validUserResponse),
+                "validation.request.parameter.missing");
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.parameter.missing");
+    }
+
+    @Test
+    public void validate_multipartFormData_manyValuesForSingleKey() {
+        final String formData =
+                "--------------------------3046b8889e52e808\r\n" +
+                "Content-Disposition: form-data; name=\"additionalMetadata\"\r\n" +
+                "\r\n" +
+                "abc@gmail.com\r\n" +
+                "--------------------------3046b8889e52e808\r\n" +
+                "Content-Disposition: form-data; name=\"imageFile\"; filename=\"myImageFile.jpg\"\r\n" +
+                "\r\n" +
+                "some content\r\n" +
+                "--------------------------3046b8889e52e808\r\n" +
+                "Content-Disposition: form-data; name=\"imageFile\"; filename=\"myImageFile.jpg\"\r\n" +
+                "\r\n" +
+                "\r\n" +
+                "--------------------------3046b8889e52e808";
+        final Request request = SimpleRequest.Builder
+                .post("/secure/users/1/upload")
+                .withHeader("content-type", "multipart/form-data; boundary=------------------------3046b8889e52e808")
+                .withBody(formData)
+                .build();
+
         assertFail(classUnderTest.validate(request, validUserResponse),
                 "validation.request.parameter.missing");
         assertFail(classUnderTest.validateRequest(request),
@@ -113,7 +192,8 @@ public class RequestValidationTest {
     public void validate_withInvalidJsonRequestBody_shouldFail() {
         final Request request = SimpleRequest.Builder
                 .post("/users")
-                .withBody(loadRequest("newuser-invalid-missingrequired"))
+                .withHeader("content-type", "application/json")
+                .withBody(loadJsonRequest("newuser-invalid-missingrequired"))
                 .build();
 
         assertFail(classUnderTest.validate(request, validUserResponse),
@@ -125,7 +205,29 @@ public class RequestValidationTest {
     @Test
     public void validate_withInvalidFormDataRequestBody_shouldFail() {
         final String formData = "malformed-form-url-encoded";
-        final Request request = SimpleRequest.Builder.put("/users/1").withBody(formData).build();
+        final Request request = SimpleRequest.Builder
+                .put("/users/1")
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody(formData)
+                .build();
+        assertFail(classUnderTest.validate(request, validUserResponse),
+                "validation.request.parameter.missing");
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.parameter.missing");
+    }
+
+    @Test
+    public void validate_withInvalidMultipartFormDataRequestBody_shouldFail() {
+        final String formData =
+                "--------------------------3046b8889e52e808\r\n" +
+                "Content-Disposition: form-data; name=\"additionalMetadata\"\r\n" +
+                "\r\n" +
+                "abc@gmai";
+        final Request request = SimpleRequest.Builder
+                .post("/secure/users/1/upload")
+                .withHeader("content-type", "multipart/form-data; boundary=------------------------3046b8889e52e808")
+                .withBody(formData)
+                .build();
         assertFail(classUnderTest.validate(request, validUserResponse),
                 "validation.request.parameter.missing");
         assertFail(classUnderTest.validateRequest(request),
@@ -169,7 +271,7 @@ public class RequestValidationTest {
 
     @Test
     public void validate_withRequestBody_shouldFail_whenNoneExpected() {
-        final Request request = SimpleRequest.Builder.get("/users").withBody(loadRequest("newuser-valid")).build();
+        final Request request = SimpleRequest.Builder.get("/users").withBody(loadJsonRequest("newuser-valid")).build();
 
         assertFail(classUnderTest.validate(request, validUsersResponse),
                 "validation.request.body.unexpected");
@@ -250,7 +352,7 @@ public class RequestValidationTest {
     public void validate_withNoContentType_shouldPass() {
         final Request request = SimpleRequest.Builder
                 .post("/users")
-                .withBody(loadRequest("newuser-valid"))
+                .withBody(loadJsonRequest("newuser-valid"))
                 .build();
 
         assertPass(classUnderTest.validate(request, validUserResponse));
@@ -261,7 +363,7 @@ public class RequestValidationTest {
     public void validate_withMatchingContentType_shouldPass() {
         final Request request = SimpleRequest.Builder
                 .post("/users")
-                .withBody(loadRequest("newuser-valid"))
+                .withBody(loadJsonRequest("newuser-valid"))
                 .withHeader("Content-Type", "application/json;charset=UTF-8")
                 .build();
 
@@ -285,7 +387,7 @@ public class RequestValidationTest {
     public void validate_withNonMatchingContentType_shouldFail() {
         final Request request = SimpleRequest.Builder
                 .post("/users")
-                .withBody(loadRequest("newuser-valid"))
+                .withBody(loadJsonRequest("newuser-valid"))
                 .withHeader("content-Type", "text/html")
                 .build();
 
@@ -299,7 +401,7 @@ public class RequestValidationTest {
     public void validate_withInvalidContentType_shouldFail() {
         final Request request = SimpleRequest.Builder
                 .post("/users")
-                .withBody(loadRequest("newuser-valid"))
+                .withBody(loadJsonRequest("newuser-valid"))
                 .withHeader("Content-Type", "foop")
                 .build();
 
@@ -313,7 +415,7 @@ public class RequestValidationTest {
     public void validate_withMatchingAccept_shouldPass() {
         final Request request = SimpleRequest.Builder
                 .post("/users")
-                .withBody(loadRequest("newuser-valid"))
+                .withBody(loadJsonRequest("newuser-valid"))
                 .withHeader("Accept", "application/json;charset=UTF-8")
                 .build();
 
@@ -325,7 +427,7 @@ public class RequestValidationTest {
     public void validate_withWildcardAccept_shouldPass() {
         final Request request = SimpleRequest.Builder
                 .post("/users")
-                .withBody(loadRequest("newuser-valid"))
+                .withBody(loadJsonRequest("newuser-valid"))
                 .withHeader("Accept", "*/*")
                 .build();
 
@@ -337,7 +439,7 @@ public class RequestValidationTest {
     public void validate_withMultipleAcceptHeaders_shouldPass_whenOneMatches() {
         final Request request = SimpleRequest.Builder
                 .post("/users")
-                .withBody(loadRequest("newuser-valid"))
+                .withBody(loadJsonRequest("newuser-valid"))
                 .withHeader("Accept", "text/html", "application/json;charset=UTF-8")
                 .build();
 
@@ -349,7 +451,7 @@ public class RequestValidationTest {
     public void validate_withNonMatchingAccept_shouldFail() {
         final Request request = SimpleRequest.Builder
                 .post("/users")
-                .withBody(loadRequest("newuser-valid"))
+                .withBody(loadJsonRequest("newuser-valid"))
                 .withHeader("accept", "text/html")
                 .build();
 
@@ -363,7 +465,7 @@ public class RequestValidationTest {
     public void validate_withMultipleAcceptHeaders_shouldFail_whenNoneMatch() {
         final Request request = SimpleRequest.Builder
                 .post("/users")
-                .withBody(loadRequest("newuser-valid"))
+                .withBody(loadJsonRequest("newuser-valid"))
                 .withHeader("Accept", "text/html", "application/binary")
                 .build();
 
@@ -377,7 +479,7 @@ public class RequestValidationTest {
     public void validate_withInvalidAccept_shouldFail() {
         final Request request = SimpleRequest.Builder
                 .post("/users")
-                .withBody(loadRequest("newuser-valid"))
+                .withBody(loadJsonRequest("newuser-valid"))
                 .withHeader("accept", "foop")
                 .build();
 

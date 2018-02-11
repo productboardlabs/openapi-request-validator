@@ -54,4 +54,22 @@ public class StringUtils {
     }
 
     private StringUtils() { }
+
+    /**
+     * Adds "\r\n" to the beginning and to the end of the string if not there
+     * @param string - string to wrap
+     * @param doNotAddIfAlreadyThere - when true, it won't append/prepend string with the new lines if they are already there
+     */
+    public static String addOpneingAndTrailnigNewlines(final String string, final boolean doNotAddIfAlreadyThere) {
+        final StringBuilder withNewlines = new StringBuilder(string);
+
+        if (!(string.startsWith("\r\n") && doNotAddIfAlreadyThere)) {
+            withNewlines.insert(0, "\r\n");
+        }
+
+        if (!(string.endsWith("\r\n") && doNotAddIfAlreadyThere)) {
+            withNewlines.append("\r\n");
+        }
+        return withNewlines.toString();
+    }
 }
