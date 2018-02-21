@@ -18,6 +18,7 @@ import io.swagger.models.parameters.Parameter;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -174,7 +175,7 @@ public class RequestValidator {
         final List<MediaType> requestMediaTypes = new ArrayList<>();
         for (final String requestHeaderValue : requestHeaderValues) {
             try {
-                requestMediaTypes.add(MediaType.parse(requestHeaderValue));
+                Arrays.asList(requestHeaderValue.split("\\s*,\\s*")).forEach(acceptHeader -> requestMediaTypes.add(MediaType.parse(acceptHeader)));
             } catch (final IllegalArgumentException e) {
                 return ValidationReport.singleton(messages.get(invalidTypeKey, requestHeaderValue));
             }
