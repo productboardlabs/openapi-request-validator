@@ -51,6 +51,16 @@
               "type": "number",
               "format": "int32"
             }
+          },
+          {
+            "name": "sorting",
+            "in": "query",
+            "description": "Comma-separated sorting fields (created only testing that query parameters are not split!)",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "name,email"
+            ]
           }
         ],
         "responses": {

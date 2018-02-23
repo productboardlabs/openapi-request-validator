@@ -322,6 +322,14 @@ public class RequestValidationTest {
     }
 
     @Test
+    public void validate_withQueryParamNotSplitted_shouldPass() {
+        final Request request = SimpleRequest.Builder.get("/users").withQueryParam("sorting", "name,email").build();
+
+        assertPass(classUnderTest.validate(request, validUsersResponse));
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
     public void validate_withExtraQueryParams_shouldPass() {
         final Request request = SimpleRequest.Builder.get("/users")
                 .withQueryParam("foo", "bar")

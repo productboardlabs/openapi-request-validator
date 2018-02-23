@@ -266,7 +266,7 @@ public class SimpleRequest implements Request {
          */
         public Builder withHeader(final String name, final List<String> values) {
             // available but not set headers are considered as empty
-            putValuesToMapOrDefault(headers, name, values, "");
+            putValuesToMapOrDefault(headers, name, values, "", true);
             return this;
         }
 
@@ -297,7 +297,7 @@ public class SimpleRequest implements Request {
          */
         public Builder withQueryParam(final String name, final List<String> values) {
             // available but not set query parameters are considered as available but with no value
-            putValuesToMapOrDefault(queryParams, name, values, null);
+            putValuesToMapOrDefault(queryParams, name, values, null, false);
             return this;
         }
 
@@ -331,11 +331,12 @@ public class SimpleRequest implements Request {
         }
 
         static void putValuesToMapOrDefault(final Multimap<String, String> map, final String name,
-                                            final List<String> values, final String defaultIfNotSet) {
+                                            final List<String> values, final String defaultIfNotSet,
+                                            final boolean splitValues) {
             if (values == null || values.isEmpty()) {
-                map.putAll(name, splitHeaderValue(defaultIfNotSet));
+                map.putAll(name, splitValues ? splitHeaderValue(defaultIfNotSet) : Collections.singleton(null));
             } else {
-                values.forEach(value -> map.putAll(name, splitHeaderValue(value)));
+                values.forEach(value -> map.putAll(name, splitValues ? splitHeaderValue(value) : Collections.singleton(value)));
             }
         }
 
