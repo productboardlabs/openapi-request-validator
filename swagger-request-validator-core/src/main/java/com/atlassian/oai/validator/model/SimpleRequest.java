@@ -5,6 +5,7 @@ import com.google.common.collect.MultimapBuilder;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -332,10 +333,14 @@ public class SimpleRequest implements Request {
         static void putValuesToMapOrDefault(final Multimap<String, String> map, final String name,
                                             final List<String> values, final String defaultIfNotSet) {
             if (values == null || values.isEmpty()) {
-                map.put(name, defaultIfNotSet);
+                map.putAll(name, splitHeaderValue(defaultIfNotSet));
             } else {
-                map.putAll(name, values);
+                values.forEach(value -> map.putAll(name, splitHeaderValue(value)));
             }
+        }
+
+        static Collection<String> splitHeaderValue(final String value) {
+            return value != null ? Arrays.asList(value.split("\\s*,\\s*")) : Collections.singleton(null);
         }
     }
 }
