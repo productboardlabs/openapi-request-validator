@@ -10,7 +10,7 @@
 
     <groupId>com.atlassian.oai</groupId>
     <artifactId>swagger-request-validator</artifactId>
-    <version>1.3.5</version>
+    <version>1.3.6-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Swagger Request Validator</name>
@@ -34,7 +34,7 @@
     <scm>
         <connection>scm:git:ssh://git@bitbucket.org/atlassian/swagger-request-validator.git</connection>
         <developerConnection>scm:git:ssh://git@bitbucket.org/atlassian/swagger-request-validator.git</developerConnection>
-        <tag>swagger-request-validator-1.3.5</tag>
+        <tag>HEAD</tag>
         <url>https://bitbucket.org/atlassian/swagger-request-validator</url>
     </scm>
 
