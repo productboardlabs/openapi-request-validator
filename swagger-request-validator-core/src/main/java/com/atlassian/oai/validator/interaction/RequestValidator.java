@@ -219,7 +219,7 @@ public class RequestValidator {
     @Nonnull
     private ValidationReport validateRequestBody(@Nonnull final Request request,
                                                  @Nonnull final ApiOperation apiOperation) {
-        Optional<String> requestContentType = request.getHeaderValue("content-type");
+        final Optional<String> requestContentType = request.getHeaderValue("content-type");
         if (isMultipartFormData(requestContentType, apiOperation)) {
             return validateForm(request.getBody(), apiOperation, bodyData -> parseMultipartFormDataBody(requestContentType.get(), bodyData));
         }
