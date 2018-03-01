@@ -11,10 +11,12 @@ import com.google.common.collect.Multimap;
 import com.google.common.net.MediaType;
 import io.swagger.models.Swagger;
 import io.swagger.models.auth.ApiKeyAuthDefinition;
+import io.swagger.models.auth.BasicAuthDefinition;
 import io.swagger.models.auth.In;
 import io.swagger.models.auth.SecuritySchemeDefinition;
 import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.Parameter;
+import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -24,17 +26,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
 
 import static com.atlassian.oai.validator.report.ValidationReport.empty;
 import static com.atlassian.oai.validator.util.HttpParsingUtils.isMultipartContentTypeAcceptedByConsumer;
 import static com.atlassian.oai.validator.util.HttpParsingUtils.parseUrlencodedFormDataBody;
 import static com.atlassian.oai.validator.util.HttpParsingUtils.parseMultipartFormDataBody;
 import static java.util.Objects.requireNonNull;
+import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  * Validate a request against a given API operation.
  */
 public class RequestValidator {
+
+    private static final Logger log = getLogger(RequestValidator.class);
+
+    private static final String BASIC_AUTH_HEADER = "Authorization";
 
     private final SchemaValidator schemaValidator;
     private final ParameterValidators parameterValidators;
@@ -85,20 +94,45 @@ public class RequestValidator {
         final List<Map<String, List<String>>> securityRequired = apiOperation.getOperation().getSecurity();
 
         if (null != securityRequired && !securityRequired.isEmpty()) {
-            final Map<String, SecuritySchemeDefinition> filtered = new HashMap<>();
+            boolean foundSecurity = false;
+            ValidationReport report = empty();
             for (Map.Entry<String, SecuritySchemeDefinition> s: swaggerDefinition.getSecurityDefinitions().entrySet()) {
+                final Map<String, SecuritySchemeDefinition> filtered = new HashMap<>();
                 securityRequired.stream().filter(item -> item.containsKey(s.getKey())).forEach(item -> filtered.put(s.getKey(), s.getValue()));
+
+                if (!filtered.isEmpty()) {
+                    final Set<String> missingParameters = new TreeSet<>();
+                    report = report.merge(filtered.entrySet().stream().map(e -> {
+                        try {
+                            return validateSingleSecurityParameter(request, e.getValue());
+                        } catch (final SecurityParameterNotFoundException ex) {
+                            missingParameters.add(ex.parameterName);
+                            return empty();
+                        }
+                    }).reduce(empty(), ValidationReport::merge));
+
+                    if (missingParameters.isEmpty()) {
+                        foundSecurity = true;
+                    } else {
+                        log.debug("Security definition not found for {}, parameters: {}", s.getKey(), missingParameters);
+                    }
+                }
             }
 
-            return filtered.entrySet().stream().map(e -> validateSingleSecurityParameter(request, e.getValue()))
-                    .reduce(empty(), ValidationReport::merge);
+            if (!foundSecurity) {
+                // none of security headers was found
+                return ValidationReport.singleton(messages.get("validation.request.security.missing", request.getMethod(), request.getPath()));
+            }
+
+            return report;
         }
         return empty();
     }
 
     @Nonnull
     private ValidationReport validateSingleSecurityParameter(@Nonnull final Request request,
-                                                             @Nonnull final SecuritySchemeDefinition securitySchemeDefinition) {
+                                                             @Nonnull final SecuritySchemeDefinition securitySchemeDefinition)
+            throws SecurityParameterNotFoundException {
         switch (securitySchemeDefinition.getType()) {
             case "apiKey" :
                 final ApiKeyAuthDefinition apiKeyAuthDefinition = (ApiKeyAuthDefinition) securitySchemeDefinition;
@@ -111,31 +145,47 @@ public class RequestValidator {
                     default:
                         return empty();
                 }
+            case "basic":
+                final BasicAuthDefinition basicAuthDefinition = (BasicAuthDefinition) securitySchemeDefinition;
+                return checkBasicAuthorization(request, basicAuthDefinition);
             default:
                 return empty();
         }
     }
 
     @Nonnull
+    private ValidationReport checkBasicAuthorization(@Nonnull final Request request,
+                                                     @Nonnull final BasicAuthDefinition basicAuthDefinition)
+            throws SecurityParameterNotFoundException {
+
+        if (!request.getHeaderValue(BASIC_AUTH_HEADER).isPresent()) {
+            throw new SecurityParameterNotFoundException(BASIC_AUTH_HEADER);
+        }
+        // HTTP basic authentication header found, additional checks can be placed here
+        return empty();
+    }
+
+    @Nonnull
     private ValidationReport checkApiKeyAuthorizationByQueryParameter(@Nonnull final Request request,
-                                                                      @Nonnull final ApiKeyAuthDefinition apiKeyAuthDefinition) {
+                                                                      @Nonnull final ApiKeyAuthDefinition apiKeyAuthDefinition)
+            throws SecurityParameterNotFoundException {
         final Optional<String> authQueryParam = request.getQueryParameterValues(apiKeyAuthDefinition.getName()).stream().findFirst();
         if (!authQueryParam.isPresent()) {
-            return ValidationReport.singleton(messages.get("validation.request.security.missing", request.getMethod(), request.getPath()));
+            throw new SecurityParameterNotFoundException(apiKeyAuthDefinition.getName());
         }
+        // API key query parameter found, additional checks can be placed here
         return empty();
     }
 
     @Nonnull
     private ValidationReport checkApiKeyAuthorizationByHeader(@Nonnull final Request request,
-                                                              @Nonnull final ApiKeyAuthDefinition apiKeyAuthDefinition) {
+                                                              @Nonnull final ApiKeyAuthDefinition apiKeyAuthDefinition)
+            throws SecurityParameterNotFoundException {
 
         if (!request.getHeaderValue(apiKeyAuthDefinition.getName()).isPresent()) {
-            return ValidationReport.singleton(
-                 messages.get("validation.request.security.missing",
-                         request.getMethod(), request.getPath())
-            );
+            throw new SecurityParameterNotFoundException(apiKeyAuthDefinition.getName());
         }
+        // API key header found, additional checks can be placed here
         return empty();
     }
 
@@ -425,5 +475,13 @@ public class RequestValidator {
 
     private static boolean isParam(final Parameter p, final String type) {
         return p != null && p.getIn() != null && p.getIn().equalsIgnoreCase(type);
+    }
+
+    private static class SecurityParameterNotFoundException extends Exception {
+        final String parameterName;
+
+        SecurityParameterNotFoundException(final String parameterName) {
+            this.parameterName = parameterName;
+        }
     }
 }

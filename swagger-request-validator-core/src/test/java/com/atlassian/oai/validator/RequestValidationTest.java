@@ -28,10 +28,25 @@ public class RequestValidationTest {
 
     @Test
     public void validate_withValidRequestResponse_shouldSucceed() {
-        final Request request = SimpleRequest.Builder.get("/users/1").build();
+        final Request request = SimpleRequest.Builder
+                .get("/users/1")
+                .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
+                .build();
 
         assertPass(classUnderTest.validate(request, validUserResponse));
         assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withMissingBasicAuth_shouldFail() {
+        final Request request = SimpleRequest.Builder
+                .get("/users/1")
+                .build();
+
+        assertFail(classUnderTest.validate(request, validUserResponse),
+                "validation.request.security.missing");
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.security.missing");
     }
 
     @Test
@@ -67,7 +82,10 @@ public class RequestValidationTest {
 
     @Test
     public void validate_withRequestMissingRequiredJsonBody_shouldFail() {
-        final Request request = SimpleRequest.Builder.post("/users").build();
+        final Request request = SimpleRequest.Builder
+                .post("/users")
+                .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
+                .build();
 
         assertFail(classUnderTest.validate(request, okResponse),
                 "validation.request.body.missing");
@@ -106,7 +124,11 @@ public class RequestValidationTest {
 
     @Test
     public void validate_withValidJsonBody_shouldPass() {
-        final Request request = SimpleRequest.Builder.post("/users").withBody(loadJsonRequest("newuser-valid")).build();
+        final Request request = SimpleRequest.Builder
+                .post("/users")
+                .withBody(loadJsonRequest("newuser-valid"))
+                .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
+                .build();
 
         assertPass(classUnderTest.validate(request, validUserResponse));
         assertPass(classUnderTest.validateRequest(request));
@@ -245,6 +267,18 @@ public class RequestValidationTest {
     }
 
     @Test
+    public void validate_authorizationQueryParamInsteadOfHeader_shouldFail() {
+        final Request request = SimpleRequest.Builder
+                .get("/secure/users/1")
+                .withQueryParam("authorization", "token")
+                .build();
+        assertFail(classUnderTest.validate(request, validUserResponse),
+                "validation.request.security.missing");
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.security.missing");
+    }
+
+    @Test
     public void validate_authorizationHeaderIsChecked_shouldFail() {
         final Request request = SimpleRequest.Builder.get("/secure/users/1").build();
         assertFail(classUnderTest.validate(request, validUserResponse),
@@ -281,7 +315,11 @@ public class RequestValidationTest {
 
     @Test
     public void validate_withValidQueryParams_shouldPass() {
-        final Request request = SimpleRequest.Builder.get("/users").withQueryParam("maxCount", "10").build();
+        final Request request = SimpleRequest.Builder
+                .get("/users")
+                .withQueryParam("maxCount", "10")
+                .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
+                .build();
 
         assertPass(classUnderTest.validate(request, validUsersResponse));
         assertPass(classUnderTest.validateRequest(request));
@@ -299,7 +337,10 @@ public class RequestValidationTest {
 
     @Test
     public void validate_withMissingQueryParam_shouldPass_whenOptional() {
-        final Request request = SimpleRequest.Builder.get("/users").build();
+        final Request request = SimpleRequest.Builder
+                .get("/users")
+                .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
+                .build();
 
         assertPass(classUnderTest.validate(request, validUsersResponse));
         assertPass(classUnderTest.validateRequest(request));
@@ -307,7 +348,11 @@ public class RequestValidationTest {
 
     @Test
     public void validate_withArrayQueryParam_shouldPass_whenValid() {
-        final Request request = SimpleRequest.Builder.get("/users").withQueryParam("filter", "1,2,3").build();
+        final Request request = SimpleRequest.Builder
+                .get("/users")
+                .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
+                .withQueryParam("filter", "1,2,3")
+                .build();
 
         assertPass(classUnderTest.validate(request, validUsersResponse));
         assertPass(classUnderTest.validateRequest(request));
@@ -332,6 +377,7 @@ public class RequestValidationTest {
     @Test
     public void validate_withExtraQueryParams_shouldPass() {
         final Request request = SimpleRequest.Builder.get("/users")
+                .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
                 .withQueryParam("foo", "bar")
                 .withQueryParam("something", "else")
                 .build();
@@ -361,6 +407,7 @@ public class RequestValidationTest {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withBody(loadJsonRequest("newuser-valid"))
+                .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
                 .build();
 
         assertPass(classUnderTest.validate(request, validUserResponse));
@@ -372,6 +419,7 @@ public class RequestValidationTest {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withBody(loadJsonRequest("newuser-valid"))
+                .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
                 .withHeader("Content-Type", "application/json;charset=UTF-8")
                 .build();
 
@@ -424,6 +472,7 @@ public class RequestValidationTest {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withBody(loadJsonRequest("newuser-valid"))
+                .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
                 .withHeader("Accept", "application/json;charset=UTF-8")
                 .build();
 
@@ -437,6 +486,7 @@ public class RequestValidationTest {
                 .post("/users")
                 .withBody(loadJsonRequest("newuser-valid"))
                 .withHeader("Accept", "*/*")
+                .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
                 .build();
 
         assertPass(classUnderTest.validate(request, validUserResponse));
@@ -448,6 +498,7 @@ public class RequestValidationTest {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withBody(loadJsonRequest("newuser-valid"))
+                .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
                 .withHeader("Accept", "text/html", "application/json;charset=UTF-8")
                 .build();
 
