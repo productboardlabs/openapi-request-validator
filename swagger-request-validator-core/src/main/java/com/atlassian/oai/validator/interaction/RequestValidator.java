@@ -114,7 +114,7 @@ public class RequestValidator {
                     if (missingParameters.isEmpty()) {
                         foundSecurity = true;
                     } else {
-                        log.debug("Security definition not found for {}, parameters: {}", s.getKey(), missingParameters);
+                        log.debug("Security definition not found for {}, missing parameters: {}", s.getKey(), missingParameters);
                     }
                 }
             }
