@@ -12,13 +12,15 @@
       "request": {
         "method": "GET",
         "path": "/users/2",
+        "headers": {
+          "Authorization": "Basic EncryptedUsernameAndPassword"
+        },
         "body": null
       },
       "response": {
         "status": 200,
         "headers": {
           "Content-Type": "application/json; charset=UTF-8",
-          "Authorization": "Basic EncryptedUsernameAndPassword"
         },
         "body": {
           "name": "Alice",
