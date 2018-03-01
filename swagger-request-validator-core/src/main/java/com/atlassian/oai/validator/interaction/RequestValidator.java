@@ -75,7 +75,7 @@ public class RequestValidator {
                 .merge(validateAccepts(request, apiOperation))
                 .merge(validateHeaders(request, apiOperation))
                 .merge(validatePathParameters(apiOperation))
-                .merge(validateRequestBody(request.getHeaderValue("content-type"), request.getBody(), apiOperation))
+                .merge(validateRequestBody(request, apiOperation))
                 .merge(validateQueryParameters(request, apiOperation));
     }
 
@@ -217,17 +217,17 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private ValidationReport validateRequestBody(@Nonnull final Optional<String> requestContentType,
-                                                 @Nonnull final Optional<String> requestBody,
+    private ValidationReport validateRequestBody(@Nonnull final Request request,
                                                  @Nonnull final ApiOperation apiOperation) {
+        Optional<String> requestContentType = request.getHeaderValue("content-type");
         if (isMultipartFormData(requestContentType, apiOperation)) {
-            return validateForm(requestBody, apiOperation, bodyData -> parseMultipartFormDataBody(requestContentType.get(), bodyData));
+            return validateForm(request.getBody(), apiOperation, bodyData -> parseMultipartFormDataBody(requestContentType.get(), bodyData));
         }
         if (isFormData(requestContentType, apiOperation)) {
-            return validateForm(requestBody, apiOperation, bodyData -> parseUrlencodedFormDataBody(bodyData));
+            return validateForm(request.getBody(), apiOperation, bodyData -> parseUrlencodedFormDataBody(bodyData));
         }
 
-        return validateBody(requestBody, apiOperation);
+        return validateBody(request.getBody(), apiOperation);
     }
 
     @FunctionalInterface

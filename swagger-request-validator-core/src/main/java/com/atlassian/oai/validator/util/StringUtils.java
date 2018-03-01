@@ -60,7 +60,7 @@ public class StringUtils {
      * @param string - string to wrap
      * @param doNotAddIfAlreadyThere - when true, it won't append/prepend string with the new lines if they are already there
      */
-    public static String addOpneingAndTrailnigNewlines(final String string, final boolean doNotAddIfAlreadyThere) {
+    public static String addOpeningAndTrailingNewlines(final String string, final boolean doNotAddIfAlreadyThere) {
         final StringBuilder withNewlines = new StringBuilder(string);
 
         if (!(string.startsWith("\r\n") && doNotAddIfAlreadyThere)) {

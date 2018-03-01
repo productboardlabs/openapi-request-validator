@@ -84,7 +84,7 @@ public class HttpParsingUtils {
 
         final String boundary = maybeBoundary.get();
 
-        final String wrappedHttpBody = StringUtils.addOpneingAndTrailnigNewlines(httpBody, true);
+        final String wrappedHttpBody = StringUtils.addOpeningAndTrailingNewlines(httpBody, true);
         if (!wrappedHttpBody.endsWith("\r\n--" + boundary + "--\r\n")) {
             // Invalid multipart body: body should be empty after last delimiter
             return params;
