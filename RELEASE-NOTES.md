@@ -1,8 +1,14 @@
-#v1.3.5
+#v1.3.7
 * Improved the way API operations are resolved when multiple paths potentially match an incoming request
 [[#83]](https://bitbucket.org/atlassian/swagger-request-validator/issues/83)
 * Exposed the RestAssured `SwaggerValidationException` so it can be handled in tests
 [[#89]](https://bitbucket.org/atlassian/swagger-request-validator/issues/89)
+
+#v1.3.6
+Version burned
+
+#v1.3.5
+Version burned
 
 #v1.3.4
 Version burned
