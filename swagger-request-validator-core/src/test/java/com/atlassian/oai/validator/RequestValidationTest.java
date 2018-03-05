@@ -459,7 +459,7 @@ public class RequestValidationTest {
     public void validate_withMultipleAcceptHeadersConcatenated_shouldPass_whenOneMatches() {
         final Request request = SimpleRequest.Builder
                 .post("/users")
-                .withBody(loadRequest("newuser-valid"))
+                .withBody(loadJsonRequest("newuser-valid"))
                 .withHeader("Accept", "text/html,application/xhtml+xml,application/xml,application/json;q=0.9,*/*;q=0.8")
                 .build();
 
