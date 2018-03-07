@@ -1,3 +1,8 @@
+#v1.3.8
+* Added support for `multipart/form-data` requests
+[[#62]](https://bitbucket.org/atlassian/swagger-request-validator/issues/62)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/70)
+
 #v1.3.7
 * Improved the way API operations are resolved when multiple paths potentially match an incoming request
 [[#83]](https://bitbucket.org/atlassian/swagger-request-validator/issues/83)
