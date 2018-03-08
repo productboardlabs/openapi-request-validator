@@ -468,6 +468,42 @@ public class RequestValidationTest {
     }
 
     @Test
+    public void validate_withMultipleAcceptHeadersSpaceBefore_shouldPass_whenOneMatches() {
+        final Request request = SimpleRequest.Builder
+                .post("/users")
+                .withBody(loadJsonRequest("newuser-valid"))
+                .withHeader("Accept", "text/html, application/xhtml+xml, application/xml, application/json;q=0.9, */*;q=0.8")
+                .build();
+
+        assertPass(classUnderTest.validate(request, validUserResponse));
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withMultipleAcceptHeadersSpaceAfter_shouldPass_whenOneMatches() {
+        final Request request = SimpleRequest.Builder
+                .post("/users")
+                .withBody(loadJsonRequest("newuser-valid"))
+                .withHeader("Accept", "text/html ,application/xhtml+xml ,application/xml ,application/json;q=0.9 , */*;q=0.8")
+                .build();
+
+        assertPass(classUnderTest.validate(request, validUserResponse));
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withMultipleAcceptHeadersSpaceAround_shouldPass_whenOneMatches() {
+        final Request request = SimpleRequest.Builder
+                .post("/users")
+                .withBody(loadJsonRequest("newuser-valid"))
+                .withHeader("Accept", "text/html ,application/xhtml+xml ,application/xml , application/json;q=0.9 , */*;q=0.8")
+                .build();
+
+        assertPass(classUnderTest.validate(request, validUserResponse));
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
     public void validate_withNonMatchingAccept_shouldFail() {
         final Request request = SimpleRequest.Builder
                 .post("/users")
