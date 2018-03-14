@@ -101,8 +101,13 @@ public class ArrayParameterValidator extends BaseParameterValidator {
         }
 
         final SerializableParameter parameter = (SerializableParameter) p;
+
+        final ValidationReport.MessageContext context = ValidationReport.MessageContext.create().withParameter(p).build();
+
         if (parameter.getRequired() && (values == null || values.isEmpty())) {
-            return ValidationReport.singleton(messages.get("validation.request.parameter.missing", parameter.getName()));
+            return ValidationReport.singleton(
+                    messages.get("validation.request.parameter.missing", parameter.getName())
+            ).withAdditionalContext(context);
         }
 
         if (values == null) {
@@ -110,9 +115,9 @@ public class ArrayParameterValidator extends BaseParameterValidator {
         }
 
         if (!parameter.getCollectionFormat().equalsIgnoreCase(CollectionFormat.MULTI.name())) {
-            return ValidationReport.singleton(messages.get("validation.request.parameter.collection.invalidFormat",
-                    p.getName(), parameter.getCollectionFormat(), "multi")
-            );
+            return ValidationReport.singleton(
+                    messages.get("validation.request.parameter.collection.invalidFormat", p.getName(), parameter.getCollectionFormat(), "multi")
+            ).withAdditionalContext(context);
         }
 
         return doValidate(values, parameter);

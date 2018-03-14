@@ -8,6 +8,7 @@ import java.util.Collection;
 
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.arrayParam;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFailWithoutContext;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.enumeratedArrayParam;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.intArrayParam;
@@ -18,7 +19,7 @@ import static java.util.Collections.emptyList;
 
 public class ArrayParameterValidatorTest {
 
-    private ArrayParameterValidator classUnderTest = new ArrayParameterValidator(null, new MessageResolver());
+    private final ArrayParameterValidator classUnderTest = new ArrayParameterValidator(null, new MessageResolver());
 
     @Test
     public void validate_withValidCsvFormat_shouldPass() {
@@ -101,7 +102,7 @@ public class ArrayParameterValidatorTest {
 
     @Test
     public void validate_withInvalidCollectionParameter_shouldFail() {
-        assertFail(classUnderTest.validate(asList("1", "2.1", "3"), intArrayParam(true, "multi")),
+        assertFailWithoutContext(classUnderTest.validate(asList("1", "2.1", "3"), intArrayParam(true, "multi")),
                 "validation.schema.type");
     }
 

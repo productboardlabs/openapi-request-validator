@@ -1,6 +1,7 @@
 package com.atlassian.oai.validator.report;
 
 import com.atlassian.oai.validator.model.ApiOperation;
+import com.atlassian.oai.validator.model.Request;
 import io.swagger.models.Response;
 import io.swagger.models.parameters.Parameter;
 
@@ -136,6 +137,10 @@ public interface ValidationReport {
             return new Builder(other);
         }
 
+        Optional<String> getRequestPath();
+
+        Optional<Request.Method> getRequestMethod();
+
         Optional<ApiOperation> getApiOperation();
 
         Optional<Parameter> getParameter();
@@ -155,6 +160,8 @@ public interface ValidationReport {
         MessageContext enhanceWith(MessageContext other);
 
         class Builder {
+            String requestPath;
+            Request.Method method;
             ApiOperation apiOperation;
             Parameter parameter;
 
@@ -167,11 +174,23 @@ public interface ValidationReport {
             }
 
             private Builder(final MessageContext init) {
+                requestPath = init.getRequestPath().orElse(null);
+                method = init.getRequestMethod().orElse(null);
                 apiOperation = init.getApiOperation().orElse(null);
                 parameter = init.getParameter().orElse(null);
                 responseStatus = init.getResponseStatus().orElse(null);
                 apiResponse = init.getApiResponseDefinition().orElse(null);
                 location = init.getLocation().orElse(null);
+            }
+
+            public Builder withRequestPath(final String requestPath) {
+                this.requestPath = requestPath;
+                return this;
+            }
+
+            public Builder withRequestMethod(final Request.Method method) {
+                this.method = method;
+                return this;
             }
 
             public Builder withApiOperation(final ApiOperation apiOperation) {
@@ -200,6 +219,12 @@ public interface ValidationReport {
             }
 
             public Builder withAdditionalDataFrom(final MessageContext other) {
+                if (requestPath == null) {
+                    requestPath = other.getRequestPath().orElse(null);
+                }
+                if (method == null) {
+                    method = other.getRequestMethod().orElse(null);
+                }
                 if (apiOperation == null) {
                     apiOperation = other.getApiOperation().orElse(null);
                 }

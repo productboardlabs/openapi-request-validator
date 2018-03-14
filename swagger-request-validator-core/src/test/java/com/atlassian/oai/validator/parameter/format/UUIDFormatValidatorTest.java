@@ -5,7 +5,7 @@ import org.junit.Test;
 
 import java.util.UUID;
 
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFailWithoutContext;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -29,12 +29,12 @@ public class UUIDFormatValidatorTest {
 
     @Test
     public void fails_whenInvalid() {
-        assertFail(classUnderTest.validate("notauuid"), EXPECTED_KEY);
+        assertFailWithoutContext(classUnderTest.validate("notauuid"), EXPECTED_KEY);
     }
 
     @Test
     public void fails_whenEmpty() {
-        assertFail(classUnderTest.validate(""), EXPECTED_KEY);
+        assertFailWithoutContext(classUnderTest.validate(""), EXPECTED_KEY);
     }
 
 }
