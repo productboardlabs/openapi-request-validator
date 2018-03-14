@@ -190,7 +190,10 @@ public class SwaggerRequestResponseValidator {
                                                     @Nonnull final Function<ApiOperation, ValidationReport> validationFunction,
                                                     @Nonnull final BiFunction<ApiOperation, ValidationReport, ValidationReport> whitelistingFunction) {
 
-        final ValidationReport.MessageContext context = ValidationReport.MessageContext.create().withRequestPath(path).build();
+        final ValidationReport.MessageContext context = ValidationReport.MessageContext.create()
+                .withRequestPath(path)
+                .withRequestMethod(method)
+                .build();
 
         final ApiOperationMatch apiOperationMatch = apiOperationResolver.findApiOperation(path, method);
         if (!apiOperationMatch.isPathFound()) {
