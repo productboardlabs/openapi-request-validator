@@ -129,8 +129,8 @@ public class MergedValidationReportTest {
 
         final MessageContext baseContext = MessageContext.create().in(REQUEST).build();
         final MergedValidationReport report = new MergedValidationReport(
-                ValidationReport.singleton(ERROR_MSG.withContext(baseContext)),
-                ValidationReport.from(NON_ERROR_MSG.withContext(baseContext), ERROR_MSG.withContext(baseContext))
+                ValidationReport.singleton(ERROR_MSG.withAdditionalContext(baseContext)),
+                ValidationReport.from(NON_ERROR_MSG.withAdditionalContext(baseContext), ERROR_MSG.withAdditionalContext(baseContext))
         );
 
         final MessageContext additionalContext = MessageContext.create().withParameter(new PathParameter().name("param")).build();

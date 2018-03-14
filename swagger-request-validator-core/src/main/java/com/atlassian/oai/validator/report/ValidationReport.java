@@ -66,11 +66,6 @@ public interface ValidationReport {
         Message withAdditionalInfo(String info);
 
         /**
-         * Returns a new instance, the same as this message, but with the provided context attached.
-         */
-        Message withContext(MessageContext context);
-
-        /**
          * Returns a new instance, the same as this message, but additional context attached.
          */
         Message withAdditionalContext(MessageContext context);

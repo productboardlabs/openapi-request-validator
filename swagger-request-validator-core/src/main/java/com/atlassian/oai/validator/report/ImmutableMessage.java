@@ -57,13 +57,9 @@ class ImmutableMessage implements ValidationReport.Message {
     }
 
     @Override
-    public ValidationReport.Message withContext(final ValidationReport.MessageContext context) {
-        return new ImmutableMessage(key, level, message, additionalInfo, context);
-    }
-
-    @Override
     public ValidationReport.Message withAdditionalContext(final ValidationReport.MessageContext context) {
-        return withContext(this.context == null ? context : this.context.enhanceWith(context));
+        final ValidationReport.MessageContext newContext = this.context == null ? context : this.context.enhanceWith(context);
+        return new ImmutableMessage(key, level, message, additionalInfo, newContext);
     }
 
     @Override
