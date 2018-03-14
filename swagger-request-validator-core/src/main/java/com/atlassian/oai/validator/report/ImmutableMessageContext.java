@@ -5,6 +5,7 @@ import com.atlassian.oai.validator.model.Request;
 import io.swagger.models.Response;
 import io.swagger.models.parameters.Parameter;
 
+import java.util.Objects;
 import java.util.Optional;
 
 class ImmutableMessageContext implements ValidationReport.MessageContext {
@@ -81,5 +82,28 @@ class ImmutableMessageContext implements ValidationReport.MessageContext {
                 .from(this)
                 .withAdditionalDataFrom(other)
                 .build();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final ImmutableMessageContext that = (ImmutableMessageContext) o;
+        return Objects.equals(requestPath, that.requestPath) &&
+                method == that.method &&
+                Objects.equals(apiOperation, that.apiOperation) &&
+                Objects.equals(parameter, that.parameter) &&
+                Objects.equals(responseStatus, that.responseStatus) &&
+                Objects.equals(apiResponseDefinition, that.apiResponseDefinition) &&
+                location == that.location;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(requestPath, method, apiOperation, parameter, responseStatus, apiResponseDefinition, location);
     }
 }
