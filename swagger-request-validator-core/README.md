@@ -42,6 +42,9 @@ if (report.hasErrors()) {
 }
 ```
 
+Each report will contain 0 or more `Message`s, which include a key, a human-readable message (suitable for display to users),
+a 'level' indicating the severity of the message, and additional context to help identify where the message was generated.
+
 See the javadoc for the library for more information on how to use individual classes.
 
 ### Controlling validation behaviour ###
