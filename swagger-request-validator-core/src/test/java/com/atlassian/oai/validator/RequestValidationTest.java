@@ -368,7 +368,11 @@ public class RequestValidationTest {
 
     @Test
     public void validate_withQueryParamNotSplitted_shouldPass() {
-        final Request request = SimpleRequest.Builder.get("/users").withQueryParam("sorting", "name,email").build();
+        final Request request = SimpleRequest.Builder
+                .get("/users")
+                .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
+                .withQueryParam("sorting", "name,email")
+                .build();
 
         assertPass(classUnderTest.validate(request, validUsersResponse));
         assertPass(classUnderTest.validateRequest(request));
@@ -511,6 +515,7 @@ public class RequestValidationTest {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withBody(loadJsonRequest("newuser-valid"))
+                .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
                 .withHeader("Accept", "text/html,application/xhtml+xml,application/xml,application/json;q=0.9,*/*;q=0.8")
                 .build();
 
@@ -523,6 +528,7 @@ public class RequestValidationTest {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withBody(loadJsonRequest("newuser-valid"))
+                .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
                 .withHeader("Accept", "text/html, application/xhtml+xml, application/xml, application/json;q=0.9, */*;q=0.8")
                 .build();
 
@@ -535,6 +541,7 @@ public class RequestValidationTest {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withBody(loadJsonRequest("newuser-valid"))
+                .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
                 .withHeader("Accept", "text/html ,application/xhtml+xml ,application/xml ,application/json;q=0.9 , */*;q=0.8")
                 .build();
 
@@ -547,6 +554,7 @@ public class RequestValidationTest {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withBody(loadJsonRequest("newuser-valid"))
+                .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
                 .withHeader("Accept", "text/html ,application/xhtml+xml ,application/xml , application/json;q=0.9 , */*;q=0.8")
                 .build();
 
