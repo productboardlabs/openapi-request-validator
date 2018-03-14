@@ -43,7 +43,7 @@ public class RequestValidator {
 
     private static final Logger log = getLogger(RequestValidator.class);
 
-    private static final String BASIC_AUTH_HEADER = "Authorization";
+    private static final String HTTP_AUTH_HEADER = "Authorization";
 
     private final SchemaValidator schemaValidator;
     private final ParameterValidators parameterValidators;
@@ -158,8 +158,10 @@ public class RequestValidator {
                                                      @Nonnull final BasicAuthDefinition basicAuthDefinition)
             throws SecurityParameterNotFoundException {
 
-        if (!request.getHeaderValue(BASIC_AUTH_HEADER).isPresent()) {
-            throw new SecurityParameterNotFoundException(BASIC_AUTH_HEADER);
+        if (!request.getHeaderValue(HTTP_AUTH_HEADER).isPresent()) {
+            throw new SecurityParameterNotFoundException(HTTP_AUTH_HEADER);
+        } else if (!request.getHeaderValue(HTTP_AUTH_HEADER).get().startsWith("Basic ")) {
+            throw new SecurityParameterNotFoundException(HTTP_AUTH_HEADER);
         }
         // HTTP basic authentication header found, additional checks can be placed here
         return empty();
