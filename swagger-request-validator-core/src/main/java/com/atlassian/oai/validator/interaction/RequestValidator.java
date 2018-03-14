@@ -8,8 +8,6 @@ import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
 import com.atlassian.oai.validator.schema.SchemaValidator;
-import com.google.common.base.Charsets;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.net.MediaType;
 import io.swagger.models.Swagger;
@@ -20,8 +18,6 @@ import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.Parameter;
 
 import javax.annotation.Nonnull;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,6 +28,9 @@ import java.util.Optional;
 
 import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.REQUEST;
 import static com.atlassian.oai.validator.report.ValidationReport.empty;
+import static com.atlassian.oai.validator.util.HttpParsingUtils.isMultipartContentTypeAcceptedByConsumer;
+import static com.atlassian.oai.validator.util.HttpParsingUtils.parseMultipartFormDataBody;
+import static com.atlassian.oai.validator.util.HttpParsingUtils.parseUrlencodedFormDataBody;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -83,7 +82,7 @@ public class RequestValidator {
                 .merge(validateAccepts(request, apiOperation))
                 .merge(validateHeaders(request, apiOperation))
                 .merge(validatePathParameters(apiOperation))
-                .merge(validateRequestBody(request.getBody(), apiOperation))
+                .merge(validateRequestBody(request, apiOperation))
                 .merge(validateQueryParameters(request, apiOperation))
                 .withAdditionalContext(context);
     }
@@ -226,20 +225,30 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private ValidationReport validateRequestBody(@Nonnull final Optional<String> requestBody,
+    private ValidationReport validateRequestBody(@Nonnull final Request request,
                                                  @Nonnull final ApiOperation apiOperation) {
-
-        if (isFormData(requestBody, apiOperation)) {
-            return validateForm(requestBody, apiOperation);
+        final Optional<String> requestContentType = request.getHeaderValue("content-type");
+        if (isMultipartFormData(requestContentType, apiOperation)) {
+            return validateForm(request.getBody(), apiOperation, bodyData -> parseMultipartFormDataBody(requestContentType.get(), bodyData));
         }
-        return validateBody(requestBody, apiOperation);
+        if (isFormData(requestContentType, apiOperation)) {
+            return validateForm(request.getBody(), apiOperation, bodyData -> parseUrlencodedFormDataBody(bodyData));
+        }
+
+        return validateBody(request.getBody(), apiOperation);
+    }
+
+    @FunctionalInterface
+    private interface FormBodyParser {
+        Multimap<String, String> parse(String bodyData);
     }
 
     @Nonnull
     private ValidationReport validateForm(@Nonnull final Optional<String> requestBody,
-                                          @Nonnull final ApiOperation apiOperation) {
+                                          @Nonnull final ApiOperation apiOperation,
+                                          @Nonnull final FormBodyParser formBodyParser) {
 
-        final Multimap<String, String> formData = parseFormData(requestBody.get());
+        final Multimap<String, String> formData = formBodyParser.parse(requestBody.orElse(""));
         return apiOperation.getOperation().getParameters()
                 .stream()
                 .filter(RequestValidator::isFormDataParam)
@@ -382,29 +391,30 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private boolean isFormData(@Nonnull final Optional<String> requestBody,
+    private boolean isFormData(@Nonnull final Optional<String> maybeRequestContentType,
                                @Nonnull final ApiOperation apiOperation) {
         final List<String> consumes = apiOperation.getOperation().getConsumes();
-        return null != consumes && !consumes.isEmpty() &&
-                consumes.stream().anyMatch(p -> p.equals(MediaType.FORM_DATA.toString()))
-                && requestBody.isPresent();
+        if (consumes == null || consumes.isEmpty() || !maybeRequestContentType.isPresent()) {
+            return false;
+        }
+        final String requestContentType = maybeRequestContentType.get();
+
+        return consumes.stream().anyMatch(p -> p.equals(MediaType.FORM_DATA.toString()))
+                && requestContentType.equals(MediaType.FORM_DATA.toString());
     }
 
     @Nonnull
-    private Multimap<String, String> parseFormData(@Nonnull final String formData) {
-        final Multimap<String, String> params = ArrayListMultimap.create();
-        final String[] pairs = formData.split("&");
-        try {
-            for (final String pair : pairs) {
-                final String[] fields = pair.split("=");
-                final String name = URLDecoder.decode(fields[0], Charsets.UTF_8.name());
-                final String value = (fields.length > 1) ? URLDecoder.decode(fields[1], Charsets.UTF_8.name()) : null;
-                params.put(name, value);
-            }
-        } catch (final UnsupportedEncodingException ex) {
-            throw new RuntimeException(ex);
+    private boolean isMultipartFormData(@Nonnull final Optional<String> maybeRequestContentType,
+                                        @Nonnull final ApiOperation apiOperation) {
+        final List<String> consumes = apiOperation.getOperation().getConsumes();
+        if (consumes == null || consumes.isEmpty() || !maybeRequestContentType.isPresent()) {
+            return false;
         }
-        return params;
+        final String requestContentType = maybeRequestContentType.get();
+
+        return consumes
+                .stream()
+                .anyMatch(consumesContentType -> isMultipartContentTypeAcceptedByConsumer(requestContentType, consumesContentType));
     }
 
     private static boolean isBodyParam(final Parameter p) {
@@ -430,5 +440,4 @@ public class RequestValidator {
     private static boolean isParam(final Parameter p, final String type) {
         return p != null && p.getIn() != null && p.getIn().equalsIgnoreCase(type);
     }
-
 }

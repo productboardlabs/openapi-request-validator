@@ -51,6 +51,16 @@
               "type": "number",
               "format": "int32"
             }
+          },
+          {
+            "name": "sorting",
+            "in": "query",
+            "description": "Comma-separated sorting fields (created only testing that query parameters are not split!)",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "name,email"
+            ]
           }
         ],
         "responses": {
@@ -250,6 +260,51 @@
             "schema": {
               "$ref": "#/definitions/User"
             }
+          }
+        }
+      }
+    },
+    "/secure/users/{id}/upload": {
+      "post": {
+        "tags": [
+          "image"
+        ],
+        "summary": "uploads an image",
+        "description": "",
+        "operationId": "uploadFile",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the user",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "additionalMetadata",
+            "in": "formData",
+            "description": "Additional data to pass to server",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "imageFile",
+            "in": "formData",
+            "description": "file to upload",
+            "required": true,
+            "type": "file"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Everything is ok"
           }
         }
       }

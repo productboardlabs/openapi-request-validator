@@ -5,6 +5,7 @@ import com.google.common.collect.MultimapBuilder;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -265,7 +266,7 @@ public class SimpleRequest implements Request {
          */
         public Builder withHeader(final String name, final List<String> values) {
             // available but not set headers are considered as empty
-            putValuesToMapOrDefault(headers, name, values, "");
+            putValuesToMapOrDefault(headers, name, values, "", true);
             return this;
         }
 
@@ -296,7 +297,7 @@ public class SimpleRequest implements Request {
          */
         public Builder withQueryParam(final String name, final List<String> values) {
             // available but not set query parameters are considered as available but with no value
-            putValuesToMapOrDefault(queryParams, name, values, null);
+            putValuesToMapOrDefault(queryParams, name, values, null, false);
             return this;
         }
 
@@ -330,12 +331,17 @@ public class SimpleRequest implements Request {
         }
 
         static void putValuesToMapOrDefault(final Multimap<String, String> map, final String name,
-                                            final List<String> values, final String defaultIfNotSet) {
+                                            final List<String> values, final String defaultIfNotSet,
+                                            final boolean splitValues) {
             if (values == null || values.isEmpty()) {
-                map.put(name, defaultIfNotSet);
+                map.putAll(name, splitValues ? splitHeaderValue(defaultIfNotSet) : Collections.singleton(null));
             } else {
-                map.putAll(name, values);
+                values.forEach(value -> map.putAll(name, splitValues ? splitHeaderValue(value) : Collections.singleton(value)));
             }
+        }
+
+        static Collection<String> splitHeaderValue(final String value) {
+            return value != null ? Arrays.asList(value.split("\\s*,\\s*")) : Collections.singleton(null);
         }
     }
 }

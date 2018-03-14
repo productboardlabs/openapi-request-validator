@@ -8,6 +8,7 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.floatParam;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.doubleParam;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.intParam;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.requiredParam;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.stringParam;
 
 public class ParameterValidatorsTest {
@@ -47,6 +48,11 @@ public class ParameterValidatorsTest {
     @Test
     public void validate_withValidStringParam_shouldPass() {
         assertPass(parameterValidators.validate("a", stringParam()));
+    }
+
+    @Test
+    public void validate_withInvalidRequiredParm_shouldFail() {
+        assertFail(parameterValidators.validate("", requiredParam()));
     }
 
 }

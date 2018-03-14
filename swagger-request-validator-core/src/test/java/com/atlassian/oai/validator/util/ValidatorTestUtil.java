@@ -73,8 +73,18 @@ public class ValidatorTestUtil {
      * @param requestName The name of the request to load
      * @return The response JSON as a String, or <code>null</code> if it cannot be loaded
      */
-    public static String loadRequest(final String requestName) {
+    public static String loadJsonRequest(final String requestName) {
         return loadResource("/requests/" + requestName + ".json");
+    }
+
+    /**
+     * Load a request raw file with the given name.
+     *
+     * @param requestName The name of the request to load
+     * @return The response as a String, or <code>null</code> if it cannot be loaded
+     */
+    public static String loadRawRequest(final String requestName) {
+        return loadResource("/requests/" + requestName + ".raw");
     }
 
     public static String loadResource(final String path) {
@@ -302,5 +312,9 @@ public class ValidatorTestUtil {
         when(result.isUniqueItems()).thenReturn(unique);
         when(result.getItems()).thenReturn(items);
         return result;
+    }
+
+    public static SerializableParameter requiredParam() {
+        return stringParam(true);
     }
 }
