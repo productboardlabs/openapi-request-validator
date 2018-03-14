@@ -152,6 +152,11 @@ public interface ValidationReport {
         Optional<Location> getLocation();
 
         /**
+         * @return {@code true} if at least one field on this context object has been set; {@code false} otherwise.
+         */
+        boolean hasData();
+
+        /**
          * Return a new MessageContext instance that contains all of the data in this context,
          * plus data from the incoming context where that data does not already exist on this context.
          * <p>

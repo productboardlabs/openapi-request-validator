@@ -65,6 +65,17 @@ class ImmutableMessageContext implements ValidationReport.MessageContext {
     }
 
     @Override
+    public boolean hasData() {
+        return requestPath != null ||
+                method != null ||
+                apiOperation != null ||
+                parameter != null ||
+                responseStatus != null ||
+                apiResponseDefinition != null ||
+                location != null;
+    }
+
+    @Override
     public ValidationReport.MessageContext enhanceWith(final ValidationReport.MessageContext other) {
         return ValidationReport.MessageContext
                 .from(this)

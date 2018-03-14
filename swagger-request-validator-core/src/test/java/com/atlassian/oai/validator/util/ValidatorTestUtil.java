@@ -63,6 +63,7 @@ public class ValidatorTestUtil {
         if (expectContext) {
             report.getMessages().forEach(m -> {
                 assertThat(m.getContext().isPresent(), is(true));
+                assertThat(m.getContext().get().hasData(), is(true));
             });
         }
 
