@@ -148,7 +148,7 @@ public class SimpleResponse implements Response {
          */
         public Builder withHeader(final String name, final List<String> values) {
             // available but not set headers are considered as empty
-            SimpleRequest.Builder.putValuesToMapOrDefault(headers, name, values, "");
+            SimpleRequest.Builder.putValuesToMapOrDefault(headers, name, values, "", true);
             return this;
         }
 
