@@ -38,6 +38,19 @@ public class RequestValidationTest {
     }
 
     @Test
+    public void validate_withInvalidMissingBasicAuth_shouldFail() {
+        final Request request = SimpleRequest.Builder
+                .get("/users/1")
+                .withHeader("Authorization", "NOT_BASIC EncryptedUsernameAndPassword")
+                .build();
+
+        assertFail(classUnderTest.validate(request, validUserResponse),
+                "validation.request.security.invalid");
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.security.invalid");
+    }
+
+    @Test
     public void validate_withMissingBasicAuth_shouldFail() {
         final Request request = SimpleRequest.Builder
                 .get("/users/1")
