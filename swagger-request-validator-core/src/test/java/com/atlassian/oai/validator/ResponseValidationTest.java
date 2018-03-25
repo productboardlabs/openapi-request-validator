@@ -19,8 +19,14 @@ public class ResponseValidationTest {
     private final SwaggerRequestResponseValidator classUnderTest =
             SwaggerRequestResponseValidator.createFor("/oai/api-users.json").build();
 
-    private final Request getUserRequest = SimpleRequest.Builder.get("/users/1").build();
-    private final Request getUsersRequest = SimpleRequest.Builder.get("/users").build();
+    private final Request getUserRequest = SimpleRequest.Builder
+            .get("/users/1")
+            .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
+            .build();
+    private final Request getUsersRequest = SimpleRequest.Builder
+            .get("/users")
+            .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
+            .build();
     private final Request healthcheckRequest = SimpleRequest.Builder.get("/healthcheck").withQueryParam("type", "shallow").build();
 
     @Test

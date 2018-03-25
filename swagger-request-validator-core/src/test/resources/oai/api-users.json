@@ -248,6 +248,9 @@
         "operationId": "Update a user's name",
         "security": [
           {
+            "bearer": []
+          },
+          {
             "queryParam": []
           }
         ],
