@@ -47,7 +47,7 @@
     </developers>
 
     <properties>
-        <pact-jvm.version>3.2.6</pact-jvm.version>
+        <pact-jvm.version>3.2.13</pact-jvm.version>
         <junit.version>4.12</junit.version>
         <swagger-parser.version>1.0.32</swagger-parser.version>
         <json-schema-validator.version>2.2.8</json-schema-validator.version>
