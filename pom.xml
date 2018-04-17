@@ -60,7 +60,7 @@
         <logback.version>1.2.3</logback.version>
         <rest-assured.version>3.0.0</rest-assured.version>
         <wiremock.version>2.1.7</wiremock.version>
-        <guava.version>18.0</guava.version>
+        <guava.version>23.0</guava.version>
         <jackson.version>2.6.3</jackson.version>
         <spring.version>4.3.7.RELEASE</spring.version>
         <servlet.api.version>3.1.0</servlet.api.version>
