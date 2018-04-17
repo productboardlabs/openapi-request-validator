@@ -1,3 +1,11 @@
+#v1.3.10
+* Added support for HTTP Basic auth validation, and AND/OR security operations
+[[#99]](https://bitbucket.org/atlassian/swagger-request-validator/issues/99)
+
+#v1.3.9
+* Split comma-separated headers into individual values before validating
+[[#97]](https://bitbucket.org/atlassian/swagger-request-validator/issues/97)
+
 #v1.3.8
 * Added support for `multipart/form-data` requests
 [[#62]](https://bitbucket.org/atlassian/swagger-request-validator/issues/62)

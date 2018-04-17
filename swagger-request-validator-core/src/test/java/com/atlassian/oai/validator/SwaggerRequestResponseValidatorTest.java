@@ -89,7 +89,10 @@ public class SwaggerRequestResponseValidatorTest {
                         .withBasePathOverride("/test")
                         .build();
 
-        final Request request = SimpleRequest.Builder.get("/test/users/1").build();
+        final Request request = SimpleRequest.Builder
+                .get("/test/users/1")
+                .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
+                .build();
         final Response response = SimpleResponse.Builder.ok().withBody("{\"id\":1,\"name\":\"Max\",\"email\":\"max@example.com\"}").build();
 
         assertPass(classUnderTest.validate(request, response));

@@ -10,7 +10,7 @@
 
     <groupId>com.atlassian.oai</groupId>
     <artifactId>swagger-request-validator</artifactId>
-    <version>1.3.9-SNAPSHOT</version>
+    <version>1.4.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Swagger Request Validator</name>
@@ -47,28 +47,29 @@
     </developers>
 
     <properties>
-        <pact-jvm.version>3.2.6</pact-jvm.version>
-        <junit.version>4.12</junit.version>
-        <swagger-parser.version>1.0.32</swagger-parser.version>
-        <json-schema-validator.version>2.2.8</json-schema-validator.version>
-        <jdk.version>1.8</jdk.version>
         <source.encoding>UTF-8</source.encoding>
-        <mockito.version>1.10.19</mockito.version>
+        <jdk.version>1.8</jdk.version>
+
+        <pact-jvm.version>3.2.13</pact-jvm.version>
+        <junit.version>4.12</junit.version>
+        <swagger-parser.version>1.0.34</swagger-parser.version>
+        <json-schema-validator.version>2.2.8</json-schema-validator.version>
+        <mockito.version>2.18.0</mockito.version>
         <hamcrest.version>1.3</hamcrest.version>
-        <slf4j.version>1.7.20</slf4j.version>
-        <logback.version>1.0.13</logback.version>
-        <rest-assured.version>3.0.0</rest-assured.version>
-        <wiremock.version>2.1.7</wiremock.version>
-        <guava.version>18.0</guava.version>
-        <jackson.version>2.6.3</jackson.version>
-        <spring.version>4.3.7.RELEASE</spring.version>
+        <slf4j.version>1.7.25</slf4j.version>
+        <logback.version>1.2.3</logback.version>
+        <rest-assured.version>3.0.7</rest-assured.version>
+        <wiremock.version>2.17.0</wiremock.version>
+        <guava.version>23.0</guava.version>
+        <jackson.version>2.9.5</jackson.version>
+        <spring.version>4.3.16.RELEASE</spring.version>
         <servlet.api.version>3.1.0</servlet.api.version>
         <jsr305.version>3.0.2</jsr305.version>
         <hamcrest-optional.version>1.1.1</hamcrest-optional.version>
 
         <license-maven-plugin.version>1.9</license-maven-plugin.version>
         <maven-checkstyle-plugin.version>2.17</maven-checkstyle-plugin.version>
-        <checkstyle.version>7.5.1</checkstyle.version>
+        <checkstyle.version>8.9</checkstyle.version>
     </properties>
 
     <modules>

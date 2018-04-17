@@ -180,7 +180,7 @@ public class ResponseValidator {
 
         return propertyValues
                 .stream()
-                .map((v) -> schemaValidator.validate(v, property))
+                .map(v -> schemaValidator.validate(v, property))
                 .reduce(ValidationReport.empty(), ValidationReport::merge);
     }
 }
