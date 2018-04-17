@@ -478,17 +478,6 @@ public class RequestValidator {
                 .anyMatch(consumesContentType -> isMultipartContentTypeAcceptedByConsumer(requestContentType, consumesContentType));
     }
 
-    private static boolean isJsonData(@Nonnull final Optional<String> maybeContentType) {
-        try {
-            return maybeContentType
-                    .map(MediaType::parse)
-                    .map(ct -> ct.withoutParameters().is(MediaType.JSON_UTF_8.withoutParameters()))
-                    .orElse(false);
-        } catch (final IllegalArgumentException e) {
-            return false;
-        }
-    }
-
     private static boolean isBodyParam(final Parameter p) {
         return isParam(p, "body");
     }
