@@ -9,6 +9,10 @@ import java.util.Optional;
 
 public class ContentTypeUtils {
 
+    private ContentTypeUtils() {
+
+    }
+
     /**
      * Determine whether a given request has a JSON content-type.
      *
