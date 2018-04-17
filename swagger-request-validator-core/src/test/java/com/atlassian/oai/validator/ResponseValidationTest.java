@@ -186,4 +186,18 @@ public class ResponseValidationTest {
                 "validation.response.header.missing");
     }
 
+    @Test
+    public void validate_withXmlBody_shouldNotApplySchemaValidation() {
+        final SwaggerRequestResponseValidator classUnderTest =
+                SwaggerRequestResponseValidator.createFor("/oai/api-non-json-body.json").build();
+
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withHeader("Content-Type", "text/xml")
+                .withBody("<Result><id>100</id><name>Adam Andrews</name><score>86</score></Result>")
+                .build();
+
+        assertPass(classUnderTest.validateResponse("/results", Request.Method.GET, response));
+    }
+
 }

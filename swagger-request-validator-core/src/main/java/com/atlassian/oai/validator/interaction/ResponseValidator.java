@@ -9,6 +9,7 @@ import com.atlassian.oai.validator.schema.SchemaValidator;
 import com.google.common.net.MediaType;
 import io.swagger.models.Swagger;
 import io.swagger.models.properties.Property;
+import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -18,12 +19,18 @@ import java.util.Map;
 import java.util.Optional;
 
 import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.RESPONSE;
+import static com.atlassian.oai.validator.report.ValidationReport.empty;
+import static com.atlassian.oai.validator.util.ContentTypeUtils.hasContentType;
+import static com.atlassian.oai.validator.util.ContentTypeUtils.isJsonContentType;
 import static java.util.Objects.requireNonNull;
+import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  * Validate a response against an API operation
  */
 public class ResponseValidator {
+
+    private static final Logger log = getLogger(ResponseValidator.class);
 
     private final SchemaValidator schemaValidator;
     private final MessageResolver messages;
@@ -104,6 +111,11 @@ public class ResponseValidator {
                     messages.get("validation.response.body.missing",
                             apiOperation.getMethod(), apiOperation.getApiPath().original())
             );
+        }
+
+        if (hasContentType(response) && !isJsonContentType(response)) {
+            log.debug("Non-JSON response body found. No validation will be applied.");
+            return empty();
         }
 
         return schemaValidator.validate(response.getBody().get(), apiResponse.getSchema());
