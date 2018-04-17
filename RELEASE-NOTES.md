@@ -1,3 +1,12 @@
+#v1.4.1
+* Added additional context to validation messages to describe where a validation error occurred
+[[#33]](https://bitbucket.org/atlassian/swagger-request-validator/issues/33)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/68)
+
+#v1.4.0
+* Bumped dependency versions
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/73)
+
 #v1.3.10
 * Added support for HTTP Basic auth validation, and AND/OR security operations
 [[#99]](https://bitbucket.org/atlassian/swagger-request-validator/issues/99)
