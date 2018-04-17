@@ -289,6 +289,10 @@ public class RequestValidator {
         if (isFormData(requestContentType, apiOperation)) {
             return validateForm(request.getBody(), apiOperation, bodyData -> parseUrlencodedFormDataBody(bodyData));
         }
+        if (requestContentType.isPresent() && !isJsonData(requestContentType)) {
+            log.debug("Non-JSON request body found. No validation will be applied.");
+            return empty();
+        }
 
         return validateBody(request.getBody(), apiOperation);
     }
@@ -353,6 +357,7 @@ public class RequestValidator {
             }
             return empty();
         }
+
 
         return schemaValidator
                 .validate(requestBody.get(), ((BodyParameter) bodyParameter.get()).getSchema())
@@ -445,9 +450,8 @@ public class RequestValidator {
                 .reduce(empty(), ValidationReport::merge);
     }
 
-    @Nonnull
-    private boolean isFormData(@Nonnull final Optional<String> maybeRequestContentType,
-                               @Nonnull final ApiOperation apiOperation) {
+    private static boolean isFormData(@Nonnull final Optional<String> maybeRequestContentType,
+                                      @Nonnull final ApiOperation apiOperation) {
         final List<String> consumes = apiOperation.getOperation().getConsumes();
         if (consumes == null || consumes.isEmpty() || !maybeRequestContentType.isPresent()) {
             return false;
@@ -458,9 +462,8 @@ public class RequestValidator {
                 && requestContentType.equals(MediaType.FORM_DATA.toString());
     }
 
-    @Nonnull
-    private boolean isMultipartFormData(@Nonnull final Optional<String> maybeRequestContentType,
-                                        @Nonnull final ApiOperation apiOperation) {
+    private static boolean isMultipartFormData(@Nonnull final Optional<String> maybeRequestContentType,
+                                               @Nonnull final ApiOperation apiOperation) {
         final List<String> consumes = apiOperation.getOperation().getConsumes();
         if (consumes == null || consumes.isEmpty() || !maybeRequestContentType.isPresent()) {
             return false;
@@ -470,6 +473,17 @@ public class RequestValidator {
         return consumes
                 .stream()
                 .anyMatch(consumesContentType -> isMultipartContentTypeAcceptedByConsumer(requestContentType, consumesContentType));
+    }
+
+    private static boolean isJsonData(@Nonnull final Optional<String> maybeContentType) {
+        try {
+            return maybeContentType
+                    .map(MediaType::parse)
+                    .map(ct -> ct.withoutParameters().is(MediaType.JSON_UTF_8.withoutParameters()))
+                    .orElse(false);
+        } catch (final IllegalArgumentException e) {
+            return false;
+        }
     }
 
     private static boolean isBodyParam(final Parameter p) {
