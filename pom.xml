@@ -59,7 +59,7 @@
         <slf4j.version>1.7.25</slf4j.version>
         <logback.version>1.2.3</logback.version>
         <rest-assured.version>3.0.7</rest-assured.version>
-        <wiremock.version>2.1.7</wiremock.version>
+        <wiremock.version>2.17.0</wiremock.version>
         <guava.version>23.0</guava.version>
         <jackson.version>2.9.5</jackson.version>
         <spring.version>4.3.7.RELEASE</spring.version>
