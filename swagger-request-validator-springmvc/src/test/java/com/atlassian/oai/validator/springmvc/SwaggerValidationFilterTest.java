@@ -9,13 +9,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.same;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.times;
 
 public class SwaggerValidationFilterTest {
 
-    private SwaggerValidationFilter classUnderTest = new SwaggerValidationFilter();
+    private final SwaggerValidationFilter classUnderTest = new SwaggerValidationFilter();
 
     @Test
     public void doFilterInternal_wrapsTheServletRequest() throws ServletException, IOException {
