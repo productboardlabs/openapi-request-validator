@@ -21,7 +21,11 @@ public class MergedValidationReport implements ValidationReport {
         final ImmutableList.Builder<ValidationReport> reportsBuilder = new ImmutableList.Builder<>();
         collect(reportsBuilder, validationReport1);
         collect(reportsBuilder, validationReport2);
-        this.reports = reportsBuilder.build();
+        reports = reportsBuilder.build();
+    }
+
+    MergedValidationReport(final List<ValidationReport> validationReports) {
+        reports = ImmutableList.copyOf(validationReports);
     }
 
     @Nonnull
@@ -33,6 +37,11 @@ public class MergedValidationReport implements ValidationReport {
     @Override
     public boolean hasErrors() {
         return reports.stream().anyMatch(ValidationReport::hasErrors);
+    }
+
+    @Override
+    public ValidationReport withAdditionalContext(final MessageContext context) {
+        return new MergedValidationReport(reports.stream().map(r -> r.withAdditionalContext(context)).collect(toList()));
     }
 
     private ImmutableList<ValidationReport> getReports() {

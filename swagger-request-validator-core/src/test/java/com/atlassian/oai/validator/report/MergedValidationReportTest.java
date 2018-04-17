@@ -1,12 +1,18 @@
 package com.atlassian.oai.validator.report;
 
+import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
+import io.swagger.models.parameters.PathParameter;
 import org.junit.Test;
 
 import java.util.List;
 
+import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.REQUEST;
+import static com.spotify.hamcrest.optional.OptionalMatchers.emptyOptional;
+import static com.spotify.hamcrest.optional.OptionalMatchers.optionalWithValue;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertThat;
@@ -95,5 +101,58 @@ public class MergedValidationReportTest {
         }
         assertThat(report.hasErrors(), is(true));
         assertThat(report.getMessages(), hasSize(numMessages));
+    }
+
+    @Test
+    public void withAdditionalContext_attachesContext_toEachMessage_whenNoContext() {
+        final MergedValidationReport report = new MergedValidationReport(
+                ValidationReport.singleton(ERROR_MSG),
+                ValidationReport.from(NON_ERROR_MSG, ERROR_MSG)
+        );
+
+        final MessageContext context = MessageContext.create().in(REQUEST).build();
+        final ValidationReport contextualReport = report.withAdditionalContext(context);
+
+        assertThat(contextualReport, not(is(report)));
+        assertThat(contextualReport.getMessages().size(), is(report.getMessages().size()));
+        report.getMessages().forEach(m -> {
+            assertThat(m.getContext().isPresent(), is(false));
+        });
+        contextualReport.getMessages().forEach(m -> {
+            assertThat(m.getContext().isPresent(), is(true));
+            assertThat(m.getContext().get(), is(context));
+        });
+    }
+
+    @Test
+    public void withAdditionalContext_attachesAdditionalContext_toEachMessage_whenContext() {
+
+        final MessageContext baseContext = MessageContext.create().in(REQUEST).build();
+        final MergedValidationReport report = new MergedValidationReport(
+                ValidationReport.singleton(ERROR_MSG.withAdditionalContext(baseContext)),
+                ValidationReport.from(NON_ERROR_MSG.withAdditionalContext(baseContext), ERROR_MSG.withAdditionalContext(baseContext))
+        );
+
+        final MessageContext additionalContext = MessageContext.create().withParameter(new PathParameter().name("param")).build();
+        final ValidationReport contextualReport = report.withAdditionalContext(additionalContext);
+
+        assertThat(contextualReport, not(is(report)));
+        assertThat(contextualReport.getMessages().size(), is(report.getMessages().size()));
+        report.getMessages().forEach(m -> {
+            assertThat(m.getContext().isPresent(), is(true));
+
+            final MessageContext messageContext = m.getContext().get();
+            assertThat(messageContext.getParameter(), emptyOptional());
+            assertThat(messageContext.getLocation(), optionalWithValue());
+            assertThat(messageContext.getApiOperation(), emptyOptional());
+        });
+        contextualReport.getMessages().forEach(m -> {
+            assertThat(m.getContext().isPresent(), is(true));
+
+            final MessageContext messageContext = m.getContext().get();
+            assertThat(messageContext.getParameter(), optionalWithValue());
+            assertThat(messageContext.getLocation(), optionalWithValue());
+            assertThat(messageContext.getApiOperation(), emptyOptional());
+        });
     }
 }

@@ -36,14 +36,35 @@ public class ValidatorTestUtil {
      * Assert that validation has failed.
      */
     public static void assertFail(final ValidationReport report, final String... expectedKeys) {
+        assertFail(report, true, expectedKeys);
+    }
+
+    /**
+     * Assert that validation has failed, and that no context has been attached to the messages.
+     */
+    public static void assertFailWithoutContext(final ValidationReport report, final String... expectedKeys) {
+        assertFail(report, false, expectedKeys);
+    }
+
+    /**
+     * Assert that validation has failed.
+     */
+    private static void assertFail(final ValidationReport report, final boolean expectContext, final String... expectedKeys) {
         log.trace(ValidationReportFormatter.format(report));
         assertThat("Expected validation errors but found none. Enable trace logging for more details.", report.getMessages(), is(not(empty())));
 
         final List<String> foundKeys = report.getMessages().stream().map(ValidationReport.Message::getKey).collect(toList());
 
-        for (String key : expectedKeys) {
+        for (final String key : expectedKeys) {
             assertThat(format("Expected message key '%s' but not found. Found <%s>.", key, foundKeys.toString()),
-                foundKeys.contains(key), is(true));
+                    foundKeys.contains(key), is(true));
+        }
+
+        if (expectContext) {
+            report.getMessages().forEach(m -> {
+                assertThat(m.getContext().isPresent(), is(true));
+                assertThat(m.getContext().get().hasData(), is(true));
+            });
         }
 
     }

@@ -113,10 +113,10 @@ public class SwaggerRequestResponseValidator {
                     swaggerJsonUrlOrPayload, swaggerParseResult.getMessages().toString().replace("\n", "\n\t")));
         }
         this.messages = messages;
-        this.apiOperationResolver = new ApiOperationResolver(api, basePathOverride);
+        apiOperationResolver = new ApiOperationResolver(api, basePathOverride);
         final SchemaValidator schemaValidator = new SchemaValidator(api, messages);
-        this.requestValidator = new RequestValidator(schemaValidator, messages, api);
-        this.responseValidator = new ResponseValidator(schemaValidator, messages, api);
+        requestValidator = new RequestValidator(schemaValidator, messages, api);
+        responseValidator = new ResponseValidator(schemaValidator, messages, api);
         this.whitelist = whitelist;
     }
 
@@ -189,15 +189,23 @@ public class SwaggerRequestResponseValidator {
                                                     @Nonnull final Request.Method method,
                                                     @Nonnull final Function<ApiOperation, ValidationReport> validationFunction,
                                                     @Nonnull final BiFunction<ApiOperation, ValidationReport, ValidationReport> whitelistingFunction) {
+
+        final ValidationReport.MessageContext context = ValidationReport.MessageContext.create()
+                .withRequestPath(path)
+                .withRequestMethod(method)
+                .build();
+
         final ApiOperationMatch apiOperationMatch = apiOperationResolver.findApiOperation(path, method);
         if (!apiOperationMatch.isPathFound()) {
             return whitelistingFunction.apply(null, ValidationReport.singleton(
-                messages.get("validation.request.path.missing", path)));
+                    messages.get("validation.request.path.missing", path)).withAdditionalContext(context)
+            );
         }
 
         if (!apiOperationMatch.isOperationAllowed()) {
             return whitelistingFunction.apply(null, ValidationReport.singleton(
-                messages.get("validation.request.operation.notAllowed", method, path)));
+                    messages.get("validation.request.operation.notAllowed", method, path)).withAdditionalContext(context)
+            );
         }
 
         final ApiOperation apiOperation = apiOperationMatch.getApiOperation();
@@ -310,7 +318,7 @@ public class SwaggerRequestResponseValidator {
         public Builder withAuthHeaderData(final String key, final String value) {
             requireNonNull(key, "A key for the auth header is required");
 
-            this.authData = Arrays.asList(new AuthorizationValue(key, value, "header"));
+            authData = Arrays.asList(new AuthorizationValue(key, value, "header"));
             return this;
         }
 

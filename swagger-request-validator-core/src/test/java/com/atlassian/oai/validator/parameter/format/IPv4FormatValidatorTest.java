@@ -3,7 +3,7 @@ package com.atlassian.oai.validator.parameter.format;
 import com.atlassian.oai.validator.report.MessageResolver;
 import org.junit.Test;
 
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFailWithoutContext;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -28,14 +28,14 @@ public class IPv4FormatValidatorTest {
 
     @Test
     public void fails_whenInvalid() {
-        assertFail(classUnderTest.validate("123.456.789"), EXPECTED_KEY);
-        assertFail(classUnderTest.validate("2001:0db8:0000:0000:0000:ff00:0042:8329"), EXPECTED_KEY);
-        assertFail(classUnderTest.validate("floop"), EXPECTED_KEY);
+        assertFailWithoutContext(classUnderTest.validate("123.456.789"), EXPECTED_KEY);
+        assertFailWithoutContext(classUnderTest.validate("2001:0db8:0000:0000:0000:ff00:0042:8329"), EXPECTED_KEY);
+        assertFailWithoutContext(classUnderTest.validate("floop"), EXPECTED_KEY);
     }
 
     @Test
     public void fails_whenEmpty() {
-        assertFail(classUnderTest.validate(""), EXPECTED_KEY);
+        assertFailWithoutContext(classUnderTest.validate(""), EXPECTED_KEY);
     }
 
 }

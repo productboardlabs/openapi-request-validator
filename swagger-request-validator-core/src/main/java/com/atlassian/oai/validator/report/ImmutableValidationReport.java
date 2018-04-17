@@ -24,7 +24,7 @@ public class ImmutableValidationReport implements ValidationReport {
             messages = Collections.emptyList();
             return;
         }
-        this.messages = ImmutableList.of(message);
+        messages = ImmutableList.of(message);
     }
 
     ImmutableValidationReport(final ValidationReport.Message... messages) {
@@ -33,6 +33,14 @@ public class ImmutableValidationReport implements ValidationReport {
             return;
         }
         this.messages = ImmutableList.copyOf(stream(messages).filter(Objects::nonNull).collect(toList()));
+    }
+
+    ImmutableValidationReport(final List<ValidationReport.Message> messages) {
+        if (messages == null || messages.size() == 0) {
+            this.messages = Collections.emptyList();
+            return;
+        }
+        this.messages = ImmutableList.copyOf(messages.stream().filter(Objects::nonNull).collect(toList()));
     }
 
     @Nonnull
@@ -44,5 +52,13 @@ public class ImmutableValidationReport implements ValidationReport {
     @Override
     public String toString() {
         return getMessages().toString();
+    }
+
+    @Override
+    public ValidationReport withAdditionalContext(final MessageContext context) {
+        return new ImmutableValidationReport(
+                messages.stream().map(m -> m.withAdditionalContext(context))
+                        .collect(toList())
+        );
     }
 }

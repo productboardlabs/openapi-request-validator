@@ -6,6 +6,7 @@ import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.parameter.ParameterValidators;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
+import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
 import com.atlassian.oai.validator.schema.SchemaValidator;
 import com.google.common.collect.Multimap;
 import com.google.common.net.MediaType;
@@ -29,6 +30,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 
+import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.REQUEST;
 import static com.atlassian.oai.validator.report.ValidationReport.empty;
 import static com.atlassian.oai.validator.util.HttpParsingUtils.isMultipartContentTypeAcceptedByConsumer;
 import static com.atlassian.oai.validator.util.HttpParsingUtils.parseMultipartFormDataBody;
@@ -82,13 +84,19 @@ public class RequestValidator {
         requireNonNull(request, "A request is required");
         requireNonNull(apiOperation, "An API operation is required");
 
+        final MessageContext context = MessageContext.create()
+                .in(REQUEST)
+                .withApiOperation(apiOperation)
+                .build();
+
         return  validateSecurity(request, apiOperation)
                 .merge(validateContentType(request, apiOperation))
                 .merge(validateAccepts(request, apiOperation))
                 .merge(validateHeaders(request, apiOperation))
                 .merge(validatePathParameters(apiOperation))
                 .merge(validateRequestBody(request, apiOperation))
-                .merge(validateQueryParameters(request, apiOperation));
+                .merge(validateQueryParameters(request, apiOperation))
+                .withAdditionalContext(context);
     }
 
     @Nonnull
@@ -321,11 +329,15 @@ public class RequestValidator {
                 .filter(RequestValidator::isBodyParam)
                 .findFirst();
 
+        final MessageContext context = MessageContext.create()
+                .withParameter(bodyParameter.orElse(null))
+                .build();
+
         if (requestBody.isPresent() && !requestBody.get().isEmpty() && !bodyParameter.isPresent()) {
             return ValidationReport.singleton(
                     messages.get("validation.request.body.unexpected",
                             apiOperation.getMethod(), apiOperation.getApiPath().original())
-            );
+            ).withAdditionalContext(context);
         }
 
         if (!bodyParameter.isPresent()) {
@@ -337,12 +349,14 @@ public class RequestValidator {
                 return ValidationReport.singleton(
                         messages.get("validation.request.body.missing",
                                 apiOperation.getMethod(), apiOperation.getApiPath().original())
-                );
+                ).withAdditionalContext(context);
             }
             return empty();
         }
 
-        return schemaValidator.validate(requestBody.get(), ((BodyParameter) bodyParameter.get()).getSchema());
+        return schemaValidator
+                .validate(requestBody.get(), ((BodyParameter) bodyParameter.get()).getSchema())
+                .withAdditionalContext(context);
     }
 
     @Nonnull
@@ -446,16 +460,16 @@ public class RequestValidator {
 
     @Nonnull
     private boolean isMultipartFormData(@Nonnull final Optional<String> maybeRequestContentType,
-                               @Nonnull final ApiOperation apiOperation) {
+                                        @Nonnull final ApiOperation apiOperation) {
         final List<String> consumes = apiOperation.getOperation().getConsumes();
         if (consumes == null || consumes.isEmpty() || !maybeRequestContentType.isPresent()) {
             return false;
         }
         final String requestContentType = maybeRequestContentType.get();
 
-        return consumes.stream().anyMatch(
-            consumesContentType -> isMultipartContentTypeAcceptedByConsumer(requestContentType, consumesContentType)
-        );
+        return consumes
+                .stream()
+                .anyMatch(consumesContentType -> isMultipartContentTypeAcceptedByConsumer(requestContentType, consumesContentType));
     }
 
     private static boolean isBodyParam(final Parameter p) {

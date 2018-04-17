@@ -3,7 +3,7 @@ package com.atlassian.oai.validator.parameter.format;
 import com.atlassian.oai.validator.report.MessageResolver;
 import org.junit.Test;
 
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFailWithoutContext;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -27,14 +27,14 @@ public class EmailFormatValidatorTest {
 
     @Test
     public void fails_whenInvalidEmail() {
-        assertFail(classUnderTest.validate("not@anemail@"), EXPECTED_KEY);
-        assertFail(classUnderTest.validate("notanemail"), EXPECTED_KEY);
-        assertFail(classUnderTest.validate("not@@anemail"), EXPECTED_KEY);
+        assertFailWithoutContext(classUnderTest.validate("not@anemail@"), EXPECTED_KEY);
+        assertFailWithoutContext(classUnderTest.validate("notanemail"), EXPECTED_KEY);
+        assertFailWithoutContext(classUnderTest.validate("not@@anemail"), EXPECTED_KEY);
     }
 
     @Test
     public void fails_whenEmpty() {
-        assertFail(classUnderTest.validate(""), EXPECTED_KEY);
+        assertFailWithoutContext(classUnderTest.validate(""), EXPECTED_KEY);
     }
 
 }

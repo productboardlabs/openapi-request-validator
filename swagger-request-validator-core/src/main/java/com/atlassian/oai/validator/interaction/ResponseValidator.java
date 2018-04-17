@@ -4,6 +4,7 @@ import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
+import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
 import com.atlassian.oai.validator.schema.SchemaValidator;
 import com.google.common.net.MediaType;
 import io.swagger.models.Swagger;
@@ -16,6 +17,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.RESPONSE;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -55,16 +57,27 @@ public class ResponseValidator {
         requireNonNull(apiOperation, "An API operation is required");
 
         final io.swagger.models.Response apiResponse = getApiResponse(response, apiOperation);
+
+        final MessageContext.Builder contextBuilder = MessageContext.create()
+                .in(RESPONSE)
+                .withApiOperation(apiOperation);
+
         if (apiResponse == null) {
             return ValidationReport.singleton(
                     messages.get("validation.response.status.unknown",
                             response.getStatus(), apiOperation.getApiPath().original())
-            );
+            ).withAdditionalContext(contextBuilder.build());
         }
 
         return validateResponseBody(response, apiResponse, apiOperation)
                 .merge(validateContentType(response, apiOperation))
-                .merge(validateHeaders(response, apiResponse, apiOperation));
+                .merge(validateHeaders(response, apiResponse, apiOperation))
+                .withAdditionalContext(
+                        contextBuilder
+                                .withResponseStatus(response.getStatus())
+                                .withApiResponseDefinition(apiResponse)
+                                .build()
+                );
     }
 
     @Nullable

@@ -1,11 +1,18 @@
 package com.atlassian.oai.validator.report;
 
+import com.atlassian.oai.validator.model.ApiOperation;
+import com.atlassian.oai.validator.model.Request;
+import io.swagger.models.Response;
+import io.swagger.models.parameters.Parameter;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
+import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -31,8 +38,8 @@ public interface ValidationReport {
      */
     interface Message {
 
-        static Message create(String key, String message) {
-            return new ImmutableMessage(key, Level.ERROR, message, Collections.emptyList());
+        static Builder create(final String key, final String message) {
+            return new Builder(key, Level.ERROR, message);
         }
 
         String getKey();
@@ -44,6 +51,11 @@ public interface ValidationReport {
         List<String> getAdditionalInfo();
 
         /**
+         * Returns contextual information about this message, if it is available.
+         */
+        Optional<MessageContext> getContext();
+
+        /**
          * Returns a new instance, the same as this message, but, with level changed.
          */
         Message withLevel(Level level);
@@ -52,6 +64,190 @@ public interface ValidationReport {
          * Returns a new instance, the same as this message, but with additional info attached.
          */
         Message withAdditionalInfo(String info);
+
+        /**
+         * Returns a new instance, the same as this message, but additional context attached.
+         */
+        Message withAdditionalContext(MessageContext context);
+
+        class Builder {
+            private final String key;
+            private final ValidationReport.Level level;
+            private final String message;
+            private final List<String> additionalInfo = new ArrayList<>();
+            private ValidationReport.MessageContext context;
+
+            private Builder(@Nonnull final String key,
+                            @Nonnull final ValidationReport.Level level,
+                            @Nonnull final String message) {
+
+                this.key = requireNonNull(key, "A key is required");
+                this.level = requireNonNull(level, "A level is required");
+                this.message = requireNonNull(message, "A message is required");
+            }
+
+            public Builder withAdditionalInfo(final List<String> additionalInfo) {
+                if (additionalInfo != null) {
+                    this.additionalInfo.addAll(additionalInfo);
+                }
+                return this;
+            }
+
+            public Builder withAdditionalInfo(final String... additionalInfo) {
+                this.additionalInfo.addAll(asList(additionalInfo));
+                return this;
+            }
+
+            public Builder withContext(final ValidationReport.MessageContext context) {
+                this.context = context;
+                return this;
+            }
+
+            public Message build() {
+                return new ImmutableMessage(key, level, message, additionalInfo, context);
+            }
+        }
+
+    }
+
+    /**
+     * Contextual information about a validation message.
+     */
+    interface MessageContext {
+
+        enum Location {
+            REQUEST,
+            RESPONSE
+        }
+
+        static MessageContext empty() {
+            return create().build();
+        }
+
+        static Builder create() {
+            return new Builder();
+        }
+
+        static Builder from(final MessageContext other) {
+            return new Builder(other);
+        }
+
+        Optional<String> getRequestPath();
+
+        Optional<Request.Method> getRequestMethod();
+
+        Optional<ApiOperation> getApiOperation();
+
+        Optional<Parameter> getParameter();
+
+        Optional<Integer> getResponseStatus();
+
+        Optional<Response> getApiResponseDefinition();
+
+        Optional<Location> getLocation();
+
+        /**
+         * @return {@code true} if at least one field on this context object has been set; {@code false} otherwise.
+         */
+        boolean hasData();
+
+        /**
+         * Return a new MessageContext instance that contains all of the data in this context,
+         * plus data from the incoming context where that data does not already exist on this context.
+         * <p>
+         * This is used to build a context up as more information becomes available.
+         */
+        MessageContext enhanceWith(MessageContext other);
+
+        class Builder {
+            String requestPath;
+            Request.Method method;
+            ApiOperation apiOperation;
+            Parameter parameter;
+
+            Integer responseStatus;
+            Response apiResponse;
+
+            Location location;
+
+            private Builder() {
+            }
+
+            private Builder(final MessageContext init) {
+                requestPath = init.getRequestPath().orElse(null);
+                method = init.getRequestMethod().orElse(null);
+                apiOperation = init.getApiOperation().orElse(null);
+                parameter = init.getParameter().orElse(null);
+                responseStatus = init.getResponseStatus().orElse(null);
+                apiResponse = init.getApiResponseDefinition().orElse(null);
+                location = init.getLocation().orElse(null);
+            }
+
+            public Builder withRequestPath(final String requestPath) {
+                this.requestPath = requestPath;
+                return this;
+            }
+
+            public Builder withRequestMethod(final Request.Method method) {
+                this.method = method;
+                return this;
+            }
+
+            public Builder withApiOperation(final ApiOperation apiOperation) {
+                this.apiOperation = apiOperation;
+                return this;
+            }
+
+            public Builder withParameter(final Parameter parameter) {
+                this.parameter = parameter;
+                return this;
+            }
+
+            public Builder withResponseStatus(final Integer status) {
+                responseStatus = status;
+                return this;
+            }
+
+            public Builder withApiResponseDefinition(final Response apiResponseDefinition) {
+                apiResponse = apiResponseDefinition;
+                return this;
+            }
+
+            public Builder in(final Location location) {
+                this.location = location;
+                return this;
+            }
+
+            public Builder withAdditionalDataFrom(final MessageContext other) {
+                if (requestPath == null) {
+                    requestPath = other.getRequestPath().orElse(null);
+                }
+                if (method == null) {
+                    method = other.getRequestMethod().orElse(null);
+                }
+                if (apiOperation == null) {
+                    apiOperation = other.getApiOperation().orElse(null);
+                }
+                if (parameter == null) {
+                    parameter = other.getParameter().orElse(null);
+                }
+                if (responseStatus == null) {
+                    responseStatus = other.getResponseStatus().orElse(null);
+                }
+                if (apiResponse == null) {
+                    apiResponse = other.getApiResponseDefinition().orElse(null);
+                }
+                if (location == null) {
+                    location = other.getLocation().orElse(null);
+                }
+                return this;
+            }
+
+            public MessageContext build() {
+                return new ImmutableMessageContext(this);
+            }
+
+        }
     }
 
     /**
@@ -128,8 +324,19 @@ public interface ValidationReport {
      * @return A new, unmodifiable validation report containing all the messages from this report
      * and the other report
      */
-    default ValidationReport merge(@Nonnull ValidationReport other) {
+    default ValidationReport merge(@Nonnull final ValidationReport other) {
         requireNonNull(other, "A validation report is required");
         return new MergedValidationReport(this, other);
     }
+
+    /**
+     * Apply the given additional message context to each message in this validation report,
+     * returning a new unmodifiable report.
+     *
+     * @param context The additional context to apply to each message in the report
+     *
+     * @return A new, unmodifiable validation report containing all of the messages from this report,
+     * enhanced with the additional supplied context
+     */
+    ValidationReport withAdditionalContext(MessageContext context);
 }

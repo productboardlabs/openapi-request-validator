@@ -3,7 +3,9 @@ package com.atlassian.oai.validator.report;
 import com.google.common.collect.ImmutableList;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Optional;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
@@ -17,22 +19,27 @@ class ImmutableMessage implements ValidationReport.Message {
     private final String message;
     private final List<String> additionalInfo;
 
+    @Nullable
+    private final ValidationReport.MessageContext context;
+
     ImmutableMessage(@Nonnull final String key,
                      @Nonnull final ValidationReport.Level level,
                      @Nonnull final String message,
                      @Nonnull final String... additionalInfo) {
-        this(key, level, message, asList(additionalInfo));
+        this(key, level, message, asList(additionalInfo), null);
     }
 
     ImmutableMessage(@Nonnull final String key,
                      @Nonnull final ValidationReport.Level level,
                      @Nonnull final String message,
-                     @Nonnull final List<String> additionalInfo) {
+                     @Nonnull final List<String> additionalInfo,
+                     @Nullable final ValidationReport.MessageContext context) {
 
         this.key = requireNonNull(key, "A key is required");
         this.level = requireNonNull(level, "A level is required");
         this.message = requireNonNull(message, "A message is required");
         this.additionalInfo = unmodifiableList(requireNonNull(additionalInfo));
+        this.context = context;
     }
 
     @Override
@@ -44,8 +51,15 @@ class ImmutableMessage implements ValidationReport.Message {
     public ValidationReport.Message withAdditionalInfo(final String info) {
         return new ImmutableMessage(
                 key, level, message,
-                ImmutableList.<String>builder().addAll(additionalInfo).add(info).build()
+                ImmutableList.<String>builder().addAll(additionalInfo).add(info).build(),
+                context
         );
+    }
+
+    @Override
+    public ValidationReport.Message withAdditionalContext(final ValidationReport.MessageContext context) {
+        final ValidationReport.MessageContext newContext = this.context == null ? context : this.context.enhanceWith(context);
+        return new ImmutableMessage(key, level, message, additionalInfo, newContext);
     }
 
     @Override
@@ -74,4 +88,10 @@ class ImmutableMessage implements ValidationReport.Message {
     public List<String> getAdditionalInfo() {
         return additionalInfo;
     }
+
+    @Override
+    public Optional<ValidationReport.MessageContext> getContext() {
+        return Optional.ofNullable(context);
+    }
+
 }

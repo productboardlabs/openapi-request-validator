@@ -1,9 +1,8 @@
 package com.atlassian.oai.validator.report;
 
+import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.List;
-
-import javax.annotation.Nonnull;
 
 /**
  * An empty {@link ValidationReport} which contains no {@link ValidationReport.Message}.
@@ -25,5 +24,10 @@ public class EmptyValidationReport implements ValidationReport {
     @Override
     public List<Message> getMessages() {
         return Collections.emptyList();
+    }
+
+    @Override
+    public ValidationReport withAdditionalContext(final MessageContext context) {
+        return this;
     }
 }
