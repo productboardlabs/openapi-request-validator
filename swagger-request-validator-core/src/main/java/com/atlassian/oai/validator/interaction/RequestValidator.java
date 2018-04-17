@@ -31,8 +31,8 @@ import java.util.TreeSet;
 
 import static com.atlassian.oai.validator.report.ValidationReport.empty;
 import static com.atlassian.oai.validator.util.HttpParsingUtils.isMultipartContentTypeAcceptedByConsumer;
-import static com.atlassian.oai.validator.util.HttpParsingUtils.parseUrlencodedFormDataBody;
 import static com.atlassian.oai.validator.util.HttpParsingUtils.parseMultipartFormDataBody;
+import static com.atlassian.oai.validator.util.HttpParsingUtils.parseUrlencodedFormDataBody;
 import static java.util.Objects.requireNonNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -63,7 +63,7 @@ public class RequestValidator {
                             @Nonnull final MessageResolver messages,
                             @Nonnull final Swagger swaggerDefinition) {
         this.schemaValidator = requireNonNull(schemaValidator, "A schema validator is required");
-        this.parameterValidators = new ParameterValidators(schemaValidator, messages);
+        parameterValidators = new ParameterValidators(schemaValidator, messages);
         this.messages = requireNonNull(messages, "A message resolver is required");
         this.swaggerDefinition = requireNonNull(swaggerDefinition, "A swagger definition required");
     }
@@ -99,7 +99,7 @@ public class RequestValidator {
         if (null != securityRequired && !securityRequired.isEmpty()) {
             boolean foundSecurity = false;
             ValidationReport report = empty();
-            for (Map.Entry<String, SecuritySchemeDefinition> s: swaggerDefinition.getSecurityDefinitions().entrySet()) {
+            for (final Map.Entry<String, SecuritySchemeDefinition> s : swaggerDefinition.getSecurityDefinitions().entrySet()) {
                 final Map<String, SecuritySchemeDefinition> filtered = new HashMap<>();
                 securityRequired.stream().filter(item -> item.containsKey(s.getKey())).forEach(item -> filtered.put(s.getKey(), s.getValue()));
 
@@ -360,7 +360,7 @@ public class RequestValidator {
                     .paramValues(i, requestPath.part(i))
                     .entrySet()
                     .stream()
-                    .map((param) -> validatePathParameter(apiOperation, param.getKey(), param.getValue()))
+                    .map(param -> validatePathParameter(apiOperation, param.getKey(), param.getValue()))
                     .reduce(empty(), ValidationReport::merge);
 
             validationReport = validationReport.merge(pathPartValidation);
@@ -427,7 +427,7 @@ public class RequestValidator {
 
         return parameterValues
                 .stream()
-                .map((v) -> parameterValidators.validate(v, parameter))
+                .map(v -> parameterValidators.validate(v, parameter))
                 .reduce(empty(), ValidationReport::merge);
     }
 

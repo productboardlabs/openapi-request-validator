@@ -68,7 +68,7 @@
 
         <license-maven-plugin.version>1.9</license-maven-plugin.version>
         <maven-checkstyle-plugin.version>2.17</maven-checkstyle-plugin.version>
-        <checkstyle.version>7.5.1</checkstyle.version>
+        <checkstyle.version>8.9</checkstyle.version>
     </properties>
 
     <modules>
