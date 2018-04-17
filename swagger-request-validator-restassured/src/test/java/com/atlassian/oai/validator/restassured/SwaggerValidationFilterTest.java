@@ -1,19 +1,17 @@
 package com.atlassian.oai.validator.restassured;
 
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import org.junit.Test;
-
 import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
-
 import io.restassured.filter.FilterContext;
 import io.restassured.response.Response;
 import io.restassured.response.ResponseBody;
 import io.restassured.specification.FilterableRequestSpecification;
+import org.junit.Test;
+
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class SwaggerValidationFilterTest {
 
