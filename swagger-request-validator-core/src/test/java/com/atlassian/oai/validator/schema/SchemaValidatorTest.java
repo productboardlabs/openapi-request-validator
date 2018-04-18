@@ -33,7 +33,7 @@ import static org.mockito.Mockito.when;
 
 public class SchemaValidatorTest {
 
-    private final SchemaValidator classUnderTest = validator("/oai/api-users.json");
+    private final SchemaValidator classUnderTest = validator("/oai/v2/api-users.json");
 
     @Test(expected = IllegalArgumentException.class)
     public void validate_withNullValue_shouldThrowException() {
@@ -164,7 +164,7 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withJsonSchemaComposition_shouldWork_whenAdditionalPropertyValidationIgnored() {
 
-        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/api-composition.yaml");
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v2/api-composition.yaml");
 
         final Model schema = new RefModel("#/definitions/User");
         final String value = "{\"firstname\":\"user_firstname\", \"lastname\":\"user_lastname\", \"city\":\"user_city\"}";
@@ -175,7 +175,7 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withAllOf_shouldAddInfoOnNestedFailures_whenSubSchemaValidationFails() {
 
-        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/api-composition.yaml");
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v2/api-composition.yaml");
 
         final Model schema = new RefModel("#/definitions/User");
         final String value = "{\"firstname\":\"user_firstname\", \"city\":1}";
@@ -192,7 +192,7 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withJsonSchemaComposition_shouldFail_whenAdditionalPropertyValidationNotIgnored() {
 
-        final SchemaValidator classUnderTest = validator("/oai/api-composition.yaml");
+        final SchemaValidator classUnderTest = validator("/oai/v2/api-composition.yaml");
 
         final Model schema = new RefModel("#/definitions/User");
         final String value = "{\"firstname\":\"user_firstname\", \"lastname\":\"user_lastname\", \"city\":\"user_city\"}";
@@ -251,7 +251,7 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withDiscriminator_shouldPass_whenValid() {
 
-        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/api-discriminator.yaml");
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v2/api-discriminator.yaml");
         final Model schema = new RefModel("#/definitions/Pet");
         final String value = "{\"name\": \"Moggy\", \"petType\": \"Cat\", \"huntingSkill\":\"clueless\"}";
 
@@ -261,7 +261,7 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withDiscriminator_shouldPass_everyTime_whenInvokedMultipleTimes() {
 
-        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/api-discriminator.yaml");
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v2/api-discriminator.yaml");
         final Model schema = new RefModel("#/definitions/Pet");
         final String value = "{\"name\": \"Moggy\", \"petType\": \"Cat\", \"huntingSkill\":\"clueless\"}";
 
@@ -272,7 +272,7 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withDiscriminator_shouldFail_whenInvalid() {
 
-        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/api-discriminator.yaml");
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v2/api-discriminator.yaml");
         final Model schema = new RefModel("#/definitions/Pet");
         final String value = "{\"name\": \"Moggy\", \"petType\": \"Cat\", \"huntingSkill\":\"ruthless\"}";
 
@@ -282,7 +282,7 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withDiscriminator_shouldFail_everyTime_whenInvokedMultipleTimes() {
 
-        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/api-discriminator.yaml");
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v2/api-discriminator.yaml");
         final Model schema = new RefModel("#/definitions/Pet");
         final String value = "{\"name\": \"Moggy\", \"petType\": \"Cat\", \"huntingSkill\":\"ruthless\"}";
 
@@ -336,7 +336,7 @@ public class SchemaValidatorTest {
 
     @Test
     public void validate_withNoDefinitionsBlock_shouldPass_whenValid() {
-        final SchemaValidator classUnderTest = validator("/oai/api-no-definitions.json");
+        final SchemaValidator classUnderTest = validator("/oai/v2/api-no-definitions.json");
 
         final String value = "{\"id\":123}";
         final Model schema = new ModelImpl().property("id", new IntegerProperty());

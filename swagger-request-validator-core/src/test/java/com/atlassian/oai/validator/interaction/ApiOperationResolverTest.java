@@ -30,7 +30,7 @@ import static org.junit.Assert.assertTrue;
 @RunWith(Parameterized.class)
 public class ApiOperationResolverTest {
 
-    private static final String FILENAME_API_WITH_POST = "oai/api-operation-finder-test.json";
+    private static final String FILENAME_API_WITH_POST = "oai/v2/api-operation-finder-test.json";
 
     private static ApiOperationResolver classUnderTest;
 

@@ -17,7 +17,7 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadResponse;
 public class ResponseValidationTest {
 
     private final SwaggerRequestResponseValidator classUnderTest =
-            SwaggerRequestResponseValidator.createFor("/oai/api-users.json").build();
+            SwaggerRequestResponseValidator.createFor("/oai/v2/api-users.json").build();
 
     private final Request getUserRequest = SimpleRequest.Builder
             .get("/users/1")
@@ -189,7 +189,7 @@ public class ResponseValidationTest {
     @Test
     public void validate_withXmlBody_shouldNotApplySchemaValidation() {
         final SwaggerRequestResponseValidator classUnderTest =
-                SwaggerRequestResponseValidator.createFor("/oai/api-non-json-body.json").build();
+                SwaggerRequestResponseValidator.createFor("/oai/v2/api-non-json-body.json").build();
 
         final Response response = SimpleResponse.Builder
                 .ok()

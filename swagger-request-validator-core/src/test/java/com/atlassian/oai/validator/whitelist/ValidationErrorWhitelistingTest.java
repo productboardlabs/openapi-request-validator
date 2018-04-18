@@ -20,7 +20,7 @@ public class ValidationErrorWhitelistingTest {
     @Test
     public void whitelistedRequestFailuresShouldBeIgnored() {
         final SwaggerRequestResponseValidator classUnderTest = SwaggerRequestResponseValidator
-                .createFor("/oai/api-users.json")
+                .createFor("/oai/v2/api-users.json")
                 .withWhitelist(ValidationErrorsWhitelist.create()
                         .withRule("Ignore paths", WhitelistRules.messageContains("No API path"))
                     .withRule("Ignore NewUser entity errors", WhitelistRules.entityIs("NewUser")))
@@ -36,7 +36,7 @@ public class ValidationErrorWhitelistingTest {
     @Test
     public void whitelistedResponseFailuresShouldBeIgnored() {
         final SwaggerRequestResponseValidator classUnderTest = SwaggerRequestResponseValidator
-                .createFor("/oai/api-users.json")
+                .createFor("/oai/v2/api-users.json")
                 .withWhitelist(ValidationErrorsWhitelist.create()
                         .withRule("Ignore PATCH operation missing", WhitelistRules.messageContains("PATCH operation not allowed"))
                         .withRule("Ignore schema type", WhitelistRules.messageHasKey("validation.schema.type")))
