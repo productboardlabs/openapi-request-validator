@@ -1,6 +1,7 @@
 package com.atlassian.oai.validator.interaction;
 
 import com.atlassian.oai.validator.model.ApiOperation;
+import com.atlassian.oai.validator.model.Headers;
 import com.atlassian.oai.validator.model.NormalisedPath;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.parameter.ParameterValidators;
@@ -8,6 +9,7 @@ import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
 import com.atlassian.oai.validator.schema.SchemaValidator;
+import com.atlassian.oai.validator.util.ContentTypeUtils;
 import com.google.common.collect.Multimap;
 import com.google.common.net.MediaType;
 import io.swagger.models.Swagger;
@@ -32,6 +34,7 @@ import java.util.TreeSet;
 
 import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.REQUEST;
 import static com.atlassian.oai.validator.report.ValidationReport.empty;
+import static com.atlassian.oai.validator.util.ContentTypeUtils.isJsonContentType;
 import static com.atlassian.oai.validator.util.HttpParsingUtils.isMultipartContentTypeAcceptedByConsumer;
 import static com.atlassian.oai.validator.util.HttpParsingUtils.parseMultipartFormDataBody;
 import static com.atlassian.oai.validator.util.HttpParsingUtils.parseUrlencodedFormDataBody;
@@ -206,7 +209,7 @@ public class RequestValidator {
     private ValidationReport validateContentType(@Nonnull final Request request,
                                                  @Nonnull final ApiOperation apiOperation) {
         return validateMediaTypes(request,
-                "Content-Type",
+                Headers.CONTENT_TYPE,
                 getConsumes(apiOperation),
                 "validation.request.contentType.invalid",
                 "validation.request.contentType.notAllowed");
@@ -216,7 +219,7 @@ public class RequestValidator {
     private ValidationReport validateAccepts(@Nonnull final Request request,
                                              @Nonnull final ApiOperation apiOperation) {
         return validateMediaTypes(request,
-                "Accept",
+                Headers.ACCEPT,
                 getProduces(apiOperation),
                 "validation.request.accept.invalid",
                 "validation.request.accept.notAllowed");
@@ -282,15 +285,14 @@ public class RequestValidator {
     @Nonnull
     private ValidationReport validateRequestBody(@Nonnull final Request request,
                                                  @Nonnull final ApiOperation apiOperation) {
-        final Optional<String> requestContentType = request.getHeaderValue("content-type");
+        final Optional<String> requestContentType = request.getHeaderValue(Headers.CONTENT_TYPE);
         if (isMultipartFormData(requestContentType, apiOperation)) {
             return validateForm(request.getBody(), apiOperation, bodyData -> parseMultipartFormDataBody(requestContentType.get(), bodyData));
         }
         if (isFormData(requestContentType, apiOperation)) {
             return validateForm(request.getBody(), apiOperation, bodyData -> parseUrlencodedFormDataBody(bodyData));
         }
-
-        return validateBody(request.getBody(), apiOperation);
+        return validateBody(request, apiOperation);
     }
 
     @FunctionalInterface
@@ -322,7 +324,7 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private ValidationReport validateBody(@Nonnull final Optional<String> requestBody,
+    private ValidationReport validateBody(@Nonnull final Request request,
                                           @Nonnull final ApiOperation apiOperation) {
         final Optional<Parameter> bodyParameter = apiOperation.getOperation().getParameters()
                 .stream()
@@ -333,6 +335,7 @@ public class RequestValidator {
                 .withParameter(bodyParameter.orElse(null))
                 .build();
 
+        final Optional<String> requestBody = request.getBody();
         if (requestBody.isPresent() && !requestBody.get().isEmpty() && !bodyParameter.isPresent()) {
             return ValidationReport.singleton(
                     messages.get("validation.request.body.unexpected",
@@ -351,6 +354,11 @@ public class RequestValidator {
                                 apiOperation.getMethod(), apiOperation.getApiPath().original())
                 ).withAdditionalContext(context);
             }
+            return empty();
+        }
+
+        if (ContentTypeUtils.hasContentType(request) && !isJsonContentType(request)) {
+            log.debug("Non-JSON request body found. No validation will be applied.");
             return empty();
         }
 
@@ -445,9 +453,8 @@ public class RequestValidator {
                 .reduce(empty(), ValidationReport::merge);
     }
 
-    @Nonnull
-    private boolean isFormData(@Nonnull final Optional<String> maybeRequestContentType,
-                               @Nonnull final ApiOperation apiOperation) {
+    private static boolean isFormData(@Nonnull final Optional<String> maybeRequestContentType,
+                                      @Nonnull final ApiOperation apiOperation) {
         final List<String> consumes = apiOperation.getOperation().getConsumes();
         if (consumes == null || consumes.isEmpty() || !maybeRequestContentType.isPresent()) {
             return false;
@@ -458,9 +465,8 @@ public class RequestValidator {
                 && requestContentType.equals(MediaType.FORM_DATA.toString());
     }
 
-    @Nonnull
-    private boolean isMultipartFormData(@Nonnull final Optional<String> maybeRequestContentType,
-                                        @Nonnull final ApiOperation apiOperation) {
+    private static boolean isMultipartFormData(@Nonnull final Optional<String> maybeRequestContentType,
+                                               @Nonnull final ApiOperation apiOperation) {
         final List<String> consumes = apiOperation.getOperation().getConsumes();
         if (consumes == null || consumes.isEmpty() || !maybeRequestContentType.isPresent()) {
             return false;

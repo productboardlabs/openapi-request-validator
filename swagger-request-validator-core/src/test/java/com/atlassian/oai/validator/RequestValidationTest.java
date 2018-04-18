@@ -140,6 +140,7 @@ public class RequestValidationTest {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withBody(loadJsonRequest("newuser-valid"))
+                .withHeader("Content-Type", "application/json;charset=utf8")
                 .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
                 .build();
 
@@ -227,7 +228,7 @@ public class RequestValidationTest {
     public void validate_withInvalidJsonRequestBody_shouldFail() {
         final Request request = SimpleRequest.Builder
                 .post("/users")
-                .withHeader("content-type", "application/json")
+                .withHeader("content-type", "application/json;charset=utf8")
                 .withBody(loadJsonRequest("newuser-invalid-missingrequired"))
                 .build();
 
@@ -751,5 +752,33 @@ public class RequestValidationTest {
                 .build();
 
         assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.missing");
+    }
+
+    @Test
+    public void validate_withXmlBody_shouldNotApplySchemaValidation() {
+        final SwaggerRequestResponseValidator classUnderTest =
+                SwaggerRequestResponseValidator.createFor("/oai/api-non-json-body.json").build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/results")
+                .withHeader("Content-Type", "text/xml")
+                .withBody("<Result><id>100</id><name>Adam Andrews</name><score>86</score></Result>")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withPlainTextBody_shouldNotApplySchemaValidation() {
+        final SwaggerRequestResponseValidator classUnderTest =
+                SwaggerRequestResponseValidator.createFor("/oai/api-non-json-body.json").build();
+
+        final Request request = SimpleRequest.Builder
+                .patch("/results/100")
+                .withHeader("Content-Type", "text/plain")
+                .withBody("d101")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
     }
 }
