@@ -1,7 +1,6 @@
 package com.atlassian.oai.validator.mockmvc;
 
 import com.atlassian.oai.validator.mockmvc.SwaggerMatchers.SwaggerValidationException;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.test.web.servlet.MockMvc;
@@ -25,15 +24,15 @@ public class SwaggerValidationMatchersTest {
 
     @Test(expected = NullPointerException.class)
     public void create_withNullString_throwsException() throws Exception {
-        this.mvc
+        mvc
                 .perform(get("/path"))
                 .andExpect(status().isOk())
                 .andExpect(swagger().isValid(null));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = Exception.class)
     public void create_withEmpty_throwsException() throws Exception {
-        this.mvc
+        mvc
                 .perform(get("/path"))
                 .andExpect(status().isOk())
                 .andExpect(swagger().isValid(""));
@@ -41,7 +40,7 @@ public class SwaggerValidationMatchersTest {
 
     @Test
     public void match_returnsResponse_ifValidationSucceeds() throws Exception {
-        this.mvc
+        mvc
                 .perform(get("/hello/bob"))
                 .andExpect(status().isOk())
                 .andExpect(swagger().isValid("api.json"))
@@ -50,7 +49,7 @@ public class SwaggerValidationMatchersTest {
 
     @Test
     public void match_returnsResponse_ifValidationSucceedsEmptyBody() throws Exception {
-        this.mvc
+        mvc
                 .perform(get("/hello/empty"))
                 .andExpect(status().isNoContent())
                 .andExpect(swagger().isValid("api.json"))
@@ -59,7 +58,7 @@ public class SwaggerValidationMatchersTest {
 
     @Test (expected = SwaggerValidationException.class)
     public void match_throwsException_ifValidationFails() throws  Exception {
-        this.mvc
+        mvc
                 .perform(get("/hello/bill"))
                 .andExpect(status().isOk())
                 .andExpect(swagger().isValid("api.json"))
@@ -68,7 +67,7 @@ public class SwaggerValidationMatchersTest {
 
     @Test (expected = SwaggerValidationException.class)
     public void match_validationTakesMethodIntoAccount() throws Exception {
-        this.mvc
+        mvc
                 .perform(post("/hello/bob"))
                 .andExpect(status().isMethodNotAllowed())
                 .andExpect(swagger().isValid("api.json"))

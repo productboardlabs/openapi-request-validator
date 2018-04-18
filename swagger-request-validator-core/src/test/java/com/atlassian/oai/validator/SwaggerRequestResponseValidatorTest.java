@@ -60,8 +60,8 @@ public class SwaggerRequestResponseValidatorTest {
         SwaggerRequestResponseValidator.createFor("{}").build();
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void validate_neitherPathNorJson() {
+    @Test(expected = Exception.class)
+    public void validate_neitherPathNorJson_throwsException() {
         SwaggerRequestResponseValidator.createFor("<>").build();
     }
 

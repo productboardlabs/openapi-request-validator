@@ -64,7 +64,7 @@
         <servlet.api.version>3.1.0</servlet.api.version>
         <slf4j.version>1.7.25</slf4j.version>
         <spring.version>4.3.16.RELEASE</spring.version>
-        <swagger-parser.version>1.0.34</swagger-parser.version>
+        <swagger-parser.version>2.0.0</swagger-parser.version>
         <wiremock.version>2.17.0</wiremock.version>
 
         <checkstyle.version>8.9</checkstyle.version>
@@ -116,7 +116,7 @@
             </dependency>
 
             <dependency>
-                <groupId>io.swagger</groupId>
+                <groupId>io.swagger.parser.v3</groupId>
                 <artifactId>swagger-parser</artifactId>
                 <version>${swagger-parser.version}</version>
             </dependency>
