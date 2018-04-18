@@ -1,3 +1,8 @@
+#v1.4.2
+* Stopped trying to validate non-JSON request/response bodies with the JSON schema validator
+[[#65]](https://bitbucket.org/atlassian/swagger-request-validator/issues/65)
+[[#94]](https://bitbucket.org/atlassian/swagger-request-validator/issues/94)
+
 #v1.4.1
 * Added additional context to validation messages to describe where a validation error occurred
 [[#33]](https://bitbucket.org/atlassian/swagger-request-validator/issues/33)
