@@ -3,8 +3,7 @@ package com.atlassian.oai.validator.parameter;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.SchemaValidator;
-import io.swagger.models.parameters.Parameter;
-import io.swagger.models.parameters.SerializableParameter;
+import io.swagger.v3.oas.models.parameters.Parameter;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -27,9 +26,9 @@ public final class ParameterValidators {
      * @param messages The message resolver to use.
      */
     public ParameterValidators(@Nullable final SchemaValidator schemaValidator, @Nonnull final MessageResolver messages) {
-        this.arrayValidator = new ArrayParameterValidator(schemaValidator, messages);
+        arrayValidator = new ArrayParameterValidator(schemaValidator, messages);
         this.messages = requireNonNull(messages);
-        this.validators = asList(
+        validators = asList(
                 new StringParameterValidator(messages),
                 new NumberParameterValidator(messages),
                 new IntegerParameterValidator(messages)
@@ -39,8 +38,7 @@ public final class ParameterValidators {
     public ValidationReport validate(final String value, @Nonnull final Parameter parameter) {
         requireNonNull(parameter);
 
-        if ((parameter instanceof SerializableParameter) &&
-                ((SerializableParameter) parameter).getType().equalsIgnoreCase("array")) {
+        if (parameter.getSchema().getType().equalsIgnoreCase("array")) {
             return arrayValidator.validate(value, parameter);
         }
 

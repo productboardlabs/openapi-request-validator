@@ -6,9 +6,7 @@ import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.report.ValidationReport.Message;
 import io.swagger.models.RefModel;
 import io.swagger.models.parameters.BodyParameter;
-import io.swagger.models.properties.RefProperty;
 
-import java.util.Map;
 import java.util.Objects;
 
 class IsEntityWhitelistRule implements RequestOrResponseWhitelistRule {
@@ -27,14 +25,16 @@ class IsEntityWhitelistRule implements RequestOrResponseWhitelistRule {
 
     @Override
     public boolean matches(final Message message, final ApiOperation operation, final Response response) {
-        return operation != null && operation.getOperation().getResponses().entrySet()
-                .stream()
-                .filter(entry -> entry.getKey().equals(String.valueOf(response.getStatus())))
-                .map(Map.Entry::getValue)
-                .map(io.swagger.models.Response::getSchema)
-                .filter(RefProperty.class::isInstance)
-                .map(RefProperty.class::cast)
-                .anyMatch(ref -> entityName.equals(ref.getSimpleRef()));
+        // TODO
+//        return operation != null && operation.getOperation().getResponses().entrySet()
+//                .stream()
+//                .filter(entry -> entry.getKey().equals(String.valueOf(response.getStatus())))
+//                .map(Map.Entry::getValue)
+//                .map(io.swagger.models.Response::getSchema)
+//                .filter(RefProperty.class::isInstance)
+//                .map(RefProperty.class::cast)
+//                .anyMatch(ref -> entityName.equals(ref.getSimpleRef()));
+        return false;
     }
 
     @Override
@@ -61,7 +61,7 @@ class IsEntityWhitelistRule implements RequestOrResponseWhitelistRule {
 
         final IsEntityWhitelistRule that = (IsEntityWhitelistRule) o;
 
-        return Objects.equals(this.getEntityName(), that.getEntityName());
+        return Objects.equals(getEntityName(), that.getEntityName());
     }
 
     @Override

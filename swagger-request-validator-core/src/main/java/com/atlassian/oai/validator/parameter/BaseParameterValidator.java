@@ -3,8 +3,7 @@ package com.atlassian.oai.validator.parameter;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
-import io.swagger.models.parameters.Parameter;
-import io.swagger.models.parameters.SerializableParameter;
+import io.swagger.v3.oas.models.parameters.Parameter;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -22,8 +21,8 @@ abstract class BaseParameterValidator implements ParameterValidator {
     @Override
     public boolean supports(@Nullable final Parameter p) {
         return p != null &&
-                p instanceof SerializableParameter &&
-                supportedParameterType().equalsIgnoreCase(((SerializableParameter) p).getType());
+                p.getSchema() != null &&
+                supportedParameterType().equalsIgnoreCase(p.getSchema().getType());
     }
 
     @Override
@@ -35,9 +34,7 @@ abstract class BaseParameterValidator implements ParameterValidator {
 
         final MessageContext context = MessageContext.create().withParameter(p).build();
 
-        final SerializableParameter parameter = (SerializableParameter) p;
-
-        if (parameter.getRequired() && (value == null || value.trim().isEmpty())) {
+        if (p.getRequired() && (value == null || value.trim().isEmpty())) {
             return ValidationReport.singleton(
                     messages.get("validation.request.parameter.missing", p.getName())
             ).withAdditionalContext(context);
@@ -47,20 +44,21 @@ abstract class BaseParameterValidator implements ParameterValidator {
             return ValidationReport.empty();
         }
 
-        if (!matchesEnumIfDefined(value, parameter)) {
+        if (!matchesEnumIfDefined(value, p)) {
             return ValidationReport.singleton(
                     messages.get("validation.request.parameter.enum.invalid",
-                            value, parameter.getName(), parameter.getEnum())
+                            value, p.getName(), p.getSchema().getEnum())
             ).withAdditionalContext(context);
         }
 
-        return doValidate(value, parameter).withAdditionalContext(context);
+        return doValidate(value, p).withAdditionalContext(context);
     }
 
-    private boolean matchesEnumIfDefined(final String value, final SerializableParameter parameter) {
-        return parameter.getEnum() == null ||
-                parameter.getEnum().isEmpty() ||
-                parameter.getEnum().stream().anyMatch(value::equals);
+    private boolean matchesEnumIfDefined(final String value, final Parameter parameter) {
+        // TODO: Fix validation to match on proper value type
+        return parameter.getSchema().getEnum() == null ||
+                parameter.getSchema().getEnum().isEmpty() ||
+                parameter.getSchema().getEnum().stream().anyMatch(value::equals);
     }
 
     /**
@@ -69,7 +67,5 @@ abstract class BaseParameterValidator implements ParameterValidator {
      * @param value     The value being validated
      * @param parameter The parameter the value is being validated against
      */
-    protected abstract ValidationReport doValidate(
-        @Nonnull String value,
-        @Nonnull SerializableParameter parameter);
+    protected abstract ValidationReport doValidate(@Nonnull String value, @Nonnull Parameter parameter);
 }

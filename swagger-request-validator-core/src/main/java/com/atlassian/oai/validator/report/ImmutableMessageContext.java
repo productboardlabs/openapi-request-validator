@@ -2,8 +2,8 @@ package com.atlassian.oai.validator.report;
 
 import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.Request;
-import io.swagger.models.Response;
-import io.swagger.models.parameters.Parameter;
+import io.swagger.v3.oas.models.parameters.Parameter;
+import io.swagger.v3.oas.models.responses.ApiResponse;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -16,7 +16,7 @@ class ImmutableMessageContext implements ValidationReport.MessageContext {
     private final Parameter parameter;
 
     private final Integer responseStatus;
-    private final Response apiResponseDefinition;
+    private final ApiResponse apiResponseDefinition;
 
     private final Location location;
 
@@ -56,7 +56,7 @@ class ImmutableMessageContext implements ValidationReport.MessageContext {
     }
 
     @Override
-    public Optional<Response> getApiResponseDefinition() {
+    public Optional<ApiResponse> getApiResponseDefinition() {
         return Optional.ofNullable(apiResponseDefinition);
     }
 

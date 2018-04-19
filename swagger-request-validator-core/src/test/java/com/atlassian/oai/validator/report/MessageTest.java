@@ -2,10 +2,10 @@ package com.atlassian.oai.validator.report;
 
 import com.atlassian.oai.validator.report.ValidationReport.Message;
 import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
-import io.swagger.models.parameters.PathParameter;
 import org.junit.Test;
 
 import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.REQUEST;
+import static com.atlassian.oai.validator.util.ParameterGenerator.stringParam;
 import static com.spotify.hamcrest.optional.OptionalMatchers.emptyOptional;
 import static com.spotify.hamcrest.optional.OptionalMatchers.optionalWithValue;
 import static org.hamcrest.Matchers.hasProperty;
@@ -26,7 +26,7 @@ public class MessageTest {
 
         final Message enhancedMsg = msg.withAdditionalContext(
                 MessageContext.create()
-                        .withParameter(new PathParameter().name("test.param"))
+                        .withParameter(stringParam())
                         .build());
 
         assertThat(enhancedMsg, not(is(msg)));

@@ -3,20 +3,25 @@ package com.atlassian.oai.validator.parameter;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.SchemaValidator;
-import io.swagger.models.parameters.Parameter;
-import io.swagger.models.parameters.SerializableParameter;
+import com.google.common.collect.ImmutableMap;
+import io.swagger.v3.oas.models.media.ArraySchema;
+import io.swagger.v3.oas.models.parameters.Parameter;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.Optional;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static java.util.Objects.requireNonNull;
+import static io.swagger.v3.oas.models.parameters.Parameter.StyleEnum.LABEL;
+import static io.swagger.v3.oas.models.parameters.Parameter.StyleEnum.MATRIX;
+import static io.swagger.v3.oas.models.parameters.Parameter.StyleEnum.PIPEDELIMITED;
+import static io.swagger.v3.oas.models.parameters.Parameter.StyleEnum.SIMPLE;
+import static io.swagger.v3.oas.models.parameters.Parameter.StyleEnum.SPACEDELIMITED;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singleton;
 
 /**
  * A validator for array parameters.
@@ -25,42 +30,20 @@ import static java.util.Objects.requireNonNull;
  */
 public class ArrayParameterValidator extends BaseParameterValidator {
 
-    public static final String ARRAY_PARAMETER_TYPE = "array";
+    private static final String ARRAY_PARAMETER_TYPE = "array";
+
+    private static final Map<Parameter.StyleEnum, String> SEPARATORS = ImmutableMap.of(
+            SIMPLE, ",",
+            SPACEDELIMITED, " ",
+            PIPEDELIMITED, "\\|",
+            LABEL, "\\.",
+            MATRIX, ","
+    );
 
     private final SchemaValidator schemaValidator;
 
-    private enum CollectionFormat {
-        CSV(","),
-        SSV(" "),
-        TSV("\t"),
-        PIPES("\\|"),
-        MULTI(null);
-
-        final String separator;
-        CollectionFormat(final String separator) {
-            this.separator = separator;
-        }
-
-        Collection<String> split(final String value) {
-            if (separator == null) {
-                return Collections.singleton(value);
-            }
-            return Arrays.asList(value.split(separator));
-        }
-
-        @Nonnull
-        static CollectionFormat from(@Nonnull final SerializableParameter parameter) {
-            requireNonNull(parameter, "A parameter is required");
-
-            return Optional.ofNullable(parameter.getCollectionFormat())
-                    .map(String::toUpperCase)
-                    .map(CollectionFormat::valueOf)
-                    .orElse(CSV);
-        }
-    }
-
-    public ArrayParameterValidator(@Nullable final SchemaValidator schemaValidator,
-                                   @Nonnull final MessageResolver messages) {
+    ArrayParameterValidator(@Nullable final SchemaValidator schemaValidator,
+                            final MessageResolver messages) {
         super(messages);
         this.schemaValidator = schemaValidator == null ? new SchemaValidator(messages) : schemaValidator;
     }
@@ -73,14 +56,12 @@ public class ArrayParameterValidator extends BaseParameterValidator {
 
     @Override
     @Nonnull
-    public ValidationReport validate(@Nullable final String value, @Nullable final Parameter p) {
-        if (!supports(p)) {
+    public ValidationReport validate(@Nullable final String value, @Nullable final Parameter parameter) {
+        if (!supports(parameter)) {
             return ValidationReport.empty();
         }
 
-        final SerializableParameter parameter = (SerializableParameter) p;
-
-        final ValidationReport.MessageContext context = ValidationReport.MessageContext.create().withParameter(p).build();
+        final ValidationReport.MessageContext context = ValidationReport.MessageContext.create().withParameter(parameter).build();
 
         if (parameter.getRequired() && (value == null || value.trim().isEmpty())) {
             return ValidationReport.singleton(
@@ -95,14 +76,12 @@ public class ArrayParameterValidator extends BaseParameterValidator {
         return doValidate(value, parameter).withAdditionalContext(context);
     }
 
-    public ValidationReport validate(@Nullable final Collection<String> values, @Nullable final Parameter p) {
-        if (p == null) {
+    public ValidationReport validate(@Nullable final Collection<String> values, @Nullable final Parameter parameter) {
+        if (parameter == null) {
             return ValidationReport.empty();
         }
 
-        final SerializableParameter parameter = (SerializableParameter) p;
-
-        final ValidationReport.MessageContext context = ValidationReport.MessageContext.create().withParameter(p).build();
+        final ValidationReport.MessageContext context = ValidationReport.MessageContext.create().withParameter(parameter).build();
 
         if (parameter.getRequired() && (values == null || values.isEmpty())) {
             return ValidationReport.singleton(
@@ -114,24 +93,25 @@ public class ArrayParameterValidator extends BaseParameterValidator {
             return ValidationReport.empty();
         }
 
-        if (!parameter.getCollectionFormat().equalsIgnoreCase(CollectionFormat.MULTI.name())) {
-            return ValidationReport.singleton(
-                    messages.get("validation.request.parameter.collection.invalidFormat", p.getName(), parameter.getCollectionFormat(), "multi")
-            ).withAdditionalContext(context);
-        }
+        // TODO: Need to support style + explode
+//        if (parameter.getStyle() != FORM && parameter.getStyle() != ) {
+//            return ValidationReport.singleton(
+//                    messages.get("validation.request.parameter.collection.invalidFormat", parameter.getName(), parameter.getCollectionFormat(), "multi")
+//            ).withAdditionalContext(context);
+//        }
 
         return doValidate(values, parameter);
     }
 
     @Override
-    protected ValidationReport doValidate(@Nonnull final String value,
-                                          @Nonnull final SerializableParameter parameter) {
+    protected ValidationReport doValidate(final String value,
+                                          final Parameter parameter) {
 
-        return doValidate(CollectionFormat.from(parameter).split(value), parameter);
+        return doValidate(splitValue(parameter, value), parameter);
     }
 
-    private ValidationReport doValidate(@Nonnull final Collection<String> values,
-                                        @Nonnull final SerializableParameter parameter) {
+    private ValidationReport doValidate(final Collection<String> values,
+                                        final Parameter parameter) {
 
         final ValidationReport report = Stream.of(
                 validateMaxItems(values, parameter),
@@ -139,23 +119,23 @@ public class ArrayParameterValidator extends BaseParameterValidator {
                 validateUniqueItems(values, parameter)
         ).reduce(ValidationReport.empty(), ValidationReport::merge);
 
-        if (parameter.getEnum() != null && !parameter.getEnum().isEmpty()) {
-            final Set<String> enumValues = new HashSet<>(parameter.getEnum());
+        if (parameter.getSchema().getEnum() != null && !parameter.getSchema().getEnum().isEmpty()) {
+            final Set<String> enumValues = new HashSet<>(parameter.getSchema().getEnum());
             return values.stream()
                     .filter(v -> !enumValues.contains(v))
                     .map(v -> ValidationReport.singleton(messages.get("validation.request.parameter.enum.invalid",
-                            v, parameter.getName(), parameter.getEnum())
+                            v, parameter.getName(), parameter.getSchema().getEnum())
                     ))
                     .reduce(report, ValidationReport::merge);
         }
 
         return values.stream()
-                .map(v -> schemaValidator.validate(v, parameter.getItems()))
+                .map(v -> schemaValidator.validate(v, ((ArraySchema) parameter.getSchema()).getItems()))
                 .reduce(report, ValidationReport::merge);
     }
 
-    private ValidationReport validateUniqueItems(final @Nonnull Collection<String> values, final @Nonnull SerializableParameter parameter) {
-        if (Boolean.TRUE.equals(parameter.isUniqueItems()) &&
+    private ValidationReport validateUniqueItems(final Collection<String> values, final Parameter parameter) {
+        if (Boolean.TRUE.equals(parameter.getSchema().getUniqueItems()) &&
             values.stream().distinct().count() != values.size()) {
             return ValidationReport.singleton(messages.get("validation.request.parameter.collection.duplicateItems",
                 parameter.getName())
@@ -164,21 +144,29 @@ public class ArrayParameterValidator extends BaseParameterValidator {
         return ValidationReport.empty();
     }
 
-    private ValidationReport validateMinItems(final @Nonnull Collection<String> values, final @Nonnull SerializableParameter parameter) {
-        if (parameter.getMinItems() != null && values.size() < parameter.getMinItems()) {
+    private ValidationReport validateMinItems(final Collection<String> values, final Parameter parameter) {
+        if (parameter.getSchema().getMinItems() != null && values.size() < parameter.getSchema().getMinItems()) {
             return ValidationReport.singleton(messages.get("validation.request.parameter.collection.tooFewItems",
-                parameter.getName(), parameter.getMinItems(), values.size())
+                    parameter.getName(), parameter.getSchema().getMinItems(), values.size())
             );
         }
         return ValidationReport.empty();
     }
 
-    private ValidationReport validateMaxItems(final @Nonnull Collection<String> values, final @Nonnull SerializableParameter parameter) {
-        if (parameter.getMaxItems() != null && values.size() > parameter.getMaxItems()) {
+    private ValidationReport validateMaxItems(final Collection<String> values, final Parameter parameter) {
+        if (parameter.getSchema().getMaxItems() != null && values.size() > parameter.getSchema().getMaxItems()) {
             return ValidationReport.singleton(messages.get("validation.request.parameter.collection.tooManyItems",
-                parameter.getName(), parameter.getMaxItems(), values.size())
+                    parameter.getName(), parameter.getSchema().getMaxItems(), values.size())
             );
         }
         return ValidationReport.empty();
+    }
+
+    private static Collection<String> splitValue(final Parameter parameter, final String value) {
+        final String separator = SEPARATORS.get(parameter.getStyle());
+        if (separator == null) {
+            return singleton(value);
+        }
+        return asList(value.split(separator));
     }
 }

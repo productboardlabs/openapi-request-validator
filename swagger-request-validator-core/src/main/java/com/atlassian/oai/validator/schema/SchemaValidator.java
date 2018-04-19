@@ -11,12 +11,13 @@ import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.report.ListProcessingReport;
 import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import io.swagger.models.Model;
-import io.swagger.models.Swagger;
 import io.swagger.models.properties.DateProperty;
 import io.swagger.models.properties.DateTimeProperty;
 import io.swagger.models.properties.Property;
 import io.swagger.models.properties.StringProperty;
 import io.swagger.util.Json;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.media.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +61,7 @@ public class SchemaValidator {
     private static final String ALLOF_FIELD = "allOf";
     private static final String SCHEMA_REF_FIELD = "$schema";
 
-    private final Swagger api;
+    private final OpenAPI api;
     private JsonNode definitions;
     private boolean definitionsContainAllOf;
     private final MessageResolver messages;
@@ -83,9 +84,22 @@ public class SchemaValidator {
      *                 for use in references.
      * @param messages The message resolver to use.
      */
-    public SchemaValidator(@Nullable final Swagger api, @Nonnull final MessageResolver messages) {
+    public SchemaValidator(@Nullable final OpenAPI api, @Nonnull final MessageResolver messages) {
         this.api = api;
         this.messages = requireNonNull(messages, "A message resolver is required");
+    }
+
+    /**
+     * Validate the given value against the given property schema. If the schema is null then any json is valid.
+     *
+     * @param value The value to validate
+     * @param schema The schema to validate the value against
+     *
+     * @return A validation report containing accumulated validation errors
+     */
+    @Nonnull
+    public ValidationReport validate(@Nonnull final String value, @Nullable final Schema schema) {
+        return doValidate(value, schema);
     }
 
     /**
@@ -165,11 +179,11 @@ public class SchemaValidator {
         }
 
         if (api != null) {
-            if (this.definitions == null) {
-                this.definitions = api.getDefinitions() == null ?
+            if (definitions == null) {
+                definitions = api.getComponents().getSchemas() == null ?
                         Json.mapper().createObjectNode() :
-                        Json.mapper().readTree(Json.pretty(api.getDefinitions()));
-                this.definitions.forEach(n -> {
+                        Json.mapper().readTree(Json.pretty(api.getComponents().getSchemas()));
+                definitions.forEach(n -> {
                     if (additionalPropertiesValidationEnabled()) {
                         // Explicitly disable additionalProperties
                         // Calling code can choose what level to emit this failure at using
@@ -179,11 +193,11 @@ public class SchemaValidator {
                         }
                     }
                     if (n.has(ALLOF_FIELD)) {
-                        this.definitionsContainAllOf = true;
+                        definitionsContainAllOf = true;
                     }
                 });
             }
-            objectNode.set(DEFINITIONS_FIELD, this.definitions);
+            objectNode.set(DEFINITIONS_FIELD, definitions);
         }
     }
 

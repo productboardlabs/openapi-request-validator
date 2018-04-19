@@ -9,36 +9,33 @@ import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
 import com.atlassian.oai.validator.schema.SchemaValidator;
-import com.atlassian.oai.validator.util.ContentTypeUtils;
 import com.google.common.collect.Multimap;
 import com.google.common.net.MediaType;
-import io.swagger.models.Swagger;
-import io.swagger.models.auth.ApiKeyAuthDefinition;
-import io.swagger.models.auth.BasicAuthDefinition;
-import io.swagger.models.auth.In;
-import io.swagger.models.auth.SecuritySchemeDefinition;
-import io.swagger.models.parameters.BodyParameter;
-import io.swagger.models.parameters.Parameter;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.parameters.Parameter;
+import io.swagger.v3.oas.models.parameters.RequestBody;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.TreeSet;
 
 import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.REQUEST;
 import static com.atlassian.oai.validator.report.ValidationReport.empty;
+import static com.atlassian.oai.validator.util.ContentTypeUtils.findMostSpecificMatch;
+import static com.atlassian.oai.validator.util.ContentTypeUtils.hasContentType;
 import static com.atlassian.oai.validator.util.ContentTypeUtils.isJsonContentType;
 import static com.atlassian.oai.validator.util.HttpParsingUtils.isMultipartContentTypeAcceptedByConsumer;
 import static com.atlassian.oai.validator.util.HttpParsingUtils.parseMultipartFormDataBody;
 import static com.atlassian.oai.validator.util.HttpParsingUtils.parseUrlencodedFormDataBody;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -56,21 +53,22 @@ public class RequestValidator {
     private final SchemaValidator schemaValidator;
     private final ParameterValidators parameterValidators;
     private final MessageResolver messages;
-    private final Swagger swaggerDefinition;
+    private final OpenAPI oaiDefinition;
 
     /**
      * Construct a new request validator with the given schema validator.
      *
      * @param schemaValidator The schema validator to use when validating request bodies
      * @param messages The message resolver to use
+     * @param oaiDefinition The OAI spec to validate against
      */
     public RequestValidator(@Nonnull final SchemaValidator schemaValidator,
                             @Nonnull final MessageResolver messages,
-                            @Nonnull final Swagger swaggerDefinition) {
+                            @Nonnull final OpenAPI oaiDefinition) {
         this.schemaValidator = requireNonNull(schemaValidator, "A schema validator is required");
         parameterValidators = new ParameterValidators(schemaValidator, messages);
         this.messages = requireNonNull(messages, "A message resolver is required");
-        this.swaggerDefinition = requireNonNull(swaggerDefinition, "A swagger definition required");
+        this.oaiDefinition = requireNonNull(oaiDefinition, "An OAI definition required");
     }
 
     /**
@@ -105,65 +103,62 @@ public class RequestValidator {
     @Nonnull
     private ValidationReport validateSecurity(@Nonnull final Request request,
                                               @Nonnull final ApiOperation apiOperation) {
-        final List<Map<String, List<String>>> securityRequired = apiOperation.getOperation().getSecurity();
-
-        if (null != securityRequired && !securityRequired.isEmpty()) {
-            boolean foundSecurity = false;
-            ValidationReport report = empty();
-            for (final Map.Entry<String, SecuritySchemeDefinition> s : swaggerDefinition.getSecurityDefinitions().entrySet()) {
-                final Map<String, SecuritySchemeDefinition> filtered = new HashMap<>();
-                securityRequired.stream().filter(item -> item.containsKey(s.getKey())).forEach(item -> filtered.put(s.getKey(), s.getValue()));
-
-                if (!filtered.isEmpty()) {
-                    final Set<String> missingDefinitions = new TreeSet<>();
-                    final ValidationReport subReport = filtered.entrySet().stream().map(e -> {
-                        final ValidationReport validationReport = validateSingleSecurityParameter(request, e.getValue());
-
-                        if (validationReport.getMessages().stream().filter(m -> MISSING_SECURITY_PARAMETER_KEY.equals(m.getKey())).count() > 0) {
-                            missingDefinitions.add(e.getKey());
-                        }
-
-                        return validationReport;
-                    }).reduce(empty(), ValidationReport::merge);
-
-                    if (missingDefinitions.isEmpty()) {
-                        foundSecurity = true;
-                        report = report.merge(subReport);
-                    } else {
-                        // do not append subReport if security definition of 's' is missing/incomplete
-                        log.debug("Security definition not found for {}", s.getKey());
-                    }
-                }
-            }
-
-            if (!foundSecurity) {
-                // none of security headers was found
-                return ValidationReport.singleton(messages.get(MISSING_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
-            }
-
-            return report;
-        }
+//        final List<Map<String, List<String>>> securityRequired = apiOperation.getOperation().getSecurity();
+//
+//        if (null != securityRequired && !securityRequired.isEmpty()) {
+//            boolean foundSecurity = false;
+//            ValidationReport report = empty();
+//            for (final Map.Entry<String, SecurityScheme> s : oaiDefinition.getComponents().getSecuritySchemes().entrySet()) {
+//                final Map<String, SecurityScheme> filtered = new HashMap<>();
+//                securityRequired.stream().filter(item -> item.containsKey(s.getKey())).forEach(item -> filtered.put(s.getKey(), s.getValue()));
+//
+//                if (!filtered.isEmpty()) {
+//                    final Set<String> missingDefinitions = new TreeSet<>();
+//                    final ValidationReport subReport = filtered.entrySet().stream().map(e -> {
+//                        final ValidationReport validationReport = validateSingleSecurityParameter(request, e.getValue());
+//
+//                        if (validationReport.getMessages().stream().filter(m -> MISSING_SECURITY_PARAMETER_KEY.equals(m.getKey())).count() > 0) {
+//                            missingDefinitions.add(e.getKey());
+//                        }
+//
+//                        return validationReport;
+//                    }).reduce(empty(), ValidationReport::merge);
+//
+//                    if (missingDefinitions.isEmpty()) {
+//                        foundSecurity = true;
+//                        report = report.merge(subReport);
+//                    } else {
+//                        // do not append subReport if security definition of 's' is missing/incomplete
+//                        log.debug("Security definition not found for {}", s.getKey());
+//                    }
+//                }
+//            }
+//
+//            if (!foundSecurity) {
+//                // none of security headers was found
+//                return ValidationReport.singleton(messages.get(MISSING_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
+//            }
+//
+//            return report;
+//        }
         return empty();
     }
 
     @Nonnull
     private ValidationReport validateSingleSecurityParameter(@Nonnull final Request request,
-                                                             @Nonnull final SecuritySchemeDefinition securitySchemeDefinition) {
-        switch (securitySchemeDefinition.getType()) {
-            case "apiKey" :
-                final ApiKeyAuthDefinition apiKeyAuthDefinition = (ApiKeyAuthDefinition) securitySchemeDefinition;
-                final In in = apiKeyAuthDefinition.getIn();
-                switch (in.toValue()) {
-                    case "header":
-                        return checkApiKeyAuthorizationByHeader(request, apiKeyAuthDefinition);
-                    case "query" :
-                        return checkApiKeyAuthorizationByQueryParameter(request, apiKeyAuthDefinition);
+                                                             @Nonnull final SecurityScheme securityScheme) {
+        switch (securityScheme.getType()) {
+            case APIKEY:
+                switch (securityScheme.getIn()) {
+                    case HEADER:
+                        return checkApiKeyAuthorizationByHeader(request, securityScheme);
+                    case QUERY:
+                        return checkApiKeyAuthorizationByQueryParameter(request, securityScheme);
                     default:
                         return empty();
                 }
-            case "basic":
-                final BasicAuthDefinition basicAuthDefinition = (BasicAuthDefinition) securitySchemeDefinition;
-                return checkBasicAuthorization(request, basicAuthDefinition);
+            case HTTP:
+                return checkBasicAuthorization(request, securityScheme);
             default:
                 return empty();
         }
@@ -171,7 +166,7 @@ public class RequestValidator {
 
     @Nonnull
     private ValidationReport checkBasicAuthorization(@Nonnull final Request request,
-                                                     @Nonnull final BasicAuthDefinition basicAuthDefinition) {
+                                                     @Nonnull final SecurityScheme securityScheme) {
 
         if (!request.getHeaderValue(HTTP_AUTH_HEADER).isPresent()) {
             return ValidationReport.singleton(messages.get(MISSING_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
@@ -185,8 +180,8 @@ public class RequestValidator {
 
     @Nonnull
     private ValidationReport checkApiKeyAuthorizationByQueryParameter(@Nonnull final Request request,
-                                                                      @Nonnull final ApiKeyAuthDefinition apiKeyAuthDefinition) {
-        final Optional<String> authQueryParam = request.getQueryParameterValues(apiKeyAuthDefinition.getName()).stream().findFirst();
+                                                                      @Nonnull final SecurityScheme securityScheme) {
+        final Optional<String> authQueryParam = request.getQueryParameterValues(securityScheme.getName()).stream().findFirst();
         if (!authQueryParam.isPresent()) {
             return ValidationReport.singleton(messages.get(MISSING_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
         }
@@ -196,9 +191,9 @@ public class RequestValidator {
 
     @Nonnull
     private ValidationReport checkApiKeyAuthorizationByHeader(@Nonnull final Request request,
-                                                              @Nonnull final ApiKeyAuthDefinition apiKeyAuthDefinition) {
+                                                              @Nonnull final SecurityScheme securityScheme) {
 
-        if (!request.getHeaderValue(apiKeyAuthDefinition.getName()).isPresent()) {
+        if (!request.getHeaderValue(securityScheme.getName()).isPresent()) {
             return ValidationReport.singleton(messages.get(MISSING_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
         }
         // API key header found, additional checks can be placed here
@@ -266,20 +261,12 @@ public class RequestValidator {
 
     @Nonnull
     private Collection<String> getConsumes(@Nonnull final ApiOperation apiOperation) {
-        // Operation-specific 'consumes' overrides global consumes entries
-        if (apiOperation.getOperation().getConsumes() == null) {
-            return swaggerDefinition.getConsumes() == null ? Collections.emptyList() : swaggerDefinition.getConsumes();
-        }
-        return apiOperation.getOperation().getConsumes();
+        return defaultIfNull(apiOperation.getOperation().getRequestBody().getContent().keySet(), emptySet());
     }
 
     @Nonnull
     private Collection<String> getProduces(@Nonnull final ApiOperation apiOperation) {
-        // Operation-specific 'produces' overrides global produces entries
-        if (apiOperation.getOperation().getProduces() == null) {
-            return swaggerDefinition.getProduces() == null ? Collections.emptyList() : swaggerDefinition.getProduces();
-        }
-        return apiOperation.getOperation().getProduces();
+        return defaultIfNull(apiOperation.getOperation().getResponses().keySet(), emptyList());
     }
 
     @Nonnull
@@ -326,29 +313,27 @@ public class RequestValidator {
     @Nonnull
     private ValidationReport validateBody(@Nonnull final Request request,
                                           @Nonnull final ApiOperation apiOperation) {
-        final Optional<Parameter> bodyParameter = apiOperation.getOperation().getParameters()
-                .stream()
-                .filter(RequestValidator::isBodyParam)
-                .findFirst();
+        final RequestBody requestBodyDefinition = apiOperation.getOperation().getRequestBody();
 
+        // TODO: Add appropriate support for request bodies in the message context
         final MessageContext context = MessageContext.create()
-                .withParameter(bodyParameter.orElse(null))
+//                .withParameter(bodyParameter.orElse(null))
                 .build();
 
         final Optional<String> requestBody = request.getBody();
-        if (requestBody.isPresent() && !requestBody.get().isEmpty() && !bodyParameter.isPresent()) {
+        if (requestBody.isPresent() && !requestBody.get().isEmpty() && requestBodyDefinition == null) {
             return ValidationReport.singleton(
                     messages.get("validation.request.body.unexpected",
                             apiOperation.getMethod(), apiOperation.getApiPath().original())
             ).withAdditionalContext(context);
         }
 
-        if (!bodyParameter.isPresent()) {
+        if (requestBodyDefinition == null) {
             return empty();
         }
 
         if (!requestBody.isPresent() || requestBody.get().isEmpty()) {
-            if (bodyParameter.get().getRequired()) {
+            if (requestBodyDefinition.getRequired()) {
                 return ValidationReport.singleton(
                         messages.get("validation.request.body.missing",
                                 apiOperation.getMethod(), apiOperation.getApiPath().original())
@@ -357,13 +342,20 @@ public class RequestValidator {
             return empty();
         }
 
-        if (ContentTypeUtils.hasContentType(request) && !isJsonContentType(request)) {
+        if (hasContentType(request) && !isJsonContentType(request)) {
             log.debug("Non-JSON request body found. No validation will be applied.");
             return empty();
         }
 
+        final Optional<String> mostSpecificMatch =
+                findMostSpecificMatch(MediaType.JSON_UTF_8.toString(), requestBodyDefinition.getContent().keySet());
+
+        if (!mostSpecificMatch.isPresent()) {
+            return empty();
+        }
+
         return schemaValidator
-                .validate(requestBody.get(), ((BodyParameter) bodyParameter.get()).getSchema())
+                .validate(requestBody.get(), requestBodyDefinition.getContent().get(mostSpecificMatch.get()).getSchema())
                 .withAdditionalContext(context);
     }
 
@@ -453,10 +445,11 @@ public class RequestValidator {
                 .reduce(empty(), ValidationReport::merge);
     }
 
-    private static boolean isFormData(@Nonnull final Optional<String> maybeRequestContentType,
-                                      @Nonnull final ApiOperation apiOperation) {
-        final List<String> consumes = apiOperation.getOperation().getConsumes();
-        if (consumes == null || consumes.isEmpty() || !maybeRequestContentType.isPresent()) {
+    private boolean isFormData(@Nonnull final Optional<String> maybeRequestContentType,
+                               @Nonnull final ApiOperation apiOperation) {
+
+        final Collection<String> consumes = getConsumes(apiOperation);
+        if (consumes.isEmpty() || !maybeRequestContentType.isPresent()) {
             return false;
         }
         final String requestContentType = maybeRequestContentType.get();
@@ -465,10 +458,10 @@ public class RequestValidator {
                 && requestContentType.equals(MediaType.FORM_DATA.toString());
     }
 
-    private static boolean isMultipartFormData(@Nonnull final Optional<String> maybeRequestContentType,
-                                               @Nonnull final ApiOperation apiOperation) {
-        final List<String> consumes = apiOperation.getOperation().getConsumes();
-        if (consumes == null || consumes.isEmpty() || !maybeRequestContentType.isPresent()) {
+    private boolean isMultipartFormData(@Nonnull final Optional<String> maybeRequestContentType,
+                                        @Nonnull final ApiOperation apiOperation) {
+        final Collection<String> consumes = getConsumes(apiOperation);
+        if (consumes.isEmpty() || !maybeRequestContentType.isPresent()) {
             return false;
         }
         final String requestContentType = maybeRequestContentType.get();

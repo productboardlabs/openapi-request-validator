@@ -2,8 +2,8 @@ package com.atlassian.oai.validator.report;
 
 import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.Request;
-import io.swagger.models.Response;
-import io.swagger.models.parameters.Parameter;
+import io.swagger.v3.oas.models.parameters.Parameter;
+import io.swagger.v3.oas.models.responses.ApiResponse;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -142,7 +142,7 @@ public interface ValidationReport {
 
         Optional<Integer> getResponseStatus();
 
-        Optional<Response> getApiResponseDefinition();
+        Optional<ApiResponse> getApiResponseDefinition();
 
         Optional<Location> getLocation();
 
@@ -166,7 +166,7 @@ public interface ValidationReport {
             Parameter parameter;
 
             Integer responseStatus;
-            Response apiResponse;
+            ApiResponse apiResponse;
 
             Location location;
 
@@ -208,7 +208,7 @@ public interface ValidationReport {
                 return this;
             }
 
-            public Builder withApiResponseDefinition(final Response apiResponseDefinition) {
+            public Builder withApiResponseDefinition(final ApiResponse apiResponseDefinition) {
                 apiResponse = apiResponseDefinition;
                 return this;
             }

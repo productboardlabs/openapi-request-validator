@@ -5,7 +5,11 @@ import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.google.common.net.MediaType;
 
+import java.util.Comparator;
 import java.util.Optional;
+import java.util.Set;
+
+import static com.google.common.net.MediaType.JSON_UTF_8;
 
 public class ContentTypeUtils {
 
@@ -19,22 +23,26 @@ public class ContentTypeUtils {
      * @return Whether the content-type of the request (defined in the Content-Type header) is a JSON type.
      */
     public static boolean isJsonContentType(final Request request) {
-        return isJsonContentType(request.getHeaderValue(Headers.CONTENT_TYPE));
+        return isJsonContentType(request.getHeaderValue(Headers.CONTENT_TYPE).orElse(null));
     }
 
     /**
      * @return Whether the content-type of this response (defined in the Content-Type header) is a JSON type.
      */
     public static boolean isJsonContentType(final Response response) {
-        return isJsonContentType(response.getHeaderValue(Headers.CONTENT_TYPE));
+        return isJsonContentType(response.getHeaderValue(Headers.CONTENT_TYPE).orElse(null));
     }
 
-    private static boolean isJsonContentType(final Optional<String> maybeContentType) {
+    /**
+     * @return Whether the provided content-type is a JSON type.
+     */
+    public static boolean isJsonContentType(final String contentType) {
+        if (contentType == null) {
+            return false;
+        }
         try {
-            return maybeContentType
-                    .map(MediaType::parse)
-                    .map(ct -> ct.withoutParameters().is(MediaType.JSON_UTF_8.withoutParameters()))
-                    .orElse(false);
+            final MediaType mediaType = MediaType.parse(contentType);
+            return JSON_UTF_8.withoutParameters().is(mediaType);
         } catch (final IllegalArgumentException e) {
             return false;
         }
@@ -57,5 +65,29 @@ public class ContentTypeUtils {
      */
     public static boolean hasContentType(final Response response) {
         return response.getHeaderValue(Headers.CONTENT_TYPE).isPresent();
+    }
+
+    public static Optional<String> findMostSpecificMatch(final String candidate, final Set<String> contentTypes) {
+        return contentTypes
+                .stream()
+                .map(MediaType::parse)
+                .sorted(new ContentTypeComparator())
+                .filter(ct -> MediaType.parse(candidate).withoutParameters().is(ct.withoutParameters()))
+                .map(MediaType::toString)
+                .findFirst();
+    }
+
+    private static class ContentTypeComparator implements Comparator<MediaType> {
+        @Override
+        public int compare(final MediaType o1, final MediaType o2) {
+            if (o1.hasWildcard() && o2.hasWildcard()) {
+                return 0;
+            } else if (o1.hasWildcard()) {
+                return -1;
+            } else if (o2.hasWildcard()) {
+                return 1;
+            }
+            return 0;
+        }
     }
 }

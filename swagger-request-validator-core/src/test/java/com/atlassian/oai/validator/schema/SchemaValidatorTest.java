@@ -7,7 +7,6 @@ import com.google.common.collect.ImmutableList;
 import io.swagger.models.Model;
 import io.swagger.models.ModelImpl;
 import io.swagger.models.RefModel;
-import io.swagger.models.Swagger;
 import io.swagger.models.properties.ArrayProperty;
 import io.swagger.models.properties.DateProperty;
 import io.swagger.models.properties.DateTimeProperty;
@@ -16,7 +15,9 @@ import io.swagger.models.properties.IntegerProperty;
 import io.swagger.models.properties.ObjectProperty;
 import io.swagger.models.properties.Property;
 import io.swagger.models.properties.StringProperty;
-import io.swagger.parser.SwaggerParser;
+import io.swagger.parser.OpenAPIParser;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.parser.core.models.ParseOptions;
 import org.junit.Test;
 
 import java.util.List;
@@ -154,8 +155,8 @@ public class SchemaValidatorTest {
         final String value = "{\"title\":\"bar\", \"message\":\"something\"}";
         final Model schema = new RefModel("#/definitions/Error}");
 
-        final Swagger mockApi = mock(Swagger.class);
-        when(mockApi.getDefinitions()).thenThrow(new IllegalStateException("Testing exception handling"));
+        final OpenAPI mockApi = mock(OpenAPI.class);
+        when(mockApi.getComponents()).thenThrow(new IllegalStateException("Testing exception handling"));
         final SchemaValidator failingValidator = new SchemaValidator(mockApi, new MessageResolver());
 
         assertFailWithoutContext(failingValidator.validate(value, schema), "validation.schema.unknownError");
@@ -345,18 +346,21 @@ public class SchemaValidatorTest {
     }
 
     private SchemaValidator validatorWithAdditionalPropertiesIgnored(final String api) {
+        final ParseOptions parseOptions = new ParseOptions();
+        parseOptions.setResolve(true);
         return new SchemaValidator(
-                new SwaggerParser().read(api),
+                new OpenAPIParser().readLocation(api, null, parseOptions).getOpenAPI(),
                 new MessageResolver(
                         LevelResolver
                                 .create()
                                 .withLevel(ADDITIONAL_PROPERTIES_KEY, ValidationReport.Level.IGNORE)
-                                .build()
-                )
+                                .build())
         );
     }
 
     private SchemaValidator validator(final String api) {
-        return new SchemaValidator(new SwaggerParser().read(api), new MessageResolver());
+        final ParseOptions parseOptions = new ParseOptions();
+        parseOptions.setResolve(true);
+        return new SchemaValidator(new OpenAPIParser().readLocation(api, null, parseOptions).getOpenAPI(), new MessageResolver());
     }
 }

@@ -4,7 +4,6 @@ import com.atlassian.oai.validator.report.ValidationReport.Message;
 import com.atlassian.oai.validator.whitelist.rule.WhitelistRule;
 import com.atlassian.oai.validator.whitelist.rule.WhitelistRules;
 import com.google.common.collect.ImmutableMap;
-import io.swagger.models.HttpMethod;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
@@ -24,6 +23,8 @@ import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.methodIs
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.pathContains;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.responseStatusIs;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.responseStatusTypeIs;
+import static io.swagger.v3.oas.models.PathItem.HttpMethod.DELETE;
+import static io.swagger.v3.oas.models.PathItem.HttpMethod.PUT;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
@@ -37,19 +38,19 @@ public class WhitelistRulesTest {
                 messageContains("\"value\""));
 
         assertThat(andRule, matches(response()
-            .withDocumentedResponse(200, "MyEntity")
+                .withDocumentedResponse(200, "MyEntity")
                 .withMessage(Message.create("my.key", "Object instance has properties which are not allowed by the schema: [\"value\"]").build())));
 
         assertThat(andRule, matches(request()
-            .withDocumentedRequestBodyParameter("MyEntity")
+                .withDocumentedRequestBodyParameter("MyEntity")
                 .withMessage(Message.create("my.key", "Object instance has properties which are not allowed by the schema: [\"value\"]").build())));
 
         assertThat(andRule, not(matches(request()
-            .withDocumentedRequestBodyParameter("AnotherEntity")
+                .withDocumentedRequestBodyParameter("AnotherEntity")
                 .withMessage(Message.create("my.key", "Object instance has properties which are not allowed by the schema: [\"value\"]").build()))));
 
         assertThat(andRule, not(matches(request()
-            .withDocumentedRequestBodyParameter("MyEntity")
+                .withDocumentedRequestBodyParameter("MyEntity")
                 .withMessage(Message.create("my.key", "Another message").build()))));
     }
 
@@ -67,12 +68,12 @@ public class WhitelistRulesTest {
         assertThat(rule, matches(response().withStatus(200).withDocumentedResponse(200, "MyEntity")));
         assertThat(rule, not(matches(response()
                 .withStatus(201)
-            .withDocumentedResponse(201, "AnotherEntity")
-            .withDocumentedResponse(200, "MyEntity"))));
+                .withDocumentedResponse(201, "AnotherEntity")
+                .withDocumentedResponse(200, "MyEntity"))));
         assertThat(rule, matches(response()
                 .withStatus(201)
-            .withDocumentedResponse(201, "MyEntity")
-            .withDocumentedResponse(200, "AnotherEntity")));
+                .withDocumentedResponse(201, "MyEntity")
+                .withDocumentedResponse(200, "AnotherEntity")));
         assertThat(rule, not(matches(response().withDocumentedResponse(200, "NotMyEntity"))));
         assertThat(rule, matches(request().withDocumentedRequestBodyParameter("MyEntity")));
         assertThat(rule, not(matches(request().withDocumentedRequestBodyParameter("NotMyEntity"))));
@@ -133,9 +134,9 @@ public class WhitelistRulesTest {
 
     @Test
     public void testMethodIs() throws Exception {
-        assertThat(methodIs(HttpMethod.PUT), matches(request().withMethod(HttpMethod.PUT)));
-        assertThat(methodIs(HttpMethod.PUT), matches(response().withMethod(HttpMethod.PUT)));
-        assertThat(methodIs(HttpMethod.PUT), not(matches(response().withMethod(HttpMethod.DELETE))));
+        assertThat(methodIs(PUT), matches(request().withMethod(PUT)));
+        assertThat(methodIs(PUT), matches(response().withMethod(PUT)));
+        assertThat(methodIs(PUT), not(matches(response().withMethod(DELETE))));
     }
 
     @Test

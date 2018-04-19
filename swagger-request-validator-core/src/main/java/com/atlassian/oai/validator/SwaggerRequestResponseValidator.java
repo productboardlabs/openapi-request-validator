@@ -12,20 +12,21 @@ import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.SchemaValidator;
 import com.atlassian.oai.validator.whitelist.ValidationErrorsWhitelist;
-import io.swagger.models.Swagger;
-import io.swagger.models.auth.AuthorizationValue;
-import io.swagger.parser.SwaggerParser;
-import io.swagger.parser.util.SwaggerDeserializationResult;
+import io.swagger.parser.OpenAPIParser;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.parser.core.models.AuthorizationValue;
+import io.swagger.v3.parser.core.models.ParseOptions;
+import io.swagger.v3.parser.core.models.SwaggerParseResult;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
+import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -102,11 +103,14 @@ public class SwaggerRequestResponseValidator {
                                             @Nullable final List<AuthorizationValue> authData) {
         requireNonNull(swaggerJsonUrlOrPayload, "A Swagger JSON URL or payload is required");
 
-        final SwaggerDeserializationResult swaggerParseResult =
-            swaggerJsonUrlOrPayload.startsWith("{") ?
-                new SwaggerParser().readWithInfo(swaggerJsonUrlOrPayload) :
-                new SwaggerParser().readWithInfo(swaggerJsonUrlOrPayload, authData, true);
-        final Swagger api = swaggerParseResult.getSwagger();
+        final ParseOptions parseOptions = new ParseOptions();
+        parseOptions.setResolve(true);
+
+        final SwaggerParseResult swaggerParseResult =
+                swaggerJsonUrlOrPayload.startsWith("{") ? //TODO: Replace with decent URL check
+                        new OpenAPIParser().readContents(swaggerJsonUrlOrPayload, authData, parseOptions) :
+                        new OpenAPIParser().readLocation(swaggerJsonUrlOrPayload, authData, parseOptions);
+        final OpenAPI api = swaggerParseResult.getOpenAPI();
         if (api == null) {
             throw new IllegalArgumentException(
                 format("Unable to load API descriptor from provided %s:\n\t%s",
@@ -318,7 +322,7 @@ public class SwaggerRequestResponseValidator {
         public Builder withAuthHeaderData(final String key, final String value) {
             requireNonNull(key, "A key for the auth header is required");
 
-            authData = Arrays.asList(new AuthorizationValue(key, value, "header"));
+            authData = singletonList(new AuthorizationValue(key, value, "header"));
             return this;
         }
 
