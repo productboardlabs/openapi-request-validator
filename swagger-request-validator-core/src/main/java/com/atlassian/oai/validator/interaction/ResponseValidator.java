@@ -9,6 +9,7 @@ import com.atlassian.oai.validator.schema.SchemaValidator;
 import com.google.common.net.MediaType;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.headers.Header;
+import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import org.slf4j.Logger;
 
@@ -17,11 +18,12 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.RESPONSE;
 import static com.atlassian.oai.validator.report.ValidationReport.empty;
+import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -136,32 +138,37 @@ public class ResponseValidator {
         try {
             requestMediaType = MediaType.parse(requestHeader.get());
         } catch (final IllegalArgumentException e) {
-            return ValidationReport.singleton(messages.get("validation.response.contentType.invalid", requestHeader.get()));
+            return ValidationReport.singleton(messages.get(
+                    "validation.response.contentType.invalid", requestHeader.get())
+            );
         }
 
-        final Collection<String> produces = getProduces(apiOperation);
-        if (produces.isEmpty()) {
+        final Collection<String> responseMediaTypes = getResponseMediaTypes(response, apiOperation);
+        if (responseMediaTypes.isEmpty()) {
             return ValidationReport.empty();
         }
 
-        final boolean contentTypeMatchesProduces = produces.stream()
+        final boolean contentTypeMatchesProduces = responseMediaTypes.stream()
                         .map(MediaType::parse)
                         .anyMatch(m -> m.withoutParameters().is(requestMediaType.withoutParameters()));
+
         if (!contentTypeMatchesProduces) {
-            return ValidationReport.singleton(messages.get("validation.response.contentType.notAllowed", requestHeader.get(), produces));
+            return ValidationReport.singleton(
+                    messages.get("validation.response.contentType.notAllowed", requestHeader.get(), responseMediaTypes)
+            );
         }
 
         return ValidationReport.empty();
     }
 
     @Nonnull
-    private Collection<String> getProduces(final ApiOperation apiOperation) {
-        return apiOperation.getOperation()
-                .getResponses()
-                .values()
-                .stream()
-                .flatMap(apiResponse -> apiResponse.getContent().keySet().stream())
-                .collect(Collectors.toSet());
+    private Collection<String> getResponseMediaTypes(final Response response,
+                                                     final ApiOperation apiOperation) {
+        final ApiResponse apiResponse = getApiResponse(response, apiOperation);
+        if (apiResponse == null) {
+            return emptyList();
+        }
+        return defaultIfNull(apiResponse.getContent(), new Content()).keySet();
     }
 
     @Nonnull
