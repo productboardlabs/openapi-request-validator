@@ -8,6 +8,7 @@ import io.swagger.v3.oas.models.parameters.Parameter;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import static java.lang.Boolean.TRUE;
 import static java.util.Objects.requireNonNull;
 
 abstract class BaseParameterValidator implements ParameterValidator {
@@ -27,16 +28,16 @@ abstract class BaseParameterValidator implements ParameterValidator {
 
     @Override
     @Nonnull
-    public ValidationReport validate(@Nullable final String value, @Nullable final Parameter p) {
-        if (!supports(p)) {
+    public ValidationReport validate(@Nullable final String value, @Nullable final Parameter parameter) {
+        if (!supports(parameter)) {
             return ValidationReport.empty();
         }
 
-        final MessageContext context = MessageContext.create().withParameter(p).build();
+        final MessageContext context = MessageContext.create().withParameter(parameter).build();
 
-        if (p.getRequired() && (value == null || value.trim().isEmpty())) {
+        if (TRUE.equals(parameter.getRequired()) && (value == null || value.trim().isEmpty())) {
             return ValidationReport.singleton(
-                    messages.get("validation.request.parameter.missing", p.getName())
+                    messages.get("validation.request.parameter.missing", parameter.getName())
             ).withAdditionalContext(context);
         }
 
@@ -44,14 +45,14 @@ abstract class BaseParameterValidator implements ParameterValidator {
             return ValidationReport.empty();
         }
 
-        if (!matchesEnumIfDefined(value, p)) {
+        if (!matchesEnumIfDefined(value, parameter)) {
             return ValidationReport.singleton(
                     messages.get("validation.request.parameter.enum.invalid",
-                            value, p.getName(), p.getSchema().getEnum())
+                            value, parameter.getName(), parameter.getSchema().getEnum())
             ).withAdditionalContext(context);
         }
 
-        return doValidate(value, p).withAdditionalContext(context);
+        return doValidate(value, parameter).withAdditionalContext(context);
     }
 
     private boolean matchesEnumIfDefined(final String value, final Parameter parameter) {

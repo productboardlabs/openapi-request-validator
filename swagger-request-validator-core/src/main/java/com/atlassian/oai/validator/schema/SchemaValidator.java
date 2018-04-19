@@ -57,7 +57,8 @@ public class SchemaValidator {
 
     private static final String ADDITIONAL_PROPERTIES_FIELD = "additionalProperties";
     private static final String DISCRIMINATOR_FIELD = "discriminator";
-    private static final String DEFINITIONS_FIELD = "definitions";
+    private static final String COMPONENTS_FIELD = "components";
+    private static final String SCHEMAS_FIELD = "schemas";
     private static final String ALLOF_FIELD = "allOf";
     private static final String SCHEMA_REF_FIELD = "$schema";
 
@@ -171,11 +172,11 @@ public class SchemaValidator {
     }
 
     private void setupSchemaDefinitionRefs(final JsonNode schemaObject) throws IOException {
-        final ObjectNode objectNode = (ObjectNode) schemaObject;
+        final ObjectNode rootNode = (ObjectNode) schemaObject;
 
-        objectNode.put(SCHEMA_REF_FIELD, OAI_V2_METASCHEMA_URI);
+        rootNode.put(SCHEMA_REF_FIELD, OAI_V2_METASCHEMA_URI);
         if (additionalPropertiesValidationEnabled()) {
-            objectNode.set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
+            rootNode.set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
         }
 
         if (api != null) {
@@ -197,7 +198,7 @@ public class SchemaValidator {
                     }
                 });
             }
-            objectNode.set(DEFINITIONS_FIELD, definitions);
+            rootNode.putObject(COMPONENTS_FIELD).set(SCHEMAS_FIELD, definitions);
         }
     }
 

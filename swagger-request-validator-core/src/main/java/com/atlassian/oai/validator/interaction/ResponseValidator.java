@@ -17,12 +17,11 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.RESPONSE;
 import static com.atlassian.oai.validator.report.ValidationReport.empty;
-import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
-import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -157,7 +156,12 @@ public class ResponseValidator {
 
     @Nonnull
     private Collection<String> getProduces(final ApiOperation apiOperation) {
-        return defaultIfNull(apiOperation.getOperation().getResponses().keySet(), emptyList());
+        return apiOperation.getOperation()
+                .getResponses()
+                .values()
+                .stream()
+                .flatMap(apiResponse -> apiResponse.getContent().keySet().stream())
+                .collect(Collectors.toSet());
     }
 
     @Nonnull

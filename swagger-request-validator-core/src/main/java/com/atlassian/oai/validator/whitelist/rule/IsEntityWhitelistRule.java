@@ -6,21 +6,27 @@ import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.report.ValidationReport.Message;
 import io.swagger.models.RefModel;
 import io.swagger.models.parameters.BodyParameter;
+import io.swagger.v3.oas.models.parameters.Parameter;
 
+import java.util.Collections;
 import java.util.Objects;
+
+import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 
 class IsEntityWhitelistRule implements RequestOrResponseWhitelistRule {
     private final String entityName;
 
     @Override
     public boolean matches(final Message message, final ApiOperation operation, final Request request) {
-        return operation != null && operation.getOperation().getParameters().stream()
-                .filter(BodyParameter.class::isInstance)
-                .map(BodyParameter.class::cast)
-                .map(BodyParameter::getSchema)
-                .filter(RefModel.class::isInstance)
-                .map(RefModel.class::cast)
-                .anyMatch(refModel -> entityName.equalsIgnoreCase(refModel.getSimpleRef()));
+        return operation != null &&
+                defaultIfNull(operation.getOperation().getParameters(), Collections.<Parameter>emptyList())
+                        .stream()
+                        .filter(BodyParameter.class::isInstance)
+                        .map(BodyParameter.class::cast)
+                        .map(BodyParameter::getSchema)
+                        .filter(RefModel.class::isInstance)
+                        .map(RefModel.class::cast)
+                        .anyMatch(refModel -> entityName.equalsIgnoreCase(refModel.getSimpleRef()));
     }
 
     @Override

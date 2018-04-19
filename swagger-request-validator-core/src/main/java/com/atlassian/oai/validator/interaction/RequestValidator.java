@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.REQUEST;
 import static com.atlassian.oai.validator.report.ValidationReport.empty;
@@ -32,6 +33,7 @@ import static com.atlassian.oai.validator.util.ContentTypeUtils.isJsonContentTyp
 import static com.atlassian.oai.validator.util.HttpParsingUtils.isMultipartContentTypeAcceptedByConsumer;
 import static com.atlassian.oai.validator.util.HttpParsingUtils.parseMultipartFormDataBody;
 import static com.atlassian.oai.validator.util.HttpParsingUtils.parseUrlencodedFormDataBody;
+import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Objects.requireNonNull;
@@ -62,9 +64,9 @@ public class RequestValidator {
      * @param messages The message resolver to use
      * @param oaiDefinition The OAI spec to validate against
      */
-    public RequestValidator(@Nonnull final SchemaValidator schemaValidator,
-                            @Nonnull final MessageResolver messages,
-                            @Nonnull final OpenAPI oaiDefinition) {
+    public RequestValidator(final SchemaValidator schemaValidator,
+                            final MessageResolver messages,
+                            final OpenAPI oaiDefinition) {
         this.schemaValidator = requireNonNull(schemaValidator, "A schema validator is required");
         parameterValidators = new ParameterValidators(schemaValidator, messages);
         this.messages = requireNonNull(messages, "A message resolver is required");
@@ -80,8 +82,8 @@ public class RequestValidator {
      * @return A validation report containing validation errors
      */
     @Nonnull
-    public ValidationReport validateRequest(@Nonnull final Request request,
-                                            @Nonnull final ApiOperation apiOperation) {
+    public ValidationReport validateRequest(final Request request,
+                                            final ApiOperation apiOperation) {
         requireNonNull(request, "A request is required");
         requireNonNull(apiOperation, "An API operation is required");
 
@@ -101,8 +103,8 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private ValidationReport validateSecurity(@Nonnull final Request request,
-                                              @Nonnull final ApiOperation apiOperation) {
+    private ValidationReport validateSecurity(final Request request,
+                                              final ApiOperation apiOperation) {
 //        final List<Map<String, List<String>>> securityRequired = apiOperation.getOperation().getSecurity();
 //
 //        if (null != securityRequired && !securityRequired.isEmpty()) {
@@ -145,8 +147,8 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private ValidationReport validateSingleSecurityParameter(@Nonnull final Request request,
-                                                             @Nonnull final SecurityScheme securityScheme) {
+    private ValidationReport validateSingleSecurityParameter(final Request request,
+                                                             final SecurityScheme securityScheme) {
         switch (securityScheme.getType()) {
             case APIKEY:
                 switch (securityScheme.getIn()) {
@@ -165,8 +167,8 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private ValidationReport checkBasicAuthorization(@Nonnull final Request request,
-                                                     @Nonnull final SecurityScheme securityScheme) {
+    private ValidationReport checkBasicAuthorization(final Request request,
+                                                     final SecurityScheme securityScheme) {
 
         if (!request.getHeaderValue(HTTP_AUTH_HEADER).isPresent()) {
             return ValidationReport.singleton(messages.get(MISSING_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
@@ -179,8 +181,8 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private ValidationReport checkApiKeyAuthorizationByQueryParameter(@Nonnull final Request request,
-                                                                      @Nonnull final SecurityScheme securityScheme) {
+    private ValidationReport checkApiKeyAuthorizationByQueryParameter(final Request request,
+                                                                      final SecurityScheme securityScheme) {
         final Optional<String> authQueryParam = request.getQueryParameterValues(securityScheme.getName()).stream().findFirst();
         if (!authQueryParam.isPresent()) {
             return ValidationReport.singleton(messages.get(MISSING_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
@@ -190,8 +192,8 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private ValidationReport checkApiKeyAuthorizationByHeader(@Nonnull final Request request,
-                                                              @Nonnull final SecurityScheme securityScheme) {
+    private ValidationReport checkApiKeyAuthorizationByHeader(final Request request,
+                                                              final SecurityScheme securityScheme) {
 
         if (!request.getHeaderValue(securityScheme.getName()).isPresent()) {
             return ValidationReport.singleton(messages.get(MISSING_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
@@ -201,8 +203,8 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private ValidationReport validateContentType(@Nonnull final Request request,
-                                                 @Nonnull final ApiOperation apiOperation) {
+    private ValidationReport validateContentType(final Request request,
+                                                 final ApiOperation apiOperation) {
         return validateMediaTypes(request,
                 Headers.CONTENT_TYPE,
                 getConsumes(apiOperation),
@@ -211,8 +213,8 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private ValidationReport validateAccepts(@Nonnull final Request request,
-                                             @Nonnull final ApiOperation apiOperation) {
+    private ValidationReport validateAccepts(final Request request,
+                                             final ApiOperation apiOperation) {
         return validateMediaTypes(request,
                 Headers.ACCEPT,
                 getProduces(apiOperation),
@@ -221,11 +223,11 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private ValidationReport validateMediaTypes(@Nonnull final Request request,
-                                                @Nonnull final String headerName,
-                                                @Nonnull final Collection<String> specMediaTypes,
-                                                @Nonnull final String invalidTypeKey,
-                                                @Nonnull final String notAllowedKey) {
+    private ValidationReport validateMediaTypes(final Request request,
+                                                final String headerName,
+                                                final Collection<String> specMediaTypes,
+                                                final String invalidTypeKey,
+                                                final String notAllowedKey) {
 
         final Collection<String> requestHeaderValues = request.getHeaderValues(headerName);
         if (requestHeaderValues.isEmpty()) {
@@ -260,18 +262,26 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private Collection<String> getConsumes(@Nonnull final ApiOperation apiOperation) {
+    private Collection<String> getConsumes(final ApiOperation apiOperation) {
+        if (apiOperation.getOperation().getRequestBody() == null) {
+            return emptyList();
+        }
         return defaultIfNull(apiOperation.getOperation().getRequestBody().getContent().keySet(), emptySet());
     }
 
     @Nonnull
-    private Collection<String> getProduces(@Nonnull final ApiOperation apiOperation) {
-        return defaultIfNull(apiOperation.getOperation().getResponses().keySet(), emptyList());
+    private Collection<String> getProduces(final ApiOperation apiOperation) {
+        return apiOperation.getOperation()
+                .getResponses()
+                .values()
+                .stream()
+                .flatMap(apiResponse -> apiResponse.getContent().keySet().stream())
+                .collect(Collectors.toSet());
     }
 
     @Nonnull
-    private ValidationReport validateRequestBody(@Nonnull final Request request,
-                                                 @Nonnull final ApiOperation apiOperation) {
+    private ValidationReport validateRequestBody(final Request request,
+                                                 final ApiOperation apiOperation) {
         final Optional<String> requestContentType = request.getHeaderValue(Headers.CONTENT_TYPE);
         if (isMultipartFormData(requestContentType, apiOperation)) {
             return validateForm(request.getBody(), apiOperation, bodyData -> parseMultipartFormDataBody(requestContentType.get(), bodyData));
@@ -288,9 +298,9 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private ValidationReport validateForm(@Nonnull final Optional<String> requestBody,
-                                          @Nonnull final ApiOperation apiOperation,
-                                          @Nonnull final FormBodyParser formBodyParser) {
+    private ValidationReport validateForm(final Optional<String> requestBody,
+                                          final ApiOperation apiOperation,
+                                          final FormBodyParser formBodyParser) {
 
         final Multimap<String, String> formData = formBodyParser.parse(requestBody.orElse(""));
         return apiOperation.getOperation().getParameters()
@@ -304,15 +314,15 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private Collection<String> prepareFormDataForParameter(@Nonnull final Multimap<String, String> formData,
-                                                           @Nonnull final Parameter parameter) {
+    private Collection<String> prepareFormDataForParameter(final Multimap<String, String> formData,
+                                                           final Parameter parameter) {
         final Collection<String> parameterValues = formData.get(parameter.getName());
         return parameterValues.isEmpty() ? Collections.singletonList(null) : parameterValues;
     }
 
     @Nonnull
-    private ValidationReport validateBody(@Nonnull final Request request,
-                                          @Nonnull final ApiOperation apiOperation) {
+    private ValidationReport validateBody(final Request request,
+                                          final ApiOperation apiOperation) {
         final RequestBody requestBodyDefinition = apiOperation.getOperation().getRequestBody();
 
         // TODO: Add appropriate support for request bodies in the message context
@@ -360,7 +370,7 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private ValidationReport validatePathParameters(@Nonnull final ApiOperation apiOperation) {
+    private ValidationReport validatePathParameters(final ApiOperation apiOperation) {
 
         ValidationReport validationReport = empty();
         final NormalisedPath requestPath = apiOperation.getRequestPath();
@@ -383,10 +393,10 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private ValidationReport validatePathParameter(@Nonnull final ApiOperation apiOperation,
-                                                   @Nonnull final String paramName,
-                                                   @Nonnull final Optional<String> paramValue) {
-        return apiOperation.getOperation().getParameters()
+    private ValidationReport validatePathParameter(final ApiOperation apiOperation,
+                                                   final String paramName,
+                                                   final Optional<String> paramValue) {
+        return defaultIfNull(apiOperation.getOperation().getParameters(), Collections.<Parameter>emptyList())
                 .stream()
                 .filter(RequestValidator::isPathParam)
                 .filter(p -> p.getName().equalsIgnoreCase(paramName))
@@ -396,11 +406,9 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private ValidationReport validateQueryParameters(@Nonnull final Request request,
-                                                     @Nonnull final ApiOperation apiOperation) {
-        return apiOperation
-                .getOperation()
-                .getParameters()
+    private ValidationReport validateQueryParameters(final Request request,
+                                                     final ApiOperation apiOperation) {
+        return defaultIfNull(apiOperation.getOperation().getParameters(), Collections.<Parameter>emptyList())
                 .stream()
                 .filter(RequestValidator::isQueryParam)
                 .map(p -> validateParameter(
@@ -412,11 +420,9 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private ValidationReport validateHeaders(@Nonnull final Request request,
-                                             @Nonnull final ApiOperation apiOperation) {
-        return apiOperation
-                .getOperation()
-                .getParameters()
+    private ValidationReport validateHeaders(final Request request,
+                                             final ApiOperation apiOperation) {
+        return defaultIfNull(apiOperation.getOperation().getParameters(), Collections.<Parameter>emptyList())
                 .stream()
                 .filter(RequestValidator::isHeaderParam)
                 .map(p -> validateParameter(
@@ -428,12 +434,12 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private ValidationReport validateParameter(@Nonnull final ApiOperation apiOperation,
-                                               @Nonnull final Parameter parameter,
-                                               @Nonnull final Collection<String> parameterValues,
-                                               @Nonnull final String missingKey) {
+    private ValidationReport validateParameter(final ApiOperation apiOperation,
+                                               final Parameter parameter,
+                                               final Collection<String> parameterValues,
+                                               final String missingKey) {
 
-        if (parameterValues.isEmpty() && parameter.getRequired()) {
+        if (parameterValues.isEmpty() && TRUE.equals(parameter.getRequired())) {
             return ValidationReport.singleton(
                     messages.get(missingKey, parameter.getName(), apiOperation.getApiPath().original())
             );
@@ -445,8 +451,8 @@ public class RequestValidator {
                 .reduce(empty(), ValidationReport::merge);
     }
 
-    private boolean isFormData(@Nonnull final Optional<String> maybeRequestContentType,
-                               @Nonnull final ApiOperation apiOperation) {
+    private boolean isFormData(final Optional<String> maybeRequestContentType,
+                               final ApiOperation apiOperation) {
 
         final Collection<String> consumes = getConsumes(apiOperation);
         if (consumes.isEmpty() || !maybeRequestContentType.isPresent()) {
@@ -458,8 +464,8 @@ public class RequestValidator {
                 && requestContentType.equals(MediaType.FORM_DATA.toString());
     }
 
-    private boolean isMultipartFormData(@Nonnull final Optional<String> maybeRequestContentType,
-                                        @Nonnull final ApiOperation apiOperation) {
+    private boolean isMultipartFormData(final Optional<String> maybeRequestContentType,
+                                        final ApiOperation apiOperation) {
         final Collection<String> consumes = getConsumes(apiOperation);
         if (consumes.isEmpty() || !maybeRequestContentType.isPresent()) {
             return false;

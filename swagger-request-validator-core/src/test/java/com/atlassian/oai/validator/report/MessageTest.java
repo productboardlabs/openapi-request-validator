@@ -34,7 +34,7 @@ public class MessageTest {
         final MessageContext context = enhancedMsg.getContext().orElse(null);
         assertThat(context, is(notNullValue()));
         assertThat(context.getLocation(), optionalWithValue(is(REQUEST)));
-        assertThat(context.getParameter(), optionalWithValue(hasProperty("name", is("test.param"))));
+        assertThat(context.getParameter(), optionalWithValue(hasProperty("name", is("Test Parameter"))));
     }
 
     @Test

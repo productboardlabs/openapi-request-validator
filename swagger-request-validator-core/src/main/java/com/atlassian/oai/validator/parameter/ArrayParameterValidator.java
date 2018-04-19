@@ -20,6 +20,7 @@ import static io.swagger.v3.oas.models.parameters.Parameter.StyleEnum.MATRIX;
 import static io.swagger.v3.oas.models.parameters.Parameter.StyleEnum.PIPEDELIMITED;
 import static io.swagger.v3.oas.models.parameters.Parameter.StyleEnum.SIMPLE;
 import static io.swagger.v3.oas.models.parameters.Parameter.StyleEnum.SPACEDELIMITED;
+import static java.lang.Boolean.TRUE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 
@@ -63,7 +64,7 @@ public class ArrayParameterValidator extends BaseParameterValidator {
 
         final ValidationReport.MessageContext context = ValidationReport.MessageContext.create().withParameter(parameter).build();
 
-        if (parameter.getRequired() && (value == null || value.trim().isEmpty())) {
+        if (TRUE.equals(parameter.getRequired()) && (value == null || value.trim().isEmpty())) {
             return ValidationReport.singleton(
                     messages.get("validation.request.parameter.missing", parameter.getName())
             ).withAdditionalContext(context);
@@ -135,7 +136,7 @@ public class ArrayParameterValidator extends BaseParameterValidator {
     }
 
     private ValidationReport validateUniqueItems(final Collection<String> values, final Parameter parameter) {
-        if (Boolean.TRUE.equals(parameter.getSchema().getUniqueItems()) &&
+        if (TRUE.equals(parameter.getSchema().getUniqueItems()) &&
             values.stream().distinct().count() != values.size()) {
             return ValidationReport.singleton(messages.get("validation.request.parameter.collection.duplicateItems",
                 parameter.getName())
