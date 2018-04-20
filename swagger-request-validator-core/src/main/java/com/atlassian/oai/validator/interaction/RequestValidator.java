@@ -9,12 +9,12 @@ import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
 import com.atlassian.oai.validator.schema.SchemaValidator;
+import com.atlassian.oai.validator.security.SecurityValidator;
 import com.google.common.collect.Multimap;
 import com.google.common.net.MediaType;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.parameters.RequestBody;
-import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
@@ -47,30 +47,26 @@ public class RequestValidator {
 
     private static final Logger log = getLogger(RequestValidator.class);
 
-    private static final String HTTP_AUTH_HEADER = "Authorization";
-
-    private static final String MISSING_SECURITY_PARAMETER_KEY = "validation.request.security.missing";
-    private static final String INVALID_SECURITY_PARAMETER_KEY = "validation.request.security.invalid";
-
     private final SchemaValidator schemaValidator;
     private final ParameterValidators parameterValidators;
+    private final SecurityValidator securityValidator;
     private final MessageResolver messages;
-    private final OpenAPI oaiDefinition;
 
     /**
      * Construct a new request validator with the given schema validator.
      *
      * @param schemaValidator The schema validator to use when validating request bodies
      * @param messages The message resolver to use
-     * @param oaiDefinition The OAI spec to validate against
+     * @param api The OpenAPI spec to validate against
      */
     public RequestValidator(final SchemaValidator schemaValidator,
                             final MessageResolver messages,
-                            final OpenAPI oaiDefinition) {
+                            final OpenAPI api) {
         this.schemaValidator = requireNonNull(schemaValidator, "A schema validator is required");
-        parameterValidators = new ParameterValidators(schemaValidator, messages);
         this.messages = requireNonNull(messages, "A message resolver is required");
-        this.oaiDefinition = requireNonNull(oaiDefinition, "An OAI definition required");
+
+        parameterValidators = new ParameterValidators(schemaValidator, messages);
+        securityValidator = new SecurityValidator(messages, api);
     }
 
     /**
@@ -92,7 +88,7 @@ public class RequestValidator {
                 .withApiOperation(apiOperation)
                 .build();
 
-        return  validateSecurity(request, apiOperation)
+        return securityValidator.validateSecurity(request, apiOperation)
                 .merge(validateContentType(request, apiOperation))
                 .merge(validateAccepts(request, apiOperation))
                 .merge(validateHeaders(request, apiOperation))
@@ -100,106 +96,6 @@ public class RequestValidator {
                 .merge(validateRequestBody(request, apiOperation))
                 .merge(validateQueryParameters(request, apiOperation))
                 .withAdditionalContext(context);
-    }
-
-    @Nonnull
-    private ValidationReport validateSecurity(final Request request,
-                                              final ApiOperation apiOperation) {
-//        final List<Map<String, List<String>>> securityRequired = apiOperation.getOperation().getSecurity();
-//
-//        if (null != securityRequired && !securityRequired.isEmpty()) {
-//            boolean foundSecurity = false;
-//            ValidationReport report = empty();
-//            for (final Map.Entry<String, SecurityScheme> s : oaiDefinition.getComponents().getSecuritySchemes().entrySet()) {
-//                final Map<String, SecurityScheme> filtered = new HashMap<>();
-//                securityRequired.stream().filter(item -> item.containsKey(s.getKey())).forEach(item -> filtered.put(s.getKey(), s.getValue()));
-//
-//                if (!filtered.isEmpty()) {
-//                    final Set<String> missingDefinitions = new TreeSet<>();
-//                    final ValidationReport subReport = filtered.entrySet().stream().map(e -> {
-//                        final ValidationReport validationReport = validateSingleSecurityParameter(request, e.getValue());
-//
-//                        if (validationReport.getMessages().stream().filter(m -> MISSING_SECURITY_PARAMETER_KEY.equals(m.getKey())).count() > 0) {
-//                            missingDefinitions.add(e.getKey());
-//                        }
-//
-//                        return validationReport;
-//                    }).reduce(empty(), ValidationReport::merge);
-//
-//                    if (missingDefinitions.isEmpty()) {
-//                        foundSecurity = true;
-//                        report = report.merge(subReport);
-//                    } else {
-//                        // do not append subReport if security definition of 's' is missing/incomplete
-//                        log.debug("Security definition not found for {}", s.getKey());
-//                    }
-//                }
-//            }
-//
-//            if (!foundSecurity) {
-//                // none of security headers was found
-//                return ValidationReport.singleton(messages.get(MISSING_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
-//            }
-//
-//            return report;
-//        }
-        return empty();
-    }
-
-    @Nonnull
-    private ValidationReport validateSingleSecurityParameter(final Request request,
-                                                             final SecurityScheme securityScheme) {
-        switch (securityScheme.getType()) {
-            case APIKEY:
-                switch (securityScheme.getIn()) {
-                    case HEADER:
-                        return checkApiKeyAuthorizationByHeader(request, securityScheme);
-                    case QUERY:
-                        return checkApiKeyAuthorizationByQueryParameter(request, securityScheme);
-                    default:
-                        return empty();
-                }
-            case HTTP:
-                return checkBasicAuthorization(request, securityScheme);
-            default:
-                return empty();
-        }
-    }
-
-    @Nonnull
-    private ValidationReport checkBasicAuthorization(final Request request,
-                                                     final SecurityScheme securityScheme) {
-
-        if (!request.getHeaderValue(HTTP_AUTH_HEADER).isPresent()) {
-            return ValidationReport.singleton(messages.get(MISSING_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
-        } else if (!request.getHeaderValue(HTTP_AUTH_HEADER).get().startsWith("Basic ")) {
-            // Authorization HTTP header found but not a Basic authentication token
-            return ValidationReport.singleton(messages.get(INVALID_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
-        }
-        // HTTP basic authentication header found, additional checks can be placed here
-        return empty();
-    }
-
-    @Nonnull
-    private ValidationReport checkApiKeyAuthorizationByQueryParameter(final Request request,
-                                                                      final SecurityScheme securityScheme) {
-        final Optional<String> authQueryParam = request.getQueryParameterValues(securityScheme.getName()).stream().findFirst();
-        if (!authQueryParam.isPresent()) {
-            return ValidationReport.singleton(messages.get(MISSING_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
-        }
-        // API key query parameter found, additional checks can be placed here
-        return empty();
-    }
-
-    @Nonnull
-    private ValidationReport checkApiKeyAuthorizationByHeader(final Request request,
-                                                              final SecurityScheme securityScheme) {
-
-        if (!request.getHeaderValue(securityScheme.getName()).isPresent()) {
-            return ValidationReport.singleton(messages.get(MISSING_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
-        }
-        // API key header found, additional checks can be placed here
-        return empty();
     }
 
     @Nonnull
