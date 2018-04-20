@@ -52,12 +52,15 @@ public class OperationForWhitelisting {
     }
 
     public OperationForWhitelisting withDocumentedResponse(final int status, final String entityReference) {
-        operation.setResponses(new ApiResponses()
-                .addApiResponse(String.valueOf(status), new ApiResponse()
-                        .content(new Content()
-                                .addMediaType("application/json", new MediaType()
-                                        .schema(new Schema().$ref("#/components/schemas/" + entityReference))
-                                )
+        ApiResponses apiResponses = operation.getResponses();
+        if (apiResponses == null) {
+            apiResponses = new ApiResponses();
+            operation.setResponses(apiResponses);
+        }
+        apiResponses.addApiResponse(String.valueOf(status), new ApiResponse()
+                .content(new Content()
+                        .addMediaType("application/json", new MediaType()
+                                .schema(new Schema().$ref("#/components/schemas/" + entityReference))
                         )
                 )
         );
