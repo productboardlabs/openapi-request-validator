@@ -56,6 +56,7 @@ public class SwaggerV20Library {
     public static final String OAI_V2_METASCHEMA_URI = "https://openapis.org/specification/versions/2.0#";
 
     public static final String DISCRIMINATOR_KEYWORD = "discriminator";
+    public static final String DISCRIMINATOR_PROPERTYNAME_KEYWORD = "propertyName";
 
     static Library get() {
         // The discriminator validator holds state that may persist in the event of a runtime exception etc.
@@ -134,7 +135,7 @@ public class SwaggerV20Library {
         }
 
         DiscriminatorSyntaxChecker() {
-            super(DISCRIMINATOR_KEYWORD, NodeType.STRING);
+            super(DISCRIMINATOR_KEYWORD, NodeType.OBJECT);
         }
 
         @Override
@@ -143,7 +144,7 @@ public class SwaggerV20Library {
                                   final ProcessingReport report,
                                   final SchemaTree tree) throws ProcessingException {
 
-            final String discriminatorFieldName = getNode(tree).textValue();
+            final String discriminatorFieldName = getNode(tree).get(DISCRIMINATOR_PROPERTYNAME_KEYWORD).textValue();
             if (discriminatorFieldName.isEmpty()) {
                 report.error(msg(tree, bundle, "err.swaggerv2.discriminator.empty"));
                 return;
@@ -203,7 +204,7 @@ public class SwaggerV20Library {
         @Override
         public JsonNode digest(final JsonNode schema) {
             final ObjectNode ret = FACTORY.objectNode();
-            ret.put(keyword, schema.get(keyword).textValue());
+            ret.put(keyword, schema.get(keyword));
             return ret;
         }
     }
@@ -221,7 +222,7 @@ public class SwaggerV20Library {
 
         public DiscriminatorKeywordValidator(final JsonNode digest) {
             super(DISCRIMINATOR_KEYWORD);
-            this.fieldName = digest.get(keyword).textValue();
+            fieldName = digest.get(keyword).get(DISCRIMINATOR_PROPERTYNAME_KEYWORD).textValue();
         }
 
         @Override
@@ -264,7 +265,8 @@ public class SwaggerV20Library {
             final SchemaTree schemaTree = data.getSchema();
             final String parentDefinitionRef = "#" + schemaTree.getPointer().toString();
             final Map<String, JsonNode> validDiscriminatorValues = new HashMap<>();
-            data.getSchema().getBaseNode().get("definitions").fields().forEachRemaining(e -> {
+
+            definitionsNode(data).fields().forEachRemaining(e -> {
                 final JsonNode def = e.getValue();
                 if (!def.has("allOf")) {
                     return;
@@ -288,7 +290,7 @@ public class SwaggerV20Library {
             }
 
             final ListProcessingReport subReport = new ListProcessingReport(report.getLogLevel(), LogLevel.FATAL);
-            final JsonPointer ptr = JsonPointer.of("definitions", discriminatorNode.textValue());
+            final JsonPointer ptr = pointerToDiscriminator(data, discriminatorNode);
             final FullData newData = data.withSchema(schemaTree.setPointer(ptr));
 
             // Mark the node to ensure we don't get in a validation loop
@@ -303,6 +305,23 @@ public class SwaggerV20Library {
                         .put("report", subReport.asJson()));
             }
 
+        }
+
+        private JsonPointer pointerToDiscriminator(final FullData data, final JsonNode discriminatorNode) {
+            // Swagger 2.0 used 'definitions' while OpenAPI uses 'components/schemas'
+            if (data.getSchema().getBaseNode().has("components")) {
+                return JsonPointer.of("components", "schemas", discriminatorNode.textValue());
+            }
+            return JsonPointer.of("definitions", discriminatorNode.textValue());
+        }
+
+        private JsonNode definitionsNode(final FullData data) {
+            // Swagger 2.0 used 'definitions' while OpenAPI uses 'components/schemas'
+            final JsonNode baseNode = data.getSchema().getBaseNode();
+            if (baseNode.has("components")) {
+                return baseNode.get("components").get("schemas");
+            }
+            return baseNode.get("definitions");
         }
 
         @Override

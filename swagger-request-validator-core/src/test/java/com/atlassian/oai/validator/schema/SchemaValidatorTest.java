@@ -4,19 +4,16 @@ import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.google.common.collect.ImmutableList;
-import io.swagger.models.Model;
-import io.swagger.models.ModelImpl;
-import io.swagger.models.RefModel;
-import io.swagger.models.properties.ArrayProperty;
-import io.swagger.models.properties.DateProperty;
-import io.swagger.models.properties.DateTimeProperty;
-import io.swagger.models.properties.FloatProperty;
-import io.swagger.models.properties.IntegerProperty;
-import io.swagger.models.properties.ObjectProperty;
-import io.swagger.models.properties.Property;
-import io.swagger.models.properties.StringProperty;
 import io.swagger.parser.OpenAPIParser;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.media.ArraySchema;
+import io.swagger.v3.oas.models.media.DateSchema;
+import io.swagger.v3.oas.models.media.DateTimeSchema;
+import io.swagger.v3.oas.models.media.IntegerSchema;
+import io.swagger.v3.oas.models.media.NumberSchema;
+import io.swagger.v3.oas.models.media.ObjectSchema;
+import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import org.junit.Test;
 
@@ -25,6 +22,7 @@ import java.util.List;
 import static com.atlassian.oai.validator.schema.SchemaValidator.ADDITIONAL_PROPERTIES_KEY;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFailWithoutContext;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
+import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.iterableWithSize;
@@ -39,7 +37,7 @@ public class SchemaValidatorTest {
     @Test(expected = IllegalArgumentException.class)
     public void validate_withNullValue_shouldThrowException() {
         final String value = null;
-        final Model schema = new ModelImpl();
+        final Schema schema = new Schema();
 
         classUnderTest.validate(value, schema);
     }
@@ -47,7 +45,7 @@ public class SchemaValidatorTest {
     @Test(expected = IllegalArgumentException.class)
     public void validate_withEmptyValue_shouldThrowException() {
         final String value = "";
-        final Model schema = new ModelImpl();
+        final Schema schema = new Schema();
 
         classUnderTest.validate(value, schema);
     }
@@ -56,16 +54,13 @@ public class SchemaValidatorTest {
     public void validate_withNullSchema_shouldValidateAnyJson() {
         final List<String> values = ImmutableList.of("1", "\"string\"", "{\"prop\":3}", "[1,2,3]", "null");
 
-        values.forEach(v -> {
-            assertPass(classUnderTest.validate(v, (Property) null));
-            assertPass(classUnderTest.validate(v, (Model) null));
-        });
+        values.forEach(v -> assertPass(classUnderTest.validate(v, null)));
     }
 
     @Test
     public void validate_withValidProperty_shouldPass() {
         final String value = "1";
-        final Property schema = new IntegerProperty();
+        final Schema schema = new StringSchema();
 
         assertPass(classUnderTest.validate(value, schema));
     }
@@ -73,7 +68,7 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withInvalidProperty_shouldFail() {
         final String value = "1.0";
-        final Property schema = new IntegerProperty();
+        final Schema schema = new IntegerSchema();
 
         assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.type");
     }
@@ -81,7 +76,7 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withUnquotedStringProperty_shouldPass() {
         final String value = "bob";
-        final Property schema = new StringProperty();
+        final Schema schema = new StringSchema();
 
         assertPass(classUnderTest.validate(value, schema));
     }
@@ -89,7 +84,7 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withQuotedStringProperty_shouldPass() {
         final String value = "\"bob\"";
-        final Property schema = new StringProperty();
+        final Schema schema = new StringSchema();
 
         assertPass(classUnderTest.validate(value, schema));
     }
@@ -97,7 +92,10 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withValidModel_shouldPass_whenModelInline() {
         final String value = "{\"foo\":\"bar\"}";
-        final Model schema = new ModelImpl().property("foo", new StringProperty()).required("foo");
+        final Schema schema = new ObjectSchema()
+                .addProperties("foo", new StringSchema())
+                .required(singletonList("foo"));
+        //final Model schema = new ModelImpl().property("foo", new StringProperty()).required("foo");
 
         assertPass(classUnderTest.validate(value, schema));
     }
@@ -105,7 +103,9 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withInvalidModel_shouldFail_whenModelInline() {
         final String value = "{\"foos\":\"bar\"}";
-        final Model schema = new ModelImpl().property("foo", new StringProperty()).required("foo");
+        final Schema schema = new ObjectSchema()
+                .addProperties("foo", new StringSchema())
+                .required(singletonList("foo"));
 
         assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.required");
     }
@@ -113,7 +113,7 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withValidModel_shouldPass_whenModelReferenced() {
         final String value = "{\"title\":\"bar\", \"message\":\"something\"}";
-        final Model schema = new RefModel("#/definitions/Error");
+        final Schema schema = new Schema().$ref("#/components/schemas/Error");
 
         assertPass(classUnderTest.validate(value, schema));
     }
@@ -121,7 +121,7 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withInvalidModel_shouldFail_whenModelReferenced() {
         final String value = "{\"title\":\"bar\"}";
-        final Model schema = new RefModel("#/definitions/Error");
+        final Schema schema = new Schema().$ref("#/components/schemas/Error");
 
         assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.required");
     }
@@ -129,7 +129,7 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withExtraFields_shouldFail_whenModelReferenced() {
         final String value = "{\"title\":\"bar\", \"message\":\"something\", \"extra\":\"value\"}";
-        final Model schema = new RefModel("#/definitions/Error");
+        final Schema schema = new Schema().$ref("#/components/schemas/Error");
 
         assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.additionalProperties");
     }
@@ -137,7 +137,9 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withExtraFields_shouldFail_whenModelInline() {
         final String value = "{\"foo\":\"bar\", \"extra\":\"value\"}";
-        final Model schema = new ModelImpl().property("foo", new StringProperty()).required("foo");
+        final Schema schema = new ObjectSchema()
+                .addProperties("foo", new StringSchema())
+                .required(singletonList("foo"));
 
         assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.additionalProperties");
     }
@@ -145,7 +147,7 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withInvalidJsonSchema_shouldFail() {
         final String value = "{\"title\":\"bar\", \"message\":\"something\"}";
-        final Model schema = new RefModel("#/definitions/{\"What\":\"This actually happened!\"}");
+        final Schema schema = new Schema().$ref("#/definitions/{\"What\":\"This actually happened!\"}");
 
         assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.processingError");
     }
@@ -153,7 +155,7 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withOtherException_shouldFail() {
         final String value = "{\"title\":\"bar\", \"message\":\"something\"}";
-        final Model schema = new RefModel("#/definitions/Error}");
+        final Schema schema = new Schema().$ref("#/components/schemas/Error");
 
         final OpenAPI mockApi = mock(OpenAPI.class);
         when(mockApi.getComponents()).thenThrow(new IllegalStateException("Testing exception handling"));
@@ -167,7 +169,7 @@ public class SchemaValidatorTest {
 
         final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v2/api-composition.yaml");
 
-        final Model schema = new RefModel("#/definitions/User");
+        final Schema schema = new Schema().$ref("#/components/schemas/User");
         final String value = "{\"firstname\":\"user_firstname\", \"lastname\":\"user_lastname\", \"city\":\"user_city\"}";
 
         assertPass(classUnderTest.validate(value, schema));
@@ -178,7 +180,7 @@ public class SchemaValidatorTest {
 
         final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v2/api-composition.yaml");
 
-        final Model schema = new RefModel("#/definitions/User");
+        final Schema schema = new Schema().$ref("#/components/schemas/User");
         final String value = "{\"firstname\":\"user_firstname\", \"city\":1}";
 
         final ValidationReport report = classUnderTest.validate(value, schema);
@@ -186,8 +188,8 @@ public class SchemaValidatorTest {
 
         final ValidationReport.Message message = report.getMessages().get(0);
         assertThat(message.getAdditionalInfo(), iterableWithSize(2));
-        assertThat(message.getAdditionalInfo(), hasItem(containsString("/definitions/User/allOf/0")));
-        assertThat(message.getAdditionalInfo(), hasItem(containsString("/definitions/User/allOf/1")));
+        assertThat(message.getAdditionalInfo(), hasItem(containsString("/components/schemas/User/allOf/0")));
+        assertThat(message.getAdditionalInfo(), hasItem(containsString("/components/schemas/User/allOf/1")));
     }
 
     @Test
@@ -195,7 +197,7 @@ public class SchemaValidatorTest {
 
         final SchemaValidator classUnderTest = validator("/oai/v2/api-composition.yaml");
 
-        final Model schema = new RefModel("#/definitions/User");
+        final Schema schema = new Schema().$ref("#/components/schemas/User");
         final String value = "{\"firstname\":\"user_firstname\", \"lastname\":\"user_lastname\", \"city\":\"user_city\"}";
 
         assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.additionalProperties");
@@ -209,13 +211,13 @@ public class SchemaValidatorTest {
                         "\"int\": null," +
                         "\"obj\":{\"obj1\": null, \"obj2\": null, \"obj3\": \"val3\"}," +
                         "\"arr\":[null, \"val1\", \"val2\"]}";
-        final Model schema = new ModelImpl()
-                .property("foo", new StringProperty())
-                .property("baz", new StringProperty())
-                .property("int", new IntegerProperty())
-                .property("obj", new ObjectProperty())
-                .property("arr", new ArrayProperty())
-                .required("foo");
+        final Schema schema = new ObjectSchema()
+                .addProperties("foo", new StringSchema())
+                .addProperties("baz", new StringSchema())
+                .addProperties("int", new IntegerSchema())
+                .addProperties("obj", new ObjectSchema())
+                .addProperties("arr", new ArraySchema())
+                .required(singletonList("foo"));
 
         assertPass(classUnderTest.validate(value, schema));
     }
@@ -223,8 +225,8 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withValidModel_shouldPass_whenContainsNullValues_inArray() {
         final String value = "{\"arr\": [1, 2, null, 3]}";
-        final Model schema = new ModelImpl()
-                .property("arr", new ArrayProperty().items(new IntegerProperty()));
+        final Schema schema = new ObjectSchema()
+                .addProperties("arr", new ArraySchema().items(new IntegerSchema()));
 
         assertPass(classUnderTest.validate(value, schema));
     }
@@ -238,12 +240,12 @@ public class SchemaValidatorTest {
                         "{\"flt\":null}" +
                         "]}";
 
-        final Model schema = new ModelImpl()
-                .property("arr", new ArrayProperty().items(
-                        new ObjectProperty()
-                                .property("int", new IntegerProperty())
-                                .property("str", new StringProperty())
-                                .property("flt", new FloatProperty())
+        final Schema schema = new Schema()
+                .addProperties("arr", new ArraySchema().items(
+                        new ObjectSchema()
+                                .addProperties("int", new IntegerSchema())
+                                .addProperties("str", new StringSchema())
+                                .addProperties("flt", new NumberSchema().format("float"))
                 ));
 
         assertPass(classUnderTest.validate(value, schema));
@@ -253,7 +255,7 @@ public class SchemaValidatorTest {
     public void validate_withDiscriminator_shouldPass_whenValid() {
 
         final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v2/api-discriminator.yaml");
-        final Model schema = new RefModel("#/definitions/Pet");
+        final Schema schema = new Schema().$ref("#/components/schemas/Pet");
         final String value = "{\"name\": \"Moggy\", \"petType\": \"Cat\", \"huntingSkill\":\"clueless\"}";
 
         assertPass(classUnderTest.validate(value, schema));
@@ -263,7 +265,7 @@ public class SchemaValidatorTest {
     public void validate_withDiscriminator_shouldPass_everyTime_whenInvokedMultipleTimes() {
 
         final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v2/api-discriminator.yaml");
-        final Model schema = new RefModel("#/definitions/Pet");
+        final Schema schema = new Schema().$ref("#/components/schemas/Pet");
         final String value = "{\"name\": \"Moggy\", \"petType\": \"Cat\", \"huntingSkill\":\"clueless\"}";
 
         assertPass(classUnderTest.validate(value, schema));
@@ -274,7 +276,7 @@ public class SchemaValidatorTest {
     public void validate_withDiscriminator_shouldFail_whenInvalid() {
 
         final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v2/api-discriminator.yaml");
-        final Model schema = new RefModel("#/definitions/Pet");
+        final Schema schema = new Schema().$ref("#/components/schemas/Pet");
         final String value = "{\"name\": \"Moggy\", \"petType\": \"Cat\", \"huntingSkill\":\"ruthless\"}";
 
         assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.discriminator");
@@ -284,7 +286,7 @@ public class SchemaValidatorTest {
     public void validate_withDiscriminator_shouldFail_everyTime_whenInvokedMultipleTimes() {
 
         final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v2/api-discriminator.yaml");
-        final Model schema = new RefModel("#/definitions/Pet");
+        final Schema schema = new Schema().$ref("#/components/schemas/Pet");
         final String value = "{\"name\": \"Moggy\", \"petType\": \"Cat\", \"huntingSkill\":\"ruthless\"}";
 
         assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.discriminator");
@@ -296,25 +298,25 @@ public class SchemaValidatorTest {
     }
 
     @Test
-    public void validate_withDateProperty_shouldPass() {
+    public void validate_withDateProperty_shouldPass_whenValid() {
         final String value = "1985-04-12";
-        final Property schema = new DateProperty();
+        final Schema schema = new DateSchema();
 
         assertPass(classUnderTest.validate(value, schema));
     }
 
     @Test
-    public void validate_withDateProperty_shouldFail() {
+    public void validate_withDateProperty_shouldFail_whenInvalid() {
         final String value = "1985-99-99";
-        final Property schema = new DateProperty();
+        final Schema schema = new DateSchema();
 
         assertFailWithoutContext(classUnderTest.validate(value, schema));
     }
 
     @Test
-    public void validate_withDateTimeProperty_shouldPass() {
+    public void validate_withDateTimeProperty_shouldPass_whenValid() {
         final String value = "1985-04-12T23:20:50.52Z";
-        final Property schema = new DateTimeProperty();
+        final Schema schema = new DateTimeSchema();
 
         assertPass(classUnderTest.validate(value, schema));
     }
@@ -322,7 +324,7 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withDateTimeProperty_shouldPass_withTimezone() {
         final String value = "1990-12-31T15:59:59+08:00";
-        final Property schema = new DateTimeProperty();
+        final Schema schema = new DateTimeSchema();
 
         assertPass(classUnderTest.validate(value, schema));
     }
@@ -330,7 +332,7 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withDateTimeProperty_shouldFail_withWrongFormat() {
         final String value = "Wed Jul 19 14:21:33 UTC 2017";
-        final Property schema = new DateTimeProperty();
+        final Schema schema = new DateTimeSchema();
 
         assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.format");
     }
@@ -340,7 +342,7 @@ public class SchemaValidatorTest {
         final SchemaValidator classUnderTest = validator("/oai/v2/api-no-definitions.json");
 
         final String value = "{\"id\":123}";
-        final Model schema = new ModelImpl().property("id", new IntegerProperty());
+        final Schema schema = new ObjectSchema().addProperties("id", new IntegerSchema());
 
         assertPass(classUnderTest.validate(value, schema));
     }

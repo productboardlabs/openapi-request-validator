@@ -2,7 +2,6 @@ package com.atlassian.oai.validator.parameter;
 
 import com.atlassian.oai.validator.report.MessageResolver;
 import io.swagger.v3.oas.models.media.IntegerSchema;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Collection;
@@ -28,37 +27,37 @@ public class ArrayParameterValidatorTest {
 
     @Test
     public void validate_withValidCsvFormat_shouldPass() {
-        assertPass(classUnderTest.validate("1,2,3", intArrayParam(true, SIMPLE)));
+        assertPass(classUnderTest.validate("1,2,3", intArrayParam(SIMPLE)));
     }
 
     @Test
-    public void validate_withValidCsvFormatAndNoCollectionFormat_shouldPass() {
-        assertPass(classUnderTest.validate("1,2,3", intArrayParam(true, null)));
+    public void validate_withValidCsvFormatAndStyleSpecified_shouldPass() {
+        assertPass(classUnderTest.validate("1,2,3", intArrayParam(null)));
     }
 
     @Test
     public void validate_withValidPipesFormat_shouldPass() {
-        assertPass(classUnderTest.validate("1|2|3", intArrayParam(true, PIPEDELIMITED)));
+        assertPass(classUnderTest.validate("1|2|3", intArrayParam(PIPEDELIMITED)));
     }
 
     @Test
     public void validate_withValidSsvFormat_shouldPass() {
-        assertPass(classUnderTest.validate("1 2 3", intArrayParam(true, SPACEDELIMITED)));
+        assertPass(classUnderTest.validate("1 2 3", intArrayParam(SPACEDELIMITED)));
     }
 
     @Test
     public void validate_withTrailingSeparator_shouldPass() {
-        assertPass(classUnderTest.validate("1,2,3,", intArrayParam(true, SIMPLE)));
+        assertPass(classUnderTest.validate("1,2,3,", intArrayParam(SIMPLE)));
     }
 
     @Test
     public void validate_withSingleValue_shouldPass() {
-        assertPass(classUnderTest.validate("bob", stringArrayParam(true, SIMPLE)));
+        assertPass(classUnderTest.validate("bob", stringArrayParam(SIMPLE)));
     }
 
     @Test
     public void validate_withInvalidParameter_shouldFail() {
-        assertFail(classUnderTest.validate("1,2.1,3", intArrayParam(true, SIMPLE)),
+        assertFail(classUnderTest.validate("1,2.1,3", intArrayParam(SIMPLE)),
                 "validation.schema.type");
     }
 
@@ -69,44 +68,40 @@ public class ArrayParameterValidatorTest {
 
     @Test
     public void validate_withEmptyValue_shouldFail_whenRequired() {
-        assertFail(classUnderTest.validate("", intArrayParam(true, SIMPLE)),
+        assertFail(classUnderTest.validate("", intArrayParam(true, SIMPLE, false)),
                 "validation.request.parameter.missing");
     }
 
     @Test
     public void validate_withNullValue_shouldFail_whenRequired() {
-        assertFail(classUnderTest.validate((String) null, intArrayParam(true, SIMPLE)),
+        assertFail(classUnderTest.validate((String) null, intArrayParam(true, SIMPLE, false)),
                 "validation.request.parameter.missing");
     }
 
     @Test
     public void validate_withEmptyValue_shouldPass_whenNotRequired() {
-        assertPass(classUnderTest.validate("", intArrayParam(false, SIMPLE)));
+        assertPass(classUnderTest.validate("", intArrayParam(SIMPLE)));
     }
 
     @Test
     public void validate_withNullValue_shouldPass_whenNotRequired() {
-        assertPass(classUnderTest.validate((String) null, intArrayParam(false, SIMPLE)));
+        assertPass(classUnderTest.validate((String) null, intArrayParam(SIMPLE)));
     }
 
     @Test
     public void validate_withCollection_shouldFail_whenNotMultiFormat() {
-        assertFail(classUnderTest.validate(asList("1", "2", "3"), intArrayParam(true, SIMPLE)),
+        assertFail(classUnderTest.validate(asList("1", "2", "3"), intArrayParam(SIMPLE)),
                 "validation.request.parameter.collection.invalidFormat");
     }
 
     @Test
-    @Ignore("Need to fix 'explode' style validation")
-    public void validate_withCollection_shouldPass_whenMultiFormat() {
-        // TODO Need to fix 'explode' style validation
-        assertPass(classUnderTest.validate(asList("1", "2", "3"), intArrayParam(true, FORM)));
+    public void validate_withCollection_shouldPass_whenMultiValuedFormat() {
+        assertPass(classUnderTest.validate(asList("1", "2", "3"), intArrayParam(true, FORM, true)));
     }
 
     @Test
-    @Ignore("Need to fix 'explode' style validation")
     public void validate_withInvalidCollectionParameter_shouldFail() {
-        // TODO Need to fix 'explode' style validation
-        assertFailWithoutContext(classUnderTest.validate(asList("1", "2.1", "3"), intArrayParam(true, FORM)),
+        assertFailWithoutContext(classUnderTest.validate(asList("1", "2.1", "3"), intArrayParam(true, FORM, true)),
                 "validation.schema.type");
     }
 
@@ -117,44 +112,45 @@ public class ArrayParameterValidatorTest {
 
     @Test
     public void validate_withEmptyCollection_shouldFail_whenRequired() {
-        // TODO Need to fix 'explode' style validation
-        assertFail(classUnderTest.validate(emptyList(), intArrayParam(true, FORM)),
+        assertFail(classUnderTest.validate(emptyList(), intArrayParam(true, FORM, true)),
                 "validation.request.parameter.missing");
     }
 
     @Test
     public void validate_withEmptyCollection_shouldPass_whenNotRequired() {
-        // TODO Need to fix 'explode' style validation
-        assertPass(classUnderTest.validate(emptyList(), intArrayParam(false, FORM)));
+        assertPass(classUnderTest.validate(emptyList(), intArrayParam(false, FORM, true)));
     }
 
     @Test
     public void validate_withNull_shouldPass_whenNotRequired() {
-        // TODO Need to fix 'explode' style validation
-        assertPass(classUnderTest.validate((Collection) null, intArrayParam(false, FORM)));
+        assertPass(classUnderTest.validate((Collection) null, intArrayParam(false, FORM, true)));
     }
 
     @Test
     public void validate_withTooFewValues_shouldFail_whenMinItemsSpecified() {
-        assertFail(classUnderTest.validate("1,2", arrayParam(true, SIMPLE, 3, 5, null, new IntegerSchema())),
+        assertFail(classUnderTest.validate("1,2",
+                arrayParam(true, SIMPLE, false, 3, 5, null, new IntegerSchema())),
                 "validation.request.parameter.collection.tooFewItems");
     }
 
     @Test
     public void validate_withTooManyValues_shouldFail_whenMaxItemsSpecified() {
-        assertFail(classUnderTest.validate("1,2,3,4,5,6", arrayParam(true, SIMPLE, 3, 5, null, new IntegerSchema())),
+        assertFail(classUnderTest.validate("1,2,3,4,5,6",
+                arrayParam(true, SIMPLE, false, 3, 5, null, new IntegerSchema())),
                 "validation.request.parameter.collection.tooManyItems");
     }
 
     @Test
     public void validate_withNonUniqueValues_shouldFail_whenUniqueSpecified() {
-        assertFail(classUnderTest.validate("1,2,1", arrayParam(true, SIMPLE, null, null, true, new IntegerSchema())),
+        assertFail(classUnderTest.validate("1,2,1",
+                arrayParam(true, SIMPLE, false, null, null, true, new IntegerSchema())),
                 "validation.request.parameter.collection.duplicateItems");
     }
 
     @Test
     public void validate_withNonUniqueValues_shouldPass_whenUniqueNotSpecified() {
-        assertPass(classUnderTest.validate("1,2,1", arrayParam(true, SIMPLE, null, null, false, new IntegerSchema())));
+        assertPass(classUnderTest.validate("1,2,1",
+                arrayParam(true, SIMPLE, false, null, null, false, new IntegerSchema())));
     }
 
     @Test

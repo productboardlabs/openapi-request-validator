@@ -198,14 +198,24 @@ public class ParameterGenerator {
 
     // Array parameters
 
+    public static Parameter intArrayParam(final Parameter.StyleEnum style) {
+        return intArrayParam(false, style, false);
+    }
+
     public static Parameter intArrayParam(final boolean required,
-                                          final Parameter.StyleEnum style) {
-        return arrayParam(required, style, null, null, null, new IntegerSchema());
+                                          final Parameter.StyleEnum style,
+                                          final boolean explode) {
+        return arrayParam(required, style, explode, null, null, null, new IntegerSchema());
+    }
+
+    public static Parameter stringArrayParam(final Parameter.StyleEnum style) {
+        return stringArrayParam(false, style, false);
     }
 
     public static Parameter stringArrayParam(final boolean required,
-                                             final Parameter.StyleEnum style) {
-        return arrayParam(required, style, null, null, null, new StringSchema());
+                                             final Parameter.StyleEnum style,
+                                             final boolean explode) {
+        return arrayParam(required, style, explode, null, null, null, new StringSchema());
     }
 
     public static Parameter enumeratedArrayParam(final boolean required,
@@ -230,6 +240,7 @@ public class ParameterGenerator {
 
     public static Parameter arrayParam(final boolean required,
                                        final Parameter.StyleEnum style,
+                                       final boolean explode,
                                        final Integer minItems,
                                        final Integer maxItems,
                                        final Boolean unique,
@@ -247,6 +258,7 @@ public class ParameterGenerator {
         result.setRequired(required);
         result.setSchema(schema);
         result.setStyle(style);
+        result.setExplode(explode);
         return result;
     }
 
