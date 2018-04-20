@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import static com.atlassian.oai.validator.report.ValidationReport.Level.IGNORE;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadResource;
 
 /**
  * General behavioral tests for the {@link SwaggerRequestResponseValidator}.
@@ -57,7 +58,7 @@ public class SwaggerRequestResponseValidatorTest {
 
     @Test
     public void validate_jsonPayloadAccepted() {
-        SwaggerRequestResponseValidator.createFor("{}").build();
+        SwaggerRequestResponseValidator.createFor(loadResource("/oai/v2/api-users.json")).build();
     }
 
     @Test(expected = Exception.class)
