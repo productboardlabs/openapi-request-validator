@@ -3,7 +3,6 @@ package com.atlassian.oai.validator.parameter;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.SchemaValidator;
-import com.google.common.collect.ImmutableMap;
 import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.parameters.Parameter;
 
@@ -11,18 +10,12 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static io.swagger.v3.oas.models.parameters.Parameter.StyleEnum.LABEL;
-import static io.swagger.v3.oas.models.parameters.Parameter.StyleEnum.MATRIX;
-import static io.swagger.v3.oas.models.parameters.Parameter.StyleEnum.PIPEDELIMITED;
-import static io.swagger.v3.oas.models.parameters.Parameter.StyleEnum.SIMPLE;
-import static io.swagger.v3.oas.models.parameters.Parameter.StyleEnum.SPACEDELIMITED;
 import static java.lang.Boolean.TRUE;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singleton;
+import static java.util.Collections.emptyList;
 
 /**
  * A validator for array parameters.
@@ -32,14 +25,6 @@ import static java.util.Collections.singleton;
 public class ArrayParameterValidator extends BaseParameterValidator {
 
     private static final String ARRAY_PARAMETER_TYPE = "array";
-
-    private static final Map<Parameter.StyleEnum, String> SEPARATORS = ImmutableMap.of(
-            SIMPLE, ",",
-            SPACEDELIMITED, " ",
-            PIPEDELIMITED, "\\|",
-            LABEL, "\\.",
-            MATRIX, ","
-    );
 
     private final SchemaValidator schemaValidator;
 
@@ -94,12 +79,11 @@ public class ArrayParameterValidator extends BaseParameterValidator {
             return ValidationReport.empty();
         }
 
-        // TODO: Need to support style + explode
-//        if (parameter.getStyle() != FORM && parameter.getStyle() != ) {
-//            return ValidationReport.singleton(
-//                    messages.get("validation.request.parameter.collection.invalidFormat", parameter.getName(), parameter.getCollectionFormat(), "multi")
-//            ).withAdditionalContext(context);
-//        }
+        if (!ArraySeparator.from(parameter).isMultiValueParam()) {
+            return ValidationReport.singleton(
+                    messages.get("validation.request.parameter.collection.invalidFormat", parameter.getName(), parameter.getStyle(), "multi")
+            ).withAdditionalContext(context);
+        }
 
         return doValidate(values, parameter);
     }
@@ -108,7 +92,7 @@ public class ArrayParameterValidator extends BaseParameterValidator {
     protected ValidationReport doValidate(final String value,
                                           final Parameter parameter) {
 
-        return doValidate(splitValue(parameter, value), parameter);
+        return doValidate(ArraySeparator.from(parameter).split(value), parameter);
     }
 
     private ValidationReport doValidate(final Collection<String> values,
@@ -163,11 +147,61 @@ public class ArrayParameterValidator extends BaseParameterValidator {
         return ValidationReport.empty();
     }
 
-    private static Collection<String> splitValue(final Parameter parameter, final String value) {
-        final String separator = SEPARATORS.get(parameter.getStyle());
-        if (separator == null) {
-            return singleton(value);
+    /**
+     * @see <a href="https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md#parameterObject">OAI spec</a>
+     */
+    private static class ArraySeparator {
+
+        static ArraySeparator from(final Parameter parameter) {
+            if (parameter.getStyle() == null) {
+                // See https://github.com/swagger-api/swagger-parser/issues/690 - mapping from Swagger 2.0 isn't fully implemented yet
+                return new ArraySeparator(",", false);
+            }
+            final boolean explode = TRUE.equals(parameter.getExplode());
+            switch (parameter.getStyle()) {
+                case SIMPLE:
+                    return new ArraySeparator(",", false);
+                case MATRIX:
+                    return explode ?
+                            new ArraySeparator(null, true) :
+                            new ArraySeparator(",", false);
+                case LABEL:
+                    return new ArraySeparator("\\.", false);
+                case FORM:
+                    return explode ?
+                            new ArraySeparator(null, true) :
+                            new ArraySeparator(",", false);
+                case SPACEDELIMITED:
+                    return explode ?
+                            new ArraySeparator(null, false) :
+                            new ArraySeparator(" ", false);
+                case PIPEDELIMITED:
+                    return explode ?
+                            new ArraySeparator(null, false) :
+                            new ArraySeparator("\\|", false);
+                default:
+                    // See https://github.com/swagger-api/swagger-parser/issues/690 - mapping from Swagger 2.0 isn't fully implemented yet
+                    return new ArraySeparator(",", false);
+            }
         }
-        return asList(value.split(separator));
+
+        private final String separator;
+        private final boolean isMultiValueParam;
+
+        ArraySeparator(final String separator, final boolean isMultiValueParam) {
+            this.separator = separator;
+            this.isMultiValueParam = isMultiValueParam;
+        }
+
+        boolean isMultiValueParam() {
+            return isMultiValueParam;
+        }
+
+        Collection<String> split(final String value) {
+            if (separator == null) {
+                return emptyList();
+            }
+            return asList(value.split(separator));
+        }
     }
 }
