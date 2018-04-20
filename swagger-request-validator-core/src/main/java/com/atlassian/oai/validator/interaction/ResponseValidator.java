@@ -6,10 +6,10 @@ import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
 import com.atlassian.oai.validator.schema.SchemaValidator;
-import com.google.common.net.MediaType;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.headers.Header;
 import io.swagger.v3.oas.models.media.Content;
+import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import org.slf4j.Logger;
 
@@ -21,6 +21,9 @@ import java.util.Optional;
 
 import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.RESPONSE;
 import static com.atlassian.oai.validator.report.ValidationReport.empty;
+import static com.atlassian.oai.validator.util.ContentTypeUtils.findMostSpecificMatch;
+import static com.atlassian.oai.validator.util.ContentTypeUtils.hasContentType;
+import static com.atlassian.oai.validator.util.ContentTypeUtils.isJsonContentType;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
@@ -104,25 +107,37 @@ public class ResponseValidator {
     private ValidationReport validateResponseBody(final Response response,
                                                   final ApiResponse apiResponse,
                                                   final ApiOperation apiOperation) {
-        // TODO
-//        if (apiResponse.getContent().getSchema() == null) {
-//            return ValidationReport.empty();
-//        }
-//
-//        if (!response.getBody().isPresent() || response.getBody().get().isEmpty()) {
-//            return ValidationReport.singleton(
-//                    messages.get("validation.response.body.missing",
-//                            apiOperation.getMethod(), apiOperation.getApiPath().original())
-//            );
-//        }
-//
-//        if (hasContentType(response) && !isJsonContentType(response)) {
-//            log.debug("Non-JSON response body found. No validation will be applied.");
-//            return empty();
-//        }
-//
-//        return schemaValidator.validate(response.getBody().get(), apiResponse.getSchema());
-        return empty();
+
+
+        if (apiResponse.getContent() == null) {
+            return ValidationReport.empty();
+        }
+
+        final Optional<String> mostSpecificMatch = findMostSpecificMatch(response, apiResponse.getContent().keySet());
+
+        if (!mostSpecificMatch.isPresent()) {
+            // Validation of invalid content type is handled in content type validation
+            return ValidationReport.empty();
+        }
+
+        final MediaType apiMediaType = apiResponse.getContent().get(mostSpecificMatch.get());
+        if (apiMediaType.getSchema() == null) {
+            return ValidationReport.empty();
+        }
+
+        if (!response.getBody().isPresent() || response.getBody().get().isEmpty()) {
+            return ValidationReport.singleton(
+                    messages.get("validation.response.body.missing",
+                            apiOperation.getMethod(), apiOperation.getApiPath().original())
+            );
+        }
+
+        if (hasContentType(response) && !isJsonContentType(response)) {
+            log.debug("Non-JSON response body found. No validation will be applied.");
+            return empty();
+        }
+
+        return schemaValidator.validate(response.getBody().get(), apiMediaType.getSchema());
     }
 
     @Nonnull
@@ -134,9 +149,9 @@ public class ResponseValidator {
             return ValidationReport.empty();
         }
 
-        final MediaType requestMediaType;
+        final com.google.common.net.MediaType requestMediaType;
         try {
-            requestMediaType = MediaType.parse(requestHeader.get());
+            requestMediaType = com.google.common.net.MediaType.parse(requestHeader.get());
         } catch (final IllegalArgumentException e) {
             return ValidationReport.singleton(messages.get(
                     "validation.response.contentType.invalid", requestHeader.get())
@@ -149,8 +164,8 @@ public class ResponseValidator {
         }
 
         final boolean contentTypeMatchesProduces = responseMediaTypes.stream()
-                        .map(MediaType::parse)
-                        .anyMatch(m -> m.withoutParameters().is(requestMediaType.withoutParameters()));
+                .map(com.google.common.net.MediaType::parse)
+                .anyMatch(m -> m.withoutParameters().is(requestMediaType.withoutParameters()));
 
         if (!contentTypeMatchesProduces) {
             return ValidationReport.singleton(
