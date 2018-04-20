@@ -45,8 +45,14 @@ public class ValidationErrorWhitelistingTest {
         final ValidationReport report = classUnderTest.validateResponse("/users", Request.Method.PATCH, SimpleResponse.Builder.serverError().build());
         assertThat(report.getMessages(), hasItem(whitelisted("PATCH operation not allowed on path '/users'", "Ignore PATCH operation missing")));
 
-        final ValidationReport report2 = classUnderTest.validateResponse("/users", Request.Method.GET, SimpleResponse.Builder.ok().withBody("{}").build());
-        assertThat(report2.getMessages(), hasItem(whitelisted("Instance type (object) does not match any allowed primitive type", "Ignore schema type")));
+        final ValidationReport report2 = classUnderTest.validateResponse(
+                "/users",
+                Request.Method.GET,
+                SimpleResponse.Builder.ok().withHeader("Content-Type", "application/json").withBody("{}").build()
+        );
+        assertThat(report2.getMessages(), hasItem(
+                whitelisted("Instance type (object) does not match any allowed primitive type", "Ignore schema type"))
+        );
     }
 
     private Matcher<ValidationReport.Message> whitelisted(final String messageText, final String whitelistRule) {
