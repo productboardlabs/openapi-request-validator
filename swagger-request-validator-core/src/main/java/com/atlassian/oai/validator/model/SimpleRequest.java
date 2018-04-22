@@ -13,6 +13,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import static com.atlassian.oai.validator.model.Headers.ACCEPT;
+import static com.atlassian.oai.validator.model.Headers.AUTHORIZATION;
+import static com.atlassian.oai.validator.model.Headers.CONTENT_TYPE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
@@ -41,7 +44,7 @@ public class SimpleRequest implements Request {
         this.path = requireNonNull(path, "A request path is required");
         this.queryParams = requireNonNull(queryParams);
         this.headers = requireNonNull(headers);
-        this.requestBody = Optional.ofNullable(body);
+        requestBody = Optional.ofNullable(body);
     }
 
     @Nonnull
@@ -239,8 +242,8 @@ public class SimpleRequest implements Request {
             this.method = requireNonNull(method, "A method is required");
             this.path = requireNonNull(path, "A path is required");
 
-            this.headers = multimapBuilder(false /* header are always case insensitive */);
-            this.queryParams = multimapBuilder(queryParametersCaseSensitive);
+            headers = multimapBuilder(false /* header are always case insensitive */);
+            queryParams = multimapBuilder(queryParametersCaseSensitive);
         }
 
         /**
@@ -282,6 +285,45 @@ public class SimpleRequest implements Request {
          */
         public Builder withHeader(final String name, final String... values) {
             return withHeader(name, asList(values));
+        }
+
+        /**
+         * Sets the content type header on this builder.
+         * <p>
+         * Equivalent to: <pre>withHeader("Content-Type", contentType);</pre>
+         *
+         * @param contentType The content type to set
+         *
+         * @return this builder
+         */
+        public Builder withContentType(final String contentType) {
+            return withHeader(CONTENT_TYPE, contentType);
+        }
+
+        /**
+         * Sets the accept header on this builder.
+         * <p>
+         * Equivalent to: <pre>withHeader("Accept", contentType);</pre>
+         *
+         * @param accept The accept type(s) to set
+         *
+         * @return this builder
+         */
+        public Builder withAccept(final String... accept) {
+            return withHeader(ACCEPT, accept);
+        }
+
+        /**
+         * Sets the authorization header on this builder.
+         * <p>
+         * Equivalent to: <pre>withHeader("Authorization", contentType);</pre>
+         *
+         * @param auth The authorization header to set
+         *
+         * @return this builder
+         */
+        public Builder withAuthorization(final String auth) {
+            return withHeader(AUTHORIZATION, auth);
         }
 
         /**

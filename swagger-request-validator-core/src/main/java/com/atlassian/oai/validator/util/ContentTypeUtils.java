@@ -43,7 +43,7 @@ public class ContentTypeUtils {
         }
         try {
             final MediaType mediaType = MediaType.parse(contentType);
-            return JSON_UTF_8.withoutParameters().is(mediaType);
+            return JSON_UTF_8.withoutParameters().is(mediaType.withoutParameters());
         } catch (final IllegalArgumentException e) {
             return false;
         }

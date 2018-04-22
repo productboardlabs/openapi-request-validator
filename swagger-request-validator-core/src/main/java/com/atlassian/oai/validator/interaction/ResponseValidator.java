@@ -24,6 +24,7 @@ import static com.atlassian.oai.validator.report.ValidationReport.empty;
 import static com.atlassian.oai.validator.util.ContentTypeUtils.findMostSpecificMatch;
 import static com.atlassian.oai.validator.util.ContentTypeUtils.hasContentType;
 import static com.atlassian.oai.validator.util.ContentTypeUtils.isJsonContentType;
+import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
@@ -209,7 +210,7 @@ public class ResponseValidator {
                                             final Header apiHeader,
                                             final Collection<String> propertyValues) {
 
-        if (propertyValues.isEmpty() && apiHeader.getRequired()) {
+        if (propertyValues.isEmpty() && TRUE.equals(apiHeader.getRequired())) {
             return ValidationReport.singleton(
                     messages.get("validation.response.header.missing", headerName, apiOperation.getApiPath().original())
             );

@@ -31,7 +31,11 @@ public class ResponseValidationTest {
 
     @Test
     public void validate_withResponseBodyMissingRequiredField_shouldFail() {
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-invalid-missingrequired")).build();
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("application/json")
+                .withBody(loadResponse("user-invalid-missingrequired"))
+                .build();
 
         assertFail(classUnderTest.validate(getUserRequest, response), "validation.schema.required");
         assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
@@ -40,7 +44,11 @@ public class ResponseValidationTest {
 
     @Test
     public void validate_withResponseBodyWithAdditionalFields_shouldFail() {
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-invalid-additionalproperties")).build();
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("application/json")
+                .withBody(loadResponse("user-invalid-additionalproperties"))
+                .build();
 
         assertFail(classUnderTest.validate(getUserRequest, response), "validation.schema.additionalProperties");
         assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
@@ -49,7 +57,11 @@ public class ResponseValidationTest {
 
     @Test
     public void validate_withResponseBodyBadDataFormat_shouldFail() {
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-invalid-baddataformat")).build();
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("application/json")
+                .withBody(loadResponse("user-invalid-baddataformat"))
+                .build();
 
         assertFail(classUnderTest.validate(getUserRequest, response), "validation.schema.type");
         assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
@@ -58,7 +70,10 @@ public class ResponseValidationTest {
 
     @Test
     public void validate_withResponseMissingRequiredBody_shouldFail() {
-        final Response response = SimpleResponse.Builder.ok().build();
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("application/json")
+                .build();
 
         assertFail(classUnderTest.validate(getUserRequest, response), "validation.response.body.missing");
         assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
@@ -67,7 +82,11 @@ public class ResponseValidationTest {
 
     @Test
     public void validate_withRequiredResponseBodyEmpty_shouldFail() {
-        final Response response = SimpleResponse.Builder.ok().withBody("").build();
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("application/json")
+                .withBody("")
+                .build();
 
         assertFail(classUnderTest.validate(getUserRequest, response), "validation.response.body.missing");
         assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
@@ -76,7 +95,11 @@ public class ResponseValidationTest {
 
     @Test
     public void validate_withResponseContainingMalformedJson_shouldFail() {
-        final Response response = SimpleResponse.Builder.ok().withBody(loadResponse("user-invalid-malformedjson")).build();
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("application/json")
+                .withBody(loadResponse("user-invalid-malformedjson"))
+                .build();
 
         assertFail(classUnderTest.validate(getUserRequest, response), "validation.schema.invalidJson");
         assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
@@ -85,7 +108,11 @@ public class ResponseValidationTest {
 
     @Test
     public void validate_withResponseNotMatchingSchemaForStatusCode_shouldFail() {
-        final Response response = SimpleResponse.Builder.notFound().withBody(loadResponse("user-valid")).build();
+        final Response response = SimpleResponse.Builder
+                .notFound()
+                .withContentType("application/json")
+                .withBody(loadResponse("user-valid"))
+                .build();
 
         assertFail(classUnderTest.validate(getUserRequest, response), "validation.schema.required");
         assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
@@ -174,7 +201,7 @@ public class ResponseValidationTest {
     }
 
     @Test
-    @Ignore("Swagger parser currently does not read the 'required' flag on headers")
+    @Ignore("Swagger 2.0 parser currently does not read the 'required' flag on headers")
     public void validate_withResponseMissingRequiredHeader_shouldFail() {
         final Response response = SimpleResponse.Builder
                 .serverError()

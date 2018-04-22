@@ -3,6 +3,7 @@ package com.atlassian.oai.validator.util;
 import org.junit.Test;
 
 import static com.atlassian.oai.validator.util.ContentTypeUtils.findMostSpecificMatch;
+import static com.atlassian.oai.validator.util.ContentTypeUtils.isJsonContentType;
 import static com.google.common.collect.ImmutableSet.of;
 import static com.spotify.hamcrest.optional.OptionalMatchers.emptyOptional;
 import static com.spotify.hamcrest.optional.OptionalMatchers.optionalWithValue;
@@ -74,6 +75,21 @@ public class ContentTypeUtilsTest {
                 findMostSpecificMatch("foop", of("application/json", "*/*", "text/*")),
                 emptyOptional()
         );
+    }
+
+    @Test
+    public void isJsonContentType_returnsTrue_whenJson() {
+        assertThat(isJsonContentType("application/json"), is(true));
+    }
+
+    @Test
+    public void isJsonContentType_returnsFalse_whenNotJson() {
+        assertThat(isJsonContentType("application/xml"), is(false));
+    }
+
+    @Test
+    public void isJsonContentType_returnsTrue_whenJsonIncludeParameters() {
+        assertThat(isJsonContentType("application/json;charset=utf-8"), is(true));
     }
 
 }
