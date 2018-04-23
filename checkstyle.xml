@@ -23,7 +23,7 @@
         <module name="AvoidStarImport"/>
         <module name="IllegalImport"/>
         <module name="IllegalImport">
-            <property name="illegalPkgs" value="clover, junit.framework"/>
+            <property name="illegalPkgs" value="clover, junit.framework, io.swagger.models"/>
         </module>
         <module name="RedundantImport"/>
         <module name="EmptyForIteratorPad"/>
