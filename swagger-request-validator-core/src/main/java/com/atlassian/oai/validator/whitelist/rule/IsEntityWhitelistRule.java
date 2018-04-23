@@ -29,7 +29,7 @@ class IsEntityWhitelistRule implements RequestOrResponseWhitelistRule {
                 .filter(Objects::nonNull)
                 .map(Schema::get$ref)
                 .filter(Objects::nonNull)
-                .anyMatch($ref -> $ref.endsWith(entityName));
+                .anyMatch($ref -> $ref.endsWith("/" + entityName));
     }
 
     @Override
@@ -49,7 +49,7 @@ class IsEntityWhitelistRule implements RequestOrResponseWhitelistRule {
                 .filter(Objects::nonNull)
                 .map(Schema::get$ref)
                 .filter(Objects::nonNull)
-                .anyMatch($ref -> $ref.endsWith(entityName));
+                .anyMatch($ref -> $ref.endsWith("/" + entityName));
     }
 
     @Override

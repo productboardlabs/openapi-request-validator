@@ -59,7 +59,7 @@ public class OperationForWhitelisting {
         }
         apiResponses.addApiResponse(String.valueOf(status), new ApiResponse()
                 .content(new Content()
-                        .addMediaType("application/json", new MediaType()
+                        .addMediaType("*/*", new MediaType()
                                 .schema(new Schema().$ref("#/components/schemas/" + entityReference))
                         )
                 )
@@ -70,7 +70,7 @@ public class OperationForWhitelisting {
     public OperationForWhitelisting withDocumentedRequestBodyParameter(final String entityReference) {
         operation.setRequestBody(new RequestBody()
                 .content(new Content()
-                        .addMediaType("*/*", new MediaType()
+                        .addMediaType("application/json", new MediaType()
                                 .schema(new Schema().$ref("#/components/schemas/" + entityReference))
                         )
                 ));

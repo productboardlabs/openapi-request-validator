@@ -74,9 +74,9 @@ public class WhitelistRulesTest {
                 .withStatus(201)
                 .withDocumentedResponse(201, "MyEntity")
                 .withDocumentedResponse(200, "AnotherEntity")));
-//        assertThat(rule, not(matches(response().withDocumentedResponse(200, "NotMyEntity"))));
-//        assertThat(rule, matches(request().withDocumentedRequestBodyParameter("MyEntity")));
-//        assertThat(rule, not(matches(request().withDocumentedRequestBodyParameter("NotMyEntity"))));
+        assertThat(rule, not(matches(response().withDocumentedResponse(200, "NotMyEntity"))));
+        assertThat(rule, matches(request().withDocumentedRequestBodyParameter("MyEntity")));
+        assertThat(rule, not(matches(request().withDocumentedRequestBodyParameter("NotMyEntity"))));
     }
 
     @Test

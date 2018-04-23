@@ -44,7 +44,7 @@ public class ApiOperationResolver {
      */
     public ApiOperationResolver(@Nonnull final OpenAPI api, @Nullable final String basePathOverride) {
 
-        // TODO: Need to fix this!!!
+        // TODO: Need to fix this - base path now comes from servers
         apiPrefix = ofNullable(basePathOverride).orElse("/");
         final Paths apiPaths = ofNullable(api.getPaths()).orElse(new Paths());
 

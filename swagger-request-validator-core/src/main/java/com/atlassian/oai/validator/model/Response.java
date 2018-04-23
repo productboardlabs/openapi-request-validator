@@ -4,6 +4,8 @@ import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Optional;
 
+import static com.atlassian.oai.validator.model.Headers.CONTENT_TYPE;
+
 /**
  * Implementation-agnostic representation of a HTTP response
  */
@@ -40,6 +42,16 @@ public interface Response {
     @Nonnull
     default Optional<String> getHeaderValue(final String name) {
         return getHeaderValues(name).stream().findFirst();
+    }
+
+    /**
+     * Get the content-type header of this response, if it has been set.
+     *
+     * @return The content-type header, or empty if it has not been set.
+     */
+    @Nonnull
+    default Optional<String> getContentType() {
+        return getHeaderValue(CONTENT_TYPE);
     }
 
 }

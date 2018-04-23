@@ -1,4 +1,4 @@
-package com.atlassian.oai.validator.interaction;
+package com.atlassian.oai.validator.interaction.response;
 
 import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.Response;
@@ -39,21 +39,21 @@ public class ResponseValidator {
 
     private final SchemaValidator schemaValidator;
     private final MessageResolver messages;
-    private final OpenAPI oaiDefinition;
+    private final OpenAPI api;
 
     /**
      * Construct a new response validator with the given schema validator.
      *
      * @param schemaValidator The schema validator to use when validating response bodies
      * @param messages The message resolver to use
-     * @param oaiDefinition The OpenAPI spec to validate against
+     * @param api The OpenAPI spec to validate against
      */
     public ResponseValidator(final SchemaValidator schemaValidator,
                              final MessageResolver messages,
-                             final OpenAPI oaiDefinition) {
+                             final OpenAPI api) {
         this.schemaValidator = requireNonNull(schemaValidator, "A schema validator is required");
         this.messages = requireNonNull(messages, "A message resolver is required");
-        this.oaiDefinition = requireNonNull(oaiDefinition, "An OAI definition is required");
+        this.api = requireNonNull(api, "An OAI definition is required");
     }
 
     /**
@@ -108,8 +108,6 @@ public class ResponseValidator {
     private ValidationReport validateResponseBody(final Response response,
                                                   final ApiResponse apiResponse,
                                                   final ApiOperation apiOperation) {
-
-
         if (apiResponse.getContent() == null) {
             return ValidationReport.empty();
         }
@@ -145,7 +143,7 @@ public class ResponseValidator {
     private ValidationReport validateContentType(final Response response,
                                                  final ApiOperation apiOperation) {
 
-        final Optional<String> requestHeader = response.getHeaderValue("Content-Type");
+        final Optional<String> requestHeader = response.getContentType();
         if (!requestHeader.isPresent()) {
             return ValidationReport.empty();
         }

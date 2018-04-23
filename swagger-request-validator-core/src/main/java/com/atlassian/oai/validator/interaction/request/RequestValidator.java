@@ -40,7 +40,6 @@ public class RequestValidator {
 
     private final MessageResolver messages;
 
-    private final SchemaValidator schemaValidator;
     private final ParameterValidators parameterValidators;
     private final SecurityValidator securityValidator;
     private final RequestBodyValidator requestBodyValidator;
@@ -55,7 +54,6 @@ public class RequestValidator {
     public RequestValidator(final SchemaValidator schemaValidator,
                             final MessageResolver messages,
                             final OpenAPI api) {
-        this.schemaValidator = requireNonNull(schemaValidator, "A schema validator is required");
         this.messages = requireNonNull(messages, "A message resolver is required");
 
         parameterValidators = new ParameterValidators(schemaValidator, messages);

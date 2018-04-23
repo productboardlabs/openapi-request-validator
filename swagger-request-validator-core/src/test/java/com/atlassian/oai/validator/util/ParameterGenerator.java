@@ -17,6 +17,9 @@ import static java.util.Arrays.asList;
 
 public class ParameterGenerator {
 
+    private ParameterGenerator() {
+    }
+
     public static Parameter param(final Schema schema, final boolean isRequired) {
         final Parameter result = new Parameter();
         result.setName("Test Parameter");

@@ -11,6 +11,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Optional;
 
 import static com.atlassian.oai.validator.report.ValidationReport.empty;
@@ -92,12 +93,14 @@ class RequestBodyValidator {
                     .withAdditionalContext(context);
         }
 
+        // TODO: Validate form data
+
         log.debug("Validation of '{}' not supported.", maybeApiMediaTypeForRequest.get().getLeft());
         return empty();
     }
 
     private Optional<Pair<String, MediaType>> findApiMediaTypeForRequest(final Request request,
-                                                                         final RequestBody apiRequestBodyDefinition) {
+                                                                         @Nullable final RequestBody apiRequestBodyDefinition) {
         if (apiRequestBodyDefinition == null || apiRequestBodyDefinition.getContent() == null) {
             return Optional.empty();
         }

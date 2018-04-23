@@ -27,14 +27,14 @@ public class ContentTypeUtils {
      * @return Whether the content-type of the request (defined in the Content-Type header) is a JSON type.
      */
     public static boolean isJsonContentType(final Request request) {
-        return isJsonContentType(request.getHeaderValue(Headers.CONTENT_TYPE).orElse(null));
+        return isJsonContentType(request.getContentType().orElse(null));
     }
 
     /**
      * @return Whether the content-type of this response (defined in the Content-Type header) is a JSON type.
      */
     public static boolean isJsonContentType(final Response response) {
-        return isJsonContentType(response.getHeaderValue(Headers.CONTENT_TYPE).orElse(null));
+        return isJsonContentType(response.getContentType().orElse(null));
     }
 
     /**

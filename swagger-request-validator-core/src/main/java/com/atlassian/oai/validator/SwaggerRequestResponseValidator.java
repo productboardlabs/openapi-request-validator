@@ -1,8 +1,8 @@
 package com.atlassian.oai.validator;
 
 import com.atlassian.oai.validator.interaction.ApiOperationResolver;
-import com.atlassian.oai.validator.interaction.ResponseValidator;
 import com.atlassian.oai.validator.interaction.request.RequestValidator;
+import com.atlassian.oai.validator.interaction.response.ResponseValidator;
 import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.ApiOperationMatch;
 import com.atlassian.oai.validator.model.Request;
