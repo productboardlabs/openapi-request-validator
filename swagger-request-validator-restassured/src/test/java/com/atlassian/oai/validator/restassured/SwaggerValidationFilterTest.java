@@ -74,6 +74,7 @@ public class SwaggerValidationFilterTest {
 
     private FilterableRequestSpecification requestSpec(final String method, final String path) {
         final FilterableRequestSpecification request = mock(FilterableRequestSpecification.class);
+        when(request.getContentType()).thenReturn("application/json");
         when(request.getMethod()).thenReturn(method);
         when(request.getDerivedPath()).thenReturn(path);
         return request;
@@ -86,6 +87,7 @@ public class SwaggerValidationFilterTest {
         final Response response = mock(Response.class);
         when(response.getStatusCode()).thenReturn(status);
         when(response.getBody()).thenReturn(responseBody);
+        when(response.getContentType()).thenReturn("application/json");
 
         final FilterContext ctx = mock(FilterContext.class);
         when(ctx.next(any(), any())).thenReturn(response);
