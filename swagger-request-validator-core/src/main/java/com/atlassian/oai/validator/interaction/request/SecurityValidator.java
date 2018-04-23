@@ -1,4 +1,4 @@
-package com.atlassian.oai.validator.security;
+package com.atlassian.oai.validator.interaction.request;
 
 import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.Request;
@@ -17,24 +17,26 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 
+import static com.atlassian.oai.validator.model.Headers.AUTHORIZATION;
 import static com.atlassian.oai.validator.report.ValidationReport.empty;
 import static org.slf4j.LoggerFactory.getLogger;
 
-public class SecurityValidator {
+/**
+ * Validates security parameters on a request against the API definition.
+ */
+class SecurityValidator {
 
     private static final Logger log = getLogger(SecurityValidator.class);
-
-    private static final String HTTP_AUTH_HEADER = "Authorization";
 
     private static final String MISSING_SECURITY_PARAMETER_KEY = "validation.request.security.missing";
     private static final String INVALID_SECURITY_PARAMETER_KEY = "validation.request.security.invalid";
 
     private final MessageResolver messages;
-    private final OpenAPI oaiDefinition;
+    private final OpenAPI api;
 
-    public SecurityValidator(final MessageResolver messages, final OpenAPI oaiDefinition) {
+    SecurityValidator(final MessageResolver messages, final OpenAPI api) {
         this.messages = messages;
-        this.oaiDefinition = oaiDefinition;
+        this.api = api;
     }
 
     @Nonnull
@@ -45,7 +47,7 @@ public class SecurityValidator {
         if (null != securityRequired && !securityRequired.isEmpty()) {
             boolean foundSecurity = false;
             ValidationReport report = empty();
-            for (final Map.Entry<String, SecurityScheme> s : oaiDefinition.getComponents().getSecuritySchemes().entrySet()) {
+            for (final Map.Entry<String, SecurityScheme> s : api.getComponents().getSecuritySchemes().entrySet()) {
                 final Map<String, SecurityScheme> filtered = new HashMap<>();
                 securityRequired.stream().filter(item -> item.containsKey(s.getKey())).forEach(item -> filtered.put(s.getKey(), s.getValue()));
 
@@ -78,7 +80,7 @@ public class SecurityValidator {
 
             return report;
         }
-        
+
         return empty();
     }
 
@@ -106,9 +108,9 @@ public class SecurityValidator {
     private ValidationReport checkBasicAuthorization(final Request request,
                                                      final SecurityScheme securityScheme) {
 
-        if (!request.getHeaderValue(HTTP_AUTH_HEADER).isPresent()) {
+        if (!request.getHeaderValue(AUTHORIZATION).isPresent()) {
             return ValidationReport.singleton(messages.get(MISSING_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
-        } else if (!request.getHeaderValue(HTTP_AUTH_HEADER).get().startsWith("Basic ")) {
+        } else if (!request.getHeaderValue(AUTHORIZATION).get().startsWith("Basic ")) {
             // Authorization HTTP header found but not a Basic authentication token
             return ValidationReport.singleton(messages.get(INVALID_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
         }

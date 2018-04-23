@@ -161,6 +161,6 @@ public class ArrayParameterValidatorTest {
     @Test
     public void validate_withEnumValues_whouldFail_whenValueDoesntMatchEnum() {
         assertFail(classUnderTest.validate("1,2,1,4", enumeratedArrayParam(true, SIMPLE, "1", "2", "bob")),
-                "validation.request.parameter.enum.invalid");
+                "validation.schema.enum");
     }
 }

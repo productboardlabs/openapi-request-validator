@@ -29,7 +29,7 @@ public class ValidationErrorWhitelistingTest {
         final ValidationReport report = classUnderTest.validateRequest(SimpleRequest.Builder.get("/non-existent-path").build());
         assertThat(report.getMessages(), hasItem(whitelisted("No API path found that matches request", "Ignore paths")));
 
-        final ValidationReport report2 = classUnderTest.validateRequest(SimpleRequest.Builder.post("/users").withBody("{}").build());
+        final ValidationReport report2 = classUnderTest.validateRequest(SimpleRequest.Builder.post("/users").withBody("{}").withContentType("application/json").build());
         assertThat(report2.getMessages(), hasItem(whitelisted("Object has missing required properties", "Ignore NewUser entity errors")));
     }
 

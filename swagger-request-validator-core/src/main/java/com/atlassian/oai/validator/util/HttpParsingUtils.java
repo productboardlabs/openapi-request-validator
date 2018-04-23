@@ -21,7 +21,8 @@ public class HttpParsingUtils {
      * @param requestContentType - content-type of a request
      * @param consumesContentType - content-type that the API consumes
      */
-    public static boolean isMultipartContentTypeAcceptedByConsumer(@Nonnull final String requestContentType, @Nonnull final String consumesContentType) {
+    public static boolean isMultipartContentTypeAcceptedByConsumer(@Nonnull final String requestContentType,
+                                                                   @Nonnull final String consumesContentType) {
         // https://github.com/OAI/OpenAPI-Specification/issues/303
         if (!requestContentType.startsWith("multipart/") || !consumesContentType.startsWith("multipart/")) {
             return false;
@@ -114,11 +115,11 @@ public class HttpParsingUtils {
      * @param httpBody the body of the HTTP request, e.g. "foo=bar&amp;baz=blah";
      */
     @Nonnull
-    public static Multimap<String, String> parseUrlencodedFormDataBody(@Nonnull final String httpBody) {
+    public static Multimap<String, String> parseUrlEncodedFormDataBody(@Nonnull final String httpBody) {
         final Multimap<String, String> params = ArrayListMultimap.create();
         final String[] pairs = httpBody.split("&");
         try {
-            for (String pair : pairs) {
+            for (final String pair : pairs) {
                 final String[] fields = pair.split("=");
                 final String name = URLDecoder.decode(fields[0], Charsets.UTF_8.name());
                 final String value = (fields.length > 1) ? URLDecoder.decode(fields[1], Charsets.UTF_8.name()) : null;

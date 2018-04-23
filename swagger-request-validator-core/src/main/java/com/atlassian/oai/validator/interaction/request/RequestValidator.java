@@ -1,4 +1,4 @@
-package com.atlassian.oai.validator.interaction;
+package com.atlassian.oai.validator.interaction.request;
 
 import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.Headers;
@@ -9,12 +9,9 @@ import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
 import com.atlassian.oai.validator.schema.SchemaValidator;
-import com.atlassian.oai.validator.security.SecurityValidator;
-import com.google.common.collect.Multimap;
 import com.google.common.net.MediaType;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.parameters.Parameter;
-import io.swagger.v3.oas.models.parameters.RequestBody;
 import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
@@ -27,12 +24,6 @@ import java.util.stream.Collectors;
 
 import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.REQUEST;
 import static com.atlassian.oai.validator.report.ValidationReport.empty;
-import static com.atlassian.oai.validator.util.ContentTypeUtils.findMostSpecificMatch;
-import static com.atlassian.oai.validator.util.ContentTypeUtils.hasContentType;
-import static com.atlassian.oai.validator.util.ContentTypeUtils.isJsonContentType;
-import static com.atlassian.oai.validator.util.HttpParsingUtils.isMultipartContentTypeAcceptedByConsumer;
-import static com.atlassian.oai.validator.util.HttpParsingUtils.parseMultipartFormDataBody;
-import static com.atlassian.oai.validator.util.HttpParsingUtils.parseUrlencodedFormDataBody;
 import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
@@ -47,10 +38,12 @@ public class RequestValidator {
 
     private static final Logger log = getLogger(RequestValidator.class);
 
+    private final MessageResolver messages;
+
     private final SchemaValidator schemaValidator;
     private final ParameterValidators parameterValidators;
     private final SecurityValidator securityValidator;
-    private final MessageResolver messages;
+    private final RequestBodyValidator requestBodyValidator;
 
     /**
      * Construct a new request validator with the given schema validator.
@@ -67,6 +60,7 @@ public class RequestValidator {
 
         parameterValidators = new ParameterValidators(schemaValidator, messages);
         securityValidator = new SecurityValidator(messages, api);
+        requestBodyValidator = new RequestBodyValidator(messages, schemaValidator);
     }
 
     /**
@@ -93,7 +87,7 @@ public class RequestValidator {
                 .merge(validateAccepts(request, apiOperation))
                 .merge(validateHeaders(request, apiOperation))
                 .merge(validatePathParameters(apiOperation))
-                .merge(validateRequestBody(request, apiOperation))
+                .merge(requestBodyValidator.validateRequestBody(request, apiOperation))
                 .merge(validateQueryParameters(request, apiOperation))
                 .withAdditionalContext(context);
     }
@@ -173,96 +167,6 @@ public class RequestValidator {
                 .stream()
                 .flatMap(apiResponse -> apiResponse.getContent().keySet().stream())
                 .collect(Collectors.toSet());
-    }
-
-    @Nonnull
-    private ValidationReport validateRequestBody(final Request request,
-                                                 final ApiOperation apiOperation) {
-        final Optional<String> requestContentType = request.getHeaderValue(Headers.CONTENT_TYPE);
-        if (isMultipartFormData(requestContentType, apiOperation)) {
-            return validateForm(request.getBody(), apiOperation, bodyData -> parseMultipartFormDataBody(requestContentType.get(), bodyData));
-        }
-        if (isFormData(requestContentType, apiOperation)) {
-            return validateForm(request.getBody(), apiOperation, bodyData -> parseUrlencodedFormDataBody(bodyData));
-        }
-        return validateBody(request, apiOperation);
-    }
-
-    @FunctionalInterface
-    private interface FormBodyParser {
-        Multimap<String, String> parse(String bodyData);
-    }
-
-    @Nonnull
-    private ValidationReport validateForm(final Optional<String> requestBody,
-                                          final ApiOperation apiOperation,
-                                          final FormBodyParser formBodyParser) {
-
-        final Multimap<String, String> formData = formBodyParser.parse(requestBody.orElse(""));
-        return apiOperation.getOperation().getParameters()
-                .stream()
-                .filter(RequestValidator::isFormDataParam)
-                .flatMap(parameter ->
-                        prepareFormDataForParameter(formData, parameter).stream()
-                                .map(value -> parameterValidators.validate(value, parameter))
-                )
-                .reduce(empty(), ValidationReport::merge);
-    }
-
-    @Nonnull
-    private Collection<String> prepareFormDataForParameter(final Multimap<String, String> formData,
-                                                           final Parameter parameter) {
-        final Collection<String> parameterValues = formData.get(parameter.getName());
-        return parameterValues.isEmpty() ? Collections.singletonList(null) : parameterValues;
-    }
-
-    @Nonnull
-    private ValidationReport validateBody(final Request request,
-                                          final ApiOperation apiOperation) {
-        final RequestBody requestBodyDefinition = apiOperation.getOperation().getRequestBody();
-
-        // TODO: Add appropriate support for request bodies in the message context
-        final MessageContext context = MessageContext.create()
-//                .withParameter(bodyParameter.orElse(null))
-                .build();
-
-        final Optional<String> requestBody = request.getBody();
-        if (requestBody.isPresent() && !requestBody.get().isEmpty() && requestBodyDefinition == null) {
-            return ValidationReport.singleton(
-                    messages.get("validation.request.body.unexpected",
-                            apiOperation.getMethod(), apiOperation.getApiPath().original())
-            ).withAdditionalContext(context);
-        }
-
-        if (requestBodyDefinition == null) {
-            return empty();
-        }
-
-        if (!requestBody.isPresent() || requestBody.get().isEmpty()) {
-            if (requestBodyDefinition.getRequired()) {
-                return ValidationReport.singleton(
-                        messages.get("validation.request.body.missing",
-                                apiOperation.getMethod(), apiOperation.getApiPath().original())
-                ).withAdditionalContext(context);
-            }
-            return empty();
-        }
-
-        if (hasContentType(request) && !isJsonContentType(request)) {
-            log.debug("Non-JSON request body found. No validation will be applied.");
-            return empty();
-        }
-
-        final Optional<String> mostSpecificMatch =
-                findMostSpecificMatch(MediaType.JSON_UTF_8.toString(), requestBodyDefinition.getContent().keySet());
-
-        if (!mostSpecificMatch.isPresent()) {
-            return empty();
-        }
-
-        return schemaValidator
-                .validate(requestBody.get(), requestBodyDefinition.getContent().get(mostSpecificMatch.get()).getSchema())
-                .withAdditionalContext(context);
     }
 
     @Nonnull
@@ -347,36 +251,6 @@ public class RequestValidator {
                 .reduce(empty(), ValidationReport::merge);
     }
 
-    private boolean isFormData(final Optional<String> maybeRequestContentType,
-                               final ApiOperation apiOperation) {
-
-        final Collection<String> consumes = getConsumes(apiOperation);
-        if (consumes.isEmpty() || !maybeRequestContentType.isPresent()) {
-            return false;
-        }
-        final String requestContentType = maybeRequestContentType.get();
-
-        return consumes.stream().anyMatch(p -> p.equals(MediaType.FORM_DATA.toString()))
-                && requestContentType.equals(MediaType.FORM_DATA.toString());
-    }
-
-    private boolean isMultipartFormData(final Optional<String> maybeRequestContentType,
-                                        final ApiOperation apiOperation) {
-        final Collection<String> consumes = getConsumes(apiOperation);
-        if (consumes.isEmpty() || !maybeRequestContentType.isPresent()) {
-            return false;
-        }
-        final String requestContentType = maybeRequestContentType.get();
-
-        return consumes
-                .stream()
-                .anyMatch(consumesContentType -> isMultipartContentTypeAcceptedByConsumer(requestContentType, consumesContentType));
-    }
-
-    private static boolean isBodyParam(final Parameter p) {
-        return isParam(p, "body");
-    }
-
     private static boolean isPathParam(final Parameter p) {
         return isParam(p, "path");
     }
@@ -387,10 +261,6 @@ public class RequestValidator {
 
     private static boolean isHeaderParam(final Parameter p) {
         return isParam(p, "header");
-    }
-
-    private static boolean isFormDataParam(final Parameter p) {
-        return isParam(p, "formData");
     }
 
     private static boolean isParam(final Parameter p, final String type) {
