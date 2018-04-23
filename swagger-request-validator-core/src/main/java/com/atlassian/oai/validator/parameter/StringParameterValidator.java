@@ -11,7 +11,7 @@ import com.atlassian.oai.validator.parameter.format.URIFormatValidator;
 import com.atlassian.oai.validator.parameter.format.UUIDFormatValidator;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
-import io.swagger.models.parameters.SerializableParameter;
+import io.swagger.v3.oas.models.parameters.Parameter;
 import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
@@ -48,7 +48,7 @@ public class StringParameterValidator extends BaseParameterValidator {
 
     @Override
     protected ValidationReport doValidate(@Nonnull final String value,
-                                          @Nonnull final SerializableParameter parameter) {
+                                          @Nonnull final Parameter parameter) {
 
         return Stream.of(
                 validatePattern(value, parameter),
@@ -59,44 +59,44 @@ public class StringParameterValidator extends BaseParameterValidator {
     }
 
     private ValidationReport validatePattern(@Nonnull final String value,
-                                             @Nonnull final SerializableParameter parameter) {
-        if (parameter.getPattern() != null && !value.matches(parameter.getPattern())) {
+                                             @Nonnull final Parameter parameter) {
+        if (parameter.getSchema().getPattern() != null && !value.matches(parameter.getSchema().getPattern())) {
             return ValidationReport.singleton(messages.get("validation.request.parameter.string.patternMismatch",
-                parameter.getName(), parameter.getPattern())
+                    parameter.getName(), parameter.getSchema().getPattern())
             );
         }
         return ValidationReport.empty();
     }
 
     private ValidationReport validateMaxLength(@Nonnull final String value,
-                                               @Nonnull final SerializableParameter parameter) {
-        if (parameter.getMinLength() != null && value.length() < parameter.getMinLength()) {
+                                               @Nonnull final Parameter parameter) {
+        if (parameter.getSchema().getMinLength() != null && value.length() < parameter.getSchema().getMinLength()) {
             return ValidationReport.singleton(messages.get("validation.request.parameter.string.tooShort",
-                parameter.getName(), parameter.getMinLength())
+                    parameter.getName(), parameter.getSchema().getMinLength())
             );
         }
         return ValidationReport.empty();
     }
 
     private ValidationReport validateMinLength(@Nonnull final String value,
-                                               @Nonnull final SerializableParameter parameter) {
-        if (parameter.getMaxLength() != null && value.length() > parameter.getMaxLength()) {
+                                               @Nonnull final Parameter parameter) {
+        if (parameter.getSchema().getMaxLength() != null && value.length() > parameter.getSchema().getMaxLength()) {
             return ValidationReport.singleton(messages.get("validation.request.parameter.string.tooLong",
-                parameter.getName(), parameter.getMaxLength())
+                    parameter.getName(), parameter.getSchema().getMaxLength())
             );
         }
         return ValidationReport.empty();
     }
 
     private ValidationReport validateFormatIfPresent(@Nonnull final String value,
-                                                     @Nonnull final SerializableParameter parameter) {
+                                                     @Nonnull final Parameter parameter) {
 
-        if (parameter.getFormat() != null) {
+        if (parameter.getSchema().getFormat() != null) {
             final FormatValidator<String> formatValidator = formatValidators.stream()
-                    .filter(validator -> validator.supports(parameter.getFormat()))
+                    .filter(validator -> validator.supports(parameter.getSchema().getFormat()))
                     .findFirst()
                     .orElseGet(() -> {
-                        log.warn("Parameter format '{}' currently not supported.", parameter.getFormat());
+                        log.warn("Parameter format '{}' currently not supported.", parameter.getSchema().getFormat());
                         return new NoOpStringFormatValidator();
                     });
 

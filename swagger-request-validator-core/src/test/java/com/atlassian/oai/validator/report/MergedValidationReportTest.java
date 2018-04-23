@@ -1,12 +1,12 @@
 package com.atlassian.oai.validator.report;
 
 import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
-import io.swagger.models.parameters.PathParameter;
 import org.junit.Test;
 
 import java.util.List;
 
 import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.REQUEST;
+import static com.atlassian.oai.validator.util.ParameterGenerator.stringParam;
 import static com.spotify.hamcrest.optional.OptionalMatchers.emptyOptional;
 import static com.spotify.hamcrest.optional.OptionalMatchers.optionalWithValue;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -133,7 +133,7 @@ public class MergedValidationReportTest {
                 ValidationReport.from(NON_ERROR_MSG.withAdditionalContext(baseContext), ERROR_MSG.withAdditionalContext(baseContext))
         );
 
-        final MessageContext additionalContext = MessageContext.create().withParameter(new PathParameter().name("param")).build();
+        final MessageContext additionalContext = MessageContext.create().withParameter(stringParam()).build();
         final ValidationReport contextualReport = report.withAdditionalContext(additionalContext);
 
         assertThat(contextualReport, not(is(report)));

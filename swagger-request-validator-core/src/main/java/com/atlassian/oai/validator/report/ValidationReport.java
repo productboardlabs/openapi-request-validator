@@ -2,8 +2,9 @@ package com.atlassian.oai.validator.report;
 
 import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.Request;
-import io.swagger.models.Response;
-import io.swagger.models.parameters.Parameter;
+import io.swagger.v3.oas.models.parameters.Parameter;
+import io.swagger.v3.oas.models.parameters.RequestBody;
+import io.swagger.v3.oas.models.responses.ApiResponse;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -138,11 +139,15 @@ public interface ValidationReport {
 
         Optional<ApiOperation> getApiOperation();
 
+        Optional<String> getApiRequestContentType();
+
+        Optional<RequestBody> getApiRequestBodyDefinition();
+
         Optional<Parameter> getParameter();
 
         Optional<Integer> getResponseStatus();
 
-        Optional<Response> getApiResponseDefinition();
+        Optional<ApiResponse> getApiResponseDefinition();
 
         Optional<Location> getLocation();
 
@@ -165,8 +170,11 @@ public interface ValidationReport {
             ApiOperation apiOperation;
             Parameter parameter;
 
+            String apiRequestContentType;
+            RequestBody apiRequestBodyDefinition;
+
             Integer responseStatus;
-            Response apiResponse;
+            ApiResponse apiResponse;
 
             Location location;
 
@@ -178,6 +186,8 @@ public interface ValidationReport {
                 method = init.getRequestMethod().orElse(null);
                 apiOperation = init.getApiOperation().orElse(null);
                 parameter = init.getParameter().orElse(null);
+                apiRequestBodyDefinition = init.getApiRequestBodyDefinition().orElse(null);
+                apiRequestContentType = init.getApiRequestContentType().orElse(null);
                 responseStatus = init.getResponseStatus().orElse(null);
                 apiResponse = init.getApiResponseDefinition().orElse(null);
                 location = init.getLocation().orElse(null);
@@ -203,12 +213,22 @@ public interface ValidationReport {
                 return this;
             }
 
+            public Builder withApiRequestBodyDefinition(final RequestBody requestBody) {
+                apiRequestBodyDefinition = requestBody;
+                return this;
+            }
+
+            public Builder withMatchedApiContentType(final String contentType) {
+                apiRequestContentType = contentType;
+                return this;
+            }
+
             public Builder withResponseStatus(final Integer status) {
                 responseStatus = status;
                 return this;
             }
 
-            public Builder withApiResponseDefinition(final Response apiResponseDefinition) {
+            public Builder withApiResponseDefinition(final ApiResponse apiResponseDefinition) {
                 apiResponse = apiResponseDefinition;
                 return this;
             }
@@ -230,6 +250,12 @@ public interface ValidationReport {
                 }
                 if (parameter == null) {
                     parameter = other.getParameter().orElse(null);
+                }
+                if (apiRequestContentType == null) {
+                    apiRequestContentType = other.getApiRequestContentType().orElse(null);
+                }
+                if (apiRequestBodyDefinition == null) {
+                    apiRequestBodyDefinition = other.getApiRequestBodyDefinition().orElse(null);
                 }
                 if (responseStatus == null) {
                     responseStatus = other.getResponseStatus().orElse(null);

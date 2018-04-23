@@ -1,7 +1,7 @@
 package com.atlassian.oai.validator.parameter;
 
 import com.atlassian.oai.validator.report.ValidationReport;
-import io.swagger.models.parameters.Parameter;
+import io.swagger.v3.oas.models.parameters.Parameter;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

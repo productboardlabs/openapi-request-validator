@@ -3,15 +3,15 @@ package com.atlassian.oai.validator.parameter;
 import com.atlassian.oai.validator.report.MessageResolver;
 import org.junit.Test;
 
+import static com.atlassian.oai.validator.util.ParameterGenerator.intParam;
+import static com.atlassian.oai.validator.util.ParameterGenerator.intParamFormat;
+import static com.atlassian.oai.validator.util.ParameterGenerator.intParamMultipleOf;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.intParam;
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.intParamFormat;
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.intParamMultipleOf;
 
 public class IntegerParameterValidatorTest {
 
-    private IntegerParameterValidator classUnderTest = new IntegerParameterValidator(new MessageResolver());
+    private final IntegerParameterValidator classUnderTest = new IntegerParameterValidator(new MessageResolver());
 
     @Test
     public void validate_withNullValue_shouldPass_whenNotRequired() {

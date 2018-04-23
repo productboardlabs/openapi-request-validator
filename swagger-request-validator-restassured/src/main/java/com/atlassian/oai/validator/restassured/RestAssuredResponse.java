@@ -18,7 +18,7 @@ public class RestAssuredResponse implements Response {
      */
     @Deprecated
     public RestAssuredResponse(@Nonnull final io.restassured.response.Response originalResponse) {
-        this.delegate = RestAssuredResponse.of(originalResponse);
+        delegate = RestAssuredResponse.of(originalResponse);
     }
 
     @Override
@@ -51,6 +51,9 @@ public class RestAssuredResponse implements Response {
                 .withBody(originalResponse.getBody().asString());
         if (originalResponse.getHeaders() != null) {
             originalResponse.getHeaders().forEach(header -> builder.withHeader(header.getName(), header.getValue()));
+        }
+        if (originalResponse.getContentType() != null) {
+            builder.withContentType(originalResponse.getContentType());
         }
         return builder.build();
     }

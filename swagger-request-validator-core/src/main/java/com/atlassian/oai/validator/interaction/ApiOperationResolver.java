@@ -9,10 +9,10 @@ import com.atlassian.oai.validator.model.NormalisedPathImpl;
 import com.atlassian.oai.validator.model.Request;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
-import io.swagger.models.HttpMethod;
-import io.swagger.models.Operation;
-import io.swagger.models.Path;
-import io.swagger.models.Swagger;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.Operation;
+import io.swagger.v3.oas.models.PathItem;
+import io.swagger.v3.oas.models.Paths;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -21,7 +21,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
 import static java.util.Comparator.comparingInt;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.groupingBy;
@@ -35,17 +34,19 @@ public class ApiOperationResolver {
     private final String apiPrefix;
 
     private final Map<Integer, List<ApiPath>> apiPathsGroupedByNumberOfParts;
-    private final Table<String, HttpMethod, Operation> operations;
+    private final Table<String, PathItem.HttpMethod, Operation> operations;
 
     /**
      * A utility for finding the best fitting API path.
      *
-     * @param api              the Swagger API definition
-     * @param basePathOverride (Optional) override for the base path defined in the Swagger specification.
+     * @param api              the OpenAPI definition
+     * @param basePathOverride (Optional) override for the base path defined in the OpenAPI specification.
      */
-    public ApiOperationResolver(@Nonnull final Swagger api, @Nullable final String basePathOverride) {
-        apiPrefix = ofNullable(basePathOverride).orElse(api.getBasePath());
-        final Map<String, Path> apiPaths = ofNullable(api.getPaths()).orElse(emptyMap());
+    public ApiOperationResolver(@Nonnull final OpenAPI api, @Nullable final String basePathOverride) {
+
+        // TODO: Need to fix this - base path now comes from servers
+        apiPrefix = ofNullable(basePathOverride).orElse("/");
+        final Paths apiPaths = ofNullable(api.getPaths()).orElse(new Paths());
 
         // normalise all API paths and group them by their number of parts
         apiPathsGroupedByNumberOfParts = apiPaths.keySet().stream()
@@ -55,7 +56,7 @@ public class ApiOperationResolver {
         // create a operation mapping for the API path and HTTP method
         operations = HashBasedTable.create();
         apiPaths.forEach((pathKey, apiPath) ->
-                apiPath.getOperationMap().forEach((httpMethod, operation) ->
+                apiPath.readOperationsMap().forEach((httpMethod, operation) ->
                         operations.put(pathKey, httpMethod, operation))
         );
     }
@@ -84,7 +85,7 @@ public class ApiOperationResolver {
 
         // try to find the operation which fits the HTTP method,
         // choosing the most 'specific' path match from the candidates
-        final HttpMethod httpMethod = HttpMethod.valueOf(method.name());
+        final PathItem.HttpMethod httpMethod = PathItem.HttpMethod.valueOf(method.name());
         final Optional<ApiPath> matchingPathAndOperation = matchingPaths.stream()
                 .filter(apiPath -> operations.contains(apiPath.original(), httpMethod))
                 .max(comparingInt(ApiOperationResolver::specificityScore));

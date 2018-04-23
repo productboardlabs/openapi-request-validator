@@ -1,4 +1,4 @@
-package com.atlassian.oai.validator.interaction;
+package com.atlassian.oai.validator.interaction.response;
 
 import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.Response;
@@ -6,23 +6,28 @@ import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
 import com.atlassian.oai.validator.schema.SchemaValidator;
-import com.google.common.net.MediaType;
-import io.swagger.models.Swagger;
-import io.swagger.models.properties.Property;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.headers.Header;
+import io.swagger.v3.oas.models.media.Content;
+import io.swagger.v3.oas.models.media.MediaType;
+import io.swagger.v3.oas.models.responses.ApiResponse;
 import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
 import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.RESPONSE;
 import static com.atlassian.oai.validator.report.ValidationReport.empty;
+import static com.atlassian.oai.validator.util.ContentTypeUtils.findMostSpecificMatch;
 import static com.atlassian.oai.validator.util.ContentTypeUtils.hasContentType;
 import static com.atlassian.oai.validator.util.ContentTypeUtils.isJsonContentType;
+import static java.lang.Boolean.TRUE;
+import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -34,20 +39,21 @@ public class ResponseValidator {
 
     private final SchemaValidator schemaValidator;
     private final MessageResolver messages;
-    private final Swagger swaggerDefinition;
+    private final OpenAPI api;
 
     /**
      * Construct a new response validator with the given schema validator.
      *
      * @param schemaValidator The schema validator to use when validating response bodies
      * @param messages The message resolver to use
+     * @param api The OpenAPI spec to validate against
      */
-    public ResponseValidator(@Nonnull final SchemaValidator schemaValidator,
-                             @Nonnull final MessageResolver messages,
-                             @Nonnull final Swagger swaggerDefinition) {
+    public ResponseValidator(final SchemaValidator schemaValidator,
+                             final MessageResolver messages,
+                             final OpenAPI api) {
         this.schemaValidator = requireNonNull(schemaValidator, "A schema validator is required");
         this.messages = requireNonNull(messages, "A message resolver is required");
-        this.swaggerDefinition = requireNonNull(swaggerDefinition, "A swagger definition is required");
+        this.api = requireNonNull(api, "An OAI definition is required");
     }
 
     /**
@@ -59,11 +65,11 @@ public class ResponseValidator {
      * @return A validation report containing validation errors
      */
     @Nonnull
-    public ValidationReport validateResponse(@Nonnull final Response response, @Nonnull final ApiOperation apiOperation) {
+    public ValidationReport validateResponse(final Response response, final ApiOperation apiOperation) {
         requireNonNull(response, "A response is required");
         requireNonNull(apiOperation, "An API operation is required");
 
-        final io.swagger.models.Response apiResponse = getApiResponse(response, apiOperation);
+        final ApiResponse apiResponse = getApiResponse(response, apiOperation);
 
         final MessageContext.Builder contextBuilder = MessageContext.create()
                 .in(RESPONSE)
@@ -88,9 +94,9 @@ public class ResponseValidator {
     }
 
     @Nullable
-    private io.swagger.models.Response getApiResponse(@Nonnull final Response response,
-                                                      @Nonnull final ApiOperation apiOperation) {
-        final io.swagger.models.Response apiResponse =
+    private ApiResponse getApiResponse(final Response response,
+                                       final ApiOperation apiOperation) {
+        final ApiResponse apiResponse =
                 apiOperation.getOperation().getResponses().get(Integer.toString(response.getStatus()));
         if (apiResponse == null) {
             return apiOperation.getOperation().getResponses().get("default"); // try the default response
@@ -99,10 +105,22 @@ public class ResponseValidator {
     }
 
     @Nonnull
-    private ValidationReport validateResponseBody(@Nonnull final Response response,
-                                                  @Nonnull final io.swagger.models.Response apiResponse,
-                                                  @Nonnull final ApiOperation apiOperation) {
-        if (apiResponse.getSchema() == null) {
+    private ValidationReport validateResponseBody(final Response response,
+                                                  final ApiResponse apiResponse,
+                                                  final ApiOperation apiOperation) {
+        if (apiResponse.getContent() == null) {
+            return ValidationReport.empty();
+        }
+
+        final Optional<String> mostSpecificMatch = findMostSpecificMatch(response, apiResponse.getContent().keySet());
+
+        if (!mostSpecificMatch.isPresent()) {
+            // Validation of invalid content type is handled in content type validation
+            return ValidationReport.empty();
+        }
+
+        final MediaType apiMediaType = apiResponse.getContent().get(mostSpecificMatch.get());
+        if (apiMediaType.getSchema() == null) {
             return ValidationReport.empty();
         }
 
@@ -118,81 +136,87 @@ public class ResponseValidator {
             return empty();
         }
 
-        return schemaValidator.validate(response.getBody().get(), apiResponse.getSchema());
+        return schemaValidator.validate(response.getBody().get(), apiMediaType.getSchema());
     }
 
     @Nonnull
-    private ValidationReport validateContentType(@Nonnull final Response response,
-                                                 @Nonnull final ApiOperation apiOperation) {
+    private ValidationReport validateContentType(final Response response,
+                                                 final ApiOperation apiOperation) {
 
-        final Optional<String> requestHeader = response.getHeaderValue("Content-Type");
+        final Optional<String> requestHeader = response.getContentType();
         if (!requestHeader.isPresent()) {
             return ValidationReport.empty();
         }
 
-        final MediaType requestMediaType;
+        final com.google.common.net.MediaType requestMediaType;
         try {
-            requestMediaType = MediaType.parse(requestHeader.get());
+            requestMediaType = com.google.common.net.MediaType.parse(requestHeader.get());
         } catch (final IllegalArgumentException e) {
-            return ValidationReport.singleton(messages.get("validation.response.contentType.invalid", requestHeader.get()));
+            return ValidationReport.singleton(messages.get(
+                    "validation.response.contentType.invalid", requestHeader.get())
+            );
         }
 
-        final Collection<String> produces = getProduces(apiOperation);
-        if (produces.isEmpty()) {
+        final Collection<String> responseMediaTypes = getResponseMediaTypes(response, apiOperation);
+        if (responseMediaTypes.isEmpty()) {
             return ValidationReport.empty();
         }
 
-        final boolean contentTypeMatchesProduces = produces.stream()
-                        .map(MediaType::parse)
-                        .anyMatch(m -> m.withoutParameters().is(requestMediaType.withoutParameters()));
+        final boolean contentTypeMatchesProduces = responseMediaTypes.stream()
+                .map(com.google.common.net.MediaType::parse)
+                .anyMatch(m -> m.withoutParameters().is(requestMediaType.withoutParameters()));
+
         if (!contentTypeMatchesProduces) {
-            return ValidationReport.singleton(messages.get("validation.response.contentType.notAllowed", requestHeader.get(), produces));
+            return ValidationReport.singleton(
+                    messages.get("validation.response.contentType.notAllowed", requestHeader.get(), responseMediaTypes)
+            );
         }
 
         return ValidationReport.empty();
     }
 
     @Nonnull
-    private Collection<String> getProduces(@Nonnull final ApiOperation apiOperation) {
-        // Operation-specific 'produces' overrides global produces entries
-        if (apiOperation.getOperation().getProduces() == null) {
-            return swaggerDefinition.getProduces() == null ? Collections.emptyList() : swaggerDefinition.getProduces();
+    private Collection<String> getResponseMediaTypes(final Response response,
+                                                     final ApiOperation apiOperation) {
+        final ApiResponse apiResponse = getApiResponse(response, apiOperation);
+        if (apiResponse == null) {
+            return emptyList();
         }
-        return apiOperation.getOperation().getProduces();
+        return defaultIfNull(apiResponse.getContent(), new Content()).keySet();
     }
 
     @Nonnull
-    private ValidationReport validateHeaders(@Nonnull final Response response,
-                                             @Nonnull final io.swagger.models.Response apiResponse,
-                                             @Nonnull final ApiOperation apiOperation) {
+    private ValidationReport validateHeaders(final Response response,
+                                             final ApiResponse apiResponse,
+                                             final ApiOperation apiOperation) {
 
-        final Map<String, Property> apiHeaders = apiResponse.getHeaders();
+        final Map<String, Header> apiHeaders = apiResponse.getHeaders();
         if (apiHeaders == null || apiHeaders.isEmpty()) {
             return ValidationReport.empty();
         }
 
         return apiHeaders.entrySet()
                 .stream()
-                .map(h -> validateHeader(apiOperation, h.getValue(), response.getHeaderValues(h.getKey())))
+                .map(h -> validateHeader(apiOperation, h.getKey(), h.getValue(), response.getHeaderValues(h.getKey())))
                 .reduce(ValidationReport.empty(), ValidationReport::merge);
 
     }
 
     @Nonnull
-    private ValidationReport validateHeader(@Nonnull final ApiOperation apiOperation,
-                                            @Nonnull final Property property,
-                                            @Nonnull final Collection<String> propertyValues) {
+    private ValidationReport validateHeader(final ApiOperation apiOperation,
+                                            final String headerName,
+                                            final Header apiHeader,
+                                            final Collection<String> propertyValues) {
 
-        if (propertyValues.isEmpty() && (property.getRequired() || Boolean.FALSE == property.getAllowEmptyValue())) {
+        if (propertyValues.isEmpty() && TRUE.equals(apiHeader.getRequired())) {
             return ValidationReport.singleton(
-                    messages.get("validation.response.header.missing",
-                            property.getName(), apiOperation.getApiPath().original())
+                    messages.get("validation.response.header.missing", headerName, apiOperation.getApiPath().original())
             );
         }
 
         return propertyValues
                 .stream()
-                .map(v -> schemaValidator.validate(v, property))
+                .map(v -> schemaValidator.validate(v, apiHeader.getSchema()))
                 .reduce(ValidationReport.empty(), ValidationReport::merge);
     }
 }

@@ -2,9 +2,10 @@ package com.atlassian.oai.validator.interaction;
 
 import com.atlassian.oai.validator.model.ApiOperationMatch;
 import com.atlassian.oai.validator.model.Request;
-import io.swagger.models.Swagger;
-import io.swagger.parser.SwaggerParser;
-import io.swagger.parser.util.SwaggerDeserializationResult;
+import io.swagger.parser.OpenAPIParser;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.parser.core.models.ParseOptions;
+import io.swagger.v3.parser.core.models.SwaggerParseResult;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,15 +31,18 @@ import static org.junit.Assert.assertTrue;
 @RunWith(Parameterized.class)
 public class ApiOperationResolverTest {
 
-    private static final String FILENAME_API_WITH_POST = "oai/api-operation-finder-test.json";
+    private static final String FILENAME_API_WITH_POST = "oai/v2/api-operation-finder-test.json";
 
     private static ApiOperationResolver classUnderTest;
 
     @BeforeClass
     public static void init() {
-        final SwaggerDeserializationResult swaggerParseResult = new SwaggerParser().readWithInfo(FILENAME_API_WITH_POST, null, true);
-        final Swagger swagger = swaggerParseResult.getSwagger();
-        classUnderTest = new ApiOperationResolver(swagger, null);
+        final ParseOptions parseOptions = new ParseOptions();
+        parseOptions.setResolve(true);
+
+        final SwaggerParseResult swaggerParseResult = new OpenAPIParser().readLocation(FILENAME_API_WITH_POST, null, parseOptions);
+        final OpenAPI api = swaggerParseResult.getOpenAPI();
+        classUnderTest = new ApiOperationResolver(api, null);
     }
 
     @Parameters(name = "{0}")

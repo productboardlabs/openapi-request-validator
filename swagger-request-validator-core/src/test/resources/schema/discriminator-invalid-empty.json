@@ -4,7 +4,9 @@
   "definitions": {
     "Pet": {
       "type": "object",
-      "discriminator": "",
+      "discriminator": {
+        "propertyName": ""
+      },
       "properties": {
         "name": {
           "type": "string"

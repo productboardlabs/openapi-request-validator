@@ -6,7 +6,7 @@ import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.whitelist.StatusType;
 import com.google.common.collect.ImmutableList;
-import io.swagger.models.HttpMethod;
+import io.swagger.v3.oas.models.PathItem;
 
 import java.util.Collections;
 import java.util.regex.Pattern;
@@ -111,7 +111,7 @@ public final class WhitelistRules {
     /**
      * Matches all operations with the given method. Both request and response errors can be matched with this.
      */
-    public static WhitelistRule methodIs(final HttpMethod method) {
+    public static WhitelistRule methodIs(final PathItem.HttpMethod method) {
         return new PrintableWhitelistRule(
             "Method is " + method,
             (message, operation, request, response) -> operation != null && operation.getMethod() == method);

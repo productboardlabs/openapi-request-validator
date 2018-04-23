@@ -1,19 +1,18 @@
 package com.atlassian.oai.validator.parameter;
 
+import com.atlassian.oai.validator.report.MessageResolver;
 import org.junit.Test;
 
-import com.atlassian.oai.validator.report.MessageResolver;
-
+import static com.atlassian.oai.validator.util.ParameterGenerator.floatParam;
+import static com.atlassian.oai.validator.util.ParameterGenerator.floatParamFormat;
+import static com.atlassian.oai.validator.util.ParameterGenerator.floatParamMultipleOf;
+import static com.atlassian.oai.validator.util.ParameterGenerator.stringParam;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.floatParam;
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.floatParamFormat;
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.floatParamMultipleOf;
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.stringParam;
 
 public class NumberParameterValidatorTest {
 
-    private NumberParameterValidator classUnderTest = new NumberParameterValidator(new MessageResolver());
+    private final NumberParameterValidator classUnderTest = new NumberParameterValidator(new MessageResolver());
 
     @Test
     public void validate_withNullValue_shouldPass_whenNotRequired() {

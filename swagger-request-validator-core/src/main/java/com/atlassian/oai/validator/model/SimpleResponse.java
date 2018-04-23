@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.atlassian.oai.validator.model.Headers.CONTENT_TYPE;
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
 
@@ -122,7 +123,7 @@ public class SimpleResponse implements Response {
          */
         public Builder(final int status) {
             this.status = status;
-            this.headers = SimpleRequest.Builder.multimapBuilder(false /* header are always case insensitive */);
+            headers = SimpleRequest.Builder.multimapBuilder(false /* header are always case insensitive */);
         }
 
         /**
@@ -164,6 +165,19 @@ public class SimpleResponse implements Response {
          */
         public Builder withHeader(final String name, final String... values) {
             return withHeader(name, asList(values));
+        }
+
+        /**
+         * Sets the content type header on this builder.
+         * <p>
+         * Equivalent to: <pre>withHeader("Content-Type", contentType);</pre>
+         *
+         * @param contentType The content type to set
+         *
+         * @return this builder
+         */
+        public Builder withContentType(final String contentType) {
+            return withHeader(CONTENT_TYPE, contentType);
         }
 
         /**

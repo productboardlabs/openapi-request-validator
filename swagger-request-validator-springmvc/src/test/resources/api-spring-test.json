@@ -12,6 +12,9 @@
         "produces": [
           "application/json"
         ],
+        "consumes": [
+          "application/json"
+        ],
         "parameters": [
           {
             "in": "body",
@@ -37,6 +40,9 @@
         "summary": "Spring GET",
         "operationId": "spring#GET",
         "produces": [
+          "application/json"
+        ],
+        "consumes": [
           "application/json"
         ],
         "parameters": [
@@ -75,6 +81,9 @@
         "summary": "Spring PUT",
         "operationId": "spring#PUT",
         "produces": [
+          "application/json"
+        ],
+        "consumes": [
           "application/json"
         ],
         "parameters": [

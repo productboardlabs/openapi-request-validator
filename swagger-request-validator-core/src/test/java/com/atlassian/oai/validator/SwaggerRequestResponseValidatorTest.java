@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import static com.atlassian.oai.validator.report.ValidationReport.Level.IGNORE;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadResource;
 
 /**
  * General behavioral tests for the {@link SwaggerRequestResponseValidator}.
@@ -19,7 +20,7 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 public class SwaggerRequestResponseValidatorTest {
 
     private final SwaggerRequestResponseValidator classUnderTest =
-            SwaggerRequestResponseValidator.createFor("/oai/api-users.json").build();
+            SwaggerRequestResponseValidator.createFor("/oai/v2/api-users.json").build();
 
     @Test(expected = NullPointerException.class)
     public void validate_withNullRequest_throwsNPE() {
@@ -41,7 +42,7 @@ public class SwaggerRequestResponseValidatorTest {
     public void validate_withFailures_shoudPass_whenLevelResolverIgnoresFailures() {
         final SwaggerRequestResponseValidator classUnderTest =
                 SwaggerRequestResponseValidator
-                        .createFor("/oai/api-users.json")
+                        .createFor("/oai/v2/api-users.json")
                         .withLevelResolver(LevelResolver
                                 .create()
                                 .withLoader(null)
@@ -57,18 +58,18 @@ public class SwaggerRequestResponseValidatorTest {
 
     @Test
     public void validate_jsonPayloadAccepted() {
-        SwaggerRequestResponseValidator.createFor("{}").build();
+        SwaggerRequestResponseValidator.createFor(loadResource("/oai/v2/api-users.json")).build();
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void validate_neitherPathNorJson() {
+    @Test(expected = Exception.class)
+    public void validate_neitherPathNorJson_throwsException() {
         SwaggerRequestResponseValidator.createFor("<>").build();
     }
 
     @Test(expected = NullPointerException.class)
     public void validate_withNullAuthHeaderKey_throwsNPE() throws Exception {
         SwaggerRequestResponseValidator
-                .createFor("/oai/api-users.json")
+                .createFor("/oai/v2/api-users.json")
                 .withAuthHeaderData(null, null)
                 .build();
     }
@@ -76,7 +77,7 @@ public class SwaggerRequestResponseValidatorTest {
     @Test
     public void validate_withNullAuthHeaderValue() throws Exception {
         SwaggerRequestResponseValidator
-                .createFor("/oai/api-users.json")
+                .createFor("/oai/v2/api-users.json")
                 .withAuthHeaderData("api-key", null)
                 .build();
     }
@@ -85,7 +86,7 @@ public class SwaggerRequestResponseValidatorTest {
     public void validate_withBasePathOverride() throws Exception {
         final SwaggerRequestResponseValidator classUnderTest =
                 SwaggerRequestResponseValidator
-                        .createFor("/oai/api-users.json")
+                        .createFor("/oai/v2/api-users.json")
                         .withBasePathOverride("/test")
                         .build();
 

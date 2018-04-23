@@ -1,28 +1,27 @@
 package com.atlassian.oai.validator.parameter;
 
 import com.atlassian.oai.validator.report.MessageResolver;
-import io.swagger.models.parameters.FormParameter;
-import io.swagger.models.parameters.SerializableParameter;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.UUID;
 
+import static com.atlassian.oai.validator.util.ParameterGenerator.dateParam;
+import static com.atlassian.oai.validator.util.ParameterGenerator.dateTimeParam;
+import static com.atlassian.oai.validator.util.ParameterGenerator.emailParam;
+import static com.atlassian.oai.validator.util.ParameterGenerator.enumeratedStringParam;
+import static com.atlassian.oai.validator.util.ParameterGenerator.ipv4Param;
+import static com.atlassian.oai.validator.util.ParameterGenerator.ipv6Param;
+import static com.atlassian.oai.validator.util.ParameterGenerator.patternStringParam;
+import static com.atlassian.oai.validator.util.ParameterGenerator.stringParam;
+import static com.atlassian.oai.validator.util.ParameterGenerator.stringParamFormat;
+import static com.atlassian.oai.validator.util.ParameterGenerator.uriParam;
+import static com.atlassian.oai.validator.util.ParameterGenerator.uuidParam;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.stringParam;
-import static java.util.Arrays.asList;
 
 public class StringParameterValidatorTest {
 
     private final StringParameterValidator classUnderTest = new StringParameterValidator(new MessageResolver());
-    private SerializableParameter parameter;
-
-    @Before
-    public void init() {
-        parameter = new FormParameter();
-        parameter.setType("string");
-    }
 
     @Test
     public void validate_withNullValue_shouldPass_whenNotRequired() {
@@ -36,151 +35,142 @@ public class StringParameterValidatorTest {
 
     @Test
     public void validate_withNullValue_shouldFail_whenRequired() {
-        assertFail(classUnderTest.validate(null, stringParam(true)), "validation.request.parameter.missing");
+        assertFail(classUnderTest.validate(null, stringParam(true)),
+                "validation.request.parameter.missing");
     }
 
     @Test
     public void validate_withEmptyValue_shouldFail_whenRequired() {
-        assertFail(classUnderTest.validate("", stringParam(true)), "validation.request.parameter.missing");
+        assertFail(classUnderTest.validate("", stringParam(true)),
+                "validation.request.parameter.missing");
     }
 
     @Test
     public void validate_withEnum_shouldPass_whenMatching() {
-        parameter.setEnum(asList("Enum-1", "Enum-2", "Enum-3"));
-        assertPass(classUnderTest.validate("Enum-2", parameter));
+        assertPass(classUnderTest.validate("Enum-2", enumeratedStringParam("Enum-1", "Enum-2", "Enum-3")));
     }
 
     @Test
     public void validate_withEnum_shouldFail_whenNotMatching() {
-        parameter.setEnum(asList("Enum-1", "Enum-2", "Enum-3"));
-        assertFail(classUnderTest.validate("Unknown", parameter), "validation.request.parameter.enum.invalid");
+        assertFail(classUnderTest.validate("Unknown", enumeratedStringParam("Enum-1", "Enum-2", "Enum-3")),
+                "validation.request.parameter.enum.invalid");
         // case sensitive match necessary
-        assertFail(classUnderTest.validate("ENUM-1", parameter), "validation.request.parameter.enum.invalid");
+        assertFail(classUnderTest.validate("ENUM-1", enumeratedStringParam("Enum-1", "Enum-2", "Enum-3")),
+                "validation.request.parameter.enum.invalid");
     }
 
     @Test
     public void validate_withPattern_shouldFail_whenNoMatch() {
-        parameter.setPattern("[a-z]*");
-        assertFail(classUnderTest.validate("NO_CAPS_ALLOWED", parameter), "validation.request.parameter.string.patternMismatch");
+        assertFail(classUnderTest.validate("NO_CAPS_ALLOWED", patternStringParam("[a-z]*")),
+                "validation.request.parameter.string.patternMismatch");
     }
 
     @Test
     public void validate_withPattern_shouldPass_whenMatch() {
-        parameter.setPattern("[a-z]*");
-        assertPass(classUnderTest.validate("allgood", parameter));
+        assertPass(classUnderTest.validate("allgood", patternStringParam("[a-z]*")));
     }
 
     @Test
     public void validate_withMinLength_shouldFail_whenTooShort() {
-        parameter.setMinLength(6);
-        assertFail(classUnderTest.validate("short", parameter), "validation.request.parameter.string.tooShort");
+        assertFail(classUnderTest.validate("short", stringParam(6, null)),
+                "validation.request.parameter.string.tooShort");
     }
 
     @Test
     public void validate_withMinLength_shouldPass_whenLongEnough() {
-        parameter.setMinLength(6);
-        assertPass(classUnderTest.validate("longer", parameter));
+        assertPass(classUnderTest.validate("longer", stringParam(6, null)));
     }
 
     @Test
     public void validate_withMaxLength_shouldFail_whenTooLong() {
-        parameter.setMaxLength(10);
-        assertFail(classUnderTest.validate("far too long for my taste", parameter), "validation.request.parameter.string.tooLong");
+        assertFail(classUnderTest.validate("far too long for my taste", stringParam(null, 10)),
+                "validation.request.parameter.string.tooLong");
     }
 
     @Test
     public void validate_withMaxLength_shouldPass_whenShortEnough() {
-        parameter.setMaxLength(30);
-        assertPass(classUnderTest.validate("easily short enough", parameter));
+        assertPass(classUnderTest.validate("easily short enough", stringParam(null, 30)));
     }
 
     @Test
     public void validate_withDateFormat_shouldFail_whenNotAValidISODate() {
-        parameter.setFormat("date");
-        assertFail(classUnderTest.validate("2016--5dd", parameter), "validation.request.parameter.string.date.invalid");
+        assertFail(classUnderTest.validate("2016--5dd", dateParam()),
+                "validation.request.parameter.string.date.invalid");
     }
 
     @Test
     public void validate_withDateFormat_shouldPass_whenAValidISODate() {
-        parameter.setFormat("date");
-        assertPass(classUnderTest.validate("2016-09-28", parameter));
+        assertPass(classUnderTest.validate("2016-09-28", dateParam()));
     }
 
     @Test
     public void validate_withDateTimeFormat_shouldFail_whenNotAValidISODate() {
-        parameter.setFormat("date-time");
-        assertFail(classUnderTest.validate("2016--5dd-slkdjfl01938", parameter), "validation.request.parameter.string.dateTime.invalid");
+        assertFail(classUnderTest.validate("2016--5dd-slkdjfl01938", dateTimeParam()),
+                "validation.request.parameter.string.dateTime.invalid");
     }
 
     @Test
     public void validate_withDateTimeFormat_shouldPass_whenAValidISODate() {
-        parameter.setFormat("date-time");
-        assertPass(classUnderTest.validate("2016-09-28T11:22:33.111Z", parameter));
+        assertPass(classUnderTest.validate("2016-09-28T11:22:33.111Z", dateTimeParam()));
     }
 
     @Test
     public void validate_withUUIDFormat_shouldPass_whenAValidUUID() {
-        parameter.setFormat("uuid");
-        assertPass(classUnderTest.validate(UUID.randomUUID().toString(), parameter));
+        assertPass(classUnderTest.validate(UUID.randomUUID().toString(), uuidParam()));
     }
 
     @Test
     public void validate_withUUIDFormat_shouldFail_whenInvalidUUID() {
-        parameter.setFormat("uuid");
-        assertFail(classUnderTest.validate("notauuid", parameter), "validation.request.parameter.string.uuid.invalid");
+        assertFail(classUnderTest.validate("notauuid", uuidParam()),
+                "validation.request.parameter.string.uuid.invalid");
     }
 
     @Test
     public void validate_withEmailFormat_shouldPass_whenAValidEmail() {
-        parameter.setFormat("email");
-        assertPass(classUnderTest.validate("some.body@somewhere.com", parameter));
+        assertPass(classUnderTest.validate("some.body@somewhere.com", emailParam()));
     }
 
     @Test
     public void validate_withEmailFormat_shouldFail_whenInvalidEmail() {
-        parameter.setFormat("email");
-        assertFail(classUnderTest.validate("notanemail", parameter), "validation.request.parameter.string.email.invalid");
+        assertFail(classUnderTest.validate("notanemail", emailParam()),
+                "validation.request.parameter.string.email.invalid");
     }
 
     @Test
     public void validate_withIPv4Format_shouldPass_whenAValidIPAddress() {
-        parameter.setFormat("ipv4");
-        assertPass(classUnderTest.validate("192.168.0.1", parameter));
+        assertPass(classUnderTest.validate("192.168.0.1", ipv4Param()));
     }
 
     @Test
     public void validate_withIPv4Format_shouldFail_whenInvalidIPAddress() {
-        parameter.setFormat("ipv4");
-        assertFail(classUnderTest.validate("192.0.0", parameter), "validation.request.parameter.string.ipv4.invalid");
+        assertFail(classUnderTest.validate("192.0.0", ipv4Param()),
+                "validation.request.parameter.string.ipv4.invalid");
     }
 
     @Test
     public void validate_withIPv6Format_shouldPass_whenAValidIPAddress() {
-        parameter.setFormat("ipv6");
-        assertPass(classUnderTest.validate("::1", parameter));
+        assertPass(classUnderTest.validate("::1", ipv6Param()));
     }
 
     @Test
     public void validate_withIPv6Format_shouldFail_whenInvalidIPAddress() {
-        parameter.setFormat("ipv6");
-        assertFail(classUnderTest.validate(":1", parameter), "validation.request.parameter.string.ipv6.invalid");
+        assertFail(classUnderTest.validate(":1", ipv6Param()),
+                "validation.request.parameter.string.ipv6.invalid");
     }
 
     @Test
     public void validate_withURIFormat_shouldPass_whenAValidURI() {
-        parameter.setFormat("uri");
-        assertPass(classUnderTest.validate("http://foo.com", parameter));
+        assertPass(classUnderTest.validate("http://foo.com", uriParam()));
     }
 
     @Test
     public void validate_withURIFormat_shouldFail_whenInvalidURI() {
-        parameter.setFormat("uri");
-        assertFail(classUnderTest.validate("http://<>.com", parameter), "validation.request.parameter.string.uri.invalid");
+        assertFail(classUnderTest.validate("http://<>.com", uriParam()),
+                "validation.request.parameter.string.uri.invalid");
     }
 
     @Test
     public void validate_withUnsupportedFormat_shouldPass() {
-        parameter.setFormat("unsupported");
-        assertPass(classUnderTest.validate("should-pass", parameter));
+        assertPass(classUnderTest.validate("should-pass", stringParamFormat("unsupported")));
     }
 }

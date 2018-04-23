@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static java.util.Collections.singletonList;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 
@@ -126,7 +127,8 @@ public class RestRequestValidationTest {
                                                 final Object body,
                                                 final Map<String, List<String>> additionalHeader) {
         final HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+        headers.setAccept(singletonList(MediaType.APPLICATION_JSON));
+        headers.setContentType(MediaType.APPLICATION_JSON);
         headers.putAll(additionalHeader);
         final HttpEntity<Object> entity = new HttpEntity<>(body, headers);
         return restTemplate.exchange(uri, method, entity, HashMap.class);

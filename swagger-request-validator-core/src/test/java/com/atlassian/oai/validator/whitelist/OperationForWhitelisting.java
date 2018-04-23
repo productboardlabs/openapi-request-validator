@@ -9,11 +9,14 @@ import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.whitelist.rule.WhitelistRule;
 import com.google.common.collect.ImmutableMap;
-import io.swagger.models.HttpMethod;
-import io.swagger.models.Operation;
-import io.swagger.models.RefModel;
-import io.swagger.models.parameters.BodyParameter;
-import io.swagger.models.properties.RefProperty;
+import io.swagger.v3.oas.models.Operation;
+import io.swagger.v3.oas.models.PathItem;
+import io.swagger.v3.oas.models.media.Content;
+import io.swagger.v3.oas.models.media.MediaType;
+import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.parameters.RequestBody;
+import io.swagger.v3.oas.models.responses.ApiResponse;
+import io.swagger.v3.oas.models.responses.ApiResponses;
 
 import java.util.List;
 
@@ -32,7 +35,7 @@ public class OperationForWhitelisting {
 
     private ValidationReport.Message message = ValidationReport.Message.create("message.key", "A default message").build();
     private ApiPath path = path("/rest/api");
-    private HttpMethod method = HttpMethod.GET;
+    private PathItem.HttpMethod method = PathItem.HttpMethod.GET;
     private Request request;
     private Response response;
     private final Operation operation = new Operation();
@@ -49,13 +52,28 @@ public class OperationForWhitelisting {
     }
 
     public OperationForWhitelisting withDocumentedResponse(final int status, final String entityReference) {
-        operation.addResponse(String.valueOf(status), new io.swagger.models.Response().schema(
-                new RefProperty("#/definitions/" + entityReference)));
+        ApiResponses apiResponses = operation.getResponses();
+        if (apiResponses == null) {
+            apiResponses = new ApiResponses();
+            operation.setResponses(apiResponses);
+        }
+        apiResponses.addApiResponse(String.valueOf(status), new ApiResponse()
+                .content(new Content()
+                        .addMediaType("*/*", new MediaType()
+                                .schema(new Schema().$ref("#/components/schemas/" + entityReference))
+                        )
+                )
+        );
         return this;
     }
 
     public OperationForWhitelisting withDocumentedRequestBodyParameter(final String entityReference) {
-        operation.addParameter(new BodyParameter().schema(new RefModel("#/definitions/" + entityReference)));
+        operation.setRequestBody(new RequestBody()
+                .content(new Content()
+                        .addMediaType("application/json", new MediaType()
+                                .schema(new Schema().$ref("#/components/schemas/" + entityReference))
+                        )
+                ));
         return this;
     }
 
@@ -83,7 +101,7 @@ public class OperationForWhitelisting {
         return this;
     }
 
-    public OperationForWhitelisting withMethod(final HttpMethod method) {
+    public OperationForWhitelisting withMethod(final PathItem.HttpMethod method) {
         this.method = method;
         return this;
     }

@@ -71,11 +71,14 @@
           {
             "name": "request",
             "in": "body",
-            "type": "integer"
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "responses": {
           "200": {
+            "description": "Success response",
             "schema": {
               "$ref": "#/definitions/Result"
             }

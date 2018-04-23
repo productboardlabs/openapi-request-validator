@@ -3,13 +3,13 @@ package com.atlassian.oai.validator.parameter;
 import com.atlassian.oai.validator.report.MessageResolver;
 import org.junit.Test;
 
+import static com.atlassian.oai.validator.util.ParameterGenerator.doubleParam;
+import static com.atlassian.oai.validator.util.ParameterGenerator.floatParam;
+import static com.atlassian.oai.validator.util.ParameterGenerator.intParam;
+import static com.atlassian.oai.validator.util.ParameterGenerator.requiredParam;
+import static com.atlassian.oai.validator.util.ParameterGenerator.stringParam;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.floatParam;
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.doubleParam;
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.intParam;
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.requiredParam;
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.stringParam;
 
 public class ParameterValidatorsTest {
 

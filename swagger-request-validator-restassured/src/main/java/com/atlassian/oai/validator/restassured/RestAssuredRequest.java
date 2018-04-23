@@ -22,7 +22,7 @@ public class RestAssuredRequest implements Request {
      */
     @Deprecated
     public RestAssuredRequest(@Nonnull final FilterableRequestSpecification originalRequest) {
-        this.delegate = RestAssuredRequest.of(originalRequest);
+        delegate = RestAssuredRequest.of(originalRequest);
     }
 
     @Nonnull
@@ -81,6 +81,9 @@ public class RestAssuredRequest implements Request {
                         .withBody(originalRequest.getBody());
         if (originalRequest.getHeaders() != null) {
             originalRequest.getHeaders().forEach(header -> builder.withHeader(header.getName(), header.getValue()));
+        }
+        if (originalRequest.getContentType() != null) {
+            builder.withContentType(originalRequest.getContentType());
         }
         // the query params seems wrongly typed - they can contain either a list of strings or a string
         new HashMap<String, Object>(originalRequest.getQueryParams())
