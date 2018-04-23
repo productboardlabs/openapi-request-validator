@@ -54,8 +54,8 @@ public class ValidatorTestUtil {
 
         if (expectContext) {
             report.getMessages().forEach(m -> {
-                assertThat(m.getContext().isPresent(), is(true));
-                assertThat(m.getContext().get().hasData(), is(true));
+                assertThat("Additional context was expected but none found.", m.getContext().isPresent(), is(true));
+                assertThat("Additional context was expected but none found.", m.getContext().get().hasData(), is(true));
             });
         }
 
