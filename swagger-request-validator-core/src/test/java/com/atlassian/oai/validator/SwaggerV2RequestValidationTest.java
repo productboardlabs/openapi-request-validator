@@ -16,7 +16,7 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadResponse;
 /**
  * Tests for Request validation behavior
  */
-public class RequestValidationTest {
+public class SwaggerV2RequestValidationTest {
 
     private final SwaggerRequestResponseValidator classUnderTest =
             SwaggerRequestResponseValidator.createFor("/oai/v2/api-users.json").build();

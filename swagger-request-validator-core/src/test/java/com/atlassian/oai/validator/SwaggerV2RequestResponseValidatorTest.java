@@ -14,10 +14,10 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadResource;
 /**
  * General behavioral tests for the {@link SwaggerRequestResponseValidator}.
  *
- * @see RequestValidationTest
- * @see ResponseValidationTest
+ * @see SwaggerV2RequestValidationTest
+ * @see SwaggerV2ResponseValidationTest
  */
-public class SwaggerRequestResponseValidatorTest {
+public class SwaggerV2RequestResponseValidatorTest {
 
     private final SwaggerRequestResponseValidator classUnderTest =
             SwaggerRequestResponseValidator.createFor("/oai/v2/api-users.json").build();
