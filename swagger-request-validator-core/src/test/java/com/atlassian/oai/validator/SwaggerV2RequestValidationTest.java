@@ -75,7 +75,7 @@ public class SwaggerV2RequestValidationTest {
     }
 
     @Test
-    public void validate_withNotMatchingApiPath_shouldFail() {
+    public void validate_withUnknownPath_shouldFail() {
         final Request request = SimpleRequest.Builder.patch("/peoples/1").build();
 
         assertFail(classUnderTest.validate(request, okResponse),
@@ -416,7 +416,7 @@ public class SwaggerV2RequestValidationTest {
     }
 
     @Test
-    public void validate_withQueryParamNotSplitted_shouldPass() {
+    public void validate_shouldNotSplitQueryParams_whenNotArrayType() {
         final Request request = SimpleRequest.Builder
                 .get("/users")
                 .withAuthorization("Basic EncryptedUsernameAndPassword")

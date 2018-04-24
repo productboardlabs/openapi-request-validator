@@ -347,6 +347,23 @@ public class SchemaValidatorTest {
         assertPass(classUnderTest.validate(value, schema));
     }
 
+    @Test
+    public void validate_withNumberProperty_shouldPass_whenValid() {
+        final String value = "1";
+        final Schema schema = new NumberSchema();
+        
+        assertPass(classUnderTest.validate(value, schema));
+    }
+
+    @Test
+    public void validate_withNumberProperty_shouldFail_withWrongType_whenInvalid() {
+        final String value = "1,2";
+        final Schema schema = new NumberSchema();
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema),
+                "validation.schema.type");
+    }
+
     private SchemaValidator validatorWithAdditionalPropertiesIgnored(final String api) {
         final ParseOptions parseOptions = new ParseOptions();
         parseOptions.setResolve(true);

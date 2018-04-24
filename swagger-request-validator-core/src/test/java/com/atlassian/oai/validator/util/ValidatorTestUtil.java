@@ -100,6 +100,17 @@ public class ValidatorTestUtil {
         return loadResource("/requests/" + requestName + ".raw");
     }
 
+    /**
+     * Load a request file with the given name and extension.
+     *
+     * @param requestNameAndExtension The name of the request to load
+     *
+     * @return The response as a String, or <code>null</code> if it cannot be loaded
+     */
+    public static String loadRequest(final String requestNameAndExtension) {
+        return loadResource("/requests/" + requestNameAndExtension);
+    }
+
     public static String loadResource(final String path) {
         try {
             final InputStream stream = ValidatorTestUtil.class.getResourceAsStream(path);

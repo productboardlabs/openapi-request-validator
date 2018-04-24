@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 
 import static java.lang.Boolean.TRUE;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 
 /**
  * A validator for array parameters.
@@ -199,7 +199,7 @@ public class ArrayParameterValidator extends BaseParameterValidator {
 
         Collection<String> split(final String value) {
             if (separator == null) {
-                return emptyList();
+                return singletonList(value);
             }
             return asList(value.split(separator));
         }

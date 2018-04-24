@@ -165,6 +165,7 @@ public class RequestValidator {
                 .getResponses()
                 .values()
                 .stream()
+                .filter(apiResponse -> apiResponse.getContent() != null)
                 .flatMap(apiResponse -> apiResponse.getContent().keySet().stream())
                 .collect(Collectors.toSet());
     }
