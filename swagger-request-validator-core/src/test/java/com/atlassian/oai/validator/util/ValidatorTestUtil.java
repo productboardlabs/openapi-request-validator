@@ -76,8 +76,19 @@ public class ValidatorTestUtil {
      * @param responseName The name of the response to load
      * @return The response JSON as a String, or <code>null</code> if it cannot be loaded
      */
-    public static String loadResponse(final String responseName) {
+    public static String loadJsonResponse(final String responseName) {
         return loadResource("/responses/" + responseName + ".json");
+    }
+
+    /**
+     * Load a response XML file with the given name.
+     *
+     * @param responseName The name of the response to load
+     *
+     * @return The response XML as a String, or <code>null</code> if it cannot be loaded
+     */
+    public static String loadXmlResponse(final String responseName) {
+        return loadResource("/responses/" + responseName + ".xml");
     }
 
     /**

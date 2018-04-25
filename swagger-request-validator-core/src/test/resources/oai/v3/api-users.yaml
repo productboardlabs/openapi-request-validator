@@ -4,6 +4,10 @@ servers:
 info:
   title: Users
   version: 1.0.0
+  description: |
+    An API used to drive tests.
+    Lots of inconsistencies and odd design choices used to test edge cases -
+    not recommended as a good example of API design :)
 tags:
   - name: user
     description: Operations related to Users
@@ -109,6 +113,9 @@ paths:
           description: User response
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+            text/xml:
               schema:
                 $ref: '#/components/schemas/User'
         '400':

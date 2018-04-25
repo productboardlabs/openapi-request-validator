@@ -10,8 +10,8 @@ import org.junit.Test;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadJsonRequest;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadJsonResponse;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadResource;
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadResponse;
 
 /**
  * Tests for Request validation behavior
@@ -22,9 +22,9 @@ public class SwaggerV2RequestValidationTest {
             SwaggerRequestResponseValidator.createFor("/oai/v2/api-users.json").build();
 
     private final Response validUserResponse =
-            SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
+            SimpleResponse.Builder.ok().withBody(loadJsonResponse("user-valid")).build();
     private final Response validUsersResponse =
-            SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
+            SimpleResponse.Builder.ok().withBody(loadJsonResponse("users-valid")).build();
     private final SimpleResponse okResponse = SimpleResponse.Builder.ok().build();
 
     @Test
