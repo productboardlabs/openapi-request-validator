@@ -12,8 +12,10 @@ import io.swagger.v3.oas.models.media.UUIDSchema;
 import io.swagger.v3.oas.models.parameters.Parameter;
 
 import java.math.BigDecimal;
+import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
+import static java.util.Arrays.stream;
 
 public class ParameterGenerator {
 
@@ -62,6 +64,12 @@ public class ParameterGenerator {
         schema.setMaximum(max == null ? null : BigDecimal.valueOf(max));
         schema.setExclusiveMinimum(exclusiveMin);
         schema.setExclusiveMaximum(exclusiveMax);
+        return param(schema, true);
+    }
+
+    public static Parameter enumeratedIntParam(final Integer... allowed) {
+        final IntegerSchema schema = new IntegerSchema();
+        schema.setEnum(asList(allowed));
         return param(schema, true);
     }
 
@@ -196,6 +204,13 @@ public class ParameterGenerator {
         final Schema schema = new NumberSchema();
         schema.setFormat("float");
         schema.setMultipleOf(multipleOf == null ? null : BigDecimal.valueOf(multipleOf));
+        return param(schema, true);
+    }
+
+    public static Parameter enumeratedFloatParam(final Float... allowed) {
+        final NumberSchema schema = new NumberSchema();
+        schema.format("float");
+        schema.setEnum(stream(allowed).map(BigDecimal::valueOf).collect(Collectors.toList()));
         return param(schema, true);
     }
 

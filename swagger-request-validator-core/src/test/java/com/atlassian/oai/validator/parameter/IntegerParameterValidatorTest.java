@@ -3,6 +3,7 @@ package com.atlassian.oai.validator.parameter;
 import com.atlassian.oai.validator.report.MessageResolver;
 import org.junit.Test;
 
+import static com.atlassian.oai.validator.util.ParameterGenerator.enumeratedIntParam;
 import static com.atlassian.oai.validator.util.ParameterGenerator.intParam;
 import static com.atlassian.oai.validator.util.ParameterGenerator.intParamFormat;
 import static com.atlassian.oai.validator.util.ParameterGenerator.intParamMultipleOf;
@@ -100,5 +101,16 @@ public class IntegerParameterValidatorTest {
     public void validate_withNonIntegerValueFormatUnknown_shouldFail() {
         assertFail(classUnderTest.validate("123.1", intParamFormat("unknown")),
                 "validation.request.parameter.invalidFormat");
+    }
+
+    @Test
+    public void validate_withValidEnumeratedValue_shouldPass() {
+        assertPass(classUnderTest.validate("3", enumeratedIntParam(1, 2, 3)));
+    }
+
+    @Test
+    public void validate_withInvalidEnumeratedValue_shouldFail() {
+        assertFail(classUnderTest.validate("4", enumeratedIntParam(1, 2, 3)),
+                "validation.request.parameter.enum.invalid");
     }
 }
