@@ -78,6 +78,8 @@ public class RequestValidator {
         final MessageContext context = MessageContext.create()
                 .in(REQUEST)
                 .withApiOperation(apiOperation)
+                .withRequestPath(apiOperation.getRequestPath().original())
+                .withRequestMethod(request.getMethod())
                 .build();
 
         return securityValidator.validateSecurity(request, apiOperation)
@@ -85,7 +87,7 @@ public class RequestValidator {
                 .merge(validateAccepts(request, apiOperation))
                 .merge(validateHeaders(request, apiOperation))
                 .merge(validatePathParameters(apiOperation))
-                .merge(requestBodyValidator.validateRequestBody(request, apiOperation))
+                .merge(requestBodyValidator.validateRequestBody(request, apiOperation.getOperation().getRequestBody()))
                 .merge(validateQueryParameters(request, apiOperation))
                 .withAdditionalContext(context);
     }
@@ -163,6 +165,7 @@ public class RequestValidator {
                 .getResponses()
                 .values()
                 .stream()
+                .filter(apiResponse -> apiResponse.getContent() != null)
                 .flatMap(apiResponse -> apiResponse.getContent().keySet().stream())
                 .collect(Collectors.toSet());
     }

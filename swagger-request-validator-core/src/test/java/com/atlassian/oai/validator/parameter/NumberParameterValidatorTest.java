@@ -3,6 +3,7 @@ package com.atlassian.oai.validator.parameter;
 import com.atlassian.oai.validator.report.MessageResolver;
 import org.junit.Test;
 
+import static com.atlassian.oai.validator.util.ParameterGenerator.enumeratedFloatParam;
 import static com.atlassian.oai.validator.util.ParameterGenerator.floatParam;
 import static com.atlassian.oai.validator.util.ParameterGenerator.floatParamFormat;
 import static com.atlassian.oai.validator.util.ParameterGenerator.floatParamMultipleOf;
@@ -106,7 +107,19 @@ public class NumberParameterValidatorTest {
     }
 
     @Test
-    public void validate_validatorDoesNotSupportParameterType_shouldPass() {
+    public void validate_whenValidatorDoesNotSupportParameterType_shouldPass() {
         assertPass(classUnderTest.validate("invalid parameter", stringParam(true)));
     }
+
+    @Test
+    public void validate_withValidEnumeratedValue_shouldPass() {
+        assertPass(classUnderTest.validate("1.3", enumeratedFloatParam(1.1f, 1.2f, 1.3f)));
+    }
+
+    @Test
+    public void validate_withInvalidEnumeratedValue_shouldFail() {
+        assertFail(classUnderTest.validate("1.4", enumeratedFloatParam(1.1f, 1.2f, 1.3f)),
+                "validation.request.parameter.enum.invalid");
+    }
+
 }

@@ -1,10 +1,10 @@
 package com.atlassian.oai.validator.interaction.request;
 
-import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.SchemaValidator;
+import com.google.common.annotations.VisibleForTesting;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.parameters.RequestBody;
 import org.apache.commons.lang3.tuple.Pair;
@@ -34,23 +34,27 @@ class RequestBodyValidator {
 
     private final SchemaValidator schemaValidator;
 
-    RequestBodyValidator(final MessageResolver messages, final SchemaValidator schemaValidator) {
+    @VisibleForTesting
+    RequestBodyValidator(final SchemaValidator schemaValidator) {
+        this(new MessageResolver(), schemaValidator);
+    }
+
+    RequestBodyValidator(@Nullable final MessageResolver messages, final SchemaValidator schemaValidator) {
         this.schemaValidator = requireNonNull(schemaValidator, "A schema validator is required");
-        this.messages = requireNonNull(messages, "A message resolver is required");
+        this.messages = messages == null ? new MessageResolver() : messages;
     }
 
     @Nonnull
     ValidationReport validateRequestBody(final Request request,
-                                         final ApiOperation apiOperation) {
+                                         @Nullable final RequestBody apiRequestBodyDefinition) {
 
         final Optional<String> requestBody = request.getBody();
 
-        if (apiOperation.getOperation().getRequestBody() == null) {
+        if (apiRequestBodyDefinition == null) {
             // A request body exists, but no request body is defined in the spec
             if (requestBody.isPresent() && !requestBody.get().isEmpty()) {
                 return ValidationReport.singleton(
-                        messages.get("validation.request.body.unexpected",
-                                apiOperation.getMethod(), apiOperation.getApiPath().original())
+                        messages.get("validation.request.body.unexpected")
                 );
             }
 
@@ -59,15 +63,14 @@ class RequestBodyValidator {
         }
 
         ValidationReport.MessageContext context = ValidationReport.MessageContext.create()
-                .withApiRequestBodyDefinition(apiOperation.getOperation().getRequestBody())
+                .withApiRequestBodyDefinition(apiRequestBodyDefinition)
                 .build();
 
         if (!requestBody.isPresent() || requestBody.get().isEmpty()) {
             // No request body, but is required in the spec
-            if (TRUE.equals(apiOperation.getOperation().getRequestBody().getRequired())) {
+            if (TRUE.equals(apiRequestBodyDefinition.getRequired())) {
                 return ValidationReport.singleton(
-                        messages.get("validation.request.body.missing",
-                                apiOperation.getMethod(), apiOperation.getApiPath().original())
+                        messages.get("validation.request.body.missing")
                 ).withAdditionalContext(context);
             }
 
@@ -76,7 +79,7 @@ class RequestBodyValidator {
         }
 
         final Optional<Pair<String, MediaType>> maybeApiMediaTypeForRequest =
-                findApiMediaTypeForRequest(request, apiOperation.getOperation().getRequestBody());
+                findApiMediaTypeForRequest(request, apiRequestBodyDefinition);
 
         // No matching media type found. Validation of mismatched content-type is handled elsewhere. Nothing to do.
         if (!maybeApiMediaTypeForRequest.isPresent()) {

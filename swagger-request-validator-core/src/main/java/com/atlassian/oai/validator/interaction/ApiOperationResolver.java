@@ -7,29 +7,39 @@ import com.atlassian.oai.validator.model.ApiPathImpl;
 import com.atlassian.oai.validator.model.NormalisedPath;
 import com.atlassian.oai.validator.model.NormalisedPathImpl;
 import com.atlassian.oai.validator.model.Request;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.Paths;
+import io.swagger.v3.oas.models.servers.Server;
+import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
+import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  * Component responsible for matching an incoming request path + method with an operation defined in the OAI spec.
  */
 public class ApiOperationResolver {
+
+    private static final Logger log = getLogger(ApiOperationResolver.class);
 
     private final String apiPrefix;
 
@@ -42,10 +52,9 @@ public class ApiOperationResolver {
      * @param api              the OpenAPI definition
      * @param basePathOverride (Optional) override for the base path defined in the OpenAPI specification.
      */
-    public ApiOperationResolver(@Nonnull final OpenAPI api, @Nullable final String basePathOverride) {
+    public ApiOperationResolver(final OpenAPI api, @Nullable final String basePathOverride) {
 
-        // TODO: Need to fix this - base path now comes from servers
-        apiPrefix = ofNullable(basePathOverride).orElse("/");
+        apiPrefix = ofNullable(basePathOverride).orElse(getBasePathFrom(api.getServers()));
         final Paths apiPaths = ofNullable(api.getPaths()).orElse(new Paths());
 
         // normalise all API paths and group them by their number of parts
@@ -70,7 +79,7 @@ public class ApiOperationResolver {
      * is allowed and having the necessary {@link ApiOperation} if applicable
      */
     @Nonnull
-    public ApiOperationMatch findApiOperation(@Nonnull final String path, @Nonnull final Request.Method method) {
+    public ApiOperationMatch findApiOperation(final String path, final Request.Method method) {
 
         // try to find possible matching paths regardless of HTTP method
         final NormalisedPath requestPath = new NormalisedPathImpl(path, apiPrefix);
@@ -107,9 +116,57 @@ public class ApiOperationResolver {
      * @return a score >= 0 that indicates how 'specific' the path definition is. Higher numbers indicate more specific
      * definitions (e.g. fewer path variables).
      */
-    private static int specificityScore(@Nonnull final ApiPath apiPath) {
+    private static int specificityScore(final ApiPath apiPath) {
         // Return the length of the path, with path vars counting as 1.
         return apiPath.normalised().replaceAll("\\{.+?}", "").length();
+    }
+
+    /**
+     * Determine the 'base path' of the given API.
+     * <p>
+     * Returns the base path of the first server definition in the spec.
+     *
+     * @param servers The OpenAPI servers definition to get the base path from
+     *
+     * @return the base path of the first server definition found in the spec.
+     */
+    @VisibleForTesting
+    @Nonnull
+    static String getBasePathFrom(@Nullable final List<Server> servers) {
+        if (servers == null) {
+            return "/";
+        }
+        return servers.stream()
+                .filter(Objects::nonNull)
+                .map(ApiOperationResolver::substituteUrlVariables)
+                .map(ApiOperationResolver::gePathFrom)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse("/");
+    }
+
+    private static String gePathFrom(final String serverUrl) {
+        try {
+            return new URI(serverUrl).getPath();
+        } catch (final URISyntaxException e) {
+            log.debug("Server URL {} not a valid URI", serverUrl);
+            return serverUrl;
+        }
+    }
+
+    private static String substituteUrlVariables(final Server server) {
+        String result = server.getUrl();
+        if (result == null) {
+            return "/";
+        }
+        if (server.getVariables() == null) {
+            return result;
+        }
+        for (final String varName : server.getVariables().keySet()) {
+            final String value = server.getVariables().get(varName).getDefault();
+            result = result.replace(format("{%s}", varName), value);
+        }
+        return result;
     }
 
 }

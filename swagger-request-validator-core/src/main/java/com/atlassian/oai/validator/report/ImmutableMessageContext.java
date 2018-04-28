@@ -86,6 +86,8 @@ class ImmutableMessageContext implements ValidationReport.MessageContext {
         return requestPath != null ||
                 method != null ||
                 apiOperation != null ||
+                apiRequestContentType != null ||
+                apiRequestBodyDefinition != null ||
                 parameter != null ||
                 responseStatus != null ||
                 apiResponseDefinition != null ||

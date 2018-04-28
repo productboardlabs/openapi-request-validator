@@ -10,21 +10,21 @@ import org.junit.Test;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadJsonRequest;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadJsonResponse;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadResource;
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadResponse;
 
 /**
  * Tests for Request validation behavior
  */
-public class RequestValidationTest {
+public class SwaggerV2RequestValidationTest {
 
     private final SwaggerRequestResponseValidator classUnderTest =
             SwaggerRequestResponseValidator.createFor("/oai/v2/api-users.json").build();
 
     private final Response validUserResponse =
-            SimpleResponse.Builder.ok().withBody(loadResponse("user-valid")).build();
+            SimpleResponse.Builder.ok().withBody(loadJsonResponse("user-valid")).build();
     private final Response validUsersResponse =
-            SimpleResponse.Builder.ok().withBody(loadResponse("users-valid")).build();
+            SimpleResponse.Builder.ok().withBody(loadJsonResponse("users-valid")).build();
     private final SimpleResponse okResponse = SimpleResponse.Builder.ok().build();
 
     @Test
@@ -75,7 +75,7 @@ public class RequestValidationTest {
     }
 
     @Test
-    public void validate_withNotMatchingApiPath_shouldFail() {
+    public void validate_withUnknownPath_shouldFail() {
         final Request request = SimpleRequest.Builder.patch("/peoples/1").build();
 
         assertFail(classUnderTest.validate(request, okResponse),
@@ -416,7 +416,7 @@ public class RequestValidationTest {
     }
 
     @Test
-    public void validate_withQueryParamNotSplitted_shouldPass() {
+    public void validate_shouldNotSplitQueryParams_whenNotArrayType() {
         final Request request = SimpleRequest.Builder
                 .get("/users")
                 .withAuthorization("Basic EncryptedUsernameAndPassword")

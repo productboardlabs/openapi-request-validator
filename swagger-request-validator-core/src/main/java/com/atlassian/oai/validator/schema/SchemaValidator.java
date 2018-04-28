@@ -14,6 +14,7 @@ import io.swagger.util.Json;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.DateSchema;
 import io.swagger.v3.oas.models.media.DateTimeSchema;
+import io.swagger.v3.oas.models.media.NumberSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.media.StringSchema;
 import org.slf4j.Logger;
@@ -183,9 +184,23 @@ public class SchemaValidator {
                 || schema instanceof DateSchema) {
             normalisedValue = quote(value);
         } else if (schema instanceof DateTimeSchema) {
-            normalisedValue = quote(normaliseDateTime(value));
+            normalisedValue = normaliseDateTime(value);
+        } else if (schema instanceof NumberSchema) {
+            normalisedValue = normaliseNumber(value);
         }
         return removeNullValuesFromTree(Json.mapper().readTree(normalisedValue));
+    }
+
+    private String normaliseNumber(final String value) {
+        try {
+            Double.parseDouble(value);
+            // Valid number. Leave unquoted.
+            return value;
+        } catch (final NumberFormatException e) {
+            // Invalid number. Schema validator will generate appropriate errors.
+            return quote(value);
+        }
+
     }
 
     private String normaliseDateTime(final String dateTime) {
@@ -201,7 +216,7 @@ public class SchemaValidator {
             // Could not parse to RFC3339 format. Schema validator will throw the appropriate error
         }
         //CHECKSTYLE:ON
-        return formatedDateTime;
+        return quote(formatedDateTime);
     }
 
     /**

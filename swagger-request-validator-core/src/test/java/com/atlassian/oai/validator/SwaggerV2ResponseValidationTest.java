@@ -9,12 +9,12 @@ import org.junit.Test;
 
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadResponse;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadJsonResponse;
 
 /**
  * Tests for Response validation behavior
  */
-public class ResponseValidationTest {
+public class SwaggerV2ResponseValidationTest {
 
     private final SwaggerRequestResponseValidator classUnderTest =
             SwaggerRequestResponseValidator.createFor("/oai/v2/api-users.json").build();
@@ -34,7 +34,7 @@ public class ResponseValidationTest {
         final Response response = SimpleResponse.Builder
                 .ok()
                 .withContentType("application/json")
-                .withBody(loadResponse("user-invalid-missingrequired"))
+                .withBody(loadJsonResponse("user-invalid-missingrequired"))
                 .build();
 
         assertFail(classUnderTest.validate(getUserRequest, response), "validation.schema.required");
@@ -47,7 +47,7 @@ public class ResponseValidationTest {
         final Response response = SimpleResponse.Builder
                 .ok()
                 .withContentType("application/json")
-                .withBody(loadResponse("user-invalid-additionalproperties"))
+                .withBody(loadJsonResponse("user-invalid-additionalproperties"))
                 .build();
 
         assertFail(classUnderTest.validate(getUserRequest, response), "validation.schema.additionalProperties");
@@ -60,7 +60,7 @@ public class ResponseValidationTest {
         final Response response = SimpleResponse.Builder
                 .ok()
                 .withContentType("application/json")
-                .withBody(loadResponse("user-invalid-baddataformat"))
+                .withBody(loadJsonResponse("user-invalid-baddataformat"))
                 .build();
 
         assertFail(classUnderTest.validate(getUserRequest, response), "validation.schema.type");
@@ -98,7 +98,7 @@ public class ResponseValidationTest {
         final Response response = SimpleResponse.Builder
                 .ok()
                 .withContentType("application/json")
-                .withBody(loadResponse("user-invalid-malformedjson"))
+                .withBody(loadJsonResponse("user-invalid-malformedjson"))
                 .build();
 
         assertFail(classUnderTest.validate(getUserRequest, response), "validation.schema.invalidJson");
@@ -111,7 +111,7 @@ public class ResponseValidationTest {
         final Response response = SimpleResponse.Builder
                 .notFound()
                 .withContentType("application/json")
-                .withBody(loadResponse("user-valid"))
+                .withBody(loadJsonResponse("user-valid"))
                 .build();
 
         assertFail(classUnderTest.validate(getUserRequest, response), "validation.schema.required");
@@ -130,7 +130,7 @@ public class ResponseValidationTest {
 
     @Test
     public void validate_withResponseContainingUnknownStatusCode_shouldPass_whenDefaultResponseDefined() {
-        final Response response = SimpleResponse.Builder.status(666).withBody(loadResponse("error-valid")).build();
+        final Response response = SimpleResponse.Builder.status(666).withBody(loadJsonResponse("error-valid")).build();
 
         assertPass(classUnderTest.validate(getUsersRequest, response));
         assertPass(classUnderTest.validateResponse("/users", Request.Method.GET, response));
@@ -140,7 +140,7 @@ public class ResponseValidationTest {
     public void validate_withResponseContentTypeMatchingProduces_shouldPass() {
         final Response response = SimpleResponse.Builder
                 .ok()
-                .withBody(loadResponse("users-valid"))
+                .withBody(loadJsonResponse("users-valid"))
                 .withHeader("Content-Type", "application/json;charset=UTF-8")
                 .build();
 
@@ -152,7 +152,7 @@ public class ResponseValidationTest {
     public void validate_withResponseContentTypeNotMatchingProduces_shouldFail() {
         final Response response = SimpleResponse.Builder
                 .ok()
-                .withBody(loadResponse("users-valid"))
+                .withBody(loadJsonResponse("users-valid"))
                 .withHeader("Content-Type", "text/html")
                 .build();
 
@@ -166,7 +166,7 @@ public class ResponseValidationTest {
     public void validate_withInvalidResponseContentType_shouldFail() {
         final Response response = SimpleResponse.Builder
                 .ok()
-                .withBody(loadResponse("users-valid"))
+                .withBody(loadJsonResponse("users-valid"))
                 .withHeader("Content-Type", "foop")
                 .build();
 

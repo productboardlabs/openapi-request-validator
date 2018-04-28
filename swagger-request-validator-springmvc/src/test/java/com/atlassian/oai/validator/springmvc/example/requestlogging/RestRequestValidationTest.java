@@ -95,8 +95,7 @@ public class RestRequestValidationTest {
         final ResponseEntity<HashMap> response = restRequest("/spring/variablePath", HttpMethod.PUT);
 
         // then: 'invalid request, missing body'
-        assertBadRequest(response,
-                "PUT on path '/spring/{pathVariable}' requires a request body. None found.");
+        assertBadRequest(response, "A request body is required but none found.");
     }
 
     @Test
