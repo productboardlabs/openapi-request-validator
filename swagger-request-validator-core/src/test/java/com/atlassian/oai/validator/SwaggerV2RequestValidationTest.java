@@ -69,9 +69,9 @@ public class SwaggerV2RequestValidationTest {
         final Response response = SimpleResponse.Builder.badRequest().build();
 
         assertFail(classUnderTest.validate(request, response),
-                "validation.schema.type");
+                "validation.request.parameter.schema.type");
         assertFail(classUnderTest.validateRequest(request),
-                "validation.schema.type");
+                "validation.request.parameter.schema.type");
     }
 
     @Test
@@ -243,9 +243,9 @@ public class SwaggerV2RequestValidationTest {
                 .build();
 
         assertFail(classUnderTest.validate(request, validUserResponse),
-                "validation.schema.required");
+                "validation.request.body.schema.required");
         assertFail(classUnderTest.validateRequest(request),
-                "validation.schema.required");
+                "validation.request.body.schema.required");
     }
 
     @Test
@@ -376,9 +376,9 @@ public class SwaggerV2RequestValidationTest {
                 .build();
 
         assertFail(classUnderTest.validate(request, validUsersResponse),
-                "validation.schema.type");
+                "validation.request.parameter.schema.type");
         assertFail(classUnderTest.validateRequest(request),
-                "validation.schema.type");
+                "validation.request.parameter.schema.type");
     }
 
     @Test
@@ -411,8 +411,8 @@ public class SwaggerV2RequestValidationTest {
                 .withQueryParam("filter", "1,\"bob\",3")
                 .build();
 
-        assertFail(classUnderTest.validate(request, validUsersResponse), "validation.schema.type");
-        assertFail(classUnderTest.validateRequest(request), "validation.schema.type");
+        assertFail(classUnderTest.validate(request, validUsersResponse), "validation.request.parameter.schema.type");
+        assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.schema.type");
     }
 
     @Test
@@ -680,9 +680,9 @@ public class SwaggerV2RequestValidationTest {
                 .build();
 
         assertFail(classUnderTest.validate(request, validUserResponse),
-                "validation.schema.type");
+                "validation.request.parameter.schema.type");
         assertFail(classUnderTest.validateRequest(request),
-                "validation.schema.type");
+                "validation.request.parameter.schema.type");
     }
 
     @Test

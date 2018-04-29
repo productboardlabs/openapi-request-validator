@@ -45,7 +45,7 @@ public class OpenAPIV3RequestValidationTest {
                 .withBody("not-valid")
                 .build();
 
-        assertFail(classUnderTest.validateRequest(request), "validation.schema.invalidJson");
+        assertFail(classUnderTest.validateRequest(request), "validation.request.body.schema.invalidJson");
     }
 
     @Test
@@ -57,7 +57,7 @@ public class OpenAPIV3RequestValidationTest {
                 .withBody("{}")
                 .build();
 
-        assertFail(classUnderTest.validateRequest(request), "validation.schema.required");
+        assertFail(classUnderTest.validateRequest(request), "validation.request.body.schema.required");
     }
 
     @Test
@@ -91,7 +91,7 @@ public class OpenAPIV3RequestValidationTest {
                 .withAuthorization("Basic EncryptedUsernameAndPassword")
                 .build();
 
-        assertFail(classUnderTest.validateRequest(request), "validation.schema.type");
+        assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.schema.type");
     }
 
     @Test
@@ -133,7 +133,7 @@ public class OpenAPIV3RequestValidationTest {
                 .withAuthorization("Basic EncryptedUsernameAndPassword")
                 .build();
 
-        assertFail(classUnderTest.validateRequest(request), "validation.schema.type");
+        assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.schema.type");
     }
 
     @Test
@@ -155,7 +155,7 @@ public class OpenAPIV3RequestValidationTest {
                 .withQueryParam("filter", "1,2,3")
                 .build();
 
-        assertFail(classUnderTest.validateRequest(request), "validation.schema.type");
+        assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.schema.type");
     }
 
     @Test
@@ -165,7 +165,7 @@ public class OpenAPIV3RequestValidationTest {
                 .withQueryParam("filter", "1", "bob", "3")
                 .build();
 
-        assertFail(classUnderTest.validateRequest(request), "validation.schema.type");
+        assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.schema.type");
     }
 
     @Test

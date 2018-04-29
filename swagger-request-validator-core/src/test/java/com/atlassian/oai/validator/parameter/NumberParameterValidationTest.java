@@ -40,7 +40,7 @@ public class NumberParameterValidationTest {
     @Test
     public void validate_withNonNumericValue_shouldFail() {
         assertFail(classUnderTest.validate("not-a-Number", floatParam()),
-                "validation.schema.type");
+                "validation.request.parameter.schema.type");
     }
 
     @Test
@@ -56,25 +56,25 @@ public class NumberParameterValidationTest {
     @Test
     public void validate_withValueGreaterThanMax_shouldFail_ifMaxSpecified() {
         assertFail(classUnderTest.validate("1.1", floatParam(null, 1.0)),
-                "validation.schema.maximum");
+                "validation.request.parameter.schema.maximum");
     }
 
     @Test
     public void validate_withValueEqualToMax_shouldFail_ifExclusiveMaxSpecified() {
         assertFail(classUnderTest.validate("1.0", floatParam(null, 1.0, null, true)),
-                "validation.schema.maximum");
+                "validation.request.parameter.schema.maximum");
     }
 
     @Test
     public void validate_withValueEqualToMin_shouldFail_ifExclusiveMinSpecified() {
         assertFail(classUnderTest.validate("1.0", floatParam(1.0, null, true, null)),
-                "validation.schema.minimum");
+                "validation.request.parameter.schema.minimum");
     }
 
     @Test
     public void validate_withValueLessThanMin_shouldFail_ifMinSpecified() {
         assertFail(classUnderTest.validate("0.9", floatParam(1.0, null)),
-                "validation.schema.minimum");
+                "validation.request.parameter.schema.minimum");
     }
 
     @Test
@@ -85,7 +85,7 @@ public class NumberParameterValidationTest {
     @Test
     public void validate_withValueNotMultipleOf_shouldFail() {
         assertFail(classUnderTest.validate("1.6", floatParamMultipleOf(0.5f)),
-                "validation.schema.multipleOf");
+                "validation.request.parameter.schema.multipleOf");
     }
 
     @Test
@@ -106,7 +106,7 @@ public class NumberParameterValidationTest {
     @Test
     public void validate_withNonNumericValueFormatUnknown_shouldFail() {
         assertFail(classUnderTest.validate("not-a-Number", floatParamFormat("unknown")),
-                "validation.schema.type");
+                "validation.request.parameter.schema.type");
     }
 
     @Test
@@ -122,7 +122,7 @@ public class NumberParameterValidationTest {
     @Test
     public void validate_withInvalidEnumeratedValue_shouldFail() {
         assertFail(classUnderTest.validate("1.4", enumeratedFloatParam(1.1f, 1.2f, 1.3f)),
-                "validation.schema.enum");
+                "validation.request.parameter.schema.enum");
     }
 
 }

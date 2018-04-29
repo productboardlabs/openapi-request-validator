@@ -75,7 +75,7 @@ public final class ParameterValidator {
             return validateArrayParam(value, parameter).withAdditionalContext(context);
         }
 
-        return schemaValidator.validate(value, parameter.getSchema())
+        return schemaValidator.validate(value, parameter.getSchema(), "request.parameter")
                 .withAdditionalContext(context);
     }
 
@@ -111,7 +111,7 @@ public final class ParameterValidator {
                         messages.get("validation.request.parameter.collection.invalid", parameter.getName())
                 ).withAdditionalContext(context);
             }
-            return schemaValidator.validate(values.iterator().next(), parameter.getSchema());
+            return schemaValidator.validate(values.iterator().next(), parameter.getSchema(), "request.parameter");
         }
 
         if (!ArraySeparator.from(parameter).isMultiValueParam()) {
@@ -147,7 +147,9 @@ public final class ParameterValidator {
         }
 
         return values.stream()
-                .map(v -> schemaValidator.validate(v, ((ArraySchema) parameter.getSchema()).getItems()))
+                .map(v -> schemaValidator.validate(
+                        v, ((ArraySchema) parameter.getSchema()).getItems(), "request.parameter")
+                )
                 .reduce(report, ValidationReport::merge);
     }
 

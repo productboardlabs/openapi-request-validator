@@ -39,7 +39,7 @@ public class SchemaValidatorTest {
         final String value = null;
         final Schema schema = new Schema();
 
-        classUnderTest.validate(value, schema);
+        classUnderTest.validate(value, schema, "prefix");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -47,14 +47,14 @@ public class SchemaValidatorTest {
         final String value = "";
         final Schema schema = new Schema();
 
-        classUnderTest.validate(value, schema);
+        classUnderTest.validate(value, schema, "prefix");
     }
 
     @Test
     public void validate_withNullSchema_shouldValidateAnyJson() {
         final List<String> values = ImmutableList.of("1", "\"string\"", "{\"prop\":3}", "[1,2,3]", "null");
 
-        values.forEach(v -> assertPass(classUnderTest.validate(v, null)));
+        values.forEach(v -> assertPass(classUnderTest.validate(v, null, "prefix")));
     }
 
     @Test
@@ -62,7 +62,7 @@ public class SchemaValidatorTest {
         final String value = "1";
         final Schema schema = new StringSchema();
 
-        assertPass(classUnderTest.validate(value, schema));
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
 
     @Test
@@ -70,7 +70,8 @@ public class SchemaValidatorTest {
         final String value = "1.0";
         final Schema schema = new IntegerSchema();
 
-        assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.type");
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.type");
     }
 
     @Test
@@ -78,7 +79,7 @@ public class SchemaValidatorTest {
         final String value = "bob";
         final Schema schema = new StringSchema();
 
-        assertPass(classUnderTest.validate(value, schema));
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
 
     @Test
@@ -86,7 +87,7 @@ public class SchemaValidatorTest {
         final String value = "\"bob\"";
         final Schema schema = new StringSchema();
 
-        assertPass(classUnderTest.validate(value, schema));
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
 
     @Test
@@ -95,9 +96,8 @@ public class SchemaValidatorTest {
         final Schema schema = new ObjectSchema()
                 .addProperties("foo", new StringSchema())
                 .required(singletonList("foo"));
-        //final Model schema = new ModelImpl().property("foo", new StringProperty()).required("foo");
 
-        assertPass(classUnderTest.validate(value, schema));
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
 
     @Test
@@ -107,7 +107,8 @@ public class SchemaValidatorTest {
                 .addProperties("foo", new StringSchema())
                 .required(singletonList("foo"));
 
-        assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.required");
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.required");
     }
 
     @Test
@@ -115,7 +116,7 @@ public class SchemaValidatorTest {
         final String value = "{\"title\":\"bar\", \"message\":\"something\"}";
         final Schema schema = new Schema().$ref("#/components/schemas/Error");
 
-        assertPass(classUnderTest.validate(value, schema));
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
 
     @Test
@@ -123,7 +124,8 @@ public class SchemaValidatorTest {
         final String value = "{\"title\":\"bar\"}";
         final Schema schema = new Schema().$ref("#/components/schemas/Error");
 
-        assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.required");
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.required");
     }
 
     @Test
@@ -131,7 +133,8 @@ public class SchemaValidatorTest {
         final String value = "{\"title\":\"bar\", \"message\":\"something\", \"extra\":\"value\"}";
         final Schema schema = new Schema().$ref("#/components/schemas/Error");
 
-        assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.additionalProperties");
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.additionalProperties");
     }
 
     @Test
@@ -141,7 +144,8 @@ public class SchemaValidatorTest {
                 .addProperties("foo", new StringSchema())
                 .required(singletonList("foo"));
 
-        assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.additionalProperties");
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.additionalProperties");
     }
 
     @Test
@@ -149,7 +153,8 @@ public class SchemaValidatorTest {
         final String value = "{\"title\":\"bar\", \"message\":\"something\"}";
         final Schema schema = new Schema().$ref("#/definitions/{\"What\":\"This actually happened!\"}");
 
-        assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.processingError");
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.processingError");
     }
 
     @Test
@@ -161,7 +166,8 @@ public class SchemaValidatorTest {
         when(mockApi.getComponents()).thenThrow(new IllegalStateException("Testing exception handling"));
         final SchemaValidator failingValidator = new SchemaValidator(mockApi, new MessageResolver());
 
-        assertFailWithoutContext(failingValidator.validate(value, schema), "validation.schema.unknownError");
+        assertFailWithoutContext(failingValidator.validate(value, schema, "prefix"),
+                "validation.prefix.schema.unknownError");
     }
 
     @Test
@@ -172,7 +178,7 @@ public class SchemaValidatorTest {
         final Schema schema = new Schema().$ref("#/components/schemas/User");
         final String value = "{\"firstname\":\"user_firstname\", \"lastname\":\"user_lastname\", \"city\":\"user_city\"}";
 
-        assertPass(classUnderTest.validate(value, schema));
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
 
     @Test
@@ -183,8 +189,8 @@ public class SchemaValidatorTest {
         final Schema schema = new Schema().$ref("#/components/schemas/User");
         final String value = "{\"firstname\":\"user_firstname\", \"city\":1}";
 
-        final ValidationReport report = classUnderTest.validate(value, schema);
-        assertFailWithoutContext(report, "validation.schema.allOf");
+        final ValidationReport report = classUnderTest.validate(value, schema, "prefix");
+        assertFailWithoutContext(report, "validation.prefix.schema.allOf");
 
         final ValidationReport.Message message = report.getMessages().get(0);
         assertThat(message.getAdditionalInfo(), iterableWithSize(2));
@@ -200,7 +206,8 @@ public class SchemaValidatorTest {
         final Schema schema = new Schema().$ref("#/components/schemas/User");
         final String value = "{\"firstname\":\"user_firstname\", \"lastname\":\"user_lastname\", \"city\":\"user_city\"}";
 
-        assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.additionalProperties");
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.additionalProperties");
     }
 
     @Test
@@ -219,7 +226,7 @@ public class SchemaValidatorTest {
                 .addProperties("arr", new ArraySchema())
                 .required(singletonList("foo"));
 
-        assertPass(classUnderTest.validate(value, schema));
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
 
     @Test
@@ -228,7 +235,7 @@ public class SchemaValidatorTest {
         final Schema schema = new ObjectSchema()
                 .addProperties("arr", new ArraySchema().items(new IntegerSchema()));
 
-        assertPass(classUnderTest.validate(value, schema));
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
 
     @Test
@@ -248,7 +255,7 @@ public class SchemaValidatorTest {
                                 .addProperties("flt", new NumberSchema().format("float"))
                 ));
 
-        assertPass(classUnderTest.validate(value, schema));
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
 
     @Test
@@ -258,7 +265,7 @@ public class SchemaValidatorTest {
         final Schema schema = new Schema().$ref("#/components/schemas/Pet");
         final String value = "{\"name\": \"Moggy\", \"petType\": \"Cat\", \"huntingSkill\":\"clueless\"}";
 
-        assertPass(classUnderTest.validate(value, schema));
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
 
     @Test
@@ -268,8 +275,8 @@ public class SchemaValidatorTest {
         final Schema schema = new Schema().$ref("#/components/schemas/Pet");
         final String value = "{\"name\": \"Moggy\", \"petType\": \"Cat\", \"huntingSkill\":\"clueless\"}";
 
-        assertPass(classUnderTest.validate(value, schema));
-        assertPass(classUnderTest.validate(value, schema));
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
 
     @Test
@@ -279,7 +286,8 @@ public class SchemaValidatorTest {
         final Schema schema = new Schema().$ref("#/components/schemas/Pet");
         final String value = "{\"name\": \"Moggy\", \"petType\": \"Cat\", \"huntingSkill\":\"ruthless\"}";
 
-        assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.discriminator");
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.discriminator");
     }
 
     @Test
@@ -289,12 +297,16 @@ public class SchemaValidatorTest {
         final Schema schema = new Schema().$ref("#/components/schemas/Pet");
         final String value = "{\"name\": \"Moggy\", \"petType\": \"Cat\", \"huntingSkill\":\"ruthless\"}";
 
-        assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.discriminator");
-        assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.discriminator");
-        assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.discriminator");
-        assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.discriminator");
-        assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.discriminator");
-        assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.discriminator");
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.discriminator");
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.discriminator");
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.discriminator");
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.discriminator");
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.discriminator");
     }
 
     @Test
@@ -302,7 +314,7 @@ public class SchemaValidatorTest {
         final String value = "1985-04-12";
         final Schema schema = new DateSchema();
 
-        assertPass(classUnderTest.validate(value, schema));
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
 
     @Test
@@ -310,7 +322,7 @@ public class SchemaValidatorTest {
         final String value = "1985-99-99";
         final Schema schema = new DateSchema();
 
-        assertFailWithoutContext(classUnderTest.validate(value, schema));
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"));
     }
 
     @Test
@@ -318,7 +330,7 @@ public class SchemaValidatorTest {
         final String value = "1985-04-12T23:20:50.52Z";
         final Schema schema = new DateTimeSchema();
 
-        assertPass(classUnderTest.validate(value, schema));
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
 
     @Test
@@ -326,7 +338,7 @@ public class SchemaValidatorTest {
         final String value = "1990-12-31T15:59:59+08:00";
         final Schema schema = new DateTimeSchema();
 
-        assertPass(classUnderTest.validate(value, schema));
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
 
     @Test
@@ -334,7 +346,8 @@ public class SchemaValidatorTest {
         final String value = "Wed Jul 19 14:21:33 UTC 2017";
         final Schema schema = new DateTimeSchema();
 
-        assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.format");
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.format");
     }
 
     @Test
@@ -344,15 +357,15 @@ public class SchemaValidatorTest {
         final String value = "{\"id\":123}";
         final Schema schema = new ObjectSchema().addProperties("id", new IntegerSchema());
 
-        assertPass(classUnderTest.validate(value, schema));
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
 
     @Test
     public void validate_withNumberProperty_shouldPass_whenValid() {
         final String value = "1";
         final Schema schema = new NumberSchema();
-        
-        assertPass(classUnderTest.validate(value, schema));
+
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
 
     @Test
@@ -360,8 +373,8 @@ public class SchemaValidatorTest {
         final String value = "1,2";
         final Schema schema = new NumberSchema();
 
-        assertFailWithoutContext(classUnderTest.validate(value, schema),
-                "validation.schema.type");
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.type");
     }
 
     private SchemaValidator validatorWithAdditionalPropertiesIgnored(final String api) {

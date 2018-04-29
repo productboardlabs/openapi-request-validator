@@ -58,7 +58,7 @@ public class ArrayParameterValidationTest {
     @Test
     public void validate_withInvalidParameter_shouldFail() {
         assertFail(classUnderTest.validate("1,2.1,3", intArrayParam(SIMPLE)),
-                "validation.schema.type");
+                "validation.request.parameter.schema.type");
     }
 
     @Test
@@ -102,7 +102,7 @@ public class ArrayParameterValidationTest {
     @Test
     public void validate_withInvalidCollectionParameter_shouldFail() {
         assertFailWithoutContext(classUnderTest.validate(asList("1", "2.1", "3"), intArrayParam(true, FORM, true)),
-                "validation.schema.type");
+                "validation.request.parameter.schema.type");
     }
 
     @Test
@@ -156,6 +156,6 @@ public class ArrayParameterValidationTest {
     @Test
     public void validate_withEnumValues_whouldFail_whenValueDoesntMatchEnum() {
         assertFail(classUnderTest.validate("1,2,1,4", enumeratedArrayParam(true, SIMPLE, "1", "2", "bob")),
-                "validation.schema.enum");
+                "validation.request.parameter.schema.enum");
     }
 }

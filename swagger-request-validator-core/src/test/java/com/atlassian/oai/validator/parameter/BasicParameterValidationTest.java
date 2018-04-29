@@ -17,7 +17,7 @@ public class BasicParameterValidationTest {
 
     @Test
     public void validate_withInvalidIntegerParam_shouldFail() {
-        assertFail(parameterValidator.validate("1.0", intParam()), "validation.schema.type");
+        assertFail(parameterValidator.validate("1.0", intParam()), "validation.request.parameter.schema.type");
     }
 
     @Test
@@ -27,7 +27,7 @@ public class BasicParameterValidationTest {
 
     @Test
     public void validate_withInvalidNumberParam_shouldFail() {
-        assertFail(parameterValidator.validate("1.0a", floatParam()), "validation.schema.type");
+        assertFail(parameterValidator.validate("1.0a", floatParam()), "validation.request.parameter.schema.type");
     }
 
     @Test

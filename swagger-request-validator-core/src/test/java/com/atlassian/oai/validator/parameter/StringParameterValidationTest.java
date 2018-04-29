@@ -53,16 +53,16 @@ public class StringParameterValidationTest {
     @Test
     public void validate_withEnum_shouldFail_whenNotMatching() {
         assertFail(classUnderTest.validate("Unknown", enumeratedStringParam("Enum-1", "Enum-2", "Enum-3")),
-                "validation.schema.enum");
+                "validation.request.parameter.schema.enum");
         // case sensitive match necessary
         assertFail(classUnderTest.validate("ENUM-1", enumeratedStringParam("Enum-1", "Enum-2", "Enum-3")),
-                "validation.schema.enum");
+                "validation.request.parameter.schema.enum");
     }
 
     @Test
     public void validate_withPattern_shouldFail_whenNoMatch() {
         assertFail(classUnderTest.validate("NO_CAPS_ALLOWED", patternStringParam("^[a-z]*$")),
-                "validation.schema.pattern");
+                "validation.request.parameter.schema.pattern");
     }
 
     @Test
@@ -73,7 +73,7 @@ public class StringParameterValidationTest {
     @Test
     public void validate_withMinLength_shouldFail_whenTooShort() {
         assertFail(classUnderTest.validate("short", stringParam(6, null)),
-                "validation.schema.minLength");
+                "validation.request.parameter.schema.minLength");
     }
 
     @Test
@@ -84,7 +84,7 @@ public class StringParameterValidationTest {
     @Test
     public void validate_withMaxLength_shouldFail_whenTooLong() {
         assertFail(classUnderTest.validate("far too long for my taste", stringParam(null, 10)),
-                "validation.schema.maxLength");
+                "validation.request.parameter.schema.maxLength");
     }
 
     @Test
@@ -95,7 +95,7 @@ public class StringParameterValidationTest {
     @Test
     public void validate_withDateFormat_shouldFail_whenNotAValidISODate() {
         assertFail(classUnderTest.validate("2016--5dd", dateParam()),
-                "validation.schema.format");
+                "validation.request.parameter.schema.format");
     }
 
     @Test
@@ -106,7 +106,7 @@ public class StringParameterValidationTest {
     @Test
     public void validate_withDateTimeFormat_shouldFail_whenNotAValidISODate() {
         assertFail(classUnderTest.validate("2016--5dd-slkdjfl01938", dateTimeParam()),
-                "validation.schema.format");
+                "validation.request.parameter.schema.format");
     }
 
     @Test
@@ -122,7 +122,7 @@ public class StringParameterValidationTest {
     @Test
     public void validate_withUUIDFormat_shouldFail_whenInvalidUUID() {
         assertFail(classUnderTest.validate("notauuid", uuidParam()),
-                "validation.schema.format");
+                "validation.request.parameter.schema.format");
     }
 
     @Test
@@ -133,7 +133,7 @@ public class StringParameterValidationTest {
     @Test
     public void validate_withEmailFormat_shouldFail_whenInvalidEmail() {
         assertFail(classUnderTest.validate("notanemail", emailParam()),
-                "validation.schema.format");
+                "validation.request.parameter.schema.format");
     }
 
     @Test
@@ -144,7 +144,7 @@ public class StringParameterValidationTest {
     @Test
     public void validate_withIPv4Format_shouldFail_whenInvalidIPAddress() {
         assertFail(classUnderTest.validate("192.0.0", ipv4Param()),
-                "validation.schema.format");
+                "validation.request.parameter.schema.format");
     }
 
     @Test
@@ -155,7 +155,7 @@ public class StringParameterValidationTest {
     @Test
     public void validate_withIPv6Format_shouldFail_whenInvalidIPAddress() {
         assertFail(classUnderTest.validate(":1", ipv6Param()),
-                "validation.schema.format");
+                "validation.request.parameter.schema.format");
     }
 
     @Test
@@ -166,7 +166,7 @@ public class StringParameterValidationTest {
     @Test
     public void validate_withURIFormat_shouldFail_whenInvalidURI() {
         assertFail(classUnderTest.validate("http://<>.com", uriParam()),
-                "validation.schema.format");
+                "validation.request.parameter.schema.format");
     }
 
     @Test
