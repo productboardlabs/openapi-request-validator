@@ -1,6 +1,5 @@
 package com.atlassian.oai.validator.schema;
 
-import com.atlassian.oai.validator.parameter.format.CustomDateTimeFormatter;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.fasterxml.jackson.core.JsonParseException;
