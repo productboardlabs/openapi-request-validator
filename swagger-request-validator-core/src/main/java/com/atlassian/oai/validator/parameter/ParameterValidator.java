@@ -18,7 +18,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 
-public final class ParameterValidators {
+public final class ParameterValidator {
 
     private final SchemaValidator schemaValidator;
     private final MessageResolver messages;
@@ -29,7 +29,7 @@ public final class ParameterValidators {
      *
      * @param messages The message resolver to use.
      */
-    public ParameterValidators(final MessageResolver messages) {
+    public ParameterValidator(final MessageResolver messages) {
         this(null, messages);
     }
 
@@ -40,8 +40,8 @@ public final class ParameterValidators {
      * @param schemaValidator The schema validator to use. If not provided a default (empty) validator will be used.
      * @param messages The message resolver to use.
      */
-    public ParameterValidators(@Nullable final SchemaValidator schemaValidator,
-                               final MessageResolver messages) {
+    public ParameterValidator(@Nullable final SchemaValidator schemaValidator,
+                              final MessageResolver messages) {
         this.schemaValidator = schemaValidator == null ? new SchemaValidator(messages) : schemaValidator;
         this.messages = requireNonNull(messages);
     }

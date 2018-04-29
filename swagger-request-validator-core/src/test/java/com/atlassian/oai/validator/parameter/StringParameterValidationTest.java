@@ -21,7 +21,7 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 
 public class StringParameterValidationTest {
 
-    private final ParameterValidators classUnderTest = new ParameterValidators(new MessageResolver());
+    private final ParameterValidator classUnderTest = new ParameterValidator(new MessageResolver());
 
     @Test
     public void validate_withNullValue_shouldPass_whenNotRequired() {

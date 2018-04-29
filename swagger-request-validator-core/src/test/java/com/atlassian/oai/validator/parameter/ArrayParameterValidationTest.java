@@ -23,7 +23,7 @@ import static java.util.Collections.emptyList;
 
 public class ArrayParameterValidationTest {
 
-    private final ParameterValidators classUnderTest = new ParameterValidators(null, new MessageResolver());
+    private final ParameterValidator classUnderTest = new ParameterValidator(null, new MessageResolver());
 
     @Test
     public void validate_withValidCsvFormat_shouldPass() {
