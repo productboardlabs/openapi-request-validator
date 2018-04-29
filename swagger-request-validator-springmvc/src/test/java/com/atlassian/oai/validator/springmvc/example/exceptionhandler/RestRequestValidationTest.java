@@ -111,7 +111,7 @@ public class RestRequestValidationTest {
         final ResponseEntity<HashMap> response = restRequest("/spring/noInteger", HttpMethod.DELETE);
 
         // then: 'invalid request, the path variable is no integer'
-        assertBadRequest(response, "validation.request.parameter.invalidFormat");
+        assertBadRequest(response, "validation.schema.type");
     }
 
     private ResponseEntity<HashMap> restRequest(final String uri, final HttpMethod method) {

@@ -19,13 +19,13 @@ import static com.atlassian.oai.validator.util.ParameterGenerator.uuidParam;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 
-public class StringParameterValidatorTest {
+public class StringParameterValidationTest {
 
-    private final StringParameterValidator classUnderTest = new StringParameterValidator(new MessageResolver());
+    private final ParameterValidators classUnderTest = new ParameterValidators(new MessageResolver());
 
     @Test
     public void validate_withNullValue_shouldPass_whenNotRequired() {
-        assertPass(classUnderTest.validate(null, stringParam(false)));
+        assertPass(classUnderTest.validate((String) null, stringParam(false)));
     }
 
     @Test
@@ -35,7 +35,7 @@ public class StringParameterValidatorTest {
 
     @Test
     public void validate_withNullValue_shouldFail_whenRequired() {
-        assertFail(classUnderTest.validate(null, stringParam(true)),
+        assertFail(classUnderTest.validate((String) null, stringParam(true)),
                 "validation.request.parameter.missing");
     }
 
@@ -53,16 +53,16 @@ public class StringParameterValidatorTest {
     @Test
     public void validate_withEnum_shouldFail_whenNotMatching() {
         assertFail(classUnderTest.validate("Unknown", enumeratedStringParam("Enum-1", "Enum-2", "Enum-3")),
-                "validation.request.parameter.enum.invalid");
+                "validation.schema.enum");
         // case sensitive match necessary
         assertFail(classUnderTest.validate("ENUM-1", enumeratedStringParam("Enum-1", "Enum-2", "Enum-3")),
-                "validation.request.parameter.enum.invalid");
+                "validation.schema.enum");
     }
 
     @Test
     public void validate_withPattern_shouldFail_whenNoMatch() {
-        assertFail(classUnderTest.validate("NO_CAPS_ALLOWED", patternStringParam("[a-z]*")),
-                "validation.request.parameter.string.patternMismatch");
+        assertFail(classUnderTest.validate("NO_CAPS_ALLOWED", patternStringParam("^[a-z]*$")),
+                "validation.schema.pattern");
     }
 
     @Test
@@ -73,7 +73,7 @@ public class StringParameterValidatorTest {
     @Test
     public void validate_withMinLength_shouldFail_whenTooShort() {
         assertFail(classUnderTest.validate("short", stringParam(6, null)),
-                "validation.request.parameter.string.tooShort");
+                "validation.schema.minLength");
     }
 
     @Test
@@ -84,7 +84,7 @@ public class StringParameterValidatorTest {
     @Test
     public void validate_withMaxLength_shouldFail_whenTooLong() {
         assertFail(classUnderTest.validate("far too long for my taste", stringParam(null, 10)),
-                "validation.request.parameter.string.tooLong");
+                "validation.schema.maxLength");
     }
 
     @Test
@@ -95,7 +95,7 @@ public class StringParameterValidatorTest {
     @Test
     public void validate_withDateFormat_shouldFail_whenNotAValidISODate() {
         assertFail(classUnderTest.validate("2016--5dd", dateParam()),
-                "validation.request.parameter.string.date.invalid");
+                "validation.schema.format");
     }
 
     @Test
@@ -106,7 +106,7 @@ public class StringParameterValidatorTest {
     @Test
     public void validate_withDateTimeFormat_shouldFail_whenNotAValidISODate() {
         assertFail(classUnderTest.validate("2016--5dd-slkdjfl01938", dateTimeParam()),
-                "validation.request.parameter.string.dateTime.invalid");
+                "validation.schema.format");
     }
 
     @Test
@@ -122,7 +122,7 @@ public class StringParameterValidatorTest {
     @Test
     public void validate_withUUIDFormat_shouldFail_whenInvalidUUID() {
         assertFail(classUnderTest.validate("notauuid", uuidParam()),
-                "validation.request.parameter.string.uuid.invalid");
+                "validation.schema.format");
     }
 
     @Test
@@ -133,7 +133,7 @@ public class StringParameterValidatorTest {
     @Test
     public void validate_withEmailFormat_shouldFail_whenInvalidEmail() {
         assertFail(classUnderTest.validate("notanemail", emailParam()),
-                "validation.request.parameter.string.email.invalid");
+                "validation.schema.format");
     }
 
     @Test
@@ -144,7 +144,7 @@ public class StringParameterValidatorTest {
     @Test
     public void validate_withIPv4Format_shouldFail_whenInvalidIPAddress() {
         assertFail(classUnderTest.validate("192.0.0", ipv4Param()),
-                "validation.request.parameter.string.ipv4.invalid");
+                "validation.schema.format");
     }
 
     @Test
@@ -155,7 +155,7 @@ public class StringParameterValidatorTest {
     @Test
     public void validate_withIPv6Format_shouldFail_whenInvalidIPAddress() {
         assertFail(classUnderTest.validate(":1", ipv6Param()),
-                "validation.request.parameter.string.ipv6.invalid");
+                "validation.schema.format");
     }
 
     @Test
@@ -166,7 +166,7 @@ public class StringParameterValidatorTest {
     @Test
     public void validate_withURIFormat_shouldFail_whenInvalidURI() {
         assertFail(classUnderTest.validate("http://<>.com", uriParam()),
-                "validation.request.parameter.string.uri.invalid");
+                "validation.schema.format");
     }
 
     @Test

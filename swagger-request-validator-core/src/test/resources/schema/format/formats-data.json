@@ -1,0 +1,68 @@
+{
+  "format-valid": {
+    "date": "1990-01-02",
+    "date-time": "2017-02-02T12:13:14.156+07:00",
+    "int32": 27,
+    "int64": 34359738368,
+    "float": 0.3333,
+    "double": 0.6083333333333333,
+    "email": "someone@somewhere.com",
+    "byte": "SGVsbG8gU3dhZ2dlciByZXF1ZXN0IHZhbGlkYXRvciE=",
+    "boolean": true,
+    "ipv4": "192.168.0.1",
+    "ipv6": "2001:0db8:0000:0000:0000:ff00:0042:8329",
+    "uri": "http://192.168.0.1:8080",
+    "uuid": "123e4567-e89b-12d3-a456-426655440000"
+  },
+  "format-invalid-date": {
+    "date": "1990-01-02T08:00:00"
+  },
+  "format-invalid-date-time": {
+    "date-time": "2017-02-02 12:13:14.156+07:00"
+  },
+  "format-invalid-int32-overflow": {
+    "int32": 34359738368
+  },
+  "format-invalid-int64-overflow": {
+    "int64": 343597383683435973836834359738368
+  },
+  "format-invalid-float-overflow": {
+    "float": 0.6083333333333333
+  },
+  "format-invalid-double-overflow": {
+    "double": 0.343597383683435973836834359738368343597383683435973836834359738368
+  },
+  "format-invalid-email": {
+    "email": "someone@some@where.com"
+  },
+  "format-invalid-base64": {
+    "byte": "invalid-base64-content"
+  },
+  "format-invalid-ipv4": {
+    "ipv4": "192.168.0"
+  },
+  "format-invalid-ipv6": {
+    "ipv6": ":1"
+  },
+  "format-invalid-uri": {
+    "uri": "<>$$"
+  },
+  "format-invalid-uuid": {
+    "uuid": "123e4567-e89b-12d3-a456-"
+  },
+  "format-invalid-multiple-messages": {
+    "date": "invalid-date",
+    "int64": 343597383683435973836834359738368,
+    "byte": "invalid-base64-content"
+  },
+  "format-invalid-types": {
+    "int64": 123.456,
+    "int32": "u18",
+    "double": "test",
+    "email": 10,
+    "boolean": "true",
+    "ipv4": 111.222,
+    "ipv6": 111,
+    "uri": 1
+  }
+}

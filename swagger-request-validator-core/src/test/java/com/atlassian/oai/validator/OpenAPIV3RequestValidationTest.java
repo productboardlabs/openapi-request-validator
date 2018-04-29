@@ -91,7 +91,7 @@ public class OpenAPIV3RequestValidationTest {
                 .withAuthorization("Basic EncryptedUsernameAndPassword")
                 .build();
 
-        assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.invalidFormat");
+        assertFail(classUnderTest.validateRequest(request), "validation.schema.type");
     }
 
     @Test
@@ -133,7 +133,7 @@ public class OpenAPIV3RequestValidationTest {
                 .withAuthorization("Basic EncryptedUsernameAndPassword")
                 .build();
 
-        assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.invalidFormat");
+        assertFail(classUnderTest.validateRequest(request), "validation.schema.type");
     }
 
     @Test

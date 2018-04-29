@@ -1,31 +1,31 @@
 {
   "$schema": "https://openapis.org/specification/versions/2.0#",
-  "$ref": "#/definitions/Rec",
+  "$ref": "#/definitions/SupportedFormats",
   "definitions": {
-    "Rec": {
+    "SupportedFormats": {
       "type": "object",
       "properties": {
-        "birthDate": {
+        "date": {
           "type": "string",
           "format": "date"
         },
-        "lastLogin": {
+        "date-time": {
           "type": "string",
           "format": "date-time"
         },
-        "age": {
+        "int32": {
           "type": "integer",
           "format": "int32"
         },
-        "id": {
+        "int64": {
           "type": "integer",
           "format": "int64"
         },
-        "flo": {
+        "float": {
           "type": "number",
           "format": "float"
         },
-        "dbl": {
+        "double": {
           "type": "number",
           "format": "double"
         },
@@ -33,12 +33,28 @@
           "type": "string",
           "format": "email"
         },
-        "encoded": {
+        "byte": {
           "type": "string",
           "format": "byte"
         },
-        "archive": {
+        "boolean": {
           "type": "boolean"
+        },
+        "ipv4": {
+          "type": "string",
+          "format": "ipv4"
+        },
+        "ipv6": {
+          "type": "string",
+          "format": "ipv6"
+        },
+        "uri": {
+          "type": "string",
+          "format": "uri"
+        },
+        "uuid": {
+          "type": "string",
+          "format": "uuid"
         }
       }
     }

@@ -11,13 +11,13 @@ import static com.atlassian.oai.validator.util.ParameterGenerator.stringParam;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 
-public class ParameterValidatorsTest {
+public class BasicParameterValidationTest {
 
-    private final ParameterValidators parameterValidators = new ParameterValidators(null, new MessageResolver());
+    private final ParameterValidators parameterValidators = new ParameterValidators(new MessageResolver());
 
     @Test
     public void validate_withInvalidIntegerParam_shouldFail() {
-        assertFail(parameterValidators.validate("1.0", intParam()), "validation.request.parameter.invalidFormat");
+        assertFail(parameterValidators.validate("1.0", intParam()), "validation.schema.type");
     }
 
     @Test
@@ -27,7 +27,7 @@ public class ParameterValidatorsTest {
 
     @Test
     public void validate_withInvalidNumberParam_shouldFail() {
-        assertFail(parameterValidators.validate("1.0a", floatParam()), "validation.request.parameter.invalidFormat");
+        assertFail(parameterValidators.validate("1.0a", floatParam()), "validation.schema.type");
     }
 
     @Test

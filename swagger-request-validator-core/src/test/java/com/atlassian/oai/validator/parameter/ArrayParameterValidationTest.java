@@ -21,9 +21,9 @@ import static io.swagger.v3.oas.models.parameters.Parameter.StyleEnum.SPACEDELIM
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
-public class ArrayParameterValidatorTest {
+public class ArrayParameterValidationTest {
 
-    private final ArrayParameterValidator classUnderTest = new ArrayParameterValidator(null, new MessageResolver());
+    private final ParameterValidators classUnderTest = new ParameterValidators(null, new MessageResolver());
 
     @Test
     public void validate_withValidCsvFormat_shouldPass() {
@@ -103,11 +103,6 @@ public class ArrayParameterValidatorTest {
     public void validate_withInvalidCollectionParameter_shouldFail() {
         assertFailWithoutContext(classUnderTest.validate(asList("1", "2.1", "3"), intArrayParam(true, FORM, true)),
                 "validation.schema.type");
-    }
-
-    @Test
-    public void validate_withCollection_shouldPass_whenParameterMissing() {
-        assertPass(classUnderTest.validate(asList("value"), null));
     }
 
     @Test

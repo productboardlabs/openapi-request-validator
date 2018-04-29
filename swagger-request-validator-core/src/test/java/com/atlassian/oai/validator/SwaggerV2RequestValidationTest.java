@@ -69,9 +69,9 @@ public class SwaggerV2RequestValidationTest {
         final Response response = SimpleResponse.Builder.badRequest().build();
 
         assertFail(classUnderTest.validate(request, response),
-                "validation.request.parameter.invalidFormat");
+                "validation.schema.type");
         assertFail(classUnderTest.validateRequest(request),
-                "validation.request.parameter.invalidFormat");
+                "validation.schema.type");
     }
 
     @Test
@@ -376,9 +376,9 @@ public class SwaggerV2RequestValidationTest {
                 .build();
 
         assertFail(classUnderTest.validate(request, validUsersResponse),
-                "validation.request.parameter.invalidFormat");
+                "validation.schema.type");
         assertFail(classUnderTest.validateRequest(request),
-                "validation.request.parameter.invalidFormat");
+                "validation.schema.type");
     }
 
     @Test
@@ -680,9 +680,9 @@ public class SwaggerV2RequestValidationTest {
                 .build();
 
         assertFail(classUnderTest.validate(request, validUserResponse),
-                "validation.request.parameter.invalidFormat");
+                "validation.schema.type");
         assertFail(classUnderTest.validateRequest(request),
-                "validation.request.parameter.invalidFormat");
+                "validation.schema.type");
     }
 
     @Test

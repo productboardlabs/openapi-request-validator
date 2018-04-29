@@ -7,76 +7,107 @@ public class SwaggerV20AttributeTest extends AbstractAttributeTest {
 
     @Test
     public void testValid() throws Exception {
-        test("formats-valid", "format-valid");
+        test("format-valid");
     }
 
     @Test
     public void testInvalidDate() throws Exception {
-        test("formats-valid", "format-invalid-date",
-                new ExpectedMessage(LogLevel.ERROR, new Criteria("instance", "/birthDate", true)));
+        test("format-invalid-date",
+                new ExpectedMessage(LogLevel.ERROR,
+                        new Criteria("instance", "/date", true)));
     }
 
     @Test
     public void testInvalidDateTime() throws Exception {
-        test("formats-valid", "format-invalid-date-time",
-                new ExpectedMessage(LogLevel.ERROR, new Criteria("instance", "/lastLogin", true)));
+        test("format-invalid-date-time",
+                new ExpectedMessage(LogLevel.ERROR,
+                        new Criteria("instance", "/date-time", true)));
+    }
+
+    @Test
+    public void testInvalidIPv4() throws Exception {
+        test("format-invalid-ipv4",
+                new ExpectedMessage(LogLevel.ERROR,
+                        new Criteria("instance", "/ipv4", true)));
+    }
+
+    @Test
+    public void testInvalidIPv6() throws Exception {
+        test("format-invalid-ipv6",
+                new ExpectedMessage(LogLevel.ERROR,
+                        new Criteria("instance", "/ipv6", true)));
+    }
+
+    @Test
+    public void testInvalidUri() throws Exception {
+        test("format-invalid-uri",
+                new ExpectedMessage(LogLevel.ERROR,
+                        new Criteria("instance", "/uri", true)));
+    }
+
+    @Test
+    public void testInvalidUuid() throws Exception {
+        test("format-invalid-uuid",
+                new ExpectedMessage(LogLevel.ERROR,
+                        new Criteria("instance", "/uuid", true)));
     }
 
     @Test
     public void testInvalidInt32() throws Exception {
-        test("formats-valid", "format-invalid-int32",
+        test("format-invalid-int32-overflow",
                 new ExpectedMessage(LogLevel.WARNING, new Criteria("key", "warn.format.int32.overflow")));
     }
 
     @Test
     public void testInvalidInt64() throws Exception {
-        test("formats-valid", "format-invalid-int64",
+        test("format-invalid-int64-overflow",
                 new ExpectedMessage(LogLevel.WARNING, new Criteria("key", "warn.format.int64.overflow")));
     }
 
     @Test
     public void testInvalidFloat() throws Exception {
-        test("formats-valid", "format-invalid-float",
+        test("format-invalid-float-overflow",
                 new ExpectedMessage(LogLevel.WARNING, new Criteria("key", "warn.format.float.overflow")));
     }
 
     @Test
     public void testInvalidDouble() throws Exception {
-        test("formats-valid", "format-invalid-double",
+        test("format-invalid-double-overflow",
                 new ExpectedMessage(LogLevel.WARNING, new Criteria("key", "warn.format.double.overflow")));
     }
 
     @Test
     public void testInvalidBase64() throws Exception {
-        test("formats-valid", "format-invalid-base64",
+        test("format-invalid-base64",
                 new ExpectedMessage(LogLevel.ERROR, new Criteria("key", "err.format.base64.invalid")));
     }
 
     @Test
     public void testMultipleValidationErrors() throws Exception {
-        test("formats-valid", "format-invalid-multiple-messages",
-                new ExpectedMessage(LogLevel.ERROR, new Criteria("instance", "/birthDate", true)),
+        test("format-invalid-multiple-messages",
+                new ExpectedMessage(LogLevel.ERROR,
+                        new Criteria("instance", "/date", true)),
                 new ExpectedMessage(LogLevel.WARNING,
                         new Criteria("key", "warn.format.int64.overflow"),
-                        new Criteria("instance", "/id", true)),
+                        new Criteria("instance", "/int64", true)),
                 new ExpectedMessage(LogLevel.ERROR,
                         new Criteria("key", "err.format.base64.invalid"),
-                        new Criteria("instance", "/encoded", true)));
+                        new Criteria("instance", "/byte", true)));
     }
 
     @Test
     public void testInvalidTypes() throws Exception {
-        test("formats-valid", "format-invalid-types",
+        test("format-invalid-types",
                 new ExpectedMessage(LogLevel.ERROR,
-                        new Criteria("instance", "/age", true),
+                        new Criteria("instance", "/int32", true),
                         new Criteria("keyword", "type", false),
                         new Criteria("domain", "validation", false)),
                 new ExpectedMessage(LogLevel.ERROR,
-                        new Criteria("instance", "/archive", true),
+                        new Criteria("instance", "/boolean", true),
                         new Criteria("keyword", "type", false),
                         new Criteria("domain", "validation", false)),
                 new ExpectedMessage(LogLevel.ERROR,
-                        new Criteria("instance", "/dbl", true),
+                        new Criteria("instance", "/double", true),
                         new Criteria("keyword", "type", false),
                         new Criteria("domain", "validation", false)),
                 new ExpectedMessage(LogLevel.ERROR,
@@ -84,11 +115,19 @@ public class SwaggerV20AttributeTest extends AbstractAttributeTest {
                         new Criteria("keyword", "type", false),
                         new Criteria("domain", "validation", false)),
                 new ExpectedMessage(LogLevel.ERROR,
-                        new Criteria("instance", "/age", true),
+                        new Criteria("instance", "/ipv4", true),
                         new Criteria("keyword", "type", false),
                         new Criteria("domain", "validation", false)),
                 new ExpectedMessage(LogLevel.ERROR,
-                        new Criteria("instance", "/id", true),
+                        new Criteria("instance", "/ipv6", true),
+                        new Criteria("keyword", "type", false),
+                        new Criteria("domain", "validation", false)),
+                new ExpectedMessage(LogLevel.ERROR,
+                        new Criteria("instance", "/uri", true),
+                        new Criteria("keyword", "type", false),
+                        new Criteria("domain", "validation", false)),
+                new ExpectedMessage(LogLevel.ERROR,
+                        new Criteria("instance", "/int64", true),
                         new Criteria("keyword", "type", false),
                         new Criteria("domain", "validation", false)));
     }

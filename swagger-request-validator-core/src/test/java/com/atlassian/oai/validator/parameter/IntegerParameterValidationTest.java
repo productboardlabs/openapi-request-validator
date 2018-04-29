@@ -10,13 +10,13 @@ import static com.atlassian.oai.validator.util.ParameterGenerator.intParamMultip
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 
-public class IntegerParameterValidatorTest {
+public class IntegerParameterValidationTest {
 
-    private final IntegerParameterValidator classUnderTest = new IntegerParameterValidator(new MessageResolver());
+    private final ParameterValidators classUnderTest = new ParameterValidators(new MessageResolver());
 
     @Test
     public void validate_withNullValue_shouldPass_whenNotRequired() {
-        assertPass(classUnderTest.validate(null, intParam(false)));
+        assertPass(classUnderTest.validate((String) null, intParam(false)));
     }
 
     @Test
@@ -26,22 +26,26 @@ public class IntegerParameterValidatorTest {
 
     @Test
     public void validate_withNullValue_shouldFail_whenRequired() {
-        assertFail(classUnderTest.validate(null, intParam(true)), "validation.request.parameter.missing");
+        assertFail(classUnderTest.validate((String) null, intParam(true)),
+                "validation.request.parameter.missing");
     }
 
     @Test
     public void validate_withEmptyValue_shouldFail_whenRequired() {
-        assertFail(classUnderTest.validate("", intParam(true)), "validation.request.parameter.missing");
+        assertFail(classUnderTest.validate("", intParam(true)),
+                "validation.request.parameter.missing");
     }
 
     @Test
     public void validate_withNonNumericValue_shouldFail() {
-        assertFail(classUnderTest.validate("123a", intParam()), "validation.request.parameter.invalidFormat");
+        assertFail(classUnderTest.validate("123a", intParam()),
+                "validation.schema.type");
     }
 
     @Test
     public void validate_withNonIntegerValue_shouldFail() {
-        assertFail(classUnderTest.validate("123.1", intParam()), "validation.request.parameter.invalidFormat");
+        assertFail(classUnderTest.validate("123.1", intParam()),
+                "validation.schema.type");
     }
 
     @Test
@@ -51,12 +55,14 @@ public class IntegerParameterValidatorTest {
 
     @Test
     public void validate_withValueGreaterThanMax_shouldFail_ifMaxSpecified() {
-        assertFail(classUnderTest.validate("2", intParam(null, 1.0)), "validation.request.parameter.number.aboveMax");
+        assertFail(classUnderTest.validate("2", intParam(null, 1.0)),
+                "validation.schema.maximum");
     }
 
     @Test
     public void validate_withValueLessThanMin_shouldFail_ifMinSpecified() {
-        assertFail(classUnderTest.validate("0", intParam(1.0, null)), "validation.request.parameter.number.belowMin");
+        assertFail(classUnderTest.validate("0", intParam(1.0, null)),
+                "validation.schema.minimum");
     }
 
     @Test
@@ -67,19 +73,19 @@ public class IntegerParameterValidatorTest {
     @Test
     public void validate_withValueEqualToMax_shouldFail_ifExclusiveMaxSpecified() {
         assertFail(classUnderTest.validate("1", intParam(null, 1.0, null, true)),
-            "validation.request.parameter.number.aboveExclusiveMax");
+                "validation.schema.maximum");
     }
 
     @Test
     public void validate_withValueEqualToMin_shouldFail_ifExclusiveMinSpecified() {
         assertFail(classUnderTest.validate("1", intParam(1.0, null, true, null)),
-            "validation.request.parameter.number.belowExclusiveMin");
+                "validation.schema.minimum");
     }
 
     @Test
     public void validate_withValueNotMultipleOf_shouldFail() {
         assertFail(classUnderTest.validate("17", intParamMultipleOf(5)),
-            "validation.request.parameter.number.multipleOf");
+                "validation.schema.multipleOf");
     }
 
     @Test
@@ -100,7 +106,7 @@ public class IntegerParameterValidatorTest {
     @Test
     public void validate_withNonIntegerValueFormatUnknown_shouldFail() {
         assertFail(classUnderTest.validate("123.1", intParamFormat("unknown")),
-                "validation.request.parameter.invalidFormat");
+                "validation.schema.type");
     }
 
     @Test
@@ -111,6 +117,6 @@ public class IntegerParameterValidatorTest {
     @Test
     public void validate_withInvalidEnumeratedValue_shouldFail() {
         assertFail(classUnderTest.validate("4", enumeratedIntParam(1, 2, 3)),
-                "validation.request.parameter.enum.invalid");
+                "validation.schema.enum");
     }
 }

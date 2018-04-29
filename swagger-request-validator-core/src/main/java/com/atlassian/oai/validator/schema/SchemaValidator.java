@@ -12,11 +12,8 @@ import com.github.fge.jsonschema.core.report.ListProcessingReport;
 import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import io.swagger.util.Json;
 import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.media.DateSchema;
 import io.swagger.v3.oas.models.media.DateTimeSchema;
-import io.swagger.v3.oas.models.media.NumberSchema;
 import io.swagger.v3.oas.models.media.Schema;
-import io.swagger.v3.oas.models.media.StringSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -178,14 +175,14 @@ public class SchemaValidator {
         }
     }
 
-    private JsonNode readContent(@Nonnull final String value, @Nonnull final Object schema) throws IOException {
+    private JsonNode readContent(@Nonnull final String value, @Nonnull final Schema schema) throws IOException {
         String normalisedValue = value;
-        if (schema instanceof StringSchema
-                || schema instanceof DateSchema) {
-            normalisedValue = quote(value);
-        } else if (schema instanceof DateTimeSchema) {
+        if (schema instanceof DateTimeSchema) {
             normalisedValue = normaliseDateTime(value);
-        } else if (schema instanceof NumberSchema) {
+        } else if ("string".equalsIgnoreCase(schema.getType())) {
+            normalisedValue = quote(value);
+        } else if ("number".equalsIgnoreCase(schema.getType()) ||
+                "integer".equalsIgnoreCase(schema.getType())) {
             normalisedValue = normaliseNumber(value);
         }
         return removeNullValuesFromTree(Json.mapper().readTree(normalisedValue));
