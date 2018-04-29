@@ -1,4 +1,4 @@
-package com.atlassian.oai.validator.parameter;
+package com.atlassian.oai.validator.interaction.request;
 
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 import static java.lang.Boolean.TRUE;
 import static java.util.Objects.requireNonNull;
 
-public final class ParameterValidator {
+class ParameterValidator {
 
     private final SchemaValidator schemaValidator;
     private final MessageResolver messages;
@@ -26,7 +26,7 @@ public final class ParameterValidator {
      *
      * @param messages The message resolver to use.
      */
-    public ParameterValidator(final MessageResolver messages) {
+    ParameterValidator(final MessageResolver messages) {
         this(null, messages);
     }
 
@@ -37,8 +37,8 @@ public final class ParameterValidator {
      * @param schemaValidator The schema validator to use. If not provided a default (empty) validator will be used.
      * @param messages The message resolver to use.
      */
-    public ParameterValidator(@Nullable final SchemaValidator schemaValidator,
-                              final MessageResolver messages) {
+    ParameterValidator(@Nullable final SchemaValidator schemaValidator,
+                       final MessageResolver messages) {
         this.schemaValidator = schemaValidator == null ? new SchemaValidator(messages) : schemaValidator;
         this.messages = requireNonNull(messages);
     }
@@ -54,8 +54,8 @@ public final class ParameterValidator {
      *
      * @return A report with any validation errors
      */
-    public ValidationReport validate(@Nullable final String value,
-                                     final Parameter parameter) {
+    ValidationReport validate(@Nullable final String value,
+                              final Parameter parameter) {
         requireNonNull(parameter);
 
         final ValidationReport.MessageContext context =
@@ -90,8 +90,8 @@ public final class ParameterValidator {
      *
      * @return A report with any validation errors
      */
-    public ValidationReport validate(@Nullable final Collection<String> values,
-                                     final Parameter parameter) {
+    ValidationReport validate(@Nullable final Collection<String> values,
+                              final Parameter parameter) {
         final ValidationReport.MessageContext context =
                 ValidationReport.MessageContext.create().withParameter(parameter).build();
 

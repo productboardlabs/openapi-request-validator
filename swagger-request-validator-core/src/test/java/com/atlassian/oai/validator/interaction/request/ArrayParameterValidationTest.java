@@ -1,4 +1,4 @@
-package com.atlassian.oai.validator.parameter;
+package com.atlassian.oai.validator.interaction.request;
 
 import com.atlassian.oai.validator.report.MessageResolver;
 import io.swagger.v3.oas.models.media.IntegerSchema;

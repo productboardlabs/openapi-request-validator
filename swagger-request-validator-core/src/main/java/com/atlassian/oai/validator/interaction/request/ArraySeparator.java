@@ -1,4 +1,4 @@
-package com.atlassian.oai.validator.parameter;
+package com.atlassian.oai.validator.interaction.request;
 
 import io.swagger.v3.oas.models.parameters.Parameter;
 
