@@ -75,7 +75,8 @@ public class RestRequestValidationTest {
                 HttpMethod.POST, sendBody);
 
         // then: 'invalid request, all required request fields are missing'
-        assertBadRequest(response, "validation.schema.required", "validation.schema.type");
+        assertBadRequest(response,
+                "validation.request.body.schema.required", "validation.request.body.schema.type");
     }
 
     @Test
@@ -111,7 +112,7 @@ public class RestRequestValidationTest {
         final ResponseEntity<HashMap> response = restRequest("/spring/noInteger", HttpMethod.DELETE);
 
         // then: 'invalid request, the path variable is no integer'
-        assertBadRequest(response, "validation.schema.type");
+        assertBadRequest(response, "validation.request.parameter.schema.type");
     }
 
     private ResponseEntity<HashMap> restRequest(final String uri, final HttpMethod method) {
