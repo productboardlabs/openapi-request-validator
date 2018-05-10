@@ -1,6 +1,5 @@
 package com.atlassian.oai.validator.schema;
 
-import com.atlassian.oai.validator.parameter.format.CustomDateTimeFormatter;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -12,11 +11,8 @@ import com.github.fge.jsonschema.core.report.ListProcessingReport;
 import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import io.swagger.util.Json;
 import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.media.DateSchema;
 import io.swagger.v3.oas.models.media.DateTimeSchema;
-import io.swagger.v3.oas.models.media.NumberSchema;
 import io.swagger.v3.oas.models.media.Schema;
-import io.swagger.v3.oas.models.media.StringSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,16 +90,14 @@ public class SchemaValidator {
      *
      * @param value The value to validate
      * @param schema The schema to validate the value against
+     * @param keyPrefix A prefix to apply to validation messages emitted by the validator
      *
      * @return A validation report containing accumulated validation errors
      */
     @Nonnull
-    public ValidationReport validate(@Nonnull final String value, @Nullable final Schema schema) {
-        return doValidate(value, schema);
-    }
-
-    @Nonnull
-    private ValidationReport doValidate(@Nonnull final String value, @Nullable final Schema schema) {
+    public ValidationReport validate(@Nonnull final String value,
+                                     @Nullable final Schema schema,
+                                     @Nullable final String keyPrefix) {
         requireNonEmpty(value, "A value is required");
 
         if (schema == null) {
@@ -118,7 +112,12 @@ public class SchemaValidator {
 
                 checkForKnownGotchasAndLogMessage(schemaObject);
             } catch (final JsonParseException e) {
-                return ValidationReport.singleton(messages.get(INVALID_JSON_KEY, e.getMessage()));
+                return ValidationReport.singleton(
+                        messages.create(
+                                "validation." + keyPrefix + ".schema.invalidJson",
+                                messages.get(INVALID_JSON_KEY, e.getMessage()).getMessage()
+                        )
+                );
             }
 
             final ListProcessingReport processingReport;
@@ -126,18 +125,23 @@ public class SchemaValidator {
                 processingReport = (ListProcessingReport) schemaFactory().getJsonSchema(schemaObject)
                         .validate(content, true);
             } catch (final ProcessingException e) {
-                return getProcessingMessage(e.getProcessingMessage(), "processingError");
+                return getProcessingMessage(e.getProcessingMessage(), "processingError", keyPrefix);
             }
 
             if ((processingReport != null) && !processingReport.isSuccess()) {
                 return StreamSupport.stream(processingReport.spliterator(), false)
-                        .map(pm -> getProcessingMessage(pm, null))
+                        .map(pm -> getProcessingMessage(pm, null, keyPrefix))
                         .reduce(ValidationReport.empty(), ValidationReport::merge);
             }
             return ValidationReport.empty();
         } catch (final Exception e) {
             log.debug("Error during schema validation", e);
-            return ValidationReport.singleton(messages.get(UNKNOWN_ERROR_KEY, e.getMessage()));
+            return ValidationReport.singleton(
+                    messages.create(
+                            "validation." + keyPrefix + ".schema.unknownError",
+                            messages.get(UNKNOWN_ERROR_KEY, e.getMessage()).getMessage()
+                    )
+            );
         }
     }
 
@@ -178,14 +182,14 @@ public class SchemaValidator {
         }
     }
 
-    private JsonNode readContent(@Nonnull final String value, @Nonnull final Object schema) throws IOException {
+    private JsonNode readContent(@Nonnull final String value, @Nonnull final Schema schema) throws IOException {
         String normalisedValue = value;
-        if (schema instanceof StringSchema
-                || schema instanceof DateSchema) {
-            normalisedValue = quote(value);
-        } else if (schema instanceof DateTimeSchema) {
+        if (schema instanceof DateTimeSchema) {
             normalisedValue = normaliseDateTime(value);
-        } else if (schema instanceof NumberSchema) {
+        } else if ("string".equalsIgnoreCase(schema.getType())) {
+            normalisedValue = quote(value);
+        } else if ("number".equalsIgnoreCase(schema.getType()) ||
+                "integer".equalsIgnoreCase(schema.getType())) {
             normalisedValue = normaliseNumber(value);
         }
         return removeNullValuesFromTree(Json.mapper().readTree(normalisedValue));
@@ -271,7 +275,8 @@ public class SchemaValidator {
     }
 
     private ValidationReport getProcessingMessage(final ProcessingMessage pm,
-                                                  final String keywordOverride) {
+                                                  final String keywordOverride,
+                                                  final String keyPrefix) {
         final JsonNode processingMessage = pm.asJson();
         final String validationKeyword = keywordOverride != null ? keywordOverride : processingMessage.get("keyword").textValue();
         final String pointer = processingMessage.has("instance") ? processingMessage.get("instance").get("pointer").textValue() : "";
@@ -291,7 +296,10 @@ public class SchemaValidator {
                         + capitalise(pm.getMessage());
 
         return ValidationReport.singleton(
-                messages.create("validation.schema." + validationKeyword, message, subReports.toArray(new String[0]))
+                messages.create(
+                        "validation." + keyPrefix + ".schema." + validationKeyword,
+                        message, subReports.toArray(new String[0])
+                )
         );
     }
 

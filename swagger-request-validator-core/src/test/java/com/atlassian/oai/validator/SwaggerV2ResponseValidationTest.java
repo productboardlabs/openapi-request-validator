@@ -37,9 +37,10 @@ public class SwaggerV2ResponseValidationTest {
                 .withBody(loadJsonResponse("user-invalid-missingrequired"))
                 .build();
 
-        assertFail(classUnderTest.validate(getUserRequest, response), "validation.schema.required");
+        assertFail(classUnderTest.validate(getUserRequest, response),
+                "validation.response.body.schema.required");
         assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
-                "validation.schema.required");
+                "validation.response.body.schema.required");
     }
 
     @Test
@@ -50,9 +51,10 @@ public class SwaggerV2ResponseValidationTest {
                 .withBody(loadJsonResponse("user-invalid-additionalproperties"))
                 .build();
 
-        assertFail(classUnderTest.validate(getUserRequest, response), "validation.schema.additionalProperties");
+        assertFail(classUnderTest.validate(getUserRequest, response),
+                "validation.response.body.schema.additionalProperties");
         assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
-                "validation.schema.additionalProperties");
+                "validation.response.body.schema.additionalProperties");
     }
 
     @Test
@@ -63,9 +65,10 @@ public class SwaggerV2ResponseValidationTest {
                 .withBody(loadJsonResponse("user-invalid-baddataformat"))
                 .build();
 
-        assertFail(classUnderTest.validate(getUserRequest, response), "validation.schema.type");
+        assertFail(classUnderTest.validate(getUserRequest, response),
+                "validation.response.body.schema.type");
         assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
-                "validation.schema.type");
+                "validation.response.body.schema.type");
     }
 
     @Test
@@ -75,7 +78,8 @@ public class SwaggerV2ResponseValidationTest {
                 .withContentType("application/json")
                 .build();
 
-        assertFail(classUnderTest.validate(getUserRequest, response), "validation.response.body.missing");
+        assertFail(classUnderTest.validate(getUserRequest, response),
+                "validation.response.body.missing");
         assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
                 "validation.response.body.missing");
     }
@@ -88,7 +92,8 @@ public class SwaggerV2ResponseValidationTest {
                 .withBody("")
                 .build();
 
-        assertFail(classUnderTest.validate(getUserRequest, response), "validation.response.body.missing");
+        assertFail(classUnderTest.validate(getUserRequest, response),
+                "validation.response.body.missing");
         assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
                 "validation.response.body.missing");
     }
@@ -101,9 +106,10 @@ public class SwaggerV2ResponseValidationTest {
                 .withBody(loadJsonResponse("user-invalid-malformedjson"))
                 .build();
 
-        assertFail(classUnderTest.validate(getUserRequest, response), "validation.schema.invalidJson");
+        assertFail(classUnderTest.validate(getUserRequest, response),
+                "validation.response.body.schema.invalidJson");
         assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
-                "validation.schema.invalidJson");
+                "validation.response.body.schema.invalidJson");
     }
 
     @Test
@@ -114,16 +120,18 @@ public class SwaggerV2ResponseValidationTest {
                 .withBody(loadJsonResponse("user-valid"))
                 .build();
 
-        assertFail(classUnderTest.validate(getUserRequest, response), "validation.schema.required");
+        assertFail(classUnderTest.validate(getUserRequest, response),
+                "validation.response.body.schema.required");
         assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
-                "validation.schema.required");
+                "validation.response.body.schema.required");
     }
 
     @Test
     public void validate_withResponseContainingUnknownStatusCode_shouldFail_whenNoDefaultResponseDefined() {
         final Response response = SimpleResponse.Builder.status(666).build();
 
-        assertFail(classUnderTest.validate(getUserRequest, response), "validation.response.status.unknown");
+        assertFail(classUnderTest.validate(getUserRequest, response),
+                "validation.response.status.unknown");
         assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
                 "validation.response.status.unknown");
     }
@@ -195,9 +203,9 @@ public class SwaggerV2ResponseValidationTest {
                 .build();
 
         assertFail(classUnderTest.validate(healthcheckRequest, response),
-                "validation.schema.type");
+                "validation.response.header.schema.type");
         assertFail(classUnderTest.validateResponse("/healthcheck", Request.Method.GET, response),
-                "validation.schema.type");
+                "validation.response.header.schema.type");
     }
 
     @Test

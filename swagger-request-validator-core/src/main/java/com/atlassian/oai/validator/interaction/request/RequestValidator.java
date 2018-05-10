@@ -4,7 +4,6 @@ import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.Headers;
 import com.atlassian.oai.validator.model.NormalisedPath;
 import com.atlassian.oai.validator.model.Request;
-import com.atlassian.oai.validator.parameter.ParameterValidators;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
@@ -40,7 +39,7 @@ public class RequestValidator {
 
     private final MessageResolver messages;
 
-    private final ParameterValidators parameterValidators;
+    private final ParameterValidator parameterValidator;
     private final SecurityValidator securityValidator;
     private final RequestBodyValidator requestBodyValidator;
 
@@ -56,7 +55,7 @@ public class RequestValidator {
                             final OpenAPI api) {
         this.messages = requireNonNull(messages, "A message resolver is required");
 
-        parameterValidators = new ParameterValidators(schemaValidator, messages);
+        parameterValidator = new ParameterValidator(schemaValidator, messages);
         securityValidator = new SecurityValidator(messages, api);
         requestBodyValidator = new RequestBodyValidator(messages, schemaValidator);
     }
@@ -202,7 +201,7 @@ public class RequestValidator {
                 .filter(RequestValidator::isPathParam)
                 .filter(p -> p.getName().equalsIgnoreCase(paramName))
                 .findFirst()
-                .map(p -> parameterValidators.validate(paramValue.orElse(null), p))
+                .map(p -> parameterValidator.validate(paramValue.orElse(null), p))
                 .orElse(empty());
     }
 
@@ -248,7 +247,7 @@ public class RequestValidator {
 
         return parameterValues
                 .stream()
-                .map(v -> parameterValidators.validate(v, parameter))
+                .map(v -> parameterValidator.validate(v, parameter))
                 .reduce(empty(), ValidationReport::merge);
     }
 

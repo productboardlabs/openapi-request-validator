@@ -92,7 +92,10 @@ class RequestBodyValidator {
 
         if (isJsonContentType(request)) {
             return schemaValidator
-                    .validate(requestBody.get(), maybeApiMediaTypeForRequest.get().getRight().getSchema())
+                    .validate(
+                            requestBody.get(),
+                            maybeApiMediaTypeForRequest.get().getRight().getSchema(),
+                            "request.body")
                     .withAdditionalContext(context);
         }
 

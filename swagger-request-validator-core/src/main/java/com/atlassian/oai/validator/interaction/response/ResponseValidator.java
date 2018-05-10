@@ -136,7 +136,7 @@ public class ResponseValidator {
             return empty();
         }
 
-        return schemaValidator.validate(response.getBody().get(), apiMediaType.getSchema());
+        return schemaValidator.validate(response.getBody().get(), apiMediaType.getSchema(), "response.body");
     }
 
     @Nonnull
@@ -216,7 +216,7 @@ public class ResponseValidator {
 
         return propertyValues
                 .stream()
-                .map(v -> schemaValidator.validate(v, apiHeader.getSchema()))
+                .map(v -> schemaValidator.validate(v, apiHeader.getSchema(), "response.header"))
                 .reduce(ValidationReport.empty(), ValidationReport::merge);
     }
 }

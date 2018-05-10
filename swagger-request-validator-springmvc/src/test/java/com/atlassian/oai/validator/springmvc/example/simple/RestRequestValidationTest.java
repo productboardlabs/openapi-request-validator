@@ -110,7 +110,7 @@ public class RestRequestValidationTest {
 
         // then: 'invalid request, the path variable is no integer'
         assertBadRequest(response,
-                "Value 'noInteger' for parameter 'pathVariable' does not match type 'integer' with format 'null'.");
+                "Instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])");
     }
 
     private ResponseEntity<HashMap> restRequest(final String uri, final HttpMethod method) {

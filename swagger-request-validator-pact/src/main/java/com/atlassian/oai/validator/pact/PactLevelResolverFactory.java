@@ -17,7 +17,7 @@ public class PactLevelResolverFactory {
      */
     public static LevelResolver create() {
         return LevelResolver.create()
-                .withLevel("validation.schema.required", ValidationReport.Level.INFO)
+                .withLevel("validation.response.body.schema.required", ValidationReport.Level.INFO)
                 .withLevel("validation.response.body.missing", ValidationReport.Level.INFO)
                 .build();
     }

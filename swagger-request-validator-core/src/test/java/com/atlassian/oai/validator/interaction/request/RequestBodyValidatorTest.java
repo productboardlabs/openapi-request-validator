@@ -19,6 +19,7 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFailWithoutContext;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -36,7 +37,7 @@ public class RequestBodyValidatorTest {
 
     @Before
     public void setup() {
-        when(schemaValidator.validate(any(), any())).thenReturn(ValidationReport.empty());
+        when(schemaValidator.validate(any(), any(), any())).thenReturn(ValidationReport.empty());
     }
 
     @Test
@@ -133,7 +134,7 @@ public class RequestBodyValidatorTest {
                 );
 
         assertPass(requestBodyValidator.validateRequestBody(request, apiRequestBody));
-        verify(schemaValidator, never()).validate(any(), any());
+        verify(schemaValidator, never()).validate(any(), any(), any());
     }
 
     @Test
@@ -151,6 +152,6 @@ public class RequestBodyValidatorTest {
                 );
 
         assertPass(requestBodyValidator.validateRequestBody(request, apiRequestBody));
-        verify(schemaValidator).validate(any(), any());
+        verify(schemaValidator).validate(any(), any(), eq("request.body"));
     }
 }

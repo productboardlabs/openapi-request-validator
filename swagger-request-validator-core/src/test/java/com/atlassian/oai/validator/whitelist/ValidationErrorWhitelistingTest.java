@@ -39,7 +39,7 @@ public class ValidationErrorWhitelistingTest {
                 .createFor("/oai/v2/api-users.json")
                 .withWhitelist(ValidationErrorsWhitelist.create()
                         .withRule("Ignore PATCH operation missing", WhitelistRules.messageContains("PATCH operation not allowed"))
-                        .withRule("Ignore schema type", WhitelistRules.messageHasKey("validation.schema.type")))
+                        .withRule("Ignore schema type", WhitelistRules.messageHasKey("validation.response.body.schema.type")))
                 .build();
 
         final ValidationReport report = classUnderTest.validateResponse("/users", Request.Method.PATCH, SimpleResponse.Builder.serverError().build());
@@ -51,7 +51,7 @@ public class ValidationErrorWhitelistingTest {
                 SimpleResponse.Builder.ok().withHeader("Content-Type", "application/json").withBody("{}").build()
         );
         assertThat(report2.getMessages(), hasItem(
-                whitelisted("Instance type (object) does not match any allowed primitive type", "Ignore schema type"))
+                whitelisted("Instance type (object) does not match any allowed primitive type (allowed: [\"array\"])", "Ignore schema type"))
         );
     }
 

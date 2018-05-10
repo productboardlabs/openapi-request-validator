@@ -1,18 +1,18 @@
-package com.atlassian.oai.validator.parameter.format;
+package com.atlassian.oai.validator.schema;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
 
-import org.junit.Test;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class CustomDateTimeFormatterTest {
 
-    private DateTimeFormatter dateTimeFormatter = CustomDateTimeFormatter.getRFC3339Formatter(); 
+    private final DateTimeFormatter dateTimeFormatter = CustomDateTimeFormatter.getRFC3339Formatter();
 
     @Test
     public void parse_withNanoSecondFraction_shouldPass() {

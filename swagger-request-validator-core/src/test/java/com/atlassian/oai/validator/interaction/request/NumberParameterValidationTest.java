@@ -1,4 +1,4 @@
-package com.atlassian.oai.validator.parameter;
+package com.atlassian.oai.validator.interaction.request;
 
 import com.atlassian.oai.validator.report.MessageResolver;
 import org.junit.Test;
@@ -11,13 +11,13 @@ import static com.atlassian.oai.validator.util.ParameterGenerator.stringParam;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 
-public class NumberParameterValidatorTest {
+public class NumberParameterValidationTest {
 
-    private final NumberParameterValidator classUnderTest = new NumberParameterValidator(new MessageResolver());
+    private final ParameterValidator classUnderTest = new ParameterValidator(new MessageResolver());
 
     @Test
     public void validate_withNullValue_shouldPass_whenNotRequired() {
-        assertPass(classUnderTest.validate(null, floatParam(false)));
+        assertPass(classUnderTest.validate((String) null, floatParam(false)));
     }
 
     @Test
@@ -27,17 +27,20 @@ public class NumberParameterValidatorTest {
 
     @Test
     public void validate_withNullValue_shouldFail_whenRequired() {
-        assertFail(classUnderTest.validate(null, floatParam(true)), "validation.request.parameter.missing");
+        assertFail(classUnderTest.validate((String) null, floatParam(true)),
+                "validation.request.parameter.missing");
     }
 
     @Test
     public void validate_withEmptyValue_shouldFail_whenRequired() {
-        assertFail(classUnderTest.validate("", floatParam(true)), "validation.request.parameter.missing");
+        assertFail(classUnderTest.validate("", floatParam(true)),
+                "validation.request.parameter.missing");
     }
 
     @Test
     public void validate_withNonNumericValue_shouldFail() {
-        assertFail(classUnderTest.validate("not-a-Number", floatParam()), "validation.request.parameter.invalidFormat");
+        assertFail(classUnderTest.validate("not-a-Number", floatParam()),
+                "validation.request.parameter.schema.type");
     }
 
     @Test
@@ -53,25 +56,25 @@ public class NumberParameterValidatorTest {
     @Test
     public void validate_withValueGreaterThanMax_shouldFail_ifMaxSpecified() {
         assertFail(classUnderTest.validate("1.1", floatParam(null, 1.0)),
-            "validation.request.parameter.number.aboveMax");
+                "validation.request.parameter.schema.maximum");
     }
 
     @Test
     public void validate_withValueEqualToMax_shouldFail_ifExclusiveMaxSpecified() {
         assertFail(classUnderTest.validate("1.0", floatParam(null, 1.0, null, true)),
-            "validation.request.parameter.number.aboveExclusiveMax");
+                "validation.request.parameter.schema.maximum");
     }
 
     @Test
     public void validate_withValueEqualToMin_shouldFail_ifExclusiveMinSpecified() {
         assertFail(classUnderTest.validate("1.0", floatParam(1.0, null, true, null)),
-            "validation.request.parameter.number.belowExclusiveMin");
+                "validation.request.parameter.schema.minimum");
     }
 
     @Test
     public void validate_withValueLessThanMin_shouldFail_ifMinSpecified() {
         assertFail(classUnderTest.validate("0.9", floatParam(1.0, null)),
-            "validation.request.parameter.number.belowMin");
+                "validation.request.parameter.schema.minimum");
     }
 
     @Test
@@ -82,7 +85,7 @@ public class NumberParameterValidatorTest {
     @Test
     public void validate_withValueNotMultipleOf_shouldFail() {
         assertFail(classUnderTest.validate("1.6", floatParamMultipleOf(0.5f)),
-            "validation.request.parameter.number.multipleOf");
+                "validation.request.parameter.schema.multipleOf");
     }
 
     @Test
@@ -103,7 +106,7 @@ public class NumberParameterValidatorTest {
     @Test
     public void validate_withNonNumericValueFormatUnknown_shouldFail() {
         assertFail(classUnderTest.validate("not-a-Number", floatParamFormat("unknown")),
-            "validation.request.parameter.invalidFormat");
+                "validation.request.parameter.schema.type");
     }
 
     @Test
@@ -113,13 +116,13 @@ public class NumberParameterValidatorTest {
 
     @Test
     public void validate_withValidEnumeratedValue_shouldPass() {
-        assertPass(classUnderTest.validate("1.3", enumeratedFloatParam(1.1f, 1.2f, 1.3f)));
+        assertPass(classUnderTest.validate("2.0", enumeratedFloatParam(1.0f, 2.0f, 3.0f)));
     }
 
     @Test
     public void validate_withInvalidEnumeratedValue_shouldFail() {
         assertFail(classUnderTest.validate("1.4", enumeratedFloatParam(1.1f, 1.2f, 1.3f)),
-                "validation.request.parameter.enum.invalid");
+                "validation.request.parameter.schema.enum");
     }
 
 }

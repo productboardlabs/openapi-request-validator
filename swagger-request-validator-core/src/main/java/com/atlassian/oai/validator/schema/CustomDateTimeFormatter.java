@@ -1,4 +1,4 @@
-package com.atlassian.oai.validator.parameter.format;
+package com.atlassian.oai.validator.schema;
 
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;

@@ -70,7 +70,7 @@ public class OpenAPIV3ResponseValidationTest {
                 .build();
 
         assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
-                "validation.schema.required");
+                "validation.response.body.schema.required");
     }
 
     @Test
@@ -82,7 +82,7 @@ public class OpenAPIV3ResponseValidationTest {
                 .build();
 
         assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
-                "validation.schema.additionalProperties");
+                "validation.response.body.schema.additionalProperties");
     }
 
     @Test
@@ -94,7 +94,7 @@ public class OpenAPIV3ResponseValidationTest {
                 .build();
 
         assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
-                "validation.schema.invalidJson");
+                "validation.response.body.schema.invalidJson");
     }
 
     @Test
@@ -130,6 +130,6 @@ public class OpenAPIV3ResponseValidationTest {
                 .build();
 
         assertFail(classUnderTest.validateResponse("/healthcheck", Request.Method.GET, response),
-                "validation.schema.type");
+                "validation.response.header.schema.type");
     }
 }
