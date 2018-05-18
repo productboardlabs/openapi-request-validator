@@ -1,6 +1,7 @@
 package com.atlassian.oai.validator.restassured;
 
 import com.atlassian.oai.validator.model.Request;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import org.junit.Before;
 import org.junit.Rule;
@@ -20,7 +21,7 @@ import static org.junit.Assert.assertThat;
 public class RestAssuredRequestTest {
 
     @Rule
-    public WireMockRule wireMock = new WireMockRule();
+    public WireMockRule wireMock = new WireMockRule(WireMockConfiguration.options().dynamicPort());
 
     @Before
     public void setup() {
