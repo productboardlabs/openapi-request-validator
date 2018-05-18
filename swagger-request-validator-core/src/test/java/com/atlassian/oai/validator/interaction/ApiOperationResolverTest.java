@@ -64,11 +64,11 @@ public class ApiOperationResolverTest {
                 {"matches_whenPathParams_notWholePathPart", GET, "/pathparams/withextension/foop.json", matches("GET:/pathparams/withextension/{id}.json")},
                 {"matches_whenMultiplePathParams_inSamePart", GET, "/pathparams/withmultiple/foop-blarp.json", matches("GET:/pathparams/withmultiple/{id}-{name}.json")},
 
-                {"matches_whenPrefixOfDynamicPathWithoutPathMatcher", GET, "tree/APP_PARTIC_C/", matches("GET:/tree/{categoryName}")},
+                {"matches_whenPrefixOfDynamicPathWithoutPathMatcher", GET, "tree/category/", matches("GET:/tree/{categoryName}")},
 
-                {"matches_whenPrefixOfDynamicPathWithPathMatcher", GET, "tree/APP_PARTIC_C/", matches("GET:/tree/{categoryName}", ApiPath::matchesDynamicPath)},
+                {"matches_whenPrefixOfDynamicPathWithPathMatcher", GET, "tree/category/", matches("GET:/tree/{categoryName}", ApiPath::matchesDynamicPath)},
 
-                {"matches_withDyanmicPath", GET, "tree/APP_PARTIC_C/BRZ_APP_G/BRZ_APP_L", matches("GET:/tree/{categoryName}/{path}", ApiPath::matchesDynamicPath)},
+                {"matches_withDyanmicPath", GET, "tree/category/folderFoo/folderBar", matches("GET:/tree/{categoryName}/{path}", ApiPath::matchesDynamicPath)},
 
                 {"doesNotMatch_whenNoPathMatches", GET, "/not/a/match", missingPath()},
                 {"doesNotMatch_whenNoPathMatches_whenSimilarToActualPath", POST, "/updates/{id}/{action}", missingPath()},
