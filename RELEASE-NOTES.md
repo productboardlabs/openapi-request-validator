@@ -1,3 +1,8 @@
+#v1.4.3
+* Bumped version of `json-schema-validator` to pick up a bugfix
+[[#120]](https://bitbucket.org/atlassian/swagger-request-validator/issues/120)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/77)
+
 #v1.4.2
 * Stopped trying to validate non-JSON request/response bodies with the JSON schema validator
 [[#65]](https://bitbucket.org/atlassian/swagger-request-validator/issues/65)
