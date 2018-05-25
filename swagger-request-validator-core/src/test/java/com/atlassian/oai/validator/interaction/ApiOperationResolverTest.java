@@ -1,6 +1,8 @@
 package com.atlassian.oai.validator.interaction;
 
 import com.atlassian.oai.validator.model.ApiOperationMatch;
+import com.atlassian.oai.validator.model.ApiPath;
+import com.atlassian.oai.validator.model.NormalisedPath;
 import com.atlassian.oai.validator.model.Request;
 import io.swagger.models.Swagger;
 import io.swagger.parser.SwaggerParser;
@@ -15,6 +17,7 @@ import org.junit.runners.Parameterized.Parameters;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
 
 import static com.atlassian.oai.validator.model.Request.Method.DELETE;
 import static com.atlassian.oai.validator.model.Request.Method.GET;
@@ -61,6 +64,12 @@ public class ApiOperationResolverTest {
                 {"matches_whenPathParams_notWholePathPart", GET, "/pathparams/withextension/foop.json", matches("GET:/pathparams/withextension/{id}.json")},
                 {"matches_whenMultiplePathParams_inSamePart", GET, "/pathparams/withmultiple/foop-blarp.json", matches("GET:/pathparams/withmultiple/{id}-{name}.json")},
 
+                {"matches_whenPrefixOfDynamicPathWithoutPathMatcher", GET, "tree/category/", matches("GET:/tree/{categoryName}")},
+
+                {"matches_whenPrefixOfDynamicPathWithPathMatcher", GET, "tree/category/", matches("GET:/tree/{categoryName}", ApiPath::matchesDynamicPath)},
+
+                {"matches_withDyanmicPath", GET, "tree/category/folderFoo/folderBar", matches("GET:/tree/{categoryName}/{path}", ApiPath::matchesDynamicPath)},
+
                 {"doesNotMatch_whenNoPathMatches", GET, "/not/a/match", missingPath()},
                 {"doesNotMatch_whenNoPathMatches_whenSimilarToActualPath", POST, "/updates/{id}/{action}", missingPath()},
 
@@ -90,6 +99,10 @@ public class ApiOperationResolverTest {
         return (operation, path) -> assertApiOperationFound(path, operation, expectedMatch);
     }
 
+    private static BiConsumer<Request.Method, String> matches(final String expectedMatch, final BiPredicate<ApiPath, NormalisedPath> matcher) {
+        return (operation, path) -> assertApiOperationFound(path, operation, expectedMatch, matcher);
+    }
+
     private static BiConsumer<Request.Method, String> missingPath() {
         return (operation, path) -> assertMissingRequestPath(path, operation);
     }
@@ -102,6 +115,16 @@ public class ApiOperationResolverTest {
                                                 final Request.Method requestMethod,
                                                 final String expDescription) {
         final ApiOperationMatch apiOperationMatch = classUnderTest.findApiOperation(requestPath, requestMethod);
+        assertTrue(format("Path not found on %s", expDescription), apiOperationMatch.isPathFound());
+        assertTrue(format("Operation not allowed on %s", expDescription), apiOperationMatch.isOperationAllowed());
+        assertThat(apiOperationMatch.getApiOperation().getOperation().getDescription(), is(expDescription));
+    }
+
+    private static void assertApiOperationFound(final String requestPath,
+                                                final Request.Method requestMethod,
+                                                final String expDescription,
+                                                final BiPredicate<ApiPath, NormalisedPath> matcher) {
+        final ApiOperationMatch apiOperationMatch = classUnderTest.findApiOperation(requestPath, requestMethod, matcher);
         assertTrue(format("Path not found on %s", expDescription), apiOperationMatch.isPathFound());
         assertTrue(format("Operation not allowed on %s", expDescription), apiOperationMatch.isOperationAllowed());
         assertThat(apiOperationMatch.getApiOperation().getOperation().getDescription(), is(expDescription));

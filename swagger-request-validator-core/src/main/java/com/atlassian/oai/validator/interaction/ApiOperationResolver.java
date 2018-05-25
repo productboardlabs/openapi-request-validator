@@ -14,18 +14,21 @@ import io.swagger.models.Operation;
 import io.swagger.models.Path;
 import io.swagger.models.Swagger;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static java.util.Comparator.comparingInt;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
-import static java.util.Comparator.comparingInt;
 import static java.util.Optional.ofNullable;
+import java.util.function.BiPredicate;
+
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
+import java.util.stream.Stream;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Component responsible for matching an incoming request path + method with an operation defined in the OAI spec.
@@ -34,6 +37,7 @@ public class ApiOperationResolver {
 
     private final String apiPrefix;
 
+    private final List<ApiPath> apiPaths;
     private final Map<Integer, List<ApiPath>> apiPathsGroupedByNumberOfParts;
     private final Table<String, HttpMethod, Operation> operations;
 
@@ -45,16 +49,19 @@ public class ApiOperationResolver {
      */
     public ApiOperationResolver(@Nonnull final Swagger api, @Nullable final String basePathOverride) {
         apiPrefix = ofNullable(basePathOverride).orElse(api.getBasePath());
-        final Map<String, Path> apiPaths = ofNullable(api.getPaths()).orElse(emptyMap());
+        final Map<String, Path> apiPathsByURI = ofNullable(api.getPaths()).orElse(emptyMap());
 
-        // normalise all API paths and group them by their number of parts
-        apiPathsGroupedByNumberOfParts = apiPaths.keySet().stream()
+        apiPaths = apiPathsByURI.keySet().stream()
                 .map(p -> new ApiPathImpl(p, apiPrefix))
+                .collect(toList());
+        // normalise all API paths and group them by their number of parts
+        apiPathsGroupedByNumberOfParts = apiPaths
+                .stream()
                 .collect(groupingBy(NormalisedPath::numberOfParts));
 
         // create a operation mapping for the API path and HTTP method
         operations = HashBasedTable.create();
-        apiPaths.forEach((pathKey, apiPath) ->
+        apiPathsByURI.forEach((pathKey, apiPath) ->
                 apiPath.getOperationMap().forEach((httpMethod, operation) ->
                         operations.put(pathKey, httpMethod, operation))
         );
@@ -70,12 +77,35 @@ public class ApiOperationResolver {
      */
     @Nonnull
     public ApiOperationMatch findApiOperation(@Nonnull final String path, @Nonnull final Request.Method method) {
-
-        // try to find possible matching paths regardless of HTTP method
         final NormalisedPath requestPath = new NormalisedPathImpl(path, apiPrefix);
-        final List<ApiPath> matchingPaths = apiPathsGroupedByNumberOfParts
-                .getOrDefault(requestPath.numberOfParts(), emptyList()).stream()
-                .filter(p -> p.matches(requestPath))
+        //When using the standard path matching algorithm we can optimize by only considering paths with a matching number of parts
+        final Stream<ApiPath> pathsWithMatchingNumberOfParts = apiPathsGroupedByNumberOfParts.getOrDefault(requestPath.numberOfParts(), emptyList()).stream();
+        return findApiOperation(requestPath, method, ApiPath::matches, pathsWithMatchingNumberOfParts);
+    }
+
+    /**
+     * Tries to find the best fitting API path matching the given path and request method, given a custom path
+     * matching method.
+     *
+     * @param path   the requests path to find in API definition
+     * @param method the {@link Request.Method} for the request
+     * @param matcher a function that can compare an API path from a specification to a request path to see if they match, e.g. {@code ApiPath::matches}
+     * @return a {@link ApiOperationMatch} containing the information if the path is defined, the operation
+     * is allowed and having the necessary {@link ApiOperation} if applicable
+     */
+    @Nonnull
+    public ApiOperationMatch findApiOperation(@Nonnull final String path, @Nonnull final Request.Method method,
+            @Nonnull final BiPredicate<ApiPath, NormalisedPath> matcher) {
+        final NormalisedPath requestPath = new NormalisedPathImpl(path, apiPrefix);
+        return findApiOperation(requestPath, method, matcher, apiPaths.stream());
+    }
+
+    @Nonnull
+    private ApiOperationMatch findApiOperation(@Nonnull final NormalisedPath requestPath, @Nonnull final Request.Method method,
+            @Nonnull final BiPredicate<ApiPath, NormalisedPath> matcher, @Nonnull final Stream<ApiPath> paths) {
+        // try to find possible matching paths regardless of HTTP method
+        final List<ApiPath> matchingPaths = paths
+                .filter(apiPath -> matcher.test(apiPath, requestPath))
                 .collect(toList());
 
         if (matchingPaths.isEmpty()) {
