@@ -116,10 +116,11 @@ public class PactProviderValidator {
         final PactProviderValidationResults.ConsumerResult result =
                 new PactProviderValidationResults.ConsumerResult(consumer.getName(), consumer.getPactFile() + "");
 
-        Map<String, Object> options = new HashMap<>();
-        List authOptions = consumer.getPactFileAuthentication();
-        if (authOptions != null && !authOptions.isEmpty())
+        final Map<String, Object> options = new HashMap<>();
+        final List authOptions = consumer.getPactFileAuthentication();
+        if (authOptions != null && !authOptions.isEmpty()) {
             options.put("authentication", authOptions);
+        }
 
         final Pact pact = PactReader.loadPact(options, consumer.getPactFile());
 
