@@ -15,8 +15,11 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -113,7 +116,13 @@ public class PactProviderValidator {
         final PactProviderValidationResults.ConsumerResult result =
                 new PactProviderValidationResults.ConsumerResult(consumer.getName(), consumer.getPactFile() + "");
 
-        final Pact pact = PactReader.loadPact(consumer.getPactFile());
+        final Map<String, Object> options = new HashMap<>();
+        final List authOptions = consumer.getPactFileAuthentication();
+        if (authOptions != null && !authOptions.isEmpty()) {
+            options.put("authentication", authOptions);
+        }
+
+        final Pact pact = PactReader.loadPact(options, consumer.getPactFile());
 
         pact.getInteractions().forEach(i -> {
             final ValidationReport report = validator.validate(
@@ -144,6 +153,7 @@ public class PactProviderValidator {
 
         private String brokerUrl;
         private String providerName;
+        private Map<String, Object> brokerOptions = new HashMap<>();
 
         /**
          * The location of the Swagger JSON specification to use in the validator.
@@ -211,7 +221,7 @@ public class PactProviderValidator {
          * Configure the validator to validate against all Consumer Pacts retrieved from the given
          * broker for the given Provider.
          *
-         * @param brokerUrl    the URL of the Pact Broker to retrieve Consumer Pacts from
+         * @param brokerUrl    The URL of the Pact Broker to retrieve Consumer Pacts from
          * @param providerName The ID of the Provider to retrieve Pacts for
          * @return this builder instance.
          */
@@ -222,13 +232,30 @@ public class PactProviderValidator {
         }
 
         /**
+         * Configure the validator to validate against all Consumer Pacts retrieved from the given
+         * secure broker for the given Provider.
+         *
+         * @param brokerUrl    The URL of the Pact Broker to retrieve Consumer Pacts from
+         * @param username     The username for the broker
+         * @param password     The password for the broker
+         * @param providerName The ID of the Provider to retrieve Pacts for
+         * @return this builder instance.
+         */
+        public Builder withPactsFrom(final String brokerUrl, final String username, final String password, final String providerName) {
+            withPactsFrom(brokerUrl, providerName);
+            this.brokerOptions.clear();
+            this.brokerOptions.put("authentication", Arrays.asList("basic", username, password));
+            return this;
+        }
+
+        /**
          * Build a configured {@link PactProviderValidator} instance with the values collected in this builder.
          *
          * @return The configured {@link PactProviderValidator} instance.
          */
         public PactProviderValidator build() {
             if (brokerUrl != null && providerName != null) {
-                consumers.addAll(retrieveConsumers(brokerUrl, providerName));
+                consumers.addAll(retrieveConsumers(brokerUrl, providerName, brokerOptions));
             }
             return new PactProviderValidator(swaggerJsonUrl, consumers);
         }
@@ -236,12 +263,15 @@ public class PactProviderValidator {
         @Nonnull
         @SuppressWarnings("unchecked")
         private Collection<ConsumerInfo> retrieveConsumers(@Nonnull final String brokerUrl,
-                                                           @Nonnull final String providerName) {
+                                                           @Nonnull final String providerName,
+                                                           @Nonnull final Map<String, Object> brokerOptions) {
 
             log.debug("Retrieving consumers from broker '{}' for provider '{}'", brokerUrl, providerName);
 
             final PactBrokerClient client = new PactBrokerClient(brokerUrl);
-
+            if (!brokerOptions.isEmpty()) {
+                client.setOptions(brokerOptions);
+            }
             try {
                 final Collection<ConsumerInfo> result = client.fetchConsumers(providerName);
                 if (result == null || result.isEmpty()) {
