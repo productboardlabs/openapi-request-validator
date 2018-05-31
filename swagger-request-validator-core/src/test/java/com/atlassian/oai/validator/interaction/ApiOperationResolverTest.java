@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
+import java.util.function.Supplier;
 
 import static com.atlassian.oai.validator.model.Request.Method.DELETE;
 import static com.atlassian.oai.validator.model.Request.Method.GET;
@@ -33,15 +34,25 @@ import static org.junit.Assert.assertTrue;
 @RunWith(Parameterized.class)
 public class ApiOperationResolverTest {
 
-    private static final String FILENAME_API_WITH_POST = "oai/api-operation-finder-test.json";
+    private static final String FILE_NAME_SPEC_WITH_MANY_COMPLEX_PATHS = "oai/api-operation-finder-test.json";
+    private static final String FILE_NAME_SPEC_WITH_DYNAMIC_PATHS_THAT_ALWAYS_MATCH= "oai/api-operation-finder-always-finds-a-dynamic-match.json";
+    private static final String FILE_NAME_SPEC_WITH_DYNAMIC_PATHS_THAT_ALL_HAVE_PREFIXES= "oai/api-operation-finder-dynamic-paths-all-have-prefixes.json";
 
-    private static ApiOperationResolver classUnderTest;
+    private static ApiOperationResolver resolverWithManyComplexPathsInSpec;
+    private static ApiOperationResolver resolverWithPathThatAlwaysMatches;
+    private static ApiOperationResolver resolverWithPathThatAllHavePrefixes;
 
     @BeforeClass
     public static void init() {
-        final SwaggerDeserializationResult swaggerParseResult = new SwaggerParser().readWithInfo(FILENAME_API_WITH_POST, null, true);
+        resolverWithManyComplexPathsInSpec = createResolver(FILE_NAME_SPEC_WITH_MANY_COMPLEX_PATHS);
+        resolverWithPathThatAlwaysMatches = createResolver(FILE_NAME_SPEC_WITH_DYNAMIC_PATHS_THAT_ALWAYS_MATCH);
+        resolverWithPathThatAllHavePrefixes = createResolver(FILE_NAME_SPEC_WITH_DYNAMIC_PATHS_THAT_ALL_HAVE_PREFIXES);
+    }
+
+    private static ApiOperationResolver createResolver(final String fileName) {
+        final SwaggerDeserializationResult swaggerParseResult = new SwaggerParser().readWithInfo(fileName, null, true);
         final Swagger swagger = swaggerParseResult.getSwagger();
-        classUnderTest = new ApiOperationResolver(swagger, null);
+        return new ApiOperationResolver(swagger, null);
     }
 
     @Parameters(name = "{0}")
@@ -69,12 +80,17 @@ public class ApiOperationResolverTest {
                 {"matches_whenPrefixOfDynamicPathWithPathMatcher", GET, "tree/category/", matches("GET:/tree/{categoryName}", ApiPath::matchesDynamicPath)},
 
                 {"matches_withDyanmicPath", GET, "tree/category/folderFoo/folderBar", matches("GET:/tree/{categoryName}/{path}", ApiPath::matchesDynamicPath)},
+                {"matches_withDyanmicPathAndFileName", GET, "tree/category/folderFoo/file.txt", matches("GET:/tree/{categoryName}/{path}", ApiPath::matchesDynamicPath)},
 
                 {"doesNotMatch_whenNoPathMatches", GET, "/not/a/match", missingPath()},
                 {"doesNotMatch_whenNoPathMatches_whenSimilarToActualPath", POST, "/updates/{id}/{action}", missingPath()},
+                {"doesNotMatch_whenNoPathMatches_with_Dynamic_Paths", GET, "/not-tree/subFolder",
+                    missingPath(() -> resolverWithPathThatAllHavePrefixes, ApiPath::matchesDynamicPath)},
 
                 {"doesNotMatch_whenMethodNotAllowed", DELETE, "/id", operationNotAllowed()},
                 {"doesNotMatch_whenMethodNotAllowed_multiplePathParams", GET, "/update/id/action", operationNotAllowed()},
+                {"doesNotMatch_whenMethodNotAllowed_with_Dynamic_Paths", GET, "/not-tree/subFolder", //matches /{id}/{action} but GET is not allowed
+                    operationNotAllowed(() -> resolverWithPathThatAlwaysMatches, ApiPath::matchesDynamicPath)},
         });
     }
 
@@ -96,22 +112,31 @@ public class ApiOperationResolverTest {
     }
 
     private static BiConsumer<Request.Method, String> matches(final String expectedMatch) {
-        return (operation, path) -> assertApiOperationFound(path, operation, expectedMatch);
+        return (operation, path) -> assertApiOperationFound(resolverWithManyComplexPathsInSpec, path, operation, expectedMatch);
     }
 
     private static BiConsumer<Request.Method, String> matches(final String expectedMatch, final BiPredicate<ApiPath, NormalisedPath> matcher) {
-        return (operation, path) -> assertApiOperationFound(path, operation, expectedMatch, matcher);
+        return (operation, path) -> assertApiOperationFound(resolverWithManyComplexPathsInSpec, path, operation, expectedMatch, matcher);
     }
 
     private static BiConsumer<Request.Method, String> missingPath() {
-        return (operation, path) -> assertMissingRequestPath(path, operation);
+        return (operation, path) -> assertMissingRequestPath(resolverWithManyComplexPathsInSpec, path, operation);
+    }
+
+    private static BiConsumer<Request.Method, String> missingPath(final Supplier<ApiOperationResolver> classUnderTest, final BiPredicate<ApiPath, NormalisedPath> matcher) {
+        return (operation, path) -> assertMissingRequestPath(classUnderTest.get(), path, operation, matcher);
+    }
+
+    private static BiConsumer<Request.Method, String> operationNotAllowed(final Supplier<ApiOperationResolver> classUnderTest, final BiPredicate<ApiPath, NormalisedPath> matcher) {
+        return (operation, path) -> assertOperationNotAllowed(classUnderTest.get(), path, operation, matcher);
     }
 
     private static BiConsumer<Request.Method, String> operationNotAllowed() {
-        return (operation, path) -> assertOperationNotAllowed(path, operation);
+        return (operation, path) -> assertOperationNotAllowed(resolverWithManyComplexPathsInSpec, path, operation);
     }
 
-    private static void assertApiOperationFound(final String requestPath,
+    private static void assertApiOperationFound(final ApiOperationResolver classUnderTest,
+                                                final String requestPath,
                                                 final Request.Method requestMethod,
                                                 final String expDescription) {
         final ApiOperationMatch apiOperationMatch = classUnderTest.findApiOperation(requestPath, requestMethod);
@@ -120,7 +145,8 @@ public class ApiOperationResolverTest {
         assertThat(apiOperationMatch.getApiOperation().getOperation().getDescription(), is(expDescription));
     }
 
-    private static void assertApiOperationFound(final String requestPath,
+    private static void assertApiOperationFound(final ApiOperationResolver classUnderTest,
+                                                final String requestPath,
                                                 final Request.Method requestMethod,
                                                 final String expDescription,
                                                 final BiPredicate<ApiPath, NormalisedPath> matcher) {
@@ -130,16 +156,36 @@ public class ApiOperationResolverTest {
         assertThat(apiOperationMatch.getApiOperation().getOperation().getDescription(), is(expDescription));
     }
 
-    private static void assertMissingRequestPath(final String requestPath,
+    private static void assertMissingRequestPath(final ApiOperationResolver classUnderTest,
+                                                 final String requestPath,
                                                  final Request.Method requestMethod) {
         final ApiOperationMatch apiOperationMatch = classUnderTest.findApiOperation(requestPath, requestMethod);
         assertFalse(apiOperationMatch.isPathFound());
         assertFalse(apiOperationMatch.isOperationAllowed());
     }
 
-    private static void assertOperationNotAllowed(final String requestPath,
+    private static void assertMissingRequestPath(final ApiOperationResolver classUnderTest,
+                                                 final String requestPath,
+                                                 final Request.Method requestMethod,
+                                                 final BiPredicate<ApiPath, NormalisedPath> matcher) {
+        final ApiOperationMatch apiOperationMatch = classUnderTest.findApiOperation(requestPath, requestMethod, matcher);
+        assertFalse(apiOperationMatch.isPathFound());
+        assertFalse(apiOperationMatch.isOperationAllowed());
+    }
+
+    private static void assertOperationNotAllowed(final ApiOperationResolver classUnderTest,
+                                                  final String requestPath,
                                                   final Request.Method requestMethod) {
         final ApiOperationMatch apiOperationMatch = classUnderTest.findApiOperation(requestPath, requestMethod);
+        assertTrue(apiOperationMatch.isPathFound());
+        assertFalse(apiOperationMatch.isOperationAllowed());
+    }
+
+    private static void assertOperationNotAllowed(final ApiOperationResolver classUnderTest,
+                                                  final String requestPath,
+                                                  final Request.Method requestMethod,
+                                                  final BiPredicate<ApiPath, NormalisedPath> matcher) {
+        final ApiOperationMatch apiOperationMatch = classUnderTest.findApiOperation(requestPath, requestMethod, matcher);
         assertTrue(apiOperationMatch.isPathFound());
         assertFalse(apiOperationMatch.isOperationAllowed());
     }

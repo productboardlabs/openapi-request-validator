@@ -156,11 +156,8 @@ public class ApiPathImpl extends NormalisedPathImpl implements ApiPath {
         if (!hasTrailingParam() || numberOfParts() > requestPath.numberOfParts()) {
             return matches(requestPath);
         } else {
-            int i = 0;
-            while (i < numberOfParts()) {
-                final boolean partMatches = partMatches(i, requestPath.part(i));
-                i++;
-                if (!partMatches) {
+            for (int i=0; i < numberOfParts(); i++) {
+                if (!partMatches(i, requestPath.part(i))) {
                     return false;
                 }
             }
