@@ -1,3 +1,9 @@
+#v1.4.4
+* Added support for basic auth in the Pact Provider validator for retrieving Pacts from a 
+broker that requires authentication
+[[#122]](https://bitbucket.org/atlassian/swagger-request-validator/issues/122)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/79)
+
 #v1.4.3
 * Bumped version of `json-schema-validator` to pick up a bugfix
 [[#120]](https://bitbucket.org/atlassian/swagger-request-validator/issues/120)
