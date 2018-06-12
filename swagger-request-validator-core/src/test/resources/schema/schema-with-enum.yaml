@@ -1,0 +1,74 @@
+swagger: "2.0"
+info:
+  description: This is a sample for extensive enum usage.
+  title: Extensive enum testing
+  version: "1.0.0"
+paths:
+  /enum/{pathEnum}:
+    post:
+      description: Enum Test Request
+      consumes:
+        - application/json
+      parameters:
+        - name: pathEnum
+          in: path
+          type: integer
+          format: int32
+          enum:
+          - 1
+          - 2
+          - 3
+        - name: headerEnum
+          in: header
+          type: integer
+          format: int32
+          enum:
+          - 10
+          - 20
+          - 30
+        - name: queryEnum
+          in: query
+          type: integer
+          format: int32
+          enum:
+          - 100
+          - 200
+          - 300
+        - name: request
+          in: body
+          schema:
+            $ref: "#/definitions/ObjectContainingIntegerEnum"
+      responses:
+        204:
+          description: OK
+definitions:
+  ObjectContainingIntegerEnum:
+    type: object
+    properties:
+      innerEnum:
+        type: integer
+        format: int32
+        enum:
+        - 1000
+        - 2000
+        - 3000
+      arrayWithInnerEnum:
+        type: array
+        items:
+          type: integer
+          format: int32
+          enum:
+          - 10000
+          - 20000
+          - 30000
+      arrayWithOuterEnum:
+        type: array
+        items:
+          $ref: "#/definitions/IntegerEnum"
+  IntegerEnum:
+    type: integer
+    format: int32
+    enum:
+    - 100000
+    - 200000
+    - 300000
