@@ -4,6 +4,37 @@ info:
   title: Extensive enum testing
   version: "1.0.0"
 paths:
+  /enumString/{pathEnum}:
+    post:
+      description: Enum String Test Request
+      consumes:
+        - application/json
+      parameters:
+        - name: pathEnum
+          in: path
+          type: string
+          enum:
+          - "1"
+          - "2"
+        - name: headerEnum
+          in: header
+          type: string
+          enum:
+          - "10"
+          - "20"
+        - name: queryEnum
+          in: query
+          type: string
+          enum:
+          - "100"
+          - "200"
+        - name: request
+          in: body
+          schema:
+            $ref: "#/definitions/ObjectWithStringEnum"
+      responses:
+        204:
+          description: OK
   /enumInteger/{pathEnum}:
     post:
       description: Enum Integer Test Request
@@ -141,6 +172,30 @@ paths:
         204:
           description: OK
 definitions:
+  ObjectWithStringEnum:
+    type: object
+    properties:
+      innerEnum:
+        type: string
+        enum:
+        - "1000"
+        - "2000"
+      arrayWithInnerEnum:
+        type: array
+        items:
+          type: string
+          enum:
+          - "10000"
+          - "20000"
+      arrayWithOuterEnum:
+        type: array
+        items:
+          $ref: "#/definitions/StringEnum"
+  StringEnum:
+    type: string
+    enum:
+    - "100000"
+    - "200000"
   ObjectWithIntegerEnum:
     type: object
     properties:
