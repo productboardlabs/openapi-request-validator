@@ -57,6 +57,7 @@ public class SwaggerV20Library {
 
     public static final String DISCRIMINATOR_KEYWORD = "discriminator";
     public static final String DISCRIMINATOR_PROPERTYNAME_KEYWORD = "propertyName";
+    public static final String DISCRIMINATOR_MAPPING_KEYWORD = "mapping";
 
     static Library get() {
         // The discriminator validator holds state that may persist in the event of a runtime exception etc.
@@ -219,10 +220,12 @@ public class SwaggerV20Library {
         private final ThreadLocal<Set<ObjectNode>> visitedNodes = ThreadLocal.withInitial(HashSet::new);
 
         private final String fieldName;
+        private final JsonNode mappingNode;
 
         public DiscriminatorKeywordValidator(final JsonNode digest) {
             super(DISCRIMINATOR_KEYWORD);
             fieldName = digest.get(keyword).get(DISCRIMINATOR_PROPERTYNAME_KEYWORD).textValue();
+            mappingNode = digest.get(keyword).get(DISCRIMINATOR_MAPPING_KEYWORD);
         }
 
         @Override
@@ -238,7 +241,7 @@ public class SwaggerV20Library {
                 return;
             }
 
-            final JsonNode discriminatorNode = data.getInstance().getNode().get(fieldName);
+            JsonNode discriminatorNode = data.getInstance().getNode().get(fieldName);
             if (discriminatorNode == null) {
                 report.error(
                         msg(data, bundle, "err.swaggerv2.discriminator.missing")
@@ -279,6 +282,10 @@ public class SwaggerV20Library {
                 });
 
             });
+
+            if (mappingNode != null && mappingNode.get(discriminatorNode.textValue()) != null) {
+                discriminatorNode = mappingNode.get(discriminatorNode.textValue());
+            }
 
             if (!validDiscriminatorValues.containsKey(discriminatorNode.textValue())) {
                 report.error(
