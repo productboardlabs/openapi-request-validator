@@ -1,0 +1,81 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "API Operation Finder"
+  },
+  "basePath": "/",
+  "paths": {
+    "/delete": {
+      "delete": {
+        "description": "DELETE:/delete",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/{id}/{action}": {
+      "put": {
+        "description": "PUT:/{id}/{action}",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string"
+          },
+          {
+            "name": "action",
+            "in": "path",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+
+    "/tree/{categoryName}": {
+      "get": {
+        "description": "GET:/tree/{categoryName}",
+        "parameters": [
+          {
+            "name": "categoryName",
+            "in": "path",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/tree/{categoryName}/{path}": {
+      "get": {
+        "description": "GET:/tree/{categoryName}/{path}",
+        "parameters": [
+          {
+            "name": "categoryName",
+            "in": "path",
+            "type": "string"
+          },
+          {
+            "name": "path",
+            "in": "path",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    }
+  }
+}

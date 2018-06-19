@@ -7,6 +7,7 @@ import java.util.List;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.prependIfMissing;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
@@ -61,6 +62,11 @@ public class NormalisedPathImpl implements NormalisedPath {
 
     private static String normaliseToLeadingSlash(@Nullable final String pathPart) {
         return prependIfMissing(trimToEmpty(pathPart), "/");
+    }
+
+    @Override
+    public String toString() {
+        return pathParts.stream().map(Object::toString).collect(joining("/", "/", "/"));
     }
 
 }
