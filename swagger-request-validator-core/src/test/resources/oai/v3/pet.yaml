@@ -7,13 +7,8 @@ info:
 paths:
   '/pets/{id}':
     get:
-      tags:
-        - user
-      summary: Get a single user
-      operationId: get user by ID
-      security:
-        - basic:
-            - read_users
+      summary: Get a single pet
+      operationId: get pet by ID
       parameters:
         - name: id
           in: path
@@ -24,7 +19,7 @@ paths:
             format: int32
       responses:
         '200':
-          description: User response
+          description: Pet response
           content:
             application/json:
               schema:
