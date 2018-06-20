@@ -16,6 +16,8 @@ import static com.google.common.net.MediaType.JSON_UTF_8;
 import static java.util.Optional.empty;
 
 public class ContentTypeUtils {
+    //https://github.com/google/guava/issues/3184
+    private static final MediaType HAL_JSON = MediaType.create("application", "hal+json");
 
     private ContentTypeUtils() {
 
@@ -41,8 +43,7 @@ public class ContentTypeUtils {
      * @return Whether the provided content-type is a JSON type.
      */
     public static boolean isJsonContentType(@Nullable final String contentType) {
-        return matches(contentType, JSON_UTF_8)
-                || matches(contentType, MediaType.create("application", "hal+json"));
+        return matches(contentType, JSON_UTF_8) || matches(contentType, HAL_JSON);
     }
 
     /**
