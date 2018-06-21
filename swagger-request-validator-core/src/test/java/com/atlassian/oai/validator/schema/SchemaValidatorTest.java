@@ -269,6 +269,26 @@ public class SchemaValidatorTest {
     }
 
     @Test
+    public void validate_withValidModel_shouldPass_whenContainsNonNullValues_inNullableArrayItem() {
+        final String value =
+            "[ 1 ]";
+
+        final Schema schema = new ArraySchema().items(new IntegerSchema().nullable(true));
+
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
+    }
+
+    @Test
+    public void validate_withValidModel_shouldPass_whenContainsNonNullValues_inNonNullableArrayItem() {
+        final String value =
+            "[ 1 ]";
+
+        final Schema schema = new ArraySchema().items(new IntegerSchema().nullable(false));
+
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
+    }
+
+    @Test
     public void validate_withValidModel_shouldFail_whenContainsNullValues_inUnnullableArrayItem() {
         final String value =
             "[ null ]";
@@ -290,9 +310,32 @@ public class SchemaValidatorTest {
     }
 
     @Test
+    public void validate_withValidModel_shouldPass_whenContainsNonNullValues_inNullableObjectProperty() {
+        final String value =
+            "{\"int\": 1 }";
+
+        final Schema schema = new Schema()
+            .addProperties("int", new IntegerSchema().nullable(true));
+
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
+    }
+
+    @Test
     public void validate_withValidModel_shouldPass_whenContainsNullValues_inNullableRequiredObjectProperty() {
         final String value =
             "{\"int\": null }";
+
+        final Schema schema = new Schema()
+            .addProperties("int", new IntegerSchema().nullable(true))
+            .addRequiredItem("int");
+
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
+    }
+
+    @Test
+    public void validate_withValidModel_shouldPass_whenContainsNonNullValues_inNullableRequiredObjectProperty() {
+        final String value =
+            "{\"int\": 1 }";
 
         final Schema schema = new Schema()
             .addProperties("int", new IntegerSchema().nullable(true))
