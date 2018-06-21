@@ -192,7 +192,18 @@ public class SwaggerV20Library {
                 .forEach(
                     jsonNode -> {
                         final JsonNode type = jsonNode.get(typeKey);
-                        ((ObjectNode) jsonNode).putArray(typeKey).add(nullType).add(type);
+
+                        if (type.isTextual()) {
+                            // If we are here, it means the type is a value
+                            // like "string". So we need to transform it into
+                            // an array type like [ "null", "string" ].
+                            ((ObjectNode) jsonNode).putArray(typeKey).add(nullType).add(type);
+                        } else if (type.isArray()) {
+                            // If we are here, it means the type is already an
+                            // array of types, like [ "integer", "string" ]. We
+                            // just need to append the null type on the end.
+                            ((ArrayNode) type).add(nullType);
+                        }
                     });
         }
 
