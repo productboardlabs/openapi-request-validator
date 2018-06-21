@@ -6,6 +6,7 @@ import com.atlassian.oai.validator.schema.format.FloatAttribute;
 import com.atlassian.oai.validator.schema.format.Int32Attribute;
 import com.atlassian.oai.validator.schema.format.Int64Attribute;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.jackson.NodeType;
 import com.github.fge.jackson.jsonpointer.JsonPointer;
@@ -55,6 +56,7 @@ public class SwaggerV20Library {
 
     public static final String OAI_V2_METASCHEMA_URI = "https://openapis.org/specification/versions/2.0#";
 
+    public static final String NULLABLE_KEYWORD = "nullable";
     public static final String DISCRIMINATOR_KEYWORD = "discriminator";
     public static final String DISCRIMINATOR_PROPERTYNAME_KEYWORD = "propertyName";
 
@@ -68,6 +70,12 @@ public class SwaggerV20Library {
                 .addFormatAttribute("double", DoubleAttribute.getInstance())
                 .addFormatAttribute("date", DateAttribute.getInstance())
                 .addFormatAttribute("byte", Base64Attribute.getInstance())
+                .addKeyword(
+                        Keyword.newBuilder(NULLABLE_KEYWORD)
+                                .withSyntaxChecker(NullableSyntaxChecker.getInstance())
+                                .withDigester(NullableDigester.getInstance())
+                                .withValidatorClass(NullableKeywordValidator.class)
+                                .freeze())
                 .addKeyword(
                         Keyword.newBuilder(DISCRIMINATOR_KEYWORD)
                                 .withSyntaxChecker(DiscriminatorSyntaxChecker.getInstance())
@@ -119,6 +127,131 @@ public class SwaggerV20Library {
 
     private static boolean arrayNodeContains(final JsonNode requiredProperties, final String element) {
         return stream(requiredProperties.elements()).anyMatch(e -> e.textValue().equals(element));
+    }
+
+    /**
+     * Syntax checker for the <code>nullable</code> keyword introduced by the Swagger/OpenAPI specification.
+     *
+     * @see <a href="https://swagger.io/specification/#schemaNullable">Swagger specification</a>
+     */
+    public static class NullableSyntaxChecker extends AbstractSyntaxChecker {
+
+        private static final NullableSyntaxChecker INSTANCE = new NullableSyntaxChecker();
+
+        static NullableSyntaxChecker getInstance() {
+            return INSTANCE;
+        }
+
+        NullableSyntaxChecker() {
+            super(NULLABLE_KEYWORD, NodeType.BOOLEAN);
+        }
+
+        @Override
+        protected void checkValue(final Collection<JsonPointer> pointers,
+                                  final MessageBundle bundle,
+                                  final ProcessingReport report,
+                                  final SchemaTree tree) throws ProcessingException {
+        }
+    }
+
+    /**
+     * Digester for the <code>nullable</code> keyword introduced by the Swagger/OpenAPI specification.
+     */
+    public static class NullableDigester extends AbstractDigester {
+
+        private static final NullableDigester INSTANCE = new NullableDigester();
+
+        public static NullableDigester getInstance() {
+            return INSTANCE;
+        }
+
+        private NullableDigester() {
+            super(NULLABLE_KEYWORD, NodeType.OBJECT, NodeType.values());
+        }
+
+        @Override
+        public JsonNode digest(final JsonNode schema) {
+            setupNullableTypes(schema);
+            setupNullableEnums(schema);
+            return schema;
+        }
+
+        private static void setupNullableTypes(final JsonNode schemaObject) {
+            // If the node is marked as nullable, and the type for this node is not
+            // already "null", then we need to turn the "type" field into a list of
+            // the currently specified type and "null", so that it will be properly
+            // handled by the JSON-schema validation routine.
+            final String typeKey = "type";
+            final String nullableKey = "nullable";
+            final String nullType = NodeType.NULL.toString();
+            schemaObject
+                .findParents(typeKey)
+                .stream()
+                .filter(jsonNode -> jsonNode.path(nullableKey).asBoolean(false))
+                .filter(jsonNode -> !alreadySupportsNullType(jsonNode))
+                .forEach(
+                    jsonNode -> {
+                        final JsonNode type = jsonNode.get(typeKey);
+                        ((ObjectNode) jsonNode).putArray(typeKey).add(nullType).add(type);
+                    });
+        }
+
+        private static void setupNullableEnums(final JsonNode schemaObject) {
+            // If the node is marked as nullable, and this node is an enum, then we
+            // need to extend the set of enumerated values to include null, so that
+            // it will be properly handled by the JSON-schema validation routine.
+            final String enumKey = "enum";
+            final String nullableKey = "nullable";
+            schemaObject
+                .findParents(enumKey)
+                .stream()
+                .filter(jsonNode -> jsonNode.path(nullableKey).asBoolean(false))
+                .forEach(jsonNode -> ((ArrayNode) jsonNode.get(enumKey)).addNull());
+        }
+
+        private static boolean alreadySupportsNullType(final JsonNode schemaObject) {
+            final String nullType = NodeType.NULL.toString();
+            final String typeKey = "type";
+            final JsonNode typeNode = schemaObject.get(typeKey);
+
+            if (typeNode.isTextual()) {
+                return nullType.equals(typeNode.asText());
+            } else if (typeNode.isArray()) {
+                final ArrayNode typeNodeArr = (ArrayNode) typeNode;
+
+                for (final JsonNode typeElem : typeNodeArr) {
+                    if (nullType.equals(typeElem.asText())) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+    }
+
+    /**
+     * Keyword validator for the <code>nullable</code> keyword introduced by the Swagger/OpenAPI specification.
+     *
+     * @see <a href="https://swagger.io/specification/#schemaNullable">Swagger specification</a>
+     */
+    public static class NullableKeywordValidator extends AbstractKeywordValidator {
+
+        public NullableKeywordValidator(final JsonNode digest) {
+            super(NULLABLE_KEYWORD);
+        }
+
+        @Override
+        public void validate(final Processor<FullData, FullData> processor,
+                             final ProcessingReport report,
+                             final MessageBundle bundle,
+                             final FullData data) throws ProcessingException {
+        }
+
+        @Override
+        public String toString() {
+            return keyword;
+        }
     }
 
     /**
