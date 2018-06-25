@@ -216,6 +216,36 @@
         }
       }
     },
+    "/users/{id}/hal-json": {
+      "get": {
+        "tags": [
+          "user"
+        ],
+        "summary": "Get a single user",
+        "operationId": "get user by ID",
+        "produces": [
+          "application/hal+json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the user to get",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User response",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          }
+        }
+      }
+    },
     "/secure/users/{id}": {
       "get": {
         "tags": [

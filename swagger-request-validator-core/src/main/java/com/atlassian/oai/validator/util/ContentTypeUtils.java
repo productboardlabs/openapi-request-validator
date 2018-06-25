@@ -6,6 +6,7 @@ import com.atlassian.oai.validator.model.Response;
 import com.google.common.net.MediaType;
 
 import java.util.Optional;
+import java.util.function.Function;
 
 public class ContentTypeUtils {
 
@@ -33,11 +34,17 @@ public class ContentTypeUtils {
         try {
             return maybeContentType
                     .map(MediaType::parse)
-                    .map(ct -> ct.withoutParameters().is(MediaType.JSON_UTF_8.withoutParameters()))
+                    .map(isJsonMediaType())
                     .orElse(false);
         } catch (final IllegalArgumentException e) {
             return false;
         }
+    }
+
+    private static Function<MediaType, Boolean> isJsonMediaType() {
+        return ct ->
+                ct.withoutParameters().is(MediaType.JSON_UTF_8.withoutParameters()) ||
+                ct.withoutParameters().is(MediaTypeUtils.HAL_JSON_UTF_8.withoutParameters());
     }
 
     /**

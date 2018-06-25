@@ -1,10 +1,12 @@
 package com.atlassian.oai.validator;
 
+import com.atlassian.oai.validator.model.Headers;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.LevelResolver;
+import com.atlassian.oai.validator.util.MediaTypeUtils;
 import org.junit.Test;
 
 import static com.atlassian.oai.validator.report.ValidationReport.Level.IGNORE;
@@ -94,6 +96,17 @@ public class SwaggerRequestResponseValidatorTest {
                 .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
                 .build();
         final Response response = SimpleResponse.Builder.ok().withBody("{\"id\":1,\"name\":\"Max\",\"email\":\"max@example.com\"}").build();
+
+        assertPass(classUnderTest.validate(request, response));
+    }
+
+    @Test
+    public void validate_withHalJsonContentType() {
+        final Request request = SimpleRequest.Builder.get("/users/1/hal-json").build();
+        final Response response = SimpleResponse.Builder.ok()
+                .withHeader(Headers.CONTENT_TYPE, MediaTypeUtils.HAL_JSON_UTF_8.toString())
+                .withBody("{\"id\":1,\"name\":\"Max\",\"email\":\"max@example.com\"}")
+                .build();
 
         assertPass(classUnderTest.validate(request, response));
     }
