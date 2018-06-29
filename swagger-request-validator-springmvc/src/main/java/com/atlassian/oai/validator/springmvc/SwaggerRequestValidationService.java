@@ -87,7 +87,9 @@ class SwaggerRequestValidationService {
     }
 
     private static String readReader(final Reader reader) throws IOException {
-        return IOUtils.toString(reader);
+        try (Reader reassignedReader = reader) {
+            return IOUtils.toString(reassignedReader);
+        }
     }
 
     private static String getCompleteRequestUri(final HttpServletRequest servletRequest) {
