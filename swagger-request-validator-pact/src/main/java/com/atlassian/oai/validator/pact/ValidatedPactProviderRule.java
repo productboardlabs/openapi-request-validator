@@ -29,16 +29,29 @@ public class ValidatedPactProviderRule implements TestRule {
     private final Object target;
     private final SwaggerRequestResponseValidator validator;
 
-    public ValidatedPactProviderRule(final String swaggerJsonUrl, final String basePathOverride, final String providerId, final Object target) {
-        this.delegate = new PactProviderRule(providerId, target);
-        this.providerId = providerId;
-        this.target = target;
+    public ValidatedPactProviderRule(final String swaggerJsonUrl, final String basePathOverride,
+                                     final String providerId, final Object target) {
+        this(swaggerJsonUrl, basePathOverride, providerId, target,
+                new PactProviderRule(providerId, target));
+    }
 
+    public ValidatedPactProviderRule(final String swaggerJsonUrl, final String basePathOverride,
+                                     final String providerId, final String host, final Integer port, final Object target) {
+        this(swaggerJsonUrl, basePathOverride, providerId, target,
+                new PactProviderRule(providerId, host, port, target));
+    }
+
+    private ValidatedPactProviderRule(final String swaggerJsonUrl, final String basePathOverride,
+                                      final String providerId, final Object target, final PactProviderRule delegate) {
         this.validator = SwaggerRequestResponseValidator
                 .createFor(swaggerJsonUrl)
                 .withLevelResolver(PactLevelResolverFactory.create())
                 .withBasePathOverride(basePathOverride)
                 .build();
+
+        this.providerId = providerId;
+        this.target = target;
+        this.delegate = delegate;
     }
 
     public MockProviderConfig getConfig() {
