@@ -25,6 +25,25 @@ public interface ApiPath extends NormalisedPath {
     boolean matches(NormalisedPath requestPath);
 
     /**
+     * Determine if the given request path matches this API path, taking into consideration path params and allowing for
+     * a trailing param to match the rest of the path.
+     *
+     * e.g. consider an API path '/folder/{subFolders}'. This method will return true for any path begining /folder
+     * such as /folder/a, /folder/a/b, /folder/a/b/c etcetera.
+     *
+     * <p>
+     * Note that this method does not validate path params in the incoming request path part - it merely indicates
+     * that it matches the template described in the API path expression.
+     *
+     * @param requestPath The request path to test
+     *
+     * @return true if the incoming request path matches against the template defined in this API path, allowing for a trailing parameter to match
+     * the remainder of the path; false otherwise.
+     */
+    boolean matchesDynamicPath(final NormalisedPath requestPath);
+
+
+    /**
      * Determine if the given request path part matches against the corresponding path part in this API path,
      * taking into consideration path params.
      * <p>

@@ -4,6 +4,7 @@ import com.atlassian.oai.validator.parameter.format.CustomDateTimeFormatter;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -23,15 +24,18 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static com.atlassian.oai.validator.schema.SwaggerV20Library.OAI_V2_METASCHEMA_URI;
@@ -153,6 +157,7 @@ public class SchemaValidator {
     private JsonNode readSchema(@Nonnull final Object schema) throws IOException {
         final JsonNode schemaObject = Json.mapper().readTree(Json.pretty(schema));
         setupSchemaDefinitionRefs(schemaObject);
+
         return schemaObject;
     }
 
@@ -168,7 +173,7 @@ public class SchemaValidator {
             if (this.definitions == null) {
                 this.definitions = api.getDefinitions() == null ?
                         Json.mapper().createObjectNode() :
-                        Json.mapper().readTree(Json.pretty(api.getDefinitions()));
+                        Json.mapper().readTree(correctApiDefinitions(api.getDefinitions()));
                 this.definitions.forEach(n -> {
                     if (additionalPropertiesValidationEnabled()) {
                         // Explicitly disable additionalProperties
@@ -185,6 +190,22 @@ public class SchemaValidator {
             }
             objectNode.set(DEFINITIONS_FIELD, this.definitions);
         }
+    }
+
+    private static String correctApiDefinitions(final Map<String, Model> apiDefinitions) {
+        final Map<String, Map<String, Object>> definitions = Json.mapper()
+                .convertValue(apiDefinitions, new TypeReference<Map<String, Map<String, Object>>>() {});
+        definitions.forEach((modelName, model) -> {
+            // If the top level definition is a numeric type and contains an enum this enum was wrongly
+            // converted into a list of strings instead of a list of numbers.
+            // This enum list has to be corrected or else the validation would fail.
+            // See: https://bitbucket.org/atlassian/swagger-request-validator/issues/118
+            if (Arrays.asList("integer", "number").contains(model.get("type"))) {
+                model.computeIfPresent("enum", (key, enums) ->
+                        ((List<String>) enums).stream().map(BigDecimal::new).collect(Collectors.toList()));
+            }
+        });
+        return Json.pretty(definitions);
     }
 
     private JsonNode readContent(@Nonnull final String value, @Nonnull final Object schema) throws IOException {

@@ -199,6 +199,45 @@
           }
         }
       }
+    },
+    "/tree/{categoryName}": {
+      "get": {
+        "description": "GET:/tree/{categoryName}",
+        "parameters": [
+          {
+            "name": "categoryName",
+            "in": "path",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/tree/{categoryName}/{path}": {
+      "get": {
+        "description": "GET:/tree/{categoryName}/{path}",
+        "parameters": [
+          {
+            "name": "categoryName",
+            "in": "path",
+            "type": "string"
+          },
+          {
+            "name": "path",
+            "in": "path",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
     }
   }
 }

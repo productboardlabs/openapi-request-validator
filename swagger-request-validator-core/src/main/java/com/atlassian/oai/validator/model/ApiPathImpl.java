@@ -147,4 +147,22 @@ public class ApiPathImpl extends NormalisedPathImpl implements ApiPath {
         return result;
     }
 
+    private boolean hasTrailingParam() {
+        return part(numberOfParts() - 1).endsWith("}");
+    }
+
+    @Override
+    public boolean matchesDynamicPath(final NormalisedPath requestPath) {
+        if (!hasTrailingParam() || numberOfParts() > requestPath.numberOfParts()) {
+            return matches(requestPath);
+        } else {
+            for (int i=0; i < numberOfParts(); i++) {
+                if (!partMatches(i, requestPath.part(i))) {
+                    return false;
+                }
+            }
+            //all parts matched and the final part is known to be a parameter
+            return true;
+        }
+    }
 }

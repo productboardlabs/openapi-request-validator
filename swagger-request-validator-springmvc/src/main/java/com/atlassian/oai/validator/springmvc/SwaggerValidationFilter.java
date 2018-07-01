@@ -1,5 +1,8 @@
 package com.atlassian.oai.validator.springmvc;
 
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.cors.CorsUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -23,6 +26,8 @@ import java.io.IOException;
  */
 public class SwaggerValidationFilter extends OncePerRequestFilter {
 
+    private static final Logger LOG = LoggerFactory.getLogger(SwaggerValidationFilter.class);
+
     @Override
     protected void doFilterInternal(final HttpServletRequest servletRequest, final HttpServletResponse servletResponse, final FilterChain filterChain)
             throws ServletException, IOException {
@@ -32,8 +37,22 @@ public class SwaggerValidationFilter extends OncePerRequestFilter {
 
     private HttpServletRequest wrapValidatableServletRequest(final HttpServletRequest servletRequest) {
         // wrap only validatable requests
-        final boolean doValidationStep = servletRequest.getContentLengthLong() <= Integer.MAX_VALUE &&
+        final long contentLengthLong = getContentLength(servletRequest);
+        final boolean doValidationStep = contentLengthLong <= Integer.MAX_VALUE &&
                 !CorsUtils.isPreFlightRequest(servletRequest);
         return doValidationStep ? new ResettableRequestServletWrapper(servletRequest) : servletRequest;
+    }
+
+    private long getContentLength(final HttpServletRequest servletRequest) {
+        final String contentLength = servletRequest.getHeader("content-length");
+        if (StringUtils.isNotBlank(contentLength)) {
+            try {
+                return Long.parseLong(contentLength);
+            } catch (final NumberFormatException e) {
+                // either no valid content-length was set or the content-length exceeded Long.MAX_VALUE
+                LOG.warn("Invalid content-length header value on request: '" + contentLength + "'");
+            }
+        }
+        return -1L;
     }
 }

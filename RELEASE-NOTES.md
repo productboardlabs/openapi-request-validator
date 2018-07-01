@@ -1,3 +1,11 @@
+#v1.4.5
+* Fixed validation of non-string enums in request/response bodies. 
+[[#118]](https://bitbucket.org/atlassian/swagger-request-validator/issues/118)
+* Removed usage of `servletRequest.getContentLengthLong()` to be compatible with Servlet 2.0
+[[#114]](https://bitbucket.org/atlassian/swagger-request-validator/issues/114)
+* Added support for dynamic path matching to the operation resolver.
+[[#121]](https://bitbucket.org/atlassian/swagger-request-validator/issues/121)
+
 #v1.4.4
 * Added support for basic auth in the Pact Provider validator for retrieving Pacts from a 
 broker that requires authentication
