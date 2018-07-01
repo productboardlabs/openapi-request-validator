@@ -2,11 +2,15 @@ package com.atlassian.oai.validator.springmvc;
 
 import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
 import com.atlassian.oai.validator.model.Request;
+import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleRequest;
+import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.ValidationReport;
+import com.google.common.collect.Lists;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.support.EncodedResource;
+import org.springframework.web.util.ContentCachingResponseWrapper;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -22,7 +26,7 @@ class SwaggerRequestValidationService {
 
     private static final String MESSAGE_REQUEST_PATH_MISSING = "validation.request.path.missing";
 
-    private final SwaggerRequestResponseValidator requestValidator;
+    private final SwaggerRequestResponseValidator swaggerRequestResponseValidator;
 
     SwaggerRequestValidationService(final EncodedResource restInterface) throws IOException {
         this(SwaggerRequestResponseValidator
@@ -30,9 +34,9 @@ class SwaggerRequestValidationService {
                 .build());
     }
 
-    SwaggerRequestValidationService(final SwaggerRequestResponseValidator requestValidator) {
-        Objects.requireNonNull(requestValidator, "A request validator is required.");
-        this.requestValidator = requestValidator;
+    SwaggerRequestValidationService(final SwaggerRequestResponseValidator swaggerRequestResponseValidator) {
+        Objects.requireNonNull(swaggerRequestResponseValidator, "A Swagger request response validator is required.");
+        this.swaggerRequestResponseValidator = swaggerRequestResponseValidator;
     }
 
     /**
@@ -43,10 +47,7 @@ class SwaggerRequestValidationService {
     Request buildRequest(final HttpServletRequest servletRequest) throws IOException {
         Objects.requireNonNull(servletRequest, "A request is required.");
         final Request.Method method = Request.Method.valueOf(servletRequest.getMethod());
-        final String requestUri = getCompleteRequestUri(servletRequest);
-        final UriComponents uriComponents = UriComponentsBuilder
-                .fromUriString(requestUri)
-                .build();
+        final UriComponents uriComponents = getUriComponents(servletRequest);
         final String path = uriComponents.getPath();
         final SimpleRequest.Builder builder = new SimpleRequest.Builder(method, path);
         final String body = readReader(servletRequest.getReader());
@@ -66,11 +67,37 @@ class SwaggerRequestValidationService {
     }
 
     /**
+     * @param servletResponse the {@link javax.servlet.http.HttpServletResponse} whose body is cached
+     * @return the build {@link Response} created out of given {@link ContentCachingResponseWrapper}
+     * @throws IOException if the cached response body can't be read
+     */
+    Response buildResponse(final ContentCachingResponseWrapper servletResponse) throws IOException {
+        final int statusCode = servletResponse.getStatusCode();
+        final SimpleResponse.Builder builder = new SimpleResponse.Builder(statusCode)
+                .withBody(new String(servletResponse.getContentAsByteArray(), servletResponse.getCharacterEncoding()));
+        for (final String headerName : servletResponse.getHeaderNames()) {
+            builder.withHeader(headerName, Lists.newArrayList(servletResponse.getHeaders(headerName)));
+        }
+        return builder.build();
+    }
+
+    /**
      * @param request the {@link Request} to validate against the Swagger schema
      * @return the {@link ValidationReport} for the validated {@link Request}
      */
     ValidationReport validateRequest(final Request request) {
-        return requestValidator.validateRequest(request);
+        return swaggerRequestResponseValidator.validateRequest(request);
+    }
+
+    /**
+     * @param servletRequest the {@link HttpServletRequest} to examine the api path to validate against
+     * @param response       the {@link Response} to validate against the Swagger schema
+     * @return the {@link ValidationReport} for the validated {@link Request}
+     */
+    ValidationReport validateResponse(final HttpServletRequest servletRequest, final Response response) {
+        final Request.Method method = Request.Method.valueOf(servletRequest.getMethod());
+        final String path = getUriComponents(servletRequest).getPath();
+        return swaggerRequestResponseValidator.validateResponse(path, method, response);
     }
 
     /**
@@ -88,6 +115,13 @@ class SwaggerRequestValidationService {
 
     private static String readReader(final Reader reader) throws IOException {
         return IOUtils.toString(reader);
+    }
+
+    private static UriComponents getUriComponents(final HttpServletRequest servletRequest) {
+        final String requestUri = getCompleteRequestUri(servletRequest);
+        return UriComponentsBuilder
+                .fromUriString(requestUri)
+                .build();
     }
 
     private static String getCompleteRequestUri(final HttpServletRequest servletRequest) {

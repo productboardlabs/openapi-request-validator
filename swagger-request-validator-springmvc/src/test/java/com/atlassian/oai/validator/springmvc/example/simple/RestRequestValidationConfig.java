@@ -27,7 +27,7 @@ public class RestRequestValidationConfig extends WebMvcConfigurerAdapter {
 
     @Bean
     public Filter swaggerValidationFilter() {
-        return new SwaggerValidationFilter();
+        return new SwaggerValidationFilter(true, true);
     }
 
     @Override
