@@ -2,24 +2,34 @@ package com.atlassian.oai.validator.springmvc;
 
 import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
 import com.atlassian.oai.validator.model.Request;
+import com.atlassian.oai.validator.model.Response;
+import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.ValidationReport;
+import com.google.common.collect.ImmutableMap;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.core.io.support.EncodedResource;
+import org.springframework.util.ReflectionUtils;
+import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
-import java.util.Arrays;
+import java.lang.reflect.Field;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
@@ -29,9 +39,15 @@ public class SwaggerRequestValidationServiceTest {
 
     private SwaggerRequestResponseValidator requestValidator;
 
+    private static Map<String, Collection<String>> getHeadersFromResponse(final Response response) {
+        final Field headersField = ReflectionUtils.findField(SimpleResponse.class, "headers");
+        ReflectionUtils.makeAccessible(headersField);
+        return (Map<String, Collection<String>>) ReflectionUtils.getField(headersField, response);
+    }
+
     @Before
     public void setUp() {
-        requestValidator = Mockito.mock(SwaggerRequestResponseValidator.class);
+        requestValidator = mock(SwaggerRequestResponseValidator.class);
         classUnderTest = new SwaggerRequestValidationService(requestValidator);
     }
 
@@ -42,7 +58,7 @@ public class SwaggerRequestValidationServiceTest {
 
     @Test
     public void constructor_withEncodedResource() throws IOException {
-        final EncodedResource encodedResource = Mockito.mock(EncodedResource.class);
+        final EncodedResource encodedResource = mock(EncodedResource.class);
         when(encodedResource.getReader())
                 .thenReturn(new InputStreamReader(getClass().getResourceAsStream("/api-spring-test.json")));
 
@@ -57,7 +73,7 @@ public class SwaggerRequestValidationServiceTest {
 
     @Test
     public void buildRequest_withoutBodyHeaderAndQueryString() throws IOException {
-        final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
+        final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
         when(servletRequest.getMethod()).thenReturn("GET");
         when(servletRequest.getQueryString()).thenReturn("");
         when(servletRequest.getRequestURI()).thenReturn("/swagger-request-validator");
@@ -77,7 +93,7 @@ public class SwaggerRequestValidationServiceTest {
 
     @Test
     public void buildRequest_withEmptyBody() throws IOException {
-        final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
+        final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
         when(servletRequest.getMethod()).thenReturn("PUT");
         when(servletRequest.getQueryString()).thenReturn("");
         when(servletRequest.getRequestURI()).thenReturn("/swagger-request-validator");
@@ -95,7 +111,7 @@ public class SwaggerRequestValidationServiceTest {
 
     @Test
     public void buildRequest_withBodyHeaderAndQueryString() throws IOException {
-        final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
+        final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
         when(servletRequest.getMethod()).thenReturn("POST");
         when(servletRequest.getQueryString())
                 .thenReturn("query1=QUERY_ONE&query2=query_two&query2=QUERY_TWO");
@@ -104,11 +120,11 @@ public class SwaggerRequestValidationServiceTest {
         final BufferedReader reader = new BufferedReader(new StringReader("Body"));
         when(servletRequest.getReader()).thenReturn(reader);
         when(servletRequest.getHeaderNames())
-                .thenReturn(Collections.enumeration(Arrays.asList("header1", "header2")));
+                .thenReturn(Collections.enumeration(asList("header1", "header2")));
         when(servletRequest.getHeaders("header1"))
-                .thenReturn(Collections.enumeration(Arrays.asList("HEADER_ONE")));
+                .thenReturn(Collections.enumeration(asList("HEADER_ONE")));
         when(servletRequest.getHeaders("header2"))
-                .thenReturn(Collections.enumeration(Arrays.asList("header_two", "HEADER_TWO")));
+                .thenReturn(Collections.enumeration(asList("header_two", "HEADER_TWO")));
 
         final Request result = classUnderTest.buildRequest(servletRequest);
 
@@ -117,20 +133,73 @@ public class SwaggerRequestValidationServiceTest {
         assertThat(result.getBody().get(), equalTo("Body"));
         assertThat(result.getHeaders().size(), equalTo(2));
         assertThat(result.getHeaderValues("header1"),
-                equalTo(Arrays.asList("HEADER_ONE")));
+                equalTo(asList("HEADER_ONE")));
         assertThat(result.getHeaderValues("header2"),
-                equalTo(Arrays.asList("header_two", "HEADER_TWO")));
+                equalTo(asList("header_two", "HEADER_TWO")));
         assertThat(result.getQueryParameters().size(), equalTo(2));
         assertThat(result.getQueryParameterValues("query1"),
-                equalTo(Arrays.asList("QUERY_ONE")));
+                equalTo(asList("QUERY_ONE")));
         assertThat(result.getQueryParameterValues("query2"),
-                equalTo(Arrays.asList("query_two", "QUERY_TWO")));
+                equalTo(asList("query_two", "QUERY_TWO")));
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void buildResponse_failsWithoutRequiredResponse() throws IOException {
+        // expect:
+        classUnderTest.buildResponse(null);
+    }
+
+    @Test
+    public void buildResponse_withEmptyBodyAndHeader() throws IOException {
+        // given:
+        final ContentCachingResponseWrapper servletResponse = mock(ContentCachingResponseWrapper.class);
+
+        // and:
+        when(servletResponse.getStatusCode()).thenReturn(202);
+        when(servletResponse.getContentAsByteArray()).thenReturn(new byte[0]);
+        when(servletResponse.getCharacterEncoding()).thenReturn("ISO-8859-1");
+        when(servletResponse.getHeaderNames()).thenReturn(emptySet());
+
+        // when:
+        final Response result = classUnderTest.buildResponse(servletResponse);
+
+        // then:
+        assertThat(result.getBody().isPresent(), equalTo(true));
+        assertThat(result.getStatus(), is(202));
+        assertThat(getHeadersFromResponse(result).size(), is(1)); // Content type header will be set
+    }
+
+    @Test
+    public void buildResponse_withBodyAndHeader() throws IOException {
+        // given:
+        final ContentCachingResponseWrapper servletResponse = mock(ContentCachingResponseWrapper.class);
+
+        // and:
+        when(servletResponse.getStatusCode()).thenReturn(404);
+        when(servletResponse.getContentAsByteArray()).thenReturn(new byte[0]);
+        when(servletResponse.getCharacterEncoding()).thenReturn("UTF-8");
+        when(servletResponse.getHeaderNames()).thenReturn(asList("header 1", "header 2"));
+        when(servletResponse.getHeaders("header 1")).thenReturn(asList("header value 1", "header value 2"));
+        when(servletResponse.getHeaders("header 2")).thenReturn(asList("header value 3"));
+        when(servletResponse.getContentType()).thenReturn("application/json");
+
+        // when:
+        final Response result = classUnderTest.buildResponse(servletResponse);
+
+        // then:
+        assertThat(result.getBody().isPresent(), equalTo(true));
+        assertThat(result.getStatus(), is(404));
+        assertThat(getHeadersFromResponse(result), equalTo(ImmutableMap.of(
+                "header 1", asList("header value 1", "header value 2"),
+                "header 2", asList("header value 3"),
+                "Content-Type", asList("application/json")
+        )));
     }
 
     @Test
     public void validateRequest_returnsTheValidationReport() {
-        final Request request = Mockito.mock(Request.class);
-        final ValidationReport validationReport = Mockito.mock(ValidationReport.class);
+        final Request request = mock(Request.class);
+        final ValidationReport validationReport = mock(ValidationReport.class);
         when(requestValidator.validateRequest(request)).thenReturn(validationReport);
 
         final ValidationReport result = classUnderTest.validateRequest(request);
@@ -140,11 +209,35 @@ public class SwaggerRequestValidationServiceTest {
     }
 
     @Test
+    public void validateResponse_returnsTheValidationReport() {
+        // given:
+        final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
+        final Response response = mock(Response.class);
+        final ValidationReport validationReport = mock(ValidationReport.class);
+
+        // and:
+        when(servletRequest.getMethod()).thenReturn("POST");
+        when(servletRequest.getQueryString()).thenReturn(null);
+        when(servletRequest.getRequestURI()).thenReturn("/swagger-request-validator");
+
+        when(requestValidator.validateResponse("/swagger-request-validator",
+                Request.Method.POST, response)).thenReturn(validationReport);
+
+        // when:
+        final ValidationReport result = classUnderTest.validateResponse(servletRequest, response);
+
+        // then:
+        Mockito.verify(requestValidator, times(1))
+                .validateResponse("/swagger-request-validator", Request.Method.POST, response);
+        assertThat(result, is(validationReport));
+    }
+
+    @Test
     public void isDefinedSwaggerRequest_theValidationReportSuggestsThatTheRequestIsNotDefined() {
-        final ValidationReport validationReport = Mockito.mock(ValidationReport.class);
-        final ValidationReport.Message message1 = Mockito.mock(ValidationReport.Message.class);
-        final ValidationReport.Message message2 = Mockito.mock(ValidationReport.Message.class);
-        when(validationReport.getMessages()).thenReturn(Arrays.asList(message1, message2));
+        final ValidationReport validationReport = mock(ValidationReport.class);
+        final ValidationReport.Message message1 = mock(ValidationReport.Message.class);
+        final ValidationReport.Message message2 = mock(ValidationReport.Message.class);
+        when(validationReport.getMessages()).thenReturn(asList(message1, message2));
         when(message1.getKey()).thenReturn("other.validation.error");
         when(message2.getKey()).thenReturn("validation.request.path.missing");
 
@@ -155,10 +248,10 @@ public class SwaggerRequestValidationServiceTest {
 
     @Test
     public void isDefinedSwaggerRequest_theValidationReportSuggestsThatTheRequestIsDefined() {
-        final ValidationReport validationReport = Mockito.mock(ValidationReport.class);
-        final ValidationReport.Message message1 = Mockito.mock(ValidationReport.Message.class);
-        final ValidationReport.Message message2 = Mockito.mock(ValidationReport.Message.class);
-        when(validationReport.getMessages()).thenReturn(Arrays.asList(message1, message2));
+        final ValidationReport validationReport = mock(ValidationReport.class);
+        final ValidationReport.Message message1 = mock(ValidationReport.Message.class);
+        final ValidationReport.Message message2 = mock(ValidationReport.Message.class);
+        when(validationReport.getMessages()).thenReturn(asList(message1, message2));
         when(message1.getKey()).thenReturn("other.validation.error");
         when(message2.getKey()).thenReturn("another.validation.error");
 

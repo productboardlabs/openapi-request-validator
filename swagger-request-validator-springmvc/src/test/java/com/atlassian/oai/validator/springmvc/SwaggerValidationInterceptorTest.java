@@ -1,13 +1,16 @@
 package com.atlassian.oai.validator.springmvc;
 
 import com.atlassian.oai.validator.model.Request;
+import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.report.ValidationReport;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.core.io.support.EncodedResource;
+import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Collections;
@@ -41,7 +44,7 @@ public class SwaggerValidationInterceptorTest {
     }
 
     @Test
-    public void preHandle_noValidationIfNoWrappedServletRequest() throws Exception {
+    public void preHandle_noRequestValidationIfNoWrappedServletRequest() throws Exception {
         final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
 
         final boolean result = classUnderTest.preHandle(servletRequest, null, null);
@@ -106,5 +109,87 @@ public class SwaggerValidationInterceptorTest {
 
         Mockito.verify(validationReport, times(1)).getMessages();
         assertThat(result, equalTo(true));
+    }
+
+    @Test
+    public void postHandle_noResponseValidationIfNoWrappedServletResponse() throws Exception {
+        // given:
+        final HttpServletResponse servletResponse = Mockito.mock(HttpServletResponse.class);
+
+        // expect:
+        classUnderTest.postHandle(null, servletResponse, null, null);
+    }
+
+    @Test
+    public void postHandle_theResponseIsValid() throws Exception {
+        // given:
+        final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
+        final ContentCachingResponseWrapper servletResponse = Mockito.mock(ContentCachingResponseWrapper.class);
+        final Response response = Mockito.mock(Response.class);
+        final ValidationReport validationReport = Mockito.mock(ValidationReport.class);
+
+        // and:
+        Mockito.when(servletRequest.getMethod()).thenReturn("METHOD");
+        Mockito.when(servletRequest.getRequestURI()).thenReturn("/request/uri");
+
+        Mockito.when(swaggerRequestValidationService.buildResponse(servletResponse)).thenReturn(response);
+        Mockito.when(swaggerRequestValidationService.validateResponse(servletRequest, response)).thenReturn(validationReport);
+        Mockito.when(validationReport.hasErrors()).thenReturn(false);
+
+        // when:
+        classUnderTest.postHandle(servletRequest, servletResponse, null, null);
+
+        // then:
+        Mockito.verify(validationReport, times(1)).hasErrors();
+    }
+
+    @Test
+    public void postHandle_theRequestIsNotPartOfTheSwaggerDefinition() throws Exception {
+        // given:
+        final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
+        final ContentCachingResponseWrapper servletResponse = Mockito.mock(ContentCachingResponseWrapper.class);
+        final Response response = Mockito.mock(Response.class);
+        final ValidationReport validationReport = Mockito.mock(ValidationReport.class);
+
+        // and:
+        Mockito.when(servletRequest.getMethod()).thenReturn("METHOD");
+        Mockito.when(servletRequest.getRequestURI()).thenReturn("/request/uri");
+
+        Mockito.when(swaggerRequestValidationService.buildResponse(servletResponse)).thenReturn(response);
+        Mockito.when(swaggerRequestValidationService.validateResponse(servletRequest, response)).thenReturn(validationReport);
+        Mockito.when(validationReport.hasErrors()).thenReturn(true);
+        Mockito.when(swaggerRequestValidationService.isDefinedSwaggerRequest(validationReport)).thenReturn(false);
+
+        // when:
+        classUnderTest.postHandle(servletRequest, servletResponse, null, null);
+
+        // then:
+        Mockito.verify(swaggerRequestValidationService, times(1)).isDefinedSwaggerRequest(validationReport);
+    }
+
+    @Test(expected = InvalidResponseException.class)
+    public void postHandle_theResponseIsInvalid() throws Exception {
+        // setup:
+        final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
+        final ContentCachingResponseWrapper servletResponse = Mockito.mock(ContentCachingResponseWrapper.class);
+        final Response response = Mockito.mock(Response.class);
+        final ValidationReport validationReport = Mockito.mock(ValidationReport.class);
+
+        // and:
+        Mockito.when(servletRequest.getMethod()).thenReturn("METHOD");
+        Mockito.when(servletRequest.getRequestURI()).thenReturn("/request/uri");
+
+        Mockito.when(swaggerRequestValidationService.buildResponse(servletResponse)).thenReturn(response);
+        Mockito.when(swaggerRequestValidationService.validateResponse(servletRequest, response)).thenReturn(validationReport);
+        Mockito.when(validationReport.hasErrors()).thenReturn(true);
+        Mockito.when(swaggerRequestValidationService.isDefinedSwaggerRequest(validationReport)).thenReturn(true);
+        Mockito.when(validationReport.getMessages()).thenReturn(Collections.emptyList());
+
+        // when:
+        classUnderTest.postHandle(servletRequest, servletResponse, null, null);
+
+        // then:
+        Mockito.verify(validationReport, times(1)).getMessages();
+        Mockito.verify(servletResponse, times(1)).reset();
     }
 }
