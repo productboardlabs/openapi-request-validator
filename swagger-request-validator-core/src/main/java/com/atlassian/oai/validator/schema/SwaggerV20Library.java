@@ -491,7 +491,7 @@ public class SwaggerV20Library {
      */
     public static class SyntaxBundle implements MessageBundleLoader {
 
-        private static final String PATH = "schema-validation.properties";
+        private static final String PATH = "/swagger/validation/schema-validation.properties";
 
         @Override
         public MessageBundle getBundle() {
@@ -509,7 +509,7 @@ public class SwaggerV20Library {
      */
     public static class ValidationBundle implements MessageBundleLoader {
 
-        private static final String PATH = "schema-validation.properties";
+        private static final String PATH = "/swagger/validation/schema-validation.properties";
 
         @Override
         public MessageBundle getBundle() {
