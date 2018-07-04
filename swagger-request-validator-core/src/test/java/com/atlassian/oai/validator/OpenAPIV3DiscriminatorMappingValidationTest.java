@@ -2,16 +2,26 @@ package com.atlassian.oai.validator;
 
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleResponse;
+import com.atlassian.oai.validator.report.LevelResolver;
 import org.junit.Test;
 
 import static com.atlassian.oai.validator.model.Request.Method.GET;
+import static com.atlassian.oai.validator.report.ValidationReport.Level.IGNORE;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 
 public class OpenAPIV3DiscriminatorMappingValidationTest {
 
     private final SwaggerRequestResponseValidator classUnderTest =
-            SwaggerRequestResponseValidator.createFor("/oai/v3/pet.yaml").build();
+            SwaggerRequestResponseValidator
+                    .createFor("/oai/v3/pet.yaml")
+                    .withLevelResolver(
+                            LevelResolver
+                                    .create()
+                                    .withLevel("validation.schema.additionalProperties", IGNORE)
+                                    .build()
+                    )
+                    .build();
 
     @Test
     public void validate_withValidMappedType_shouldSucceed() {
