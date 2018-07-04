@@ -1,0 +1,19 @@
+{
+  "$schema": "https://openapis.org/specification/versions/2.0#",
+  "$ref": "#/definitions/Thing",
+  "definitions": {
+    "Thing": {
+      "type": "object",
+      "properties": {
+        "nullableProp": {
+          "type": "string",
+          "nullable": true
+        },
+        "nonNullableProp": {
+          "type": "string",
+          "nullable": false
+        }
+      }
+    }
+  }
+}

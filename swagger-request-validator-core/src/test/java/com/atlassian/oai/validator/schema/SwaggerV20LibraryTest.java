@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static com.atlassian.oai.validator.schema.SwaggerV20Library.schemaFactory;
+import static java.lang.String.format;
 import static org.junit.Assert.fail;
 
 @RunWith(Parameterized.class)
@@ -23,47 +24,86 @@ public class SwaggerV20LibraryTest {
     @Parameters(name = "{0}")
     public static Collection<Object[]> params() {
         return Arrays.asList(new Object[][] {
-            // Name, Schema, Example, Expected
-            {"discriminator_shouldPass_whenValid",
-                "discriminator-valid", "discriminator-valid",
-                null
-            },
-            {"discriminator_shouldFail_whenInvalidDiscriminatorValue",
-                "discriminator-valid", "discriminator-invalid-badDiscriminator",
-                new String[]{"err.swaggerv2.discriminator.invalid"}
-            },
-            {"discriminator_shouldFail_whenMissingDiscriminator",
-                "discriminator-valid", "discriminator-invalid-missingDiscriminator",
-                new String[]{"err.swaggerv2.discriminator.missing"}
-            },
-            {"discriminator_shouldFail_whenEmptyDiscriminator",
-                "discriminator-valid", "discriminator-invalid-emptyDiscriminator",
-                new String[]{"err.swaggerv2.discriminator.missing"}
-            },
-            {"discriminator_shouldFail_whenNonStringDiscriminator",
-                "discriminator-valid", "discriminator-invalid-nonStringDiscriminator",
-                new String[]{"err.swaggerv2.discriminator.nonText"}
-            },
-            {"discriminator_shouldFail_whenDoesntMatchSubSchema",
-                "discriminator-valid", "discriminator-invalid-doesntMatchSubSchema",
-                new String[]{"err.swaggerv2.discriminator.fail"}
-            },
-            {"discriminator_shouldFail_whenEmptyValue",
-                "discriminator-invalid-empty", "discriminator-valid",
-                new String[]{"err.swaggerv2.discriminator.empty"}
-            },
-            {"discriminator_shouldFail_whenNotAProperty",
-                "discriminator-invalid-noProperty", "discriminator-valid",
-                new String[]{"err.swaggerv2.discriminator.noProperty"}
-            },
-            {"discriminator_shouldFail_whenNotAStringProperty",
-                "discriminator-invalid-wrongType", "discriminator-valid",
-                new String[]{"err.swaggerv2.discriminator.wrongType"}
-            },
-            {"discriminator_shouldFail_whenPropertyNotMarkedAsRequired",
-                "discriminator-invalid-notRequired", "discriminator-valid",
-                new String[]{"err.swaggerv2.discriminator.notRequired"}
-            },
+                // Name, Schema, Example, Expected
+                {
+                        "discriminator_shouldPass_whenValid",
+                        "discriminator-valid",
+                        "discriminator-valid",
+                        null
+                },
+                {
+                        "discriminator_shouldFail_whenInvalidDiscriminatorValue",
+                        "discriminator-valid",
+                        "discriminator-invalid-badDiscriminator",
+                        new String[]{"err.swaggerv2.discriminator.invalid"}
+                },
+                {
+                        "discriminator_shouldFail_whenMissingDiscriminator",
+                        "discriminator-valid",
+                        "discriminator-invalid-missingDiscriminator",
+                        new String[]{"err.swaggerv2.discriminator.missing"}
+                },
+                {
+                        "discriminator_shouldFail_whenEmptyDiscriminator",
+                        "discriminator-valid",
+                        "discriminator-invalid-emptyDiscriminator",
+                        new String[]{"err.swaggerv2.discriminator.missing"}
+                },
+                {
+                        "discriminator_shouldFail_whenNonStringDiscriminator",
+                        "discriminator-valid",
+                        "discriminator-invalid-nonStringDiscriminator",
+                        new String[]{"err.swaggerv2.discriminator.nonText"}
+                },
+                {
+                        "discriminator_shouldFail_whenDoesntMatchSubSchema",
+                        "discriminator-valid",
+                        "discriminator-invalid-doesntMatchSubSchema",
+                        new String[]{"err.swaggerv2.discriminator.fail"}
+                },
+                {
+                        "discriminator_shouldFail_whenEmptyValue",
+                        "discriminator-invalid-empty",
+                        "discriminator-valid",
+                        new String[]{"err.swaggerv2.discriminator.empty"}
+                },
+                {
+                        "discriminator_shouldFail_whenNotAProperty",
+                        "discriminator-invalid-noProperty",
+                        "discriminator-valid",
+                        new String[]{"err.swaggerv2.discriminator.noProperty"}
+                },
+                {
+                        "discriminator_shouldFail_whenNotAStringProperty",
+                        "discriminator-invalid-wrongType",
+                        "discriminator-valid",
+                        new String[]{"err.swaggerv2.discriminator.wrongType"}
+                },
+                {
+                        "discriminator_shouldFail_whenPropertyNotMarkedAsRequired",
+                        "discriminator-invalid-notRequired",
+                        "discriminator-valid",
+                        new String[]{"err.swaggerv2.discriminator.notRequired"}
+                },
+                {
+                        "nullable_shouldPass_whenNoNulls",
+                        "nullable-valid",
+                        "nullable-valid-noNulls",
+                        null
+                },
+                {
+                        "nullable_shouldPass_whenValidNulls",
+                        "nullable-valid",
+                        "nullable-valid-nulls",
+                        null
+                },
+                {
+                        "nullable_shouldFail_whenInvalidNulls",
+                        "nullable-valid",
+                        "nullable-invalid-nulls",
+                        new String[]{"error.validation.type"}
+                }
+
         });
     }
 
@@ -115,11 +155,17 @@ public class SwaggerV20LibraryTest {
             final JsonNode msgJson = pm.asJson();
             if (msgJson.has("key")) {
                 keys.add(msgJson.get("key").textValue());
+            } else if (msgJson.has("keyword")) {
+                keys.add(format("%s.%s.%s",
+                        msgJson.get("level").textValue(),
+                        msgJson.get("domain").textValue(),
+                        msgJson.get("keyword").textValue())
+                );
             }
         });
         builder.append("\n]");
 
-        for (String key : expectedMsgs) {
+        for (final String key : expectedMsgs) {
             if (!keys.contains(key)) {
                 fail(builder.toString());
             }

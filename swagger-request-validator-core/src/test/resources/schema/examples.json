@@ -26,5 +26,17 @@
     "name": "Moggy",
     "petType": "Cat",
     "huntingSkill": "ruthless"
+  },
+  "nullable-valid-noNulls": {
+    "nullableProp": "foo",
+    "nonNullableProp": "bah"
+  },
+  "nullable-valid-nulls": {
+    "nullableProp": null,
+    "nonNullableProp": "bah"
+  },
+  "nullable-invalid-nulls": {
+    "nullableProp": null,
+    "nonNullableProp": null
   }
 }
