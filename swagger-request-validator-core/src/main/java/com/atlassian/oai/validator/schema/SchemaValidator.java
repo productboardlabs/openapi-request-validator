@@ -22,12 +22,8 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.StreamSupport;
 
 import static com.atlassian.oai.validator.schema.SwaggerV20Library.OAI_V2_METASCHEMA_URI;
@@ -192,7 +188,7 @@ public class SchemaValidator {
                 "integer".equalsIgnoreCase(schema.getType())) {
             normalisedValue = normaliseNumber(value);
         }
-        return removeNullValuesFromTree(Json.mapper().readTree(normalisedValue));
+        return Json.mapper().readTree(normalisedValue);
     }
 
     private String normaliseNumber(final String value) {
@@ -221,45 +217,6 @@ public class SchemaValidator {
         }
         //CHECKSTYLE:ON
         return quote(formatedDateTime);
-    }
-
-    /**
-     * Removes null values from the given <code>JsonNode</code> and its sub-nodes.
-     * <p>
-     * Traverses arrays and objects.
-     */
-    private JsonNode removeNullValuesFromTree(final JsonNode node) {
-        final JsonNode result = node.deepCopy();
-
-        final Deque<JsonNode> toClean = new ArrayDeque<>();
-        toClean.push(result);
-
-        while (!toClean.isEmpty()) {
-            final JsonNode n = toClean.pop();
-            if (n.isObject()) {
-                final Iterator<Map.Entry<String, JsonNode>> fields = n.fields();
-                while (fields.hasNext()) {
-                    final JsonNode field = fields.next().getValue();
-                    if (field.isNull()) {
-                        fields.remove();
-                    } else if (field.isObject() || field.isArray()) {
-                        toClean.push(field);
-                    }
-                }
-            } else if (n.isArray()) {
-                final Iterator<JsonNode> elements = n.elements();
-                while (elements.hasNext()) {
-                    final JsonNode e = elements.next();
-                    if (e.isNull()) {
-                        elements.remove();
-                    } else if (e.isObject() || e.isArray()) {
-                        toClean.push(e);
-                    }
-                }
-            }
-        }
-
-        return result;
     }
 
     private boolean additionalPropertiesValidationEnabled() {

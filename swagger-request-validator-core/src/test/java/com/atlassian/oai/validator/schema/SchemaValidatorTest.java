@@ -220,10 +220,10 @@ public class SchemaValidatorTest {
                         "\"arr\":[null, \"val1\", \"val2\"]}";
         final Schema schema = new ObjectSchema()
                 .addProperties("foo", new StringSchema())
-                .addProperties("baz", new StringSchema())
-                .addProperties("int", new IntegerSchema())
+                .addProperties("baz", new StringSchema().nullable(true))
+                .addProperties("int", new IntegerSchema().nullable(true))
                 .addProperties("obj", new ObjectSchema())
-                .addProperties("arr", new ArraySchema())
+                .addProperties("arr", new ArraySchema().items(new StringSchema().nullable(true)))
                 .required(singletonList("foo"));
 
         assertPass(classUnderTest.validate(value, schema, "prefix"));
@@ -233,7 +233,7 @@ public class SchemaValidatorTest {
     public void validate_withValidModel_shouldPass_whenContainsNullValues_inArray() {
         final String value = "{\"arr\": [1, 2, null, 3]}";
         final Schema schema = new ObjectSchema()
-                .addProperties("arr", new ArraySchema().items(new IntegerSchema()));
+                .addProperties("arr", new ArraySchema().items(new IntegerSchema().nullable(true)));
 
         assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
@@ -250,12 +250,121 @@ public class SchemaValidatorTest {
         final Schema schema = new Schema()
                 .addProperties("arr", new ArraySchema().items(
                         new ObjectSchema()
-                                .addProperties("int", new IntegerSchema())
-                                .addProperties("str", new StringSchema())
-                                .addProperties("flt", new NumberSchema().format("float"))
+                                .addProperties("int", new IntegerSchema().nullable(true))
+                                .addProperties("str", new StringSchema().nullable(true))
+                                .addProperties("flt", new NumberSchema().format("float").nullable(true))
                 ));
 
         assertPass(classUnderTest.validate(value, schema, "prefix"));
+    }
+
+    @Test
+    public void validate_withValidModel_shouldPass_whenContainsNullValues_inNullableArrayItem() {
+        final String value =
+            "[ null ]";
+
+        final Schema schema = new ArraySchema().items(new IntegerSchema().nullable(true));
+
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
+    }
+
+    @Test
+    public void validate_withValidModel_shouldPass_whenContainsNonNullValues_inNullableArrayItem() {
+        final String value =
+            "[ 1 ]";
+
+        final Schema schema = new ArraySchema().items(new IntegerSchema().nullable(true));
+
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
+    }
+
+    @Test
+    public void validate_withValidModel_shouldPass_whenContainsNonNullValues_inNonNullableArrayItem() {
+        final String value =
+            "[ 1 ]";
+
+        final Schema schema = new ArraySchema().items(new IntegerSchema().nullable(false));
+
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
+    }
+
+    @Test
+    public void validate_withValidModel_shouldFail_whenContainsNullValues_inUnnullableArrayItem() {
+        final String value =
+            "[ null ]";
+
+        final Schema schema = new ArraySchema().items(new IntegerSchema().nullable(false));
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"));
+    }
+
+    @Test
+    public void validate_withValidModel_shouldPass_whenContainsNullValues_inNullableObjectProperty() {
+        final String value =
+            "{\"int\": null }";
+
+        final Schema schema = new Schema()
+            .addProperties("int", new IntegerSchema().nullable(true));
+
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
+    }
+
+    @Test
+    public void validate_withValidModel_shouldPass_whenContainsNonNullValues_inNullableObjectProperty() {
+        final String value =
+            "{\"int\": 1 }";
+
+        final Schema schema = new Schema()
+            .addProperties("int", new IntegerSchema().nullable(true));
+
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
+    }
+
+    @Test
+    public void validate_withValidModel_shouldPass_whenContainsNullValues_inNullableRequiredObjectProperty() {
+        final String value =
+            "{\"int\": null }";
+
+        final Schema schema = new Schema()
+            .addProperties("int", new IntegerSchema().nullable(true))
+            .addRequiredItem("int");
+
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
+    }
+
+    @Test
+    public void validate_withValidModel_shouldPass_whenContainsNonNullValues_inNullableRequiredObjectProperty() {
+        final String value =
+            "{\"int\": 1 }";
+
+        final Schema schema = new Schema()
+            .addProperties("int", new IntegerSchema().nullable(true))
+            .addRequiredItem("int");
+
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
+    }
+
+    @Test
+    public void validate_withValidModel_shouldFail_whenContainsNullValues_inUnnullableObjectProperty() {
+        final String value =
+            "{\"int\": null }";
+
+        final Schema schema = new Schema()
+            .addProperties("int", new IntegerSchema().nullable(false));
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"));
+    }
+
+    @Test
+    public void validate_withValidModel_shouldFail_whenContainsNullValues_inUnnullableRequiredObjectProperty() {
+        final String value =
+            "{\"int\": null }";
+
+        final Schema schema = new Schema()
+            .addProperties("int", new IntegerSchema().nullable(false))
+            .addRequiredItem("int");
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"));
     }
 
     @Test
