@@ -2,12 +2,12 @@
   "_links": {
     "pacts": [
       {
-        "href": "http://localhost:9999/pacts/provider/Provider/consumer/Consumer1/version/166",
+        "href": "http://{{request.headers.Host}}/pacts/provider/Provider/consumer/Consumer1/version/166",
         "name": "Consumer1",
         "title": "Pact between Consumer1 (v166) and Provider"
       },
       {
-        "href": "http://localhost:9999/pacts/provider/Provider/consumer/Consumer2/version/251",
+        "href": "http://{{request.headers.Host}}/pacts/provider/Provider/consumer/Consumer2/version/251",
         "name": "Consumer2",
         "title": "Pact between Consumer2 (v251) and Provider"
       }
