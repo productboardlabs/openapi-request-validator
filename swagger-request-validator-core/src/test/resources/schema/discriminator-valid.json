@@ -5,7 +5,10 @@
     "Pet": {
       "type": "object",
       "discriminator": {
-        "propertyName": "petType"
+        "propertyName": "petType",
+        "mapping": {
+          "cachorro": "Dog"
+        }
       },
       "properties": {
         "name": {
