@@ -6,7 +6,7 @@ import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.LevelResolver;
-import com.atlassian.oai.validator.util.MediaTypeUtils;
+import com.atlassian.oai.validator.util.ContentTypeUtils;
 import org.junit.Test;
 
 import static com.atlassian.oai.validator.report.ValidationReport.Level.IGNORE;
@@ -104,7 +104,7 @@ public class SwaggerRequestResponseValidatorTest {
     public void validate_withHalJsonContentType() {
         final Request request = SimpleRequest.Builder.get("/users/1/hal-json").build();
         final Response response = SimpleResponse.Builder.ok()
-                .withHeader(Headers.CONTENT_TYPE, MediaTypeUtils.HAL_JSON_UTF_8.toString())
+                .withHeader(Headers.CONTENT_TYPE, ContentTypeUtils.HAL_JSON_UTF_8.toString())
                 .withBody("{\"id\":1,\"name\":\"Max\",\"email\":\"max@example.com\"}")
                 .build();
 
