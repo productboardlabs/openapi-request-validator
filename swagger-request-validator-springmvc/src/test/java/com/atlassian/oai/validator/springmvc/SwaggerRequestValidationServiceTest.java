@@ -2,19 +2,27 @@ package com.atlassian.oai.validator.springmvc;
 
 import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
 import com.atlassian.oai.validator.model.Request;
+import com.atlassian.oai.validator.model.Response;
+import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.ValidationReport;
+import com.google.common.collect.ImmutableMap;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.core.io.support.EncodedResource;
+import org.springframework.util.ReflectionUtils;
+import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
+import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -26,6 +34,12 @@ public class SwaggerRequestValidationServiceTest {
     private SwaggerRequestValidationService classUnderTest;
 
     private SwaggerRequestResponseValidator requestValidator;
+
+    private static Map<String, Collection<String>> getHeadersFromResponse(final Response response) {
+        final Field headersField = ReflectionUtils.findField(SimpleResponse.class, "headers");
+        ReflectionUtils.makeAccessible(headersField);
+        return (Map<String, Collection<String>>) ReflectionUtils.getField(headersField, response);
+    }
 
     @Before
     public void setUp() {
@@ -124,6 +138,58 @@ public class SwaggerRequestValidationServiceTest {
                 equalTo(Arrays.asList("query_two", "QUERY_TWO")));
     }
 
+    @Test(expected = NullPointerException.class)
+    public void buildResponse_failsWithoutRequiredResponse() throws IOException {
+        // expect:
+        classUnderTest.buildResponse(null);
+    }
+
+    @Test
+    public void buildResponse_withEmptyBodyAndHeader() throws IOException {
+        // given:
+        final ContentCachingResponseWrapper servletResponse = Mockito.mock(ContentCachingResponseWrapper.class);
+
+        // and:
+        Mockito.when(servletResponse.getStatusCode()).thenReturn(202);
+        Mockito.when(servletResponse.getContentAsByteArray()).thenReturn(new byte[0]);
+        Mockito.when(servletResponse.getCharacterEncoding()).thenReturn("ISO-8859-1");
+        Mockito.when(servletResponse.getHeaderNames()).thenReturn(Collections.emptySet());
+
+        // when:
+        final Response result = classUnderTest.buildResponse(servletResponse);
+
+        // then:
+        Assert.assertThat(result.getBody().isPresent(), equalTo(true));
+        Assert.assertThat(result.getStatus(), is(202));
+        Assert.assertThat(getHeadersFromResponse(result).isEmpty(), is(true));
+    }
+
+    @Test
+    public void buildResponse_withBodyAndHeader() throws IOException {
+        // given:
+        final ContentCachingResponseWrapper servletResponse = Mockito.mock(ContentCachingResponseWrapper.class);
+
+        // and:
+        Mockito.when(servletResponse.getStatusCode()).thenReturn(404);
+        Mockito.when(servletResponse.getContentAsByteArray()).thenReturn(new byte[0]);
+        Mockito.when(servletResponse.getCharacterEncoding()).thenReturn("UTF-8");
+        Mockito.when(servletResponse.getHeaderNames()).thenReturn(Arrays.asList("header 1", "header 2"));
+        Mockito.when(servletResponse.getHeaders("header 1"))
+                .thenReturn(Arrays.asList("header value 1", "header value 2"));
+        Mockito.when(servletResponse.getHeaders("header 2")).thenReturn(Arrays.asList("header value 3"));
+
+        // when:
+        final Response result = classUnderTest.buildResponse(servletResponse);
+
+        // then:
+        Assert.assertThat(result.getBody().isPresent(), equalTo(true));
+        Assert.assertThat(result.getStatus(), is(404));
+        Assert.assertThat(getHeadersFromResponse(result), equalTo(ImmutableMap.of(
+                "header 1", Arrays.asList("header value 1", "header value 2"),
+                "header 2", Arrays.asList("header value 3")
+        )));
+    }
+
     @Test
     public void validateRequest_returnsTheValidationReport() {
         final Request request = Mockito.mock(Request.class);
@@ -133,6 +199,30 @@ public class SwaggerRequestValidationServiceTest {
         final ValidationReport result = classUnderTest.validateRequest(request);
 
         Mockito.verify(requestValidator, times(1)).validateRequest(request);
+        Assert.assertThat(result, is(validationReport));
+    }
+
+    @Test
+    public void validateResponse_returnsTheValidationReport() {
+        // given:
+        final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
+        final Response response = Mockito.mock(Response.class);
+        final ValidationReport validationReport = Mockito.mock(ValidationReport.class);
+
+        // and:
+        Mockito.when(servletRequest.getMethod()).thenReturn("POST");
+        Mockito.when(servletRequest.getQueryString()).thenReturn(null);
+        Mockito.when(servletRequest.getRequestURI()).thenReturn("/swagger-request-validator");
+
+        Mockito.when(requestValidator.validateResponse("/swagger-request-validator",
+                Request.Method.POST, response)).thenReturn(validationReport);
+
+        // when:
+        final ValidationReport result = classUnderTest.validateResponse(servletRequest, response);
+
+        // then:
+        Mockito.verify(requestValidator, times(1))
+                .validateResponse("/swagger-request-validator", Request.Method.POST, response);
         Assert.assertThat(result, is(validationReport));
     }
 

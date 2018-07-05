@@ -4,9 +4,10 @@
 
 Integrations between the Swagger Request Validator with the [Spring Web MVC framework](https://docs.spring.io/spring/docs/current/spring-framework-reference/html/mvc.html).
 
-This module includes a `SwaggerValidationFilter` and a `SwaggerValidationInterceptor` that can be used to add request validation to a REST web service utilizing Spring MVC v4.2.0 or later. Including Spring Boot Starter applications utilizing Spring MVC with said version, e.g. spring-boot-starter-web-services or spring-boot-starter-web.
+This module includes a `SwaggerValidationFilter` and a `SwaggerValidationInterceptor` that can be used to add request and / or response validation to a REST web service utilizing Spring MVC v4.2.0 or later. Including Spring Boot Starter applications utilizing Spring MVC with said version, e.g. spring-boot-starter-web-services or spring-boot-starter-web.
 
-In case of invalid requests against the REST web service a `InvalidRequestException` is thrown containing the `ValidationReport`.
+In case of invalid requests against the REST web service an `InvalidRequestException` is thrown containing the `ValidationReport`.  
+In case of invalid responses coming from the REST web service an `InvalidResponseException` is thrown containing the `ValidationReport`.
 
 ## Usage ##
 
@@ -55,7 +56,10 @@ public class SwaggerRequestValidationConfig extends WebMvcConfigurerAdapter {
 
     @Bean
     public Filter swaggerValidationFilter() {
-        return new SwaggerValidationFilter();
+        return new SwaggerValidationFilter(
+                true, // enable request validation
+                true  // enable response validation
+        );
     }
 
     @Override
@@ -72,13 +76,10 @@ You might want to add logging for the package: ```com.atlassian.oai.validator.sp
 Please see [the tests](https://bitbucket.org/atlassian/swagger-request-validator/src/master/swagger-request-validator-springmvc/src/test/java/com/atlassian/oai/validator/springmvc/example/?at=master) for working examples.
 
 * There is a simple example that shows how to add the Swagger Request Validation adapter.
-* An advanced example shows how to additionally add an ExceptionHandler to map the `InvalidRequestException` to a custom response.
+* An advanced example shows how to additionally add an ExceptionHandler to map the `InvalidRequestException` and `InvalidResponseException` to a custom response.
 * Another example shows how to add custom request logging before each validation.
 
 ## Caveats ##
 
-Long requests with a content larger then 2GB are not supported. More specifically request with a content length longer than 2147483647 bytes. Those requests will not be validated at all.
-
-## Not supported by now ##
-
-Although the request is validated against the Swagger schema the response is not. Please ensure valid responses with tests.
+Long requests with a content larger then 2GB are not supported. More specifically request with a content length longer than 2147483647 bytes. Those requests will not be validated at all.  
+A mapped `Controller` \ `RESTController` method might throw an exception, which will be mapped by Spring to a generic error response. Those error responses will not be validated.
