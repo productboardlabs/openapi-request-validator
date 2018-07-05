@@ -1,3 +1,11 @@
+#v1.4.6
+* Added support for HAL+JSON content type
+[[#127]](https://bitbucket.org/atlassian/swagger-request-validator/issues/127)
+* Added an overloaded constructor to allow the host/port of the `ValidatedPactProviderRule` to be specified
+[[#72]](https://bitbucket.org/atlassian/swagger-request-validator/issues/72)
+* Ensuring the stream is closed after reading the request/response body in the `SwaggerRequestValidationService`  
+[[#132]](https://bitbucket.org/atlassian/swagger-request-validator/issues/132)
+
 #v1.4.5
 * Fixed validation of non-string enums in request/response bodies. 
 [[#118]](https://bitbucket.org/atlassian/swagger-request-validator/issues/118)
