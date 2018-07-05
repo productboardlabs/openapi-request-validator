@@ -1,6 +1,7 @@
 package com.atlassian.oai.validator.wiremock;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.internal.runners.statements.InvokeMethod;
@@ -12,7 +13,7 @@ import static io.restassured.RestAssured.get;
 
 public class ValidatedWireMockRuleTest {
 
-    private static final String PATH = "http://localhost:9999/hello/bob";
+    private static final String API_PATH = "/hello/bob";
     private static final String VALID_RESPONSE_BODY = "{\"message\":\"Hello bob!\"}";
     private static final String INVALID_RESPONSE_BODY = "{\"msg\":\"Hello bob!\"}";
 
@@ -20,7 +21,8 @@ public class ValidatedWireMockRuleTest {
 
     @Before
     public void setup() {
-        classUnderTest = new ValidatedWireMockRule("api.json", 9999);
+        classUnderTest = new ValidatedWireMockRule("api.json",
+                WireMockConfiguration.options().dynamicPort());
     }
 
     @Test
@@ -35,22 +37,26 @@ public class ValidatedWireMockRuleTest {
 
     public void validInteractionTestMethod() {
         setupStubWithBody(VALID_RESPONSE_BODY);
-        get(PATH).then().assertThat().statusCode(200);
+        get(getPath()).then().assertThat().statusCode(200);
     }
 
     public void invalidInteractionTestMethod() {
         setupStubWithBody(INVALID_RESPONSE_BODY);
-        get(PATH).then().assertThat().statusCode(200);
+        get(getPath()).then().assertThat().statusCode(200);
     }
 
     private void setupStubWithBody(final String responseBody) {
         classUnderTest.stubFor(
-                WireMock.any(urlEqualTo("/hello/bob"))
+                WireMock.any(urlEqualTo(API_PATH))
                         .willReturn(aResponse()
                                 .withStatus(200)
                                 .withHeader("content-type", "application/json")
                                 .withBody(responseBody))
         );
+    }
+
+    private String getPath() {
+        return "http://localhost:" + classUnderTest.port() + API_PATH;
     }
 
     private InvokeMethod getValidInteractionTestMethod() throws NoSuchMethodException {
