@@ -1,17 +1,21 @@
 package com.atlassian.oai.validator.pact;
 
+import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.net.URL;
+import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
 
 public class PactProviderValidatorTest {
@@ -19,7 +23,8 @@ public class PactProviderValidatorTest {
     @Rule
     public final WireMockRule wireMock = new WireMockRule(options()
             .usingFilesUnderClasspath("wiremock")
-            .port(9999));
+            .dynamicPort()
+            .extensions(new ResponseTemplateTransformer(false)));
 
     @Test
     public void validate_withNoConsumers_returnsEmptyMap() {
@@ -84,11 +89,13 @@ public class PactProviderValidatorTest {
         final PactProviderValidator validator =
                 PactProviderValidator
                     .createFor("/oai/api-users.json")
-                    .withPactsFrom("http://localhost:9999", "Provider")
+                    .withPactsFrom("http://localhost:" + wireMock.port(), "Provider")
                     .build();
 
         assertThat(validator.getConsumers().size(), is(2));
-
+        assertThat(validator.getConsumers().stream()
+                .map(consumerInfo -> consumerInfo.getPactFile().toString())
+                .collect(Collectors.toList()), everyItem(startsWith("http://localhost:" + wireMock.port())));
     }
 
     @Test
@@ -99,7 +106,7 @@ public class PactProviderValidatorTest {
         final PactProviderValidator validator =
                 PactProviderValidator
                         .createFor("/oai/api-users.json")
-                        .withPactsFrom("http://localhost:9999", "Provider")
+                        .withPactsFrom("http://localhost:" + wireMock.port(), "Provider")
                         .build();
 
         assertThat(validator.getConsumers().size(), is(0));
@@ -111,7 +118,8 @@ public class PactProviderValidatorTest {
                 .willReturn(aResponse()
                         .withStatus(status)
                         .withHeader("Content-Type", "application/json")
-                        .withBodyFile(responseName)));
+                        .withBodyFile(responseName)
+                        .withTransformers("response-template")));
     }
 
     private void setupBrokerRootResponse() {
@@ -119,7 +127,8 @@ public class PactProviderValidatorTest {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
-                        .withBodyFile("broker-root-response.json")));
+                        .withBodyFile("broker-root-response.json")
+                        .withTransformers("response-template")));
     }
 
     private URL pactUrl(final String name) {
