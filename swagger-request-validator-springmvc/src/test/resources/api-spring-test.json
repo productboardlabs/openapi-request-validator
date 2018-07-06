@@ -140,8 +140,8 @@
         "object": {
           "type": "object",
           "properties": {
-            "message": {
-              "boolean": "boolean"
+            "boolean": {
+              "type": "boolean"
             }
           }
         }
@@ -159,8 +159,8 @@
         "object": {
           "type": "object",
           "properties": {
-            "message": {
-              "boolean": "boolean"
+            "boolean": {
+              "type": "boolean"
             }
           }
         }
