@@ -117,6 +117,28 @@ public class PactConsumerValidationTest {
                 .toFragment();
     }
 
+    @Pact(provider = "Test", consumer = "Test")
+    public PactFragment getExtraFieldsInInlineObjectArrayResponse(final PactDslWithProvider builder) {
+        final DslPart responseBody = new PactDslJsonBody()
+                .array("children")
+                .object()
+                .numberValue("id", 123)
+                .stringValue("name", "the thing")
+                .array("notAField").string("foo").closeArray()
+                .array("tags").string("tag1").closeArray()
+                .closeObject()
+                .closeArray();
+
+        return builder
+                .uponReceiving("getExtraFieldsInInlineObjectArrayResponse")
+                .method("GET")
+                .path("/test/inlineObjectsInArray")
+                .willRespondWith()
+                .status(200)
+                .body(responseBody)
+                .toFragment();
+    }
+
     @Test
     @PactVerification(value = "Test", fragment = "getObjectResponse")
     public void passes_withAValidResponse() {
@@ -141,6 +163,13 @@ public class PactConsumerValidationTest {
     @ExpectValidationErrors("validation.schema.additionalProperties")
     public void fails_whenAdditionalFieldsInResponse_withArrayOfObjects() {
         get(provider.getConfig().url() + "/test/objectsInArray");
+    }
+
+    @Test
+    @PactVerification(value = "Test", fragment = "getExtraFieldsInInlineObjectArrayResponse")
+    @ExpectValidationErrors("validation.schema.additionalProperties")
+    public void fails_whenAdditionalFieldsInResponse_withArrayOfInlineObjects() {
+        get(provider.getConfig().url() + "/test/inlineObjectsInArray");
     }
 
     /**
