@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "title": "Spring request validation test service",
-    "version": "1.0.0"
+    "version": "1.0.1"
   },
   "paths": {
     "/spring": {
@@ -149,6 +149,11 @@
     },
     "PostResponse": {
       "type": "object",
+      "required": [
+        "string",
+        "integer",
+        "object"
+      ],
       "properties": {
         "string": {
           "type": "string"
@@ -168,6 +173,11 @@
     },
     "GetResponse": {
       "type": "object",
+      "required": [
+        "headerValue",
+        "pathVariable",
+        "requestParam"
+      ],
       "properties": {
         "headerValue": {
           "type": "string"
@@ -190,6 +200,10 @@
     },
     "PutResponse": {
       "type": "object",
+      "required": [
+        "putValue",
+        "pathVariable"
+      ],
       "properties": {
         "putValue": {
           "type": "string"

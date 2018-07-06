@@ -2,6 +2,7 @@ package com.atlassian.oai.validator.springmvc;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -15,10 +16,12 @@ import static org.mockito.Mockito.times;
 
 public class SwaggerValidationFilterTest {
 
-    private final SwaggerValidationFilter classUnderTest = new SwaggerValidationFilter();
-
     @Test
-    public void doFilterInternal_wrapsTheServletRequestIfNoCors() throws ServletException, IOException {
+    public void doFilterInternal_wrapsTheServletRequestAndResponseIfNoCors() throws ServletException, IOException {
+        // given:
+        final SwaggerValidationFilter classUnderTest = new SwaggerValidationFilter(true, true);
+
+        // and:
         final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
         final HttpServletResponse servletResponse = Mockito.mock(HttpServletResponse.class);
         final FilterChain filterChain = Mockito.mock(FilterChain.class);
@@ -29,11 +32,32 @@ public class SwaggerValidationFilterTest {
 
         // then: the request shall be wrapped and added to the filter chain
         Mockito.verify(filterChain, times(1))
-                .doFilter(any(ResettableRequestServletWrapper.class), same(servletResponse));
+                .doFilter(any(ResettableRequestServletWrapper.class), any(ContentCachingResponseWrapper.class));
+    }
+
+    @Test
+    public void doFilterInternal_noWrappingIfValidationIsDisabled() throws ServletException, IOException {
+        // given:
+        final SwaggerValidationFilter classUnderTest = new SwaggerValidationFilter(false, false);
+
+        // and:
+        final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
+        final HttpServletResponse servletResponse = Mockito.mock(HttpServletResponse.class);
+        final FilterChain filterChain = Mockito.mock(FilterChain.class);
+
+        // when:
+        classUnderTest.doFilterInternal(servletRequest, servletResponse, filterChain);
+
+        // then: the request wasn't wrapped
+        Mockito.verify(filterChain, times(1)).doFilter(servletRequest, servletResponse);
     }
 
     @Test
     public void doFilterInternal_wrapsTheServletRequestIfContentLengthNotToLong() throws ServletException, IOException {
+        // given:
+        final SwaggerValidationFilter classUnderTest = new SwaggerValidationFilter();
+
+        // and:
         final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
         final HttpServletResponse servletResponse = Mockito.mock(HttpServletResponse.class);
         final FilterChain filterChain = Mockito.mock(FilterChain.class);
@@ -49,6 +73,10 @@ public class SwaggerValidationFilterTest {
 
     @Test
     public void doFilterInternal_wrapsTheServletRequestIfContentLengthIsInvalid() throws ServletException, IOException {
+        // given:
+        final SwaggerValidationFilter classUnderTest = new SwaggerValidationFilter();
+
+        // and:
         final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
         final HttpServletResponse servletResponse = Mockito.mock(HttpServletResponse.class);
         final FilterChain filterChain = Mockito.mock(FilterChain.class);
@@ -63,7 +91,11 @@ public class SwaggerValidationFilterTest {
     }
 
     @Test
-    public void doFilterInternal_noWrappingIfContentIsToLong() throws ServletException, IOException {
+    public void doFilterInternal_noRequestWrappingIfContentIsToLong() throws ServletException, IOException {
+        // given:
+        final SwaggerValidationFilter classUnderTest = new SwaggerValidationFilter();
+
+        // and:
         final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
         final HttpServletResponse servletResponse = Mockito.mock(HttpServletResponse.class);
         final FilterChain filterChain = Mockito.mock(FilterChain.class);
@@ -78,6 +110,10 @@ public class SwaggerValidationFilterTest {
 
     @Test
     public void doFilterInternal_noWrappingIfCorsPreflight() throws ServletException, IOException {
+        // given:
+        final SwaggerValidationFilter classUnderTest = new SwaggerValidationFilter(true, true);
+
+        // and:
         final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
         final HttpServletResponse servletResponse = Mockito.mock(HttpServletResponse.class);
         final FilterChain filterChain = Mockito.mock(FilterChain.class);

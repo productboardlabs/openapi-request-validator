@@ -2,6 +2,7 @@ package com.atlassian.oai.validator.springmvc.example.exceptionhandler;
 
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.springmvc.InvalidRequestException;
+import com.atlassian.oai.validator.springmvc.InvalidResponseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -17,6 +18,13 @@ public class RestServiceExceptionHandler {
         final RestValidationReport report = new RestValidationReport(invalidRequestException
                 .getValidationReport().getMessages());
         return new ResponseEntity<>(report, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
+    @ExceptionHandler(InvalidResponseException.class)
+    public ResponseEntity<RestValidationReport> handle(final InvalidResponseException invalidResponseException) {
+        final RestValidationReport report = new RestValidationReport(invalidResponseException
+                .getValidationReport().getMessages());
+        return new ResponseEntity<>(report, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     public static class RestValidationReport {

@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.cors.CorsUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -28,22 +29,57 @@ public class SwaggerValidationFilter extends OncePerRequestFilter {
 
     private static final Logger LOG = LoggerFactory.getLogger(SwaggerValidationFilter.class);
 
+    private final boolean validateRequests;
+    private final boolean validateResponses;
+
+    /**
+     * Creates a {@link SwaggerValidationFilter} which validates incoming requests.
+     */
+    public SwaggerValidationFilter() {
+        this(true, false);
+    }
+
+    /**
+     * Creates a {@link SwaggerValidationFilter} which validates incoming requests and / or responses.
+     *
+     * @param validateRequests  will enable request validation if {@code true}
+     * @param validateResponses will enable response validation if {@code true}
+     */
+    public SwaggerValidationFilter(final boolean validateRequests, final boolean validateResponses) {
+        this.validateRequests = validateRequests;
+        this.validateResponses = validateResponses;
+    }
+
     @Override
     protected void doFilterInternal(final HttpServletRequest servletRequest, final HttpServletResponse servletResponse, final FilterChain filterChain)
             throws ServletException, IOException {
         final HttpServletRequest requestToUse = wrapValidatableServletRequest(servletRequest);
-        filterChain.doFilter(requestToUse, servletResponse);
+        final HttpServletResponse responseToUse = wrapValidatableServletResponse(servletRequest, servletResponse);
+        filterChain.doFilter(requestToUse, responseToUse);
+
+        // in case the response was cached it has to be written to the original response
+        if (responseToUse instanceof ContentCachingResponseWrapper) {
+            ((ContentCachingResponseWrapper) responseToUse).copyBodyToResponse();
+        }
     }
 
     private HttpServletRequest wrapValidatableServletRequest(final HttpServletRequest servletRequest) {
         // wrap only validatable requests
-        final long contentLengthLong = getContentLength(servletRequest);
-        final boolean doValidationStep = contentLengthLong <= Integer.MAX_VALUE &&
+        final boolean doValidationStep = validateRequests &&
+                getContentLength(servletRequest) <= Integer.MAX_VALUE &&
                 !CorsUtils.isPreFlightRequest(servletRequest);
         return doValidationStep ? new ResettableRequestServletWrapper(servletRequest) : servletRequest;
     }
 
-    private long getContentLength(final HttpServletRequest servletRequest) {
+    private HttpServletResponse wrapValidatableServletResponse(final HttpServletRequest servletRequest,
+                                                               final HttpServletResponse servletResponse) {
+        // wrap only validatable responses
+        final boolean doValidationStep = validateResponses &&
+                !CorsUtils.isPreFlightRequest(servletRequest);
+        return doValidationStep ? new ContentCachingResponseWrapper(servletResponse) : servletResponse;
+    }
+
+    private static long getContentLength(final HttpServletRequest servletRequest) {
         final String contentLength = servletRequest.getHeader("content-length");
         if (StringUtils.isNotBlank(contentLength)) {
             try {
