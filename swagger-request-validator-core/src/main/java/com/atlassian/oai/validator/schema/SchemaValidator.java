@@ -190,7 +190,7 @@ public class SchemaValidator {
         }
     }
 
-    private boolean injectAdditionalPropertiesDirectiveIntoTree(final JsonNode n) {
+    private boolean injectAdditionalPropertiesDirectiveIntoTree(@Nonnull final JsonNode n) {
         if (!hasAdditionalFieldSet(n) && !hasDiscriminatorField(n)) {
             disableAdditionalProperties((ObjectNode) n);
         }
@@ -214,11 +214,12 @@ public class SchemaValidator {
         return n.has(ALLOF_FIELD);
     }
 
+    @Nullable
     private static JsonNode itemsDefinition(final JsonNode n) {
         return n.get("items");
     }
 
-    private static boolean isObjectDefinition(final JsonNode n) {
+    private static boolean isObjectDefinition(@Nullable final JsonNode n) {
         if (n == null) {
             return false;
         }
@@ -226,7 +227,7 @@ public class SchemaValidator {
         return type != null && type.textValue().equalsIgnoreCase("object");
     }
 
-    private static boolean isArrayDefinition(final JsonNode n) {
+    private static boolean isArrayDefinition(@Nullable final JsonNode n) {
         if (n == null) {
             return false;
         }
