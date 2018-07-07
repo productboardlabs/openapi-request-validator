@@ -2,6 +2,7 @@ package com.atlassian.oai.validator.report;
 
 import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.Request;
+import com.atlassian.oai.validator.whitelist.NamedWhitelistRule;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.parameters.RequestBody;
 import io.swagger.v3.oas.models.responses.ApiResponse;
@@ -151,6 +152,8 @@ public interface ValidationReport {
 
         Optional<Location> getLocation();
 
+        Optional<NamedWhitelistRule> getAppliedWhitelistRule();
+
         /**
          * @return {@code true} if at least one field on this context object has been set; {@code false} otherwise.
          */
@@ -178,6 +181,8 @@ public interface ValidationReport {
 
             Location location;
 
+            NamedWhitelistRule whitelistRule;
+
             private Builder() {
             }
 
@@ -191,6 +196,7 @@ public interface ValidationReport {
                 responseStatus = init.getResponseStatus().orElse(null);
                 apiResponse = init.getApiResponseDefinition().orElse(null);
                 location = init.getLocation().orElse(null);
+                whitelistRule = init.getAppliedWhitelistRule().orElse(null);
             }
 
             public Builder withRequestPath(final String requestPath) {
@@ -238,6 +244,11 @@ public interface ValidationReport {
                 return this;
             }
 
+            public Builder withAppliedWhitelistRule(final NamedWhitelistRule whitelistRule) {
+                this.whitelistRule = whitelistRule;
+                return this;
+            }
+
             public Builder withAdditionalDataFrom(final MessageContext other) {
                 if (requestPath == null) {
                     requestPath = other.getRequestPath().orElse(null);
@@ -265,6 +276,9 @@ public interface ValidationReport {
                 }
                 if (location == null) {
                     location = other.getLocation().orElse(null);
+                }
+                if (whitelistRule == null) {
+                    whitelistRule = other.getAppliedWhitelistRule().orElse(null);
                 }
                 return this;
             }

@@ -51,8 +51,15 @@ public class SwaggerMatchers {
 
     public static class SwaggerValidationException extends RuntimeException {
 
+        private final ValidationReport report;
+
         public SwaggerValidationException(final ValidationReport report) {
             super(ValidationReportFormatter.format(report));
+            this.report = report;
+        }
+
+        public ValidationReport getValidationReport() {
+            return report;
         }
     }
 

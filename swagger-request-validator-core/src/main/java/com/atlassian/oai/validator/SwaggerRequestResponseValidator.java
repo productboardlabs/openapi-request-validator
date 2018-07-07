@@ -10,6 +10,7 @@ import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
+import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
 import com.atlassian.oai.validator.schema.SchemaValidator;
 import com.atlassian.oai.validator.whitelist.ValidationErrorsWhitelist;
 import io.swagger.parser.OpenAPIParser;
@@ -194,7 +195,7 @@ public class SwaggerRequestResponseValidator {
                                                     @Nonnull final Function<ApiOperation, ValidationReport> validationFunction,
                                                     @Nonnull final BiFunction<ApiOperation, ValidationReport, ValidationReport> whitelistingFunction) {
 
-        final ValidationReport.MessageContext context = ValidationReport.MessageContext.create()
+        final MessageContext context = MessageContext.create()
                 .withRequestPath(path)
                 .withRequestMethod(method)
                 .build();
@@ -214,8 +215,9 @@ public class SwaggerRequestResponseValidator {
 
         final ApiOperation apiOperation = apiOperationMatch.getApiOperation();
         return validationFunction
-            .andThen(report -> whitelistingFunction.apply(apiOperation, report))
-            .apply(apiOperation);
+                .andThen(report -> whitelistingFunction.apply(apiOperation, report))
+                .apply(apiOperation)
+                .withAdditionalContext(context);
     }
 
     private ValidationReport withWhitelistApplied(final ValidationReport report,
@@ -227,8 +229,13 @@ public class SwaggerRequestResponseValidator {
                 .map(message -> whitelist
                     .whitelistedBy(message, operation, request, response)
                     .map(rule -> message
-                        .withLevel(ValidationReport.Level.IGNORE)
-                        .withAdditionalInfo("Whitelisted by: " + rule))
+                            .withLevel(ValidationReport.Level.IGNORE)
+                            .withAdditionalContext(
+                                    MessageContext.create()
+                                            .withAppliedWhitelistRule(rule)
+                                            .build()
+                            )
+                    )
                     .orElse(message))
                 .collect(Collectors.toList()));
     }

@@ -2,6 +2,7 @@ package com.atlassian.oai.validator.report;
 
 import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.Request;
+import com.atlassian.oai.validator.whitelist.NamedWhitelistRule;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.parameters.RequestBody;
 import io.swagger.v3.oas.models.responses.ApiResponse;
@@ -24,6 +25,8 @@ class ImmutableMessageContext implements ValidationReport.MessageContext {
 
     private final Location location;
 
+    private final NamedWhitelistRule whitelistRule;
+
     ImmutableMessageContext(final Builder builder) {
         requestPath = builder.requestPath;
         method = builder.method;
@@ -34,6 +37,7 @@ class ImmutableMessageContext implements ValidationReport.MessageContext {
         responseStatus = builder.responseStatus;
         apiResponseDefinition = builder.apiResponse;
         location = builder.location;
+        whitelistRule = builder.whitelistRule;
     }
 
     @Override
@@ -82,6 +86,11 @@ class ImmutableMessageContext implements ValidationReport.MessageContext {
     }
 
     @Override
+    public Optional<NamedWhitelistRule> getAppliedWhitelistRule() {
+        return Optional.ofNullable(whitelistRule);
+    }
+
+    @Override
     public boolean hasData() {
         return requestPath != null ||
                 method != null ||
@@ -91,7 +100,8 @@ class ImmutableMessageContext implements ValidationReport.MessageContext {
                 parameter != null ||
                 responseStatus != null ||
                 apiResponseDefinition != null ||
-                location != null;
+                location != null ||
+                whitelistRule != null;
     }
 
     @Override
@@ -119,6 +129,7 @@ class ImmutableMessageContext implements ValidationReport.MessageContext {
                 Objects.equals(apiRequestContentType, that.apiRequestContentType) &&
                 Objects.equals(responseStatus, that.responseStatus) &&
                 Objects.equals(apiResponseDefinition, that.apiResponseDefinition) &&
+                Objects.equals(whitelistRule, that.whitelistRule) &&
                 location == that.location;
     }
 
@@ -127,7 +138,8 @@ class ImmutableMessageContext implements ValidationReport.MessageContext {
         return Objects.hash(
                 requestPath, method, apiOperation,
                 parameter, apiRequestBodyDefinition, apiRequestContentType,
-                responseStatus, apiResponseDefinition, location
+                responseStatus, apiResponseDefinition, location,
+                whitelistRule
         );
     }
 }

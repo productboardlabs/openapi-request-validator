@@ -61,7 +61,9 @@ public class ValidationErrorWhitelistingTest {
             protected boolean matchesSafely(final ValidationReport.Message message) {
                 return message.getMessage().contains(messageText) &&
                         message.getLevel() == IGNORE &&
-                        message.getAdditionalInfo().stream().anyMatch(info -> info.toLowerCase().startsWith("whitelisted by: " + whitelistRule.toLowerCase()));
+                        message.getContext().isPresent() &&
+                        message.getContext().get().getAppliedWhitelistRule().isPresent() &&
+                        message.getContext().get().getAppliedWhitelistRule().get().getName().equalsIgnoreCase(whitelistRule);
             }
 
             @Override

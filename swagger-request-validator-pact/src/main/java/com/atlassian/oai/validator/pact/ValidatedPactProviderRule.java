@@ -43,7 +43,7 @@ public class ValidatedPactProviderRule implements TestRule {
 
     private ValidatedPactProviderRule(final String swaggerJsonUrl, final String basePathOverride,
                                       final String providerId, final Object target, final PactProviderRule delegate) {
-        this.validator = SwaggerRequestResponseValidator
+        validator = SwaggerRequestResponseValidator
                 .createFor(swaggerJsonUrl)
                 .withLevelResolver(PactLevelResolverFactory.create())
                 .withBasePathOverride(basePathOverride)
@@ -86,7 +86,7 @@ public class ValidatedPactProviderRule implements TestRule {
                 .reduce(ValidationReport.empty(), ValidationReport::merge);
 
         if (report.hasErrors()) {
-            throw new PactValidationError(ValidationReportFormatter.format(report));
+            throw new PactValidationError(report);
         }
     }
 
@@ -109,7 +109,7 @@ public class ValidatedPactProviderRule implements TestRule {
 
     private Optional<Method> findPactMethod(final PactVerification pactVerification) {
         final String pactFragment = pactVerification.fragment();
-        for (Method method : target.getClass().getMethods()) {
+        for (final Method method : target.getClass().getMethods()) {
             final Pact pact = method.getAnnotation(Pact.class);
             if (pact != null && pact.provider().equals(providerId)
                     && (pactFragment.isEmpty() || pactFragment.equals(method.getName()))) {
@@ -129,8 +129,18 @@ public class ValidatedPactProviderRule implements TestRule {
     }
 
     public static class PactValidationError extends RuntimeException {
-        public PactValidationError(final String message) {
-            super(message);
+        private final ValidationReport report;
+
+        public PactValidationError(final ValidationReport report) {
+            super(ValidationReportFormatter.format(report));
+            this.report = report;
+        }
+
+        /**
+         * @return The validation report that generated this exception
+         */
+        public ValidationReport getValidationReport() {
+            return report;
         }
     }
 }
