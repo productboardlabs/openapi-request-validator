@@ -111,8 +111,15 @@ public class SwaggerValidationListener implements RequestListener {
 
     public static class SwaggerValidationException extends RuntimeException {
 
+        private final ValidationReport report;
+
         public SwaggerValidationException(final ValidationReport report) {
             super(SimpleValidationReportFormat.getInstance().apply(report));
+            this.report = report;
+        }
+
+        public ValidationReport getValidationReport() {
+            return report;
         }
     }
 }
