@@ -1,8 +1,8 @@
 package com.atlassian.oai.validator.mockmvc;
 
 import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
+import com.atlassian.oai.validator.report.SimpleValidationReportFormat;
 import com.atlassian.oai.validator.report.ValidationReport;
-import com.atlassian.oai.validator.report.ValidationReportFormatter;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -54,7 +54,7 @@ public class SwaggerMatchers {
         private final ValidationReport report;
 
         public SwaggerValidationException(final ValidationReport report) {
-            super(ValidationReportFormatter.format(report));
+            super(SimpleValidationReportFormat.getInstance().apply(report));
             this.report = report;
         }
 

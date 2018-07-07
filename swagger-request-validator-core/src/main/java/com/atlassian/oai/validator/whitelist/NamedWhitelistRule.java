@@ -1,6 +1,7 @@
 package com.atlassian.oai.validator.whitelist;
 
 import com.atlassian.oai.validator.whitelist.rule.WhitelistRule;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.Objects;
 
@@ -22,6 +23,7 @@ public class NamedWhitelistRule {
         return name;
     }
 
+    @JsonIgnore
     public WhitelistRule getRule() {
         return rule;
     }
@@ -37,8 +39,8 @@ public class NamedWhitelistRule {
 
         final NamedWhitelistRule that = (NamedWhitelistRule) o;
 
-        return Objects.equals(this.getName(), that.getName()) &&
-                Objects.equals(this.getRule(), that.getRule());
+        return Objects.equals(getName(), that.getName()) &&
+                Objects.equals(getRule(), that.getRule());
     }
 
     @Override

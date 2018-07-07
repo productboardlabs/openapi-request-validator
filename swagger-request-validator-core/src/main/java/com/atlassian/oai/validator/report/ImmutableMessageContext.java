@@ -3,6 +3,7 @@ package com.atlassian.oai.validator.report;
 import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.whitelist.NamedWhitelistRule;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.parameters.RequestBody;
 import io.swagger.v3.oas.models.responses.ApiResponse;
@@ -50,6 +51,7 @@ class ImmutableMessageContext implements ValidationReport.MessageContext {
         return Optional.ofNullable(method);
     }
 
+    @JsonIgnore
     @Override
     public Optional<ApiOperation> getApiOperation() {
         return Optional.ofNullable(apiOperation);
@@ -60,6 +62,7 @@ class ImmutableMessageContext implements ValidationReport.MessageContext {
         return Optional.ofNullable(parameter);
     }
 
+    @JsonIgnore
     @Override
     public Optional<RequestBody> getApiRequestBodyDefinition() {
         return Optional.ofNullable(apiRequestBodyDefinition);
@@ -75,6 +78,7 @@ class ImmutableMessageContext implements ValidationReport.MessageContext {
         return Optional.ofNullable(responseStatus);
     }
 
+    @JsonIgnore
     @Override
     public Optional<ApiResponse> getApiResponseDefinition() {
         return Optional.ofNullable(apiResponseDefinition);

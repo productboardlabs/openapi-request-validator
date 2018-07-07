@@ -1,8 +1,8 @@
 package com.atlassian.oai.validator.restassured;
 
 import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
+import com.atlassian.oai.validator.report.SimpleValidationReportFormat;
 import com.atlassian.oai.validator.report.ValidationReport;
-import com.atlassian.oai.validator.report.ValidationReportFormatter;
 import io.restassured.filter.Filter;
 import io.restassured.filter.FilterContext;
 import io.restassured.response.Response;
@@ -68,7 +68,7 @@ public class SwaggerValidationFilter implements Filter {
         private final ValidationReport report;
 
         public SwaggerValidationException(final ValidationReport report) {
-            super(ValidationReportFormatter.format(report));
+            super(SimpleValidationReportFormat.getInstance().apply(report));
             this.report = report;
         }
 

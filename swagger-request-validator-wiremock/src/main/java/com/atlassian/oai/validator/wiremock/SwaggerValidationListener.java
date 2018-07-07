@@ -1,8 +1,8 @@
 package com.atlassian.oai.validator.wiremock;
 
 import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
+import com.atlassian.oai.validator.report.SimpleValidationReportFormat;
 import com.atlassian.oai.validator.report.ValidationReport;
-import com.atlassian.oai.validator.report.ValidationReportFormatter;
 import com.github.tomakehurst.wiremock.http.Request;
 import com.github.tomakehurst.wiremock.http.RequestListener;
 import com.github.tomakehurst.wiremock.http.Response;
@@ -57,7 +57,7 @@ public class SwaggerValidationListener implements RequestListener {
     private ValidationReport report = ValidationReport.empty();
 
     public SwaggerValidationListener(final String swaggerJsonUrl) {
-        this.validator = SwaggerRequestResponseValidator.createFor(swaggerJsonUrl).build();
+        validator = SwaggerRequestResponseValidator.createFor(swaggerJsonUrl).build();
     }
 
     @Override
@@ -95,7 +95,7 @@ public class SwaggerValidationListener implements RequestListener {
      * </pre>
      */
     public void reset() {
-        this.report = ValidationReport.empty();
+        report = ValidationReport.empty();
     }
 
     /**
@@ -112,7 +112,7 @@ public class SwaggerValidationListener implements RequestListener {
     public static class SwaggerValidationException extends RuntimeException {
 
         public SwaggerValidationException(final ValidationReport report) {
-            super(ValidationReportFormatter.format(report));
+            super(SimpleValidationReportFormat.getInstance().apply(report));
         }
     }
 }

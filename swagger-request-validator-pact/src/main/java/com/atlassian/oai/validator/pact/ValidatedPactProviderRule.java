@@ -8,8 +8,8 @@ import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
 import au.com.dius.pact.model.MockProviderConfig;
 import au.com.dius.pact.model.PactFragment;
 import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
+import com.atlassian.oai.validator.report.SimpleValidationReportFormat;
 import com.atlassian.oai.validator.report.ValidationReport;
-import com.atlassian.oai.validator.report.ValidationReportFormatter;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -132,7 +132,7 @@ public class ValidatedPactProviderRule implements TestRule {
         private final ValidationReport report;
 
         public PactValidationError(final ValidationReport report) {
-            super(ValidationReportFormatter.format(report));
+            super(SimpleValidationReportFormat.getInstance().apply(report));
             this.report = report;
         }
 
