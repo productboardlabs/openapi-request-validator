@@ -8,6 +8,8 @@ import com.google.common.net.MediaType;
 import java.util.Optional;
 
 public class ContentTypeUtils {
+    private static final String HAL_JSON_UTF8_TYPE = "application/hal+json;charset=UTF-8";
+    public static final MediaType HAL_JSON_UTF_8 = MediaType.parse(HAL_JSON_UTF8_TYPE);
 
     private ContentTypeUtils() {
 
@@ -33,11 +35,16 @@ public class ContentTypeUtils {
         try {
             return maybeContentType
                     .map(MediaType::parse)
-                    .map(ct -> ct.withoutParameters().is(MediaType.JSON_UTF_8.withoutParameters()))
+                    .map(ContentTypeUtils::isJsonMediaType)
                     .orElse(false);
         } catch (final IllegalArgumentException e) {
             return false;
         }
+    }
+
+    private static boolean isJsonMediaType(final MediaType mediaType) {
+        return mediaType.withoutParameters().is(MediaType.JSON_UTF_8.withoutParameters()) ||
+                mediaType.withoutParameters().is(HAL_JSON_UTF_8.withoutParameters());
     }
 
     /**

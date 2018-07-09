@@ -1,11 +1,14 @@
 package com.atlassian.oai.validator.springmvc;
 
 import com.atlassian.oai.validator.model.Request;
+import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.report.ValidationReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.support.EncodedResource;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -53,18 +56,18 @@ public class SwaggerValidationInterceptor extends HandlerInterceptorAdapter {
         // validate the request
         final ResettableRequestServletWrapper resettableRequest = (ResettableRequestServletWrapper) servletRequest;
         final String requestLoggingKey = servletRequest.getMethod() + "#" + servletRequest.getRequestURI();
-        LOG.debug("Swagger validation: {}", requestLoggingKey);
+        LOG.debug("Swagger request validation: {}", requestLoggingKey);
 
         final Request request = swaggerRequestValidationService.buildRequest(resettableRequest);
         final ValidationReport validationReport = swaggerRequestValidationService.validateRequest(request);
         if (!validationReport.hasErrors()) {
-            LOG.debug("Swagger validation: {} - The request is valid.", requestLoggingKey);
+            LOG.debug("Swagger request validation: {} - The request is valid.", requestLoggingKey);
         } else if (!swaggerRequestValidationService.isDefinedSwaggerRequest(validationReport)) {
-            LOG.info("Swagger validation: {} - The request is not defined in the Swagger schema. Ignoring it.",
+            LOG.info("Swagger request validation: {} - The request is not defined in the Swagger schema. Ignoring it.",
                     requestLoggingKey);
         } else {
             final InvalidRequestException invalidRequestException = new InvalidRequestException(validationReport);
-            LOG.info("Swagger validation: {} - The REST request is invalid: {}", requestLoggingKey,
+            LOG.info("Swagger request validation: {} - The request is invalid: {}", requestLoggingKey,
                     invalidRequestException.getMessage());
             throw invalidRequestException;
         }
@@ -72,5 +75,50 @@ public class SwaggerValidationInterceptor extends HandlerInterceptorAdapter {
         // reset the requests servlet input stream after reading it on former step
         resettableRequest.resetInputStream();
         return true;
+    }
+
+    /**
+     * Validates the given response. If a request is defined but its response is invalid against
+     * the Swagger schema an {@link InvalidResponseException} will be thrown leading to an error
+     * response.
+     * <p>
+     * Only {@link ContentCachingResponseWrapper} can be validated. Wrapping is done within the
+     * {@link SwaggerValidationFilter}.
+     *
+     * @param servletRequest  the servlet request
+     * @param servletResponse the {@link HttpServletResponse} to validate
+     * @param handler         a handler
+     * @param modelAndView    a model and view
+     * @throws Exception if the response is invalid against the Swagger schema or the response body
+     *                   can't be read
+     */
+    @Override
+    public void postHandle(final HttpServletRequest servletRequest, final HttpServletResponse servletResponse,
+                           final Object handler, final ModelAndView modelAndView) throws Exception {
+        // only cached servlet responses can be validated - see: SwaggerValidationFilter
+        if (!(servletResponse instanceof ContentCachingResponseWrapper)) {
+            return;
+        }
+
+        // validate the response
+        final ContentCachingResponseWrapper cachedResponse = (ContentCachingResponseWrapper) servletResponse;
+        final String requestLoggingKey = servletRequest.getMethod() + "#" + servletRequest.getRequestURI();
+        LOG.debug("Swagger response validation: {}", requestLoggingKey);
+
+        final Response response = swaggerRequestValidationService.buildResponse(cachedResponse);
+        final ValidationReport validationReport = swaggerRequestValidationService.validateResponse(servletRequest, response);
+        if (!validationReport.hasErrors()) {
+            LOG.debug("Swagger response validation: {} - The response is valid.", requestLoggingKey);
+        } else if (!swaggerRequestValidationService.isDefinedSwaggerRequest(validationReport)) {
+            LOG.info("Swagger response validation: {} - The request is not defined in the Swagger schema. Ignoring it.",
+                    requestLoggingKey);
+        } else {
+            final InvalidResponseException invalidResponseException = new InvalidResponseException(validationReport);
+            LOG.info("Swagger response validation: {} - The response is invalid: {}", requestLoggingKey,
+                    invalidResponseException.getMessage());
+            // as an exception will rewrite the current, cached response it has to be reset
+            cachedResponse.reset();
+            throw invalidResponseException;
+        }
     }
 }
