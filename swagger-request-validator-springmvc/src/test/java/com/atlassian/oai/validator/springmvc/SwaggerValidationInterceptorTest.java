@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.springmvc;
 
+import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.report.ValidationReport;
@@ -40,6 +41,19 @@ public class SwaggerValidationInterceptorTest {
                 .thenReturn(new InputStreamReader(getClass().getResourceAsStream("/api-spring-test.json")));
 
         final SwaggerValidationInterceptor interceptor = new SwaggerValidationInterceptor(encodedResource);
+        assertThat(interceptor, notNullValue());
+    }
+
+    @Test
+    public void constructor_withSwaggerRequestResponseValidator() {
+        // given:
+        final SwaggerRequestResponseValidator swaggerRequestResponseValidator =
+                Mockito.mock(SwaggerRequestResponseValidator.class);
+
+        // when:
+        final SwaggerValidationInterceptor interceptor = new SwaggerValidationInterceptor(swaggerRequestResponseValidator);
+
+        // then:
         assertThat(interceptor, notNullValue());
     }
 
