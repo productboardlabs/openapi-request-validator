@@ -24,13 +24,12 @@ import java.util.Objects;
 
 class SwaggerRequestValidationService {
 
-    private static final String MESSAGE_REQUEST_PATH_MISSING = "validation.request.path.missing";
-
     private final SwaggerRequestResponseValidator swaggerRequestResponseValidator;
 
     SwaggerRequestValidationService(final EncodedResource restInterface) throws IOException {
         this(SwaggerRequestResponseValidator
                 .createFor(readReader(restInterface.getReader()))
+                .withLevelResolver(SpringMVCLevelResolverFactory.create())
                 .build());
     }
 
@@ -98,19 +97,6 @@ class SwaggerRequestValidationService {
         final Request.Method method = Request.Method.valueOf(servletRequest.getMethod());
         final String path = getUriComponents(servletRequest).getPath();
         return swaggerRequestResponseValidator.validateResponse(path, method, response);
-    }
-
-    /**
-     * @param validationReport the {@link ValidationReport}
-     * @return {@code true} if the validated request is defined in the Swagger schema, otherwise {@code false}
-     */
-    boolean isDefinedSwaggerRequest(final ValidationReport validationReport) {
-        for (final ValidationReport.Message message : validationReport.getMessages()) {
-            if (MESSAGE_REQUEST_PATH_MISSING.equals(message.getKey())) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private static String readReader(final Reader reader) throws IOException {

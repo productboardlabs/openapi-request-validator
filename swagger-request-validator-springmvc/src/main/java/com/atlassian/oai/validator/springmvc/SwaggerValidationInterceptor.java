@@ -62,9 +62,6 @@ public class SwaggerValidationInterceptor extends HandlerInterceptorAdapter {
         final ValidationReport validationReport = swaggerRequestValidationService.validateRequest(request);
         if (!validationReport.hasErrors()) {
             LOG.debug("Swagger request validation: {} - The request is valid.", requestLoggingKey);
-        } else if (!swaggerRequestValidationService.isDefinedSwaggerRequest(validationReport)) {
-            LOG.info("Swagger request validation: {} - The request is not defined in the Swagger schema. Ignoring it.",
-                    requestLoggingKey);
         } else {
             final InvalidRequestException invalidRequestException = new InvalidRequestException(validationReport);
             LOG.info("Swagger request validation: {} - The request is invalid: {}", requestLoggingKey,
@@ -109,9 +106,6 @@ public class SwaggerValidationInterceptor extends HandlerInterceptorAdapter {
         final ValidationReport validationReport = swaggerRequestValidationService.validateResponse(servletRequest, response);
         if (!validationReport.hasErrors()) {
             LOG.debug("Swagger response validation: {} - The response is valid.", requestLoggingKey);
-        } else if (!swaggerRequestValidationService.isDefinedSwaggerRequest(validationReport)) {
-            LOG.info("Swagger response validation: {} - The request is not defined in the Swagger schema. Ignoring it.",
-                    requestLoggingKey);
         } else {
             final InvalidResponseException invalidResponseException = new InvalidResponseException(validationReport);
             LOG.info("Swagger response validation: {} - The response is invalid: {}", requestLoggingKey,
