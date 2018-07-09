@@ -3,6 +3,7 @@ package com.atlassian.oai.validator.springmvc;
 import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
+import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.google.common.collect.ImmutableMap;
@@ -64,6 +65,25 @@ public class SwaggerRequestValidationServiceTest {
 
         final SwaggerRequestValidationService service = new SwaggerRequestValidationService(encodedResource);
         assertThat(service, notNullValue());
+    }
+
+    @Test
+    public void aMissingPathIsNotTreatedAsError() throws IOException {
+        // given:
+        final EncodedResource encodedResource = mock(EncodedResource.class);
+        when(encodedResource.getReader())
+                .thenReturn(new InputStreamReader(getClass().getResourceAsStream("/api-spring-test.json")));
+        final SwaggerRequestValidationService service = new SwaggerRequestValidationService(encodedResource);
+        assertThat(service, notNullValue());
+
+        // and:
+        final Request request = new SimpleRequest.Builder(Request.Method.GET, "/unknownPath").build();
+
+        // when:
+        final ValidationReport validationReport = service.validateRequest(request);
+
+        // then:
+        assertThat(validationReport.hasErrors(), is(false));
     }
 
     @Test(expected = NullPointerException.class)
@@ -230,33 +250,5 @@ public class SwaggerRequestValidationServiceTest {
         Mockito.verify(requestValidator, times(1))
                 .validateResponse("/swagger-request-validator", Request.Method.POST, response);
         assertThat(result, is(validationReport));
-    }
-
-    @Test
-    public void isDefinedSwaggerRequest_theValidationReportSuggestsThatTheRequestIsNotDefined() {
-        final ValidationReport validationReport = mock(ValidationReport.class);
-        final ValidationReport.Message message1 = mock(ValidationReport.Message.class);
-        final ValidationReport.Message message2 = mock(ValidationReport.Message.class);
-        when(validationReport.getMessages()).thenReturn(asList(message1, message2));
-        when(message1.getKey()).thenReturn("other.validation.error");
-        when(message2.getKey()).thenReturn("validation.request.path.missing");
-
-        final boolean result = classUnderTest.isDefinedSwaggerRequest(validationReport);
-
-        assertThat(result, is(false));
-    }
-
-    @Test
-    public void isDefinedSwaggerRequest_theValidationReportSuggestsThatTheRequestIsDefined() {
-        final ValidationReport validationReport = mock(ValidationReport.class);
-        final ValidationReport.Message message1 = mock(ValidationReport.Message.class);
-        final ValidationReport.Message message2 = mock(ValidationReport.Message.class);
-        when(validationReport.getMessages()).thenReturn(asList(message1, message2));
-        when(message1.getKey()).thenReturn("other.validation.error");
-        when(message2.getKey()).thenReturn("another.validation.error");
-
-        final boolean result = classUnderTest.isDefinedSwaggerRequest(validationReport);
-
-        assertThat(result, is(true));
     }
 }
