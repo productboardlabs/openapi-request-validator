@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.springmvc;
 
+import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.report.ValidationReport;
@@ -18,6 +19,7 @@ import java.util.Collections;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.times;
 
 public class SwaggerValidationInterceptorTest {
@@ -39,6 +41,19 @@ public class SwaggerValidationInterceptorTest {
 
         final SwaggerValidationInterceptor interceptor = new SwaggerValidationInterceptor(encodedResource);
         Assert.assertThat(interceptor, notNullValue());
+    }
+
+    @Test
+    public void constructor_withSwaggerRequestResponseValidator() {
+        // given:
+        final SwaggerRequestResponseValidator swaggerRequestResponseValidator =
+                Mockito.mock(SwaggerRequestResponseValidator.class);
+
+        // when:
+        final SwaggerValidationInterceptor interceptor = new SwaggerValidationInterceptor(swaggerRequestResponseValidator);
+
+        // then:
+        assertThat(interceptor, notNullValue());
     }
 
     @Test
