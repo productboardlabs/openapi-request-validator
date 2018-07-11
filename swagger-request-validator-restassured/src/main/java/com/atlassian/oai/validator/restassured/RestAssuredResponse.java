@@ -52,9 +52,6 @@ public class RestAssuredResponse implements Response {
         if (originalResponse.getHeaders() != null) {
             originalResponse.getHeaders().forEach(header -> builder.withHeader(header.getName(), header.getValue()));
         }
-        if (originalResponse.getContentType() != null) {
-            builder.withContentType(originalResponse.getContentType());
-        }
         return builder.build();
     }
 }
