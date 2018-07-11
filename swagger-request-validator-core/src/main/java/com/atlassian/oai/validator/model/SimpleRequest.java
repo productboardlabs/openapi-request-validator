@@ -383,7 +383,14 @@ public class SimpleRequest implements Request {
         }
 
         static Collection<String> splitHeaderValue(final String value) {
-            return value != null ? Arrays.asList(value.split("\\s*,\\s*")) : Collections.singleton(null);
+            //Do not split a date in RFC 822 format
+            if (value.matches("^(?:(Sun|Mon|Tue|Wed|Thu|Fri|Sat),\\s+)"+
+                    "?(0[1-9]|[1-2]?[0-9]|3[01])\\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\s+"+
+                    "(19[0-9]{2}|[2-9][0-9]{3})\\s+(2[0-3]|[0-1][0-9]):([0-5][0-9])(?::(60|[0-5][0-9]))?\\s+(GMT|UTC)$")) {
+                return Arrays.asList(value);
+            } else {
+                return value != null ? Arrays.asList(value.split("\\s*,\\s*")) : Collections.singleton(null);
+            }
         }
     }
 }

@@ -89,6 +89,18 @@ public class SimpleRequestTest {
     }
 
     @Test
+    public void header_dateValueIsNotSplit() {
+        final Request request = SimpleRequest.Builder.get("/path")
+                .withHeader("fOO", "Sun, 06 Nov 1994 08:49:37 GMT")
+                .build();
+
+        assertThat(request.getHeaders().keySet(), containsInAnyOrder("fOO"));
+        assertThat(request.getHeaders().get("foo"), containsInAnyOrder("Sun, 06 Nov 1994 08:49:37 GMT"));
+        assertThat(request.getHeaderValues("foo"), containsInAnyOrder("Sun, 06 Nov 1994 08:49:37 GMT"));
+        assertThat(request.getHeaderValue("foo").get(), equalTo("Sun, 06 Nov 1994 08:49:37 GMT"));
+    }
+
+    @Test
     public void queryParameter_areNotMandatory() {
         final Request request = SimpleRequest.Builder.get("/path").build();
 
