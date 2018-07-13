@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.springmvc;
 
+import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.report.ValidationReport;
@@ -25,6 +26,10 @@ public class SwaggerValidationInterceptor extends HandlerInterceptorAdapter {
 
     public SwaggerValidationInterceptor(final EncodedResource swaggerInterface) throws IOException {
         this(new SwaggerRequestValidationService(swaggerInterface));
+    }
+
+    public SwaggerValidationInterceptor(final SwaggerRequestResponseValidator swaggerRequestResponseValidator) {
+        this(new SwaggerRequestValidationService(swaggerRequestResponseValidator));
     }
 
     SwaggerValidationInterceptor(final SwaggerRequestValidationService swaggerRequestValidationService) {

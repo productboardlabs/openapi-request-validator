@@ -1,6 +1,8 @@
 package com.atlassian.oai.validator.springmvc.example.requestlogging;
 
+import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
 import com.atlassian.oai.validator.springmvc.ResettableRequestServletWrapper;
+import com.atlassian.oai.validator.springmvc.SpringMVCLevelResolverFactory;
 import com.atlassian.oai.validator.springmvc.SwaggerValidationFilter;
 import com.atlassian.oai.validator.springmvc.SwaggerValidationInterceptor;
 import org.apache.commons.io.IOUtils;
@@ -11,7 +13,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.EncodedResource;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
@@ -28,8 +29,13 @@ public class RestRequestLoggingValidationConfig extends WebMvcConfigurerAdapter 
 
     @Autowired
     public RestRequestLoggingValidationConfig(@Value("classpath:api-spring-test.json") final Resource swaggerSchema) throws IOException {
-        final EncodedResource swaggerResource = new EncodedResource(swaggerSchema, "UTF-8");
-        this.swaggerValidationInterceptor = new SwaggerValidationInterceptor(swaggerResource);
+        final SwaggerRequestResponseValidator swaggerRequestResponseValidator = SwaggerRequestResponseValidator
+                .createFor(swaggerSchema.getURL().getPath())
+                .withLevelResolver(SpringMVCLevelResolverFactory.create())
+                // the context path of the Spring application differs from the base path in the OpenAPI schema
+                .withBasePathOverride("/v1")
+                .build();
+        this.swaggerValidationInterceptor = new SwaggerValidationInterceptor(swaggerRequestResponseValidator);
     }
 
     @Bean

@@ -23,7 +23,7 @@ e.g. for Maven in your pom.xml:
 </dependency>
 ```
 
-Add this interceptor to your application.
+Add this configuration to your application.
 
 ```java
 import com.atlassian.oai.validator.springmvc.SwaggerValidationFilter;
@@ -69,6 +69,22 @@ public class SwaggerRequestValidationConfig extends WebMvcConfigurerAdapter {
 }
 ```
 
+To get better control over the validation a custom `SwaggerRequestResponseValidator` can be used.  
+
+```java
+    @Autowired
+    public SwaggerRequestValidationConfig(@Value("classpath:swagger-api.json") final Resource swaggerApi) throws IOException {
+        final SwaggerRequestResponseValidator swaggerRequestResponseValidator = SwaggerRequestResponseValidator
+                .createFor(swaggerSchema.getURL().getPath())
+                .withLevelResolver(SpringMVCLevelResolverFactory.create())
+                .withBasePathOverride("/v1")
+                .build();
+        this.swaggerValidationInterceptor = new SwaggerValidationInterceptor(swaggerRequestResponseValidator);
+    }
+```
+
+See the [Swagger Request Validator - Core](https://bitbucket.org/atlassian/swagger-request-validator/src/master/swagger-request-validator-core/README.md?at=master) for more information on customizing the validator.
+
 You might want to add logging for the package: ```com.atlassian.oai.validator.springmvc```
 
 ## Example ##
@@ -77,7 +93,7 @@ Please see [the tests](https://bitbucket.org/atlassian/swagger-request-validator
 
 * There is a simple example that shows how to add the Swagger Request Validation adapter.
 * An advanced example shows how to additionally add an ExceptionHandler to map the `InvalidRequestException` and `InvalidResponseException` to a custom response.
-* Another example shows how to add custom request logging before each validation.
+* Another example shows how to add custom request logging before each validation. A custom `SwaggerRequestResponseValidator` is used in this example.
 
 ## Caveats ##
 

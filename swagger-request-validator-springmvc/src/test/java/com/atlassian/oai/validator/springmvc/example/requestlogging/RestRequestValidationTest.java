@@ -7,6 +7,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -24,8 +25,14 @@ import java.util.Map;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 
+/**
+ * Testing with non-default context-path and a custom created
+ * {@link com.atlassian.oai.validator.SwaggerRequestResponseValidator} with base path override.
+ *
+ * @see RestRequestLoggingValidationConfig#RestRequestLoggingValidationConfig(Resource)
+ */
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {"server.contextPath=/v1"},
         classes = {RestServiceApplication.class, RestRequestLoggingValidationConfig.class})
 public class RestRequestValidationTest {
 
