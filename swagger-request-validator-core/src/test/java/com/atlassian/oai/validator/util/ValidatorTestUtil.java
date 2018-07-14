@@ -1,7 +1,7 @@
 package com.atlassian.oai.validator.util;
 
+import com.atlassian.oai.validator.report.JsonValidationReportFormat;
 import com.atlassian.oai.validator.report.ValidationReport;
-import com.atlassian.oai.validator.report.ValidationReportFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +42,7 @@ public class ValidatorTestUtil {
      * Assert that validation has failed.
      */
     private static void assertFail(final ValidationReport report, final boolean expectContext, final String... expectedKeys) {
-        log.trace(ValidationReportFormatter.format(report));
+        log.trace(JsonValidationReportFormat.getInstance().apply(report));
         assertThat("Expected validation errors but found none. Enable trace logging for more details.", report.getMessages(), is(not(empty())));
 
         final List<String> foundKeys = report.getMessages().stream().map(ValidationReport.Message::getKey).collect(toList());
@@ -65,7 +65,7 @@ public class ValidatorTestUtil {
      * Assert that validation has passed.
      */
     public static void assertPass(final ValidationReport report) {
-        log.trace(ValidationReportFormatter.format(report));
+        log.trace(JsonValidationReportFormat.getInstance().apply(report));
         assertTrue("Expected no validation errors but found some. Enable trace logging for more details.", report.getMessages().isEmpty() ||
             report.getMessages().stream().allMatch(m -> m.getLevel() == ValidationReport.Level.IGNORE));
     }

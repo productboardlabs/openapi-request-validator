@@ -30,7 +30,7 @@ This validator takes a specification file (local or remote URL) and can then be 
 The validator returns a `com.atlassian.oai.validator.report.ValidationReport` which will contain any errors that
 occurred during the validation. These can be used to generate a report for users etc.
 
-```
+```java
 final SwaggerRequestResponseValidator validator = SwaggerRequestResponseValidator
         .createFor(swaggerJsonUrl)
         .withBasePathOverride(basePathOverride)
@@ -44,6 +44,18 @@ if (report.hasErrors()) {
 
 Each report will contain 0 or more `Message`s, which include a key, a human-readable message (suitable for display to users),
 a 'level' indicating the severity of the message, and additional context to help identify where the message was generated.
+
+A String representation of the report can be generated using one of the `ValidationReportFormat` implementations. Currently two
+implementations are provided:
+1. A `SimpleValidationReportFormat` that can be used to generate a human-readable format suitable for logging etc.; and
+2. A `JsonValidationReportFormat` that outputs the report in a JSON format suitable for consumption by scripts / tooling etc.
+
+```java
+final ValidationReport report = validator.validate(request, response);
+if (report.hasErrors()) {
+  log.error(SimpleValidationReportFromat.getInstance().apply(report));
+}
+```
 
 See the javadoc for the library for more information on how to use individual classes.
 

@@ -239,10 +239,13 @@ public class RequestValidator {
                                                final Collection<String> parameterValues,
                                                final String missingKey) {
 
+        final ValidationReport.MessageContext context =
+                ValidationReport.MessageContext.create().withParameter(parameter).build();
+
         if (parameterValues.isEmpty() && TRUE.equals(parameter.getRequired())) {
             return ValidationReport.singleton(
                     messages.get(missingKey, parameter.getName(), apiOperation.getApiPath().original())
-            );
+            ).withAdditionalContext(context);
         }
 
         return parameterValues
