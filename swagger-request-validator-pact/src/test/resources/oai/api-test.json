@@ -1,0 +1,125 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Test API",
+    "version": "1.0.0"
+  },
+  "basePath": "/",
+  "paths": {
+    "/test/object": {
+      "get": {
+        "summary": "Get an object response",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Object response",
+            "schema": {
+              "$ref": "#/definitions/Object"
+            }
+          }
+        }
+      }
+    },
+    "/test/objectsInArray": {
+      "get": {
+        "summary": "Get an ObjectsInArray response",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "ObjectsInArray response",
+            "schema": {
+              "$ref": "#/definitions/ObjectsInArray"
+            }
+          }
+        }
+      }
+    },
+    "/test/inlineObjectsInArray": {
+      "get": {
+        "summary": "Get an InlineObjectsInArray response",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "InlineObjectsInArray response",
+            "schema": {
+              "$ref": "#/definitions/InlineObjectsInArray"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Object": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "name": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "tags"
+      ]
+    },
+    "ObjectsInArray": {
+      "type": "object",
+      "properties": {
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Object"
+          }
+        }
+      }
+    },
+    "InlineObjectsInArray": {
+      "type": "object",
+      "properties": {
+        "children": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "name": {
+                "type": "string"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "tags"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

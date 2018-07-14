@@ -149,6 +149,42 @@ public class SchemaValidatorTest {
     }
 
     @Test
+    public void validate_withExtraFields_shouldFail_whenModelInlineInArray() {
+        final String value = "{\"things\": [{\"foo\":\"bar\", \"extra\":\"value\"}]}";
+        final Schema inner = new ObjectSchema().addProperties("foo", new StringSchema()).required(singletonList("foo"));
+        final Schema schema = new ObjectSchema().addProperties("things", new ArraySchema().items(inner));
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.additionalProperties");
+    }
+
+    @Test
+    public void validate_withExtraFields_shouldFail_whenModelInlineInObject() {
+        final String value = "{\"things\": {\"foo\":\"bar\", \"extra\":\"value\"}}";
+        final Schema inner = new ObjectSchema().addProperties("foo", new StringSchema()).required(singletonList("foo"));
+        final Schema schema = new ObjectSchema().addProperties("things", inner);
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.additionalProperties");
+    }
+
+    @Test
+    public void validate_withExtraFields_shouldFail_whenDeepNesting() {
+        final String value = "{\"outer\": {\"inner\": {\"innermost\": {\"field\": \"value\", \"extra\": \"value\"}}}}";
+        final Schema schema = new ObjectSchema()
+                .addProperties("outer", new ObjectSchema()
+                        .addProperties("inner", new ObjectSchema()
+                                .addProperties("innermost", new ObjectSchema()
+                                        .addProperties("field", new ObjectSchema())
+                                )
+                        )
+                );
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.additionalProperties");
+    }
+
+    @Test
     public void validate_withInvalidJsonSchema_shouldFail() {
         final String value = "{\"title\":\"bar\", \"message\":\"something\"}";
         final Schema schema = new Schema().$ref("#/definitions/{\"What\":\"This actually happened!\"}");
@@ -222,7 +258,11 @@ public class SchemaValidatorTest {
                 .addProperties("foo", new StringSchema())
                 .addProperties("baz", new StringSchema().nullable(true))
                 .addProperties("int", new IntegerSchema().nullable(true))
-                .addProperties("obj", new ObjectSchema())
+                .addProperties("obj", new ObjectSchema()
+                        .addProperties("obj1", new StringSchema().nullable(true))
+                        .addProperties("obj2", new StringSchema().nullable(true))
+                        .addProperties("obj3", new StringSchema().nullable(true))
+                )
                 .addProperties("arr", new ArraySchema().items(new StringSchema().nullable(true)))
                 .required(singletonList("foo"));
 

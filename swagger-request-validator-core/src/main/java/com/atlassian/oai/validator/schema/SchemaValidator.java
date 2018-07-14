@@ -23,6 +23,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.StreamSupport;
 
@@ -48,6 +50,8 @@ public class SchemaValidator {
 
     private static final String ADDITIONAL_PROPERTIES_FIELD = "additionalProperties";
     private static final String DISCRIMINATOR_FIELD = "discriminator";
+    private static final String PROPERTIES_FIELD = "properties";
+    private static final String TYPE_FIELD = "type";
     private static final String COMPONENTS_FIELD = "components";
     private static final String SCHEMAS_FIELD = "schemas";
     private static final String ALLOF_FIELD = "allOf";
@@ -152,7 +156,7 @@ public class SchemaValidator {
 
         rootNode.put(SCHEMA_REF_FIELD, OAI_V2_METASCHEMA_URI);
         if (additionalPropertiesValidationEnabled()) {
-            rootNode.set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
+            injectAdditionalPropertiesDirectiveIntoTree(rootNode);
         }
 
         if (api != null) {
@@ -165,17 +169,76 @@ public class SchemaValidator {
                         // Explicitly disable additionalProperties
                         // Calling code can choose what level to emit this failure at using
                         // validation.schema.additionalProperties
-                        if (!n.has(ADDITIONAL_PROPERTIES_FIELD) && !n.has(DISCRIMINATOR_FIELD)) {
-                            ((ObjectNode) n).set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
-                        }
-                    }
-                    if (n.has(ALLOF_FIELD)) {
-                        definitionsContainAllOf = true;
+                        definitionsContainAllOf = injectAdditionalPropertiesDirectiveIntoTree(n);
                     }
                 });
             }
             rootNode.putObject(COMPONENTS_FIELD).set(SCHEMAS_FIELD, definitions);
         }
+    }
+
+    private boolean injectAdditionalPropertiesDirectiveIntoTree(@Nonnull final JsonNode n) {
+        if (!hasAdditionalFieldSet(n) && !hasDiscriminatorField(n)) {
+            disableAdditionalProperties((ObjectNode) n);
+        }
+        boolean hasAllOfInChildDefinition = false;
+        final Iterator<JsonNode> properties = properties(n);
+        while (properties.hasNext()) {
+            final JsonNode prop = properties.next();
+            if (isObjectDefinition(prop)) {
+                hasAllOfInChildDefinition = injectAdditionalPropertiesDirectiveIntoTree(prop) || hasAllOfInChildDefinition;
+            } else if (isArrayDefinition(prop)) {
+                final JsonNode items = itemsDefinition(prop);
+                if (isObjectDefinition(items)) {
+                    hasAllOfInChildDefinition = injectAdditionalPropertiesDirectiveIntoTree(items) || hasAllOfInChildDefinition;
+                }
+            }
+        }
+        return hasAllOfField(n) || hasAllOfInChildDefinition;
+    }
+
+    private static boolean hasAllOfField(final JsonNode n) {
+        return n.has(ALLOF_FIELD);
+    }
+
+    @Nullable
+    private static JsonNode itemsDefinition(final JsonNode n) {
+        return n.get("items");
+    }
+
+    private static boolean isObjectDefinition(@Nullable final JsonNode n) {
+        if (n == null) {
+            return false;
+        }
+        final JsonNode type = n.get(TYPE_FIELD);
+        return type != null && type.textValue().equalsIgnoreCase("object");
+    }
+
+    private static boolean isArrayDefinition(@Nullable final JsonNode n) {
+        if (n == null) {
+            return false;
+        }
+        final JsonNode type = n.get(TYPE_FIELD);
+        return type != null && type.textValue().equalsIgnoreCase("array");
+    }
+
+    private static void disableAdditionalProperties(final ObjectNode n) {
+        n.set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
+    }
+
+    private static Iterator<JsonNode> properties(final JsonNode n) {
+        if (n.has(PROPERTIES_FIELD)) {
+            return n.get(PROPERTIES_FIELD).iterator();
+        }
+        return Collections.<JsonNode>emptyList().iterator();
+    }
+
+    private static boolean hasDiscriminatorField(final JsonNode n) {
+        return n.has(DISCRIMINATOR_FIELD);
+    }
+
+    private static boolean hasAdditionalFieldSet(final JsonNode n) {
+        return n.has(ADDITIONAL_PROPERTIES_FIELD);
     }
 
     private JsonNode readContent(@Nonnull final String value, @Nonnull final Schema schema) throws IOException {
