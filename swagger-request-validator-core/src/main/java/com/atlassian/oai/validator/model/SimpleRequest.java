@@ -2,12 +2,23 @@ package com.atlassian.oai.validator.model;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
+import org.apache.http.client.utils.DateUtils;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.text.DateFormat;
+import java.text.FieldPosition;
+import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.TemporalAccessor;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -383,13 +394,32 @@ public class SimpleRequest implements Request {
         }
 
         static Collection<String> splitHeaderValue(final String value) {
-            //Do not split a date in RFC 822 format
-            if (value.matches("^(?:(Sun|Mon|Tue|Wed|Thu|Fri|Sat),\\s+)"+
-                    "?(0[1-9]|[1-2]?[0-9]|3[01])\\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\s+"+
-                    "(19[0-9]{2}|[2-9][0-9]{3})\\s+(2[0-3]|[0-1][0-9]):([0-5][0-9])(?::(60|[0-5][0-9]))?\\s+(GMT|UTC)$")) {
+            System.out.println(value);
+            //Do not split a date in RFC 1123 format
+            if (value == null) {
+                return Collections.singleton(null);
+            }
+            try {
+                LocalDateTime.parse(value, DateTimeFormatter.RFC_1123_DATE_TIME);
                 return Arrays.asList(value);
-            } else {
-                return value != null ? Arrays.asList(value.split("\\s*,\\s*")) : Collections.singleton(null);
+            } catch (DateTimeParseException dtpe) {
+                String[] split = value.split("\\s*,\\s*");
+
+                //check if multiple dates
+                List<String> dates = new ArrayList<>();
+                if (split.length % 2 == 0) {
+                    for (int i = 0; i < split.length; i = i + 2) {
+                        try {
+                            String possibleDate = split[i] + ", " + split[i + 1];
+                            LocalDateTime.parse(split[i] + ", " + split[i + 1], DateTimeFormatter.RFC_1123_DATE_TIME);
+                            dates.add(possibleDate);
+                        } catch (DateTimeParseException dtpe2) {
+                            break;
+                        }
+                    }
+                    return dates;
+                }
+                return Arrays.asList(split);
             }
         }
     }
