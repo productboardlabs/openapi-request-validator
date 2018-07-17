@@ -2,7 +2,6 @@ package com.atlassian.oai.validator.model;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
-import org.apache.http.client.utils.DateUtils;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -352,33 +351,28 @@ public class SimpleRequest implements Request {
         }
 
         static Collection<String> splitHeaderValue(final String value) {
-            System.out.println(value);
-            //Do not split a date in RFC 1123 format
             if (value == null) {
                 return Collections.singleton(null);
             }
-            try {
-                LocalDateTime.parse(value, DateTimeFormatter.RFC_1123_DATE_TIME);
-                return Arrays.asList(value);
-            } catch (DateTimeParseException dtpe) {
-                String[] split = value.split("\\s*,\\s*");
+            String[] split = value.split("\\s*,\\s*");
 
-                //check if multiple dates
-                List<String> dates = new ArrayList<>();
-                if (split.length % 2 == 0) {
-                    for (int i = 0; i < split.length; i = i + 2) {
-                        try {
-                            String possibleDate = split[i] + ", " + split[i + 1];
-                            LocalDateTime.parse(split[i] + ", " + split[i + 1], DateTimeFormatter.RFC_1123_DATE_TIME);
-                            dates.add(possibleDate);
-                        } catch (DateTimeParseException dtpe2) {
-                            break;
-                        }
+            //check if dates in RFC_1123
+            List<String> dates = new ArrayList<>();
+            if (split.length % 2 == 0) {
+                for (int i = 0; i < split.length; i = i + 2) {
+                    try {
+                        String possibleDate = split[i] + ", " + split[i + 1];
+                        LocalDateTime.parse(split[i] + ", " + split[i + 1], DateTimeFormatter.RFC_1123_DATE_TIME);
+                        dates.add(possibleDate);
+                    } catch (DateTimeParseException dtpe2) {
+                        break;
                     }
-                    return dates;
                 }
-                return Arrays.asList(split);
+                return dates;
             }
+            //return simple split
+            return Arrays.asList(split);
+
         }
     }
 }
