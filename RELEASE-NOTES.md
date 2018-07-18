@@ -1,3 +1,22 @@
+#v2.0.0
+
+Major release milestone. 
+
+Provides support for both Swagger v2 and OpenAPI v3 specifications.
+
+### Major changes from v1.x
+
+* Support for OpenAPI v3
+* Additional context attached to validation messages
+* Standardization of validation message keys
+* Substantial refactoring within the library
+* Bumping dependency versions
+
+### Upgrade notes
+
+* Schema validation errors now have the form `validation.{request|response}.{body|parameter}.schema.{keyword}`
+e.g. `validation.request.parameter.schema.type`
+
 #v1.4.7
 * Fixed the 'additional properties' validation for inline and nested schema definitions
 [[#131]](https://bitbucket.org/atlassian/swagger-request-validator/issues/131)
