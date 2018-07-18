@@ -45,5 +45,25 @@ public class RestAssuredResponseTest {
 
     }
 
+    @Test
+    public void contentTypeHeaderIsMappedCorrectly() {
+
+        wireMock.stubFor(any(anyUrl()).willReturn(responseDefinition().withHeader("Content-Type", "application/json").withStatus(200)));
+
+        final Response response = RestAssuredResponse.of(given()
+                .port(wireMock.port())
+                .when()
+                .get("/path")
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .extract()
+                .response());
+
+        assertThat("Content-Type must be available via general headers", response.getHeaderValue("Content-Type"), is(Optional.of("application/json")));
+        assertThat("ContentType must be available via direct method", response.getContentType(), is(Optional.of("application/json")));
+
+    }
+
 }
 
