@@ -1,3 +1,41 @@
+#v1.4.7
+* Fixed the 'additional properties' validation for inline and nested schema definitions
+[[#131]](https://bitbucket.org/atlassian/swagger-request-validator/issues/131)
+* Bumped the version of `swagger-parser` to pick up a fix for pattern validation
+[[#44]](https://bitbucket.org/atlassian/swagger-request-validator/issues/44)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/95)
+* Added response validation to the Spring MVC adaptor 
+[[#58]](https://bitbucket.org/atlassian/swagger-request-validator/issues/58)
+* Added control over 'unknown request' validation in the Spring MVC adaptor
+[[#55]](https://bitbucket.org/atlassian/swagger-request-validator/issues/55)
+
+#v1.4.6
+* Added support for HAL+JSON content type
+[[#127]](https://bitbucket.org/atlassian/swagger-request-validator/issues/127)
+* Added an overloaded constructor to allow the host/port of the `ValidatedPactProviderRule` to be specified
+[[#72]](https://bitbucket.org/atlassian/swagger-request-validator/issues/72)
+* Ensuring the stream is closed after reading the request/response body in the `SwaggerRequestValidationService`  
+[[#132]](https://bitbucket.org/atlassian/swagger-request-validator/issues/132)
+
+#v1.4.5
+* Fixed validation of non-string enums in request/response bodies. 
+[[#118]](https://bitbucket.org/atlassian/swagger-request-validator/issues/118)
+* Removed usage of `servletRequest.getContentLengthLong()` to be compatible with Servlet 2.0
+[[#114]](https://bitbucket.org/atlassian/swagger-request-validator/issues/114)
+* Added support for dynamic path matching to the operation resolver.
+[[#121]](https://bitbucket.org/atlassian/swagger-request-validator/issues/121)
+
+#v1.4.4
+* Added support for basic auth in the Pact Provider validator for retrieving Pacts from a 
+broker that requires authentication
+[[#122]](https://bitbucket.org/atlassian/swagger-request-validator/issues/122)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/79)
+
+#v1.4.3
+* Bumped version of `json-schema-validator` to pick up a bugfix
+[[#120]](https://bitbucket.org/atlassian/swagger-request-validator/issues/120)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/77)
+
 #v1.4.2
 * Stopped trying to validate non-JSON request/response bodies with the JSON schema validator
 [[#65]](https://bitbucket.org/atlassian/swagger-request-validator/issues/65)
