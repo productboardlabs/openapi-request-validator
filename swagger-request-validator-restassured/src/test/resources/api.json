@@ -28,6 +28,17 @@
           }
         }
       }
+    },
+    "/empty": {
+      "post": {
+        "summary": "Empty response",
+        "operationId": "empty response",
+        "responses": {
+          "204": {
+            "description": "Empty response"
+          }
+        }
+      }
     }
   },
   "definitions": {
