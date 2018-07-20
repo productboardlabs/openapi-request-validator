@@ -5,19 +5,12 @@ import com.google.common.collect.MultimapBuilder;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.text.DateFormat;
-import java.text.FieldPosition;
-import java.text.ParsePosition;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -396,25 +389,31 @@ public class SimpleRequest implements Request {
             if (value == null) {
                 return Collections.singleton(null);
             }
-            String[] split = value.split("\\s*,\\s*");
+            final String[] split = value.split("\\s*,\\s*");
 
             //check if dates in RFC_1123
-            List<String> dates = new ArrayList<>();
-            if (split.length % 2 == 0) {
-                for (int i = 0; i < split.length; i = i + 2) {
-                    try {
-                        String possibleDate = split[i] + ", " + split[i + 1];
-                        LocalDateTime.parse(split[i] + ", " + split[i + 1], DateTimeFormatter.RFC_1123_DATE_TIME);
-                        dates.add(possibleDate);
-                    } catch (DateTimeParseException dtpe2) {
-                        break;
-                    }
+            final List<String> result = new ArrayList<>();
+            int i = 0;
+            while (i < split.length) {
+                // Last element in the split
+                if (i == split.length - 1) {
+                    result.add(split[i]);
+                    break;
                 }
-                return dates;
-            }
-            //return simple split
-            return Arrays.asList(split);
 
+                try {
+                    // Check to see if we can make an RFC_1123 Date from the next two items
+                    final String possibleDate = split[i] + ", " + split[i + 1];
+                    LocalDateTime.parse(split[i] + ", " + split[i + 1], DateTimeFormatter.RFC_1123_DATE_TIME);
+                    result.add(possibleDate);
+                    i += 2;
+                } catch (final DateTimeParseException e) {
+                    // If not, add the item and continue
+                    result.add(split[i]);
+                    i += 1;
+                }
+            }
+            return result;
         }
     }
 }
