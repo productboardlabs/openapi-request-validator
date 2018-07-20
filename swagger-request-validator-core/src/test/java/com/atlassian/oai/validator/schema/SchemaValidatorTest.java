@@ -510,6 +510,16 @@ public class SchemaValidatorTest {
     }
 
     @Test
+    public void validate_withNoComponentsBlock_shouldPass_whenValid() {
+        final SchemaValidator classUnderTest = validator("/oai/v3/api-no-components.yaml");
+
+        final String value = "{\"id\":123}";
+        final Schema schema = new ObjectSchema().addProperties("id", new IntegerSchema());
+
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
+    }
+
+    @Test
     public void validate_withNumberProperty_shouldPass_whenValid() {
         final String value = "1";
         final Schema schema = new NumberSchema();

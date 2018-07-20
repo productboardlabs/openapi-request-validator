@@ -161,7 +161,7 @@ public class SchemaValidator {
 
         if (api != null) {
             if (definitions == null) {
-                definitions = api.getComponents().getSchemas() == null ?
+                definitions = (api.getComponents() == null || api.getComponents().getSchemas() == null) ?
                         Json.mapper().createObjectNode() :
                         Json.mapper().readTree(Json.pretty(api.getComponents().getSchemas()));
                 definitions.forEach(n -> {
