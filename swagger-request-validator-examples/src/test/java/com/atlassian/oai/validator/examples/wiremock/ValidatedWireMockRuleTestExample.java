@@ -24,10 +24,10 @@ import static org.junit.Assert.assertThat;
  * gives early (unit-test level) feedback if a breaking change is made to a provider's API, allowing you to
  * respond accordingly.
  *
- * @see SwaggerValidatedWireMockListenerTestExample
+ * @see ValidatedWireMockListenerTestExample
  * @see <a href="http://wiremock.org/">WireMock</a>
  */
-public class SwaggerValidatedWireMockRuleTestExample {
+public class ValidatedWireMockRuleTestExample {
 
     private static final String SWAGGER_JSON_URL = "http://petstore.swagger.io/v2/swagger.json";
     private static final int PORT = 9999;

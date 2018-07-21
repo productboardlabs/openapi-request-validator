@@ -10,10 +10,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- *
- */
-public class SwaggerValidatorTestExample {
+public class OpenApiValidatorTestExample {
     private static final String SWAGGER_JSON_URL = "http://petstore.swagger.io/v2/swagger.json";
 
     /**
