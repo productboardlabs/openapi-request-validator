@@ -15,25 +15,25 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class SwaggerValidationFilterTest {
+public class OpenApiValidationFilterTest {
 
     private static final String FILENAME_API_WITH_POST = "api-with-post.json";
 
-    private SwaggerValidationFilter classUnderTest = new SwaggerValidationFilter("api.json");
+    private OpenApiValidationFilter classUnderTest = new OpenApiValidationFilter("api.json");
 
     @Test(expected = IllegalArgumentException.class)
     public void create_withNullString_throwsException() {
-        new SwaggerValidationFilter((String) null);
+        new OpenApiValidationFilter((String) null);
     }
 
     @Test(expected = NullPointerException.class)
     public void create_withNullSwaggerRequestResponseValidator_throwsException() {
-        new SwaggerValidationFilter((OpenApiInteractionValidator) null);
+        new OpenApiValidationFilter((OpenApiInteractionValidator) null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void create_withEmpty_throwsException() {
-        new SwaggerValidationFilter("");
+        new OpenApiValidationFilter("");
     }
 
     @Test
@@ -44,7 +44,7 @@ public class SwaggerValidationFilterTest {
                 notNullValue());
     }
 
-    @Test (expected = SwaggerValidationFilter.SwaggerValidationException.class)
+    @Test(expected = OpenApiValidationFilter.OpenApiValidationException.class)
     public void filter_throwsException_ifValidationFails() {
         assertThat(classUnderTest.filter(
                 requestSpec("GET", "/hello/bob"), null,
@@ -62,12 +62,12 @@ public class SwaggerValidationFilterTest {
 
     /**
      * Test result before fix:
-     * com.atlassian.oai.validator.restassured.SwaggerValidationFilter$SwaggerValidationException: Validation failed.
+     * com.atlassian.oai.validator.restassured.OpenApiValidationFilter$OpenApiValidationException: Validation failed.
      * [ERROR] POST operation not allowed on path '/hello/{name}'.
      */
     @Test
     public void filter_validationTakesMethodIntoAccount() {
-        classUnderTest = new SwaggerValidationFilter(FILENAME_API_WITH_POST);
+        classUnderTest = new OpenApiValidationFilter(FILENAME_API_WITH_POST);
         assertThat(classUnderTest.filter(
             requestSpec("POST", "/hello/create", "{\"name\" : \"John Doe\"}"), null,
             response(201, "{\"message\":\"Hello !\"}")),
