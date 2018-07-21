@@ -1,18 +1,16 @@
 package com.atlassian.oai.validator.mockmvc;
 
+import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.report.SimpleValidationReportFormat;
 import com.atlassian.oai.validator.report.ValidationReport;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.ResultMatcher;
 
 /**
  * Factory for Swagger / OpenAPI assertions.
- *
- * @deprecated Replaced with {@link OpenApiMatchers}
  */
-@Deprecated
-public class SwaggerMatchers {
-
-    private final OpenApiMatchers matchers = new OpenApiMatchers();
+public class OpenApiMatchers {
 
     /**
      * Assert the result can be validated against the given Swagger v2 or OpenAPI v3 specification.
@@ -37,23 +35,27 @@ public class SwaggerMatchers {
      * </pre>
      *
      * @param specUrlOrPayload The location of the Swagger JSON specification to use in the validator.
-     *
-     * @deprecated Use {@link OpenApiMatchers#isValid(String)} instead
      */
     public ResultMatcher isValid(final String specUrlOrPayload) {
-        try {
-            return matchers.isValid(specUrlOrPayload);
-        } catch (final OpenApiMatchers.OpenApiValidationException e) {
-            throw new SwaggerValidationException(e.getValidationReport());
-        }
+        final OpenApiInteractionValidator validator = OpenApiInteractionValidator
+                .createFor(specUrlOrPayload)
+                .build();
+
+        return result -> {
+            final MockHttpServletRequest request = result.getRequest();
+            final MockHttpServletResponse response = result.getResponse();
+            final ValidationReport validationReport = validator.validate(MockMvcRequest.of(request), MockMvcResponse.of(response));
+            if (validationReport.hasErrors()) {
+                throw new OpenApiValidationException(validationReport);
+            }
+        };
     }
 
-    @Deprecated
-    public static class SwaggerValidationException extends RuntimeException {
+    public static class OpenApiValidationException extends RuntimeException {
 
         private final ValidationReport report;
 
-        public SwaggerValidationException(final ValidationReport report) {
+        public OpenApiValidationException(final ValidationReport report) {
             super(SimpleValidationReportFormat.getInstance().apply(report));
             this.report = report;
         }
@@ -62,4 +64,5 @@ public class SwaggerMatchers {
             return report;
         }
     }
+
 }

@@ -1,6 +1,6 @@
 package com.atlassian.oai.validator.restassured;
 
-import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
+import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.report.SimpleValidationReportFormat;
 import com.atlassian.oai.validator.report.ValidationReport;
 import io.restassured.filter.Filter;
@@ -33,15 +33,15 @@ import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
  */
 public class SwaggerValidationFilter implements Filter {
 
-    private final SwaggerRequestResponseValidator validator;
+    private final OpenApiInteractionValidator validator;
 
     public SwaggerValidationFilter(final String swaggerJsonUrl) {
         requireNonEmpty(swaggerJsonUrl, "A Swagger URL is required");
 
-        validator = SwaggerRequestResponseValidator.createFor(swaggerJsonUrl).build();
+        validator = OpenApiInteractionValidator.createFor(swaggerJsonUrl).build();
     }
 
-    public SwaggerValidationFilter(final SwaggerRequestResponseValidator validator) {
+    public SwaggerValidationFilter(final OpenApiInteractionValidator validator) {
         Objects.requireNonNull(validator, "A validator is required");
 
         this.validator = validator;

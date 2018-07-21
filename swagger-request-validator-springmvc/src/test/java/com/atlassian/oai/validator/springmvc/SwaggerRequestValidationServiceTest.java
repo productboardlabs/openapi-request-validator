@@ -1,6 +1,6 @@
 package com.atlassian.oai.validator.springmvc;
 
-import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
+import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleRequest;
@@ -38,7 +38,7 @@ public class SwaggerRequestValidationServiceTest {
 
     private SwaggerRequestValidationService classUnderTest;
 
-    private SwaggerRequestResponseValidator requestValidator;
+    private OpenApiInteractionValidator requestValidator;
 
     private static Map<String, Collection<String>> getHeadersFromResponse(final Response response) {
         final Field headersField = ReflectionUtils.findField(SimpleResponse.class, "headers");
@@ -48,13 +48,13 @@ public class SwaggerRequestValidationServiceTest {
 
     @Before
     public void setUp() {
-        requestValidator = mock(SwaggerRequestResponseValidator.class);
+        requestValidator = mock(OpenApiInteractionValidator.class);
         classUnderTest = new SwaggerRequestValidationService(requestValidator);
     }
 
     @Test(expected = NullPointerException.class)
     public void constructor_failsWithoutRequiredValidator() throws IOException {
-        new SwaggerRequestValidationService((SwaggerRequestResponseValidator) null);
+        new SwaggerRequestValidationService((OpenApiInteractionValidator) null);
     }
 
     @Test

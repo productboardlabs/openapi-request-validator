@@ -1,6 +1,6 @@
 package com.atlassian.oai.validator.whitelist;
 
-import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
+import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.model.SimpleResponse;
@@ -19,7 +19,7 @@ public class ValidationErrorWhitelistingTest {
 
     @Test
     public void whitelistedRequestFailuresShouldBeIgnored() {
-        final SwaggerRequestResponseValidator classUnderTest = SwaggerRequestResponseValidator
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
                 .createFor("/oai/v2/api-users.json")
                 .withWhitelist(ValidationErrorsWhitelist.create()
                         .withRule("Ignore paths", WhitelistRules.messageContains("No API path"))
@@ -35,7 +35,7 @@ public class ValidationErrorWhitelistingTest {
 
     @Test
     public void whitelistedResponseFailuresShouldBeIgnored() {
-        final SwaggerRequestResponseValidator classUnderTest = SwaggerRequestResponseValidator
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
                 .createFor("/oai/v2/api-users.json")
                 .withWhitelist(ValidationErrorsWhitelist.create()
                         .withRule("Ignore PATCH operation missing", WhitelistRules.messageContains("PATCH operation not allowed"))

@@ -16,6 +16,7 @@ Provides support for both Swagger v2 and OpenAPI v3 specifications.
 
 * Schema validation errors now have the form `validation.{request|response}.{body|parameter}.schema.{keyword}`
 e.g. `validation.request.parameter.schema.type`
+* Multi-part formdata validation is currently not supported. This will be re-added in an upcoming release.
 
 #v1.4.7
 * Fixed the 'additional properties' validation for inline and nested schema definitions

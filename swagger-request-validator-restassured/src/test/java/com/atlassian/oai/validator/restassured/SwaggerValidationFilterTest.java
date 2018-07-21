@@ -1,6 +1,6 @@
 package com.atlassian.oai.validator.restassured;
 
-import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
+import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import io.restassured.filter.FilterContext;
 import io.restassured.http.Header;
 import io.restassured.http.Headers;
@@ -28,7 +28,7 @@ public class SwaggerValidationFilterTest {
 
     @Test(expected = NullPointerException.class)
     public void create_withNullSwaggerRequestResponseValidator_throwsException() {
-        new SwaggerValidationFilter((SwaggerRequestResponseValidator) null);
+        new SwaggerValidationFilter((OpenApiInteractionValidator) null);
     }
 
     @Test(expected = IllegalArgumentException.class)

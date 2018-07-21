@@ -24,7 +24,7 @@ Designed to be be standalone and used independently of any HTTP library or mocki
 See the [examples module](https://bitbucket.org/atlassian/swagger-request-validator/src/master/swagger-request-validator-examples/?at=master)
 for examples on how the library is used.
 
-The main entry point to the library is the `com.atlassian.oai.validator.SwaggerRequestResponseValidator`.
+The main entry point to the library is the `com.atlassian.oai.validator.OpenApiInteractionValidator`.
 This validator takes a specification file (local or remote URL) and can then be used to validate request/response pairs.
 
 The validator returns a `com.atlassian.oai.validator.report.ValidationReport` which will contain any errors that

@@ -1,6 +1,6 @@
 package com.atlassian.oai.validator.springmvc;
 
-import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
+import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleRequest;
@@ -24,18 +24,18 @@ import java.util.Objects;
 
 class SwaggerRequestValidationService {
 
-    private final SwaggerRequestResponseValidator swaggerRequestResponseValidator;
+    private final OpenApiInteractionValidator validator;
 
     SwaggerRequestValidationService(final EncodedResource restInterface) throws IOException {
-        this(SwaggerRequestResponseValidator
+        this(OpenApiInteractionValidator
                 .createFor(readReader(restInterface.getReader()))
                 .withLevelResolver(SpringMVCLevelResolverFactory.create())
                 .build());
     }
 
-    SwaggerRequestValidationService(final SwaggerRequestResponseValidator swaggerRequestResponseValidator) {
-        Objects.requireNonNull(swaggerRequestResponseValidator, "A Swagger request response validator is required.");
-        this.swaggerRequestResponseValidator = swaggerRequestResponseValidator;
+    SwaggerRequestValidationService(final OpenApiInteractionValidator validator) {
+        Objects.requireNonNull(validator, "A Swagger request response validator is required.");
+        this.validator = validator;
     }
 
     /**
@@ -90,7 +90,7 @@ class SwaggerRequestValidationService {
      * @return the {@link ValidationReport} for the validated {@link Request}
      */
     ValidationReport validateRequest(final Request request) {
-        return swaggerRequestResponseValidator.validateRequest(request);
+        return validator.validateRequest(request);
     }
 
     /**
@@ -102,7 +102,7 @@ class SwaggerRequestValidationService {
     ValidationReport validateResponse(final HttpServletRequest servletRequest, final Response response) {
         final Request.Method method = Request.Method.valueOf(servletRequest.getMethod());
         final String path = getUriComponents(servletRequest).getPath();
-        return swaggerRequestResponseValidator.validateResponse(path, method, response);
+        return validator.validateResponse(path, method, response);
     }
 
     private static String readReader(final Reader reader) throws IOException {

@@ -74,12 +74,12 @@ To get better control over the validation a custom `SwaggerRequestResponseValida
 ```java
     @Autowired
     public SwaggerRequestValidationConfig(@Value("classpath:swagger-api.json") final Resource swaggerApi) throws IOException {
-        final SwaggerRequestResponseValidator swaggerRequestResponseValidator = SwaggerRequestResponseValidator
+        final SwaggerRequestResponseValidator validator = SwaggerRequestResponseValidator
                 .createFor(swaggerSchema.getURL().getPath())
                 .withLevelResolver(SpringMVCLevelResolverFactory.create())
                 .withBasePathOverride("/v1")
                 .build();
-        this.swaggerValidationInterceptor = new SwaggerValidationInterceptor(swaggerRequestResponseValidator);
+        this.swaggerValidationInterceptor = new SwaggerValidationInterceptor(validator);
     }
 ```
 

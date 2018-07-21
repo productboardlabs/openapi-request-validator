@@ -5,7 +5,7 @@ import au.com.dius.pact.model.PactReader;
 import au.com.dius.pact.model.RequestResponseInteraction;
 import au.com.dius.pact.provider.ConsumerInfo;
 import au.com.dius.pact.provider.broker.PactBrokerClient;
-import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
+import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
@@ -51,21 +51,21 @@ import static java.util.stream.Collectors.toList;
  * </pre>
  *
  * @see <a href="https://docs.pact.io/documentation/sharings_pacts.html">Pact broker</a>
- * @see SwaggerRequestResponseValidator
+ * @see OpenApiInteractionValidator
  * @see ValidatedPactProviderRule
  */
 public class PactProviderValidator {
 
     private static final Logger log = LoggerFactory.getLogger(PactProviderValidator.class);
 
-    private final SwaggerRequestResponseValidator validator;
+    private final OpenApiInteractionValidator validator;
     private final Collection<ConsumerInfo> consumers = new ArrayList<>();
 
     private PactProviderValidator(@Nonnull final String swaggerJsonUrl,
                                   @Nullable final Collection<ConsumerInfo> consumers) {
         requireNonNull(swaggerJsonUrl, "A Swagger JSON Url is required");
 
-        this.validator = SwaggerRequestResponseValidator
+        this.validator = OpenApiInteractionValidator
                 .createFor(swaggerJsonUrl)
                 .withLevelResolver(PactLevelResolverFactory.create())
                 .build();

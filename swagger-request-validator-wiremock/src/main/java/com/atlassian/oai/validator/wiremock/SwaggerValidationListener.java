@@ -1,6 +1,6 @@
 package com.atlassian.oai.validator.wiremock;
 
-import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
+import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.report.SimpleValidationReportFormat;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.github.tomakehurst.wiremock.http.Request;
@@ -53,11 +53,11 @@ public class SwaggerValidationListener implements RequestListener {
 
     private static final Logger log = LoggerFactory.getLogger(SwaggerValidationListener.class);
 
-    private final SwaggerRequestResponseValidator validator;
+    private final OpenApiInteractionValidator validator;
     private ValidationReport report = ValidationReport.empty();
 
     public SwaggerValidationListener(final String swaggerJsonUrl) {
-        validator = SwaggerRequestResponseValidator.createFor(swaggerJsonUrl).build();
+        validator = OpenApiInteractionValidator.createFor(swaggerJsonUrl).build();
     }
 
     @Override
