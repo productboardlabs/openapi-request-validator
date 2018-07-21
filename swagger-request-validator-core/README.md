@@ -31,8 +31,8 @@ The validator returns a `com.atlassian.oai.validator.report.ValidationReport` wh
 occurred during the validation. These can be used to generate a report for users etc.
 
 ```java
-final SwaggerRequestResponseValidator validator = SwaggerRequestResponseValidator
-        .createFor(swaggerJsonUrl)
+final OpenApiInteractionValidator validator = OpenApiInteractionValidator
+        .createFor(specUrl)
         .withBasePathOverride(basePathOverride)
         .build;
 final ValidationReport report = validator.validate(request, response);
@@ -95,11 +95,11 @@ There are 4 options for controlling validation behavior in your project.
 
 #### Option 1 - Programmatically ####
 
-When creating a `SwaggerRequestResponseValidator` instance you can specify a `LevelResolver` instance 
+When creating a `OpenApiInteractionValidator` instance you can specify a `LevelResolver` instance 
 with programmatically added validation level configuration.
 
 ```
-this.validator = SwaggerRequestResponseValidator
+this.validator = OpenApiInteractionValidator
         .createFor(swaggerJsonUrl)
         .withLevelResolver(
                 LevelResolver.create()
@@ -200,7 +200,7 @@ Once you have a whitelist, simply pass it on to the validator builder:
 ```java
 ValidationErrorsWhitelist whitelist = ...
 
-final SwaggerRequestResponseValidator swaggerValidator = SwaggerRequestResponseValidator.createFor(spec)
+final OpenApiInteractionValidator validator = OpenApiInteractionValidator.createFor(spec)
                 .withWhitelist(whitelist)
                 .build();
 ```
