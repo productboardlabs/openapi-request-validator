@@ -8,14 +8,14 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
  * interactions against a Swagger API specification.
  * <p>
  * If a validation failure is found, will throw a
- * {@link com.atlassian.oai.validator.wiremock.SwaggerValidationListener.SwaggerValidationException} that will
+ * {@link OpenApiValidationListener.OpenApiValidationException} that will
  * fail the test.
  *
- * @see SwaggerValidationListener
+ * @see OpenApiValidationListener
  */
 public class ValidatedWireMockRule extends WireMockRule {
 
-    private SwaggerValidationListener validationListener;
+    private OpenApiValidationListener validationListener;
 
     public ValidatedWireMockRule(final String swaggerJsonUrl, final Options options) {
         super(options);
@@ -42,19 +42,19 @@ public class ValidatedWireMockRule extends WireMockRule {
     }
 
     private void setupValidationListener(final String swaggerJsonUrl) {
-        this.validationListener = new SwaggerValidationListener(swaggerJsonUrl);
-        this.addMockServiceRequestListener(validationListener);
+        validationListener = new OpenApiValidationListener(swaggerJsonUrl);
+        addMockServiceRequestListener(validationListener);
     }
 
     @Override
     protected void before() {
-        this.validationListener.reset();
+        validationListener.reset();
     }
 
     @Override
     protected void after() {
         try {
-            this.validationListener.assertValidationPassed();
+            validationListener.assertValidationPassed();
         } finally {
             // Need to ensure the wiremock server is shutdown if the assertion fails
             stop();

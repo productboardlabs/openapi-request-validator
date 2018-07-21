@@ -1,6 +1,6 @@
 package com.atlassian.oai.validator.examples.wiremock;
 
-import com.atlassian.oai.validator.wiremock.SwaggerValidationListener;
+import com.atlassian.oai.validator.wiremock.OpenApiValidationListener;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.restassured.response.Response;
@@ -15,7 +15,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 /**
- * An example test that uses the {@link SwaggerValidationListener} to validate WireMock interactions
+ * An example test that uses the {@link OpenApiValidationListener} to validate WireMock interactions
  * against a Swagger API specification.
  * <p>
  * This allows developers to have confidence that the mocks you are setting up in your tests reflect reality. It also
@@ -33,18 +33,18 @@ public class SwaggerValidatedWireMockListenerTestExample {
 
     @Rule
     public WireMockRule wireMockRule;
-    private SwaggerValidationListener validationListener;
+    private final OpenApiValidationListener validationListener;
 
     public SwaggerValidatedWireMockListenerTestExample() {
-        this.validationListener = new SwaggerValidationListener(SWAGGER_JSON_URL);
+        validationListener = new OpenApiValidationListener(SWAGGER_JSON_URL);
 
-        this.wireMockRule = new WireMockRule(PORT);
-        this.wireMockRule.addMockServiceRequestListener(validationListener);
+        wireMockRule = new WireMockRule(PORT);
+        wireMockRule.addMockServiceRequestListener(validationListener);
     }
 
     @After
     public void teardown() {
-        this.validationListener.reset();
+        validationListener.reset();
     }
 
     /**

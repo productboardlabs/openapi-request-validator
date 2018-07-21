@@ -30,7 +30,7 @@ public class ValidatedWireMockRuleTest {
         classUnderTest.apply(getValidInteractionTestMethod(), null, null).evaluate();
     }
 
-    @Test(expected = SwaggerValidationListener.SwaggerValidationException.class)
+    @Test(expected = OpenApiValidationListener.OpenApiValidationException.class)
     public void testWithInvalidInteraction() throws Throwable {
         classUnderTest.apply(getInvalidInteractionTestMethod(), null, null).evaluate();
     }
@@ -68,7 +68,7 @@ public class ValidatedWireMockRuleTest {
     }
 
     private InvokeMethod getTestMethod(final String methodName) throws NoSuchMethodException {
-        final FrameworkMethod testMethod = new FrameworkMethod(this.getClass().getMethod(methodName));
+        final FrameworkMethod testMethod = new FrameworkMethod(getClass().getMethod(methodName));
         return new InvokeMethod(testMethod, this);
     }
 

@@ -3,6 +3,7 @@ package com.atlassian.oai.validator.restassured;
 import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.report.SimpleValidationReportFormat;
 import com.atlassian.oai.validator.report.ValidationReport;
+import io.restassured.filter.Filter;
 import io.restassured.filter.FilterContext;
 import io.restassured.response.Response;
 import io.restassured.specification.FilterableRequestSpecification;
@@ -12,7 +13,7 @@ import io.restassured.specification.FilterableResponseSpecification;
  * @deprecated Replaced with {@link OpenApiValidationFilter}
  */
 @Deprecated
-public class SwaggerValidationFilter {
+public class SwaggerValidationFilter implements Filter {
 
     private final OpenApiValidationFilter delegate;
 
@@ -24,6 +25,7 @@ public class SwaggerValidationFilter {
         delegate = new OpenApiValidationFilter(validator);
     }
 
+    @Override
     public Response filter(final FilterableRequestSpecification requestSpec,
                            final FilterableResponseSpecification responseSpec,
                            final FilterContext ctx) {
