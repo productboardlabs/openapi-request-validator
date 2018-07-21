@@ -1,6 +1,6 @@
 package com.atlassian.oai.validator.restassured;
 
-import com.atlassian.oai.validator.OpenApiInteractionValidator;
+import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
 import com.atlassian.oai.validator.report.SimpleValidationReportFormat;
 import com.atlassian.oai.validator.report.ValidationReport;
 import io.restassured.filter.Filter;
@@ -21,8 +21,8 @@ public class SwaggerValidationFilter implements Filter {
         delegate = new OpenApiValidationFilter(swaggerJsonUrl);
     }
 
-    public SwaggerValidationFilter(final OpenApiInteractionValidator validator) {
-        delegate = new OpenApiValidationFilter(validator);
+    public SwaggerValidationFilter(final SwaggerRequestResponseValidator validator) {
+        delegate = new OpenApiValidationFilter(validator.getValidator());
     }
 
     @Override

@@ -34,9 +34,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
-public class SwaggerRequestValidationServiceTest {
+public class OpenApiValidationServiceTest {
 
-    private SwaggerRequestValidationService classUnderTest;
+    private OpenApiValidationService classUnderTest;
 
     private OpenApiInteractionValidator requestValidator;
 
@@ -49,12 +49,12 @@ public class SwaggerRequestValidationServiceTest {
     @Before
     public void setUp() {
         requestValidator = mock(OpenApiInteractionValidator.class);
-        classUnderTest = new SwaggerRequestValidationService(requestValidator);
+        classUnderTest = new OpenApiValidationService(requestValidator);
     }
 
     @Test(expected = NullPointerException.class)
     public void constructor_failsWithoutRequiredValidator() throws IOException {
-        new SwaggerRequestValidationService((OpenApiInteractionValidator) null);
+        new OpenApiValidationService((OpenApiInteractionValidator) null);
     }
 
     @Test
@@ -63,7 +63,7 @@ public class SwaggerRequestValidationServiceTest {
         when(encodedResource.getReader())
                 .thenReturn(new InputStreamReader(getClass().getResourceAsStream("/api-spring-test.json")));
 
-        final SwaggerRequestValidationService service = new SwaggerRequestValidationService(encodedResource);
+        final OpenApiValidationService service = new OpenApiValidationService(encodedResource);
         assertThat(service, notNullValue());
     }
 
@@ -73,7 +73,7 @@ public class SwaggerRequestValidationServiceTest {
         final EncodedResource encodedResource = mock(EncodedResource.class);
         when(encodedResource.getReader())
                 .thenReturn(new InputStreamReader(getClass().getResourceAsStream("/api-spring-test.json")));
-        final SwaggerRequestValidationService service = new SwaggerRequestValidationService(encodedResource);
+        final OpenApiValidationService service = new OpenApiValidationService(encodedResource);
         assertThat(service, notNullValue());
 
         // and:

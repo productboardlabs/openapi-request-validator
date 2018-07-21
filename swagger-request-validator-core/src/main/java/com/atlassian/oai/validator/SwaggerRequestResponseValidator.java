@@ -40,4 +40,8 @@ public class SwaggerRequestResponseValidator {
     public ValidationReport validateResponse(@Nonnull final String path, @Nonnull final Request.Method method, @Nonnull final Response response) {
         return validator.validateResponse(path, method, response);
     }
+
+    public OpenApiInteractionValidator getValidator() {
+        return validator;
+    }
 }

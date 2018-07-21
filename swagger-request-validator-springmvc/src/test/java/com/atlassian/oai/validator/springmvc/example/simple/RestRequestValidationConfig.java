@@ -1,7 +1,7 @@
 package com.atlassian.oai.validator.springmvc.example.simple;
 
-import com.atlassian.oai.validator.springmvc.SwaggerValidationFilter;
-import com.atlassian.oai.validator.springmvc.SwaggerValidationInterceptor;
+import com.atlassian.oai.validator.springmvc.OpenApiValidationFilter;
+import com.atlassian.oai.validator.springmvc.OpenApiValidationInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -17,21 +17,21 @@ import java.io.IOException;
 @Configuration
 public class RestRequestValidationConfig extends WebMvcConfigurerAdapter {
 
-    private final SwaggerValidationInterceptor swaggerValidationInterceptor;
+    private final OpenApiValidationInterceptor openApiValidationInterceptor;
 
     @Autowired
     public RestRequestValidationConfig(@Value("classpath:api-spring-test.json") final Resource swaggerSchema) throws IOException {
         final EncodedResource swaggerResource = new EncodedResource(swaggerSchema, "UTF-8");
-        this.swaggerValidationInterceptor = new SwaggerValidationInterceptor(swaggerResource);
+        openApiValidationInterceptor = new OpenApiValidationInterceptor(swaggerResource);
     }
 
     @Bean
     public Filter swaggerValidationFilter() {
-        return new SwaggerValidationFilter(true, true);
+        return new OpenApiValidationFilter(true, true);
     }
 
     @Override
     public void addInterceptors(final InterceptorRegistry registry) {
-        registry.addInterceptor(swaggerValidationInterceptor);
+        registry.addInterceptor(openApiValidationInterceptor);
     }
 }
