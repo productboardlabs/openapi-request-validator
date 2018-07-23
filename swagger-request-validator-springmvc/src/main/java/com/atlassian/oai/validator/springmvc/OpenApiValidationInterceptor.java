@@ -50,7 +50,7 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
      * @return {@code true} if the request is valid against or not defined in the API specification or
      * the servlet is not a {@link ResettableRequestServletWrapper}
      *
-     * @throws Exception if the request is invalid against the Swagger schema or the requests body
+     * @throws Exception if the request is invalid against the API specification or the requests body
      * can't be read
      */
     @Override
@@ -96,7 +96,7 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
      * @param handler a handler
      * @param modelAndView a model and view
      *
-     * @throws Exception if the response is invalid against the API spec or the response body can't be read
+     * @throws Exception if the response is invalid against the API specification or the response body can't be read
      */
     @Override
     public void postHandle(final HttpServletRequest servletRequest,
