@@ -27,9 +27,9 @@ class OpenApiValidationService {
 
     private final OpenApiInteractionValidator validator;
 
-    OpenApiValidationService(final EncodedResource restInterface) throws IOException {
+    OpenApiValidationService(final EncodedResource specUrlOrPayload) throws IOException {
         this(OpenApiInteractionValidator
-                .createFor(readReader(restInterface.getReader()))
+                .createFor(readReader(specUrlOrPayload.getReader()))
                 .withLevelResolver(SpringMVCLevelResolverFactory.create())
                 .build());
     }
@@ -90,7 +90,7 @@ class OpenApiValidationService {
     }
 
     /**
-     * @param request the {@link Request} to validate against the Swagger / OpenAPI specification
+     * @param request the {@link Request} to validate against the OpenAPI / Swagger specification
      *
      * @return the {@link ValidationReport} for the validated {@link Request}
      */
@@ -100,7 +100,7 @@ class OpenApiValidationService {
 
     /**
      * @param servletRequest the {@link HttpServletRequest} to examine the api path to validate against
-     * @param response the {@link Response} to validate against the Swagger / OpenAPI specification
+     * @param response the {@link Response} to validate against the OpenAPI / Swagger specification
      *
      * @return the {@link ValidationReport} for the validated {@link Request}
      */

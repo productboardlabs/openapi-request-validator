@@ -14,8 +14,8 @@ public class SwaggerValidationListener implements RequestListener {
 
     private final OpenApiValidationListener delegate;
 
-    public SwaggerValidationListener(final String swaggerJsonUrl) {
-        delegate = new OpenApiValidationListener(swaggerJsonUrl);
+    public SwaggerValidationListener(final String specUrlOrPayload) {
+        delegate = new OpenApiValidationListener(specUrlOrPayload);
     }
 
     @Override

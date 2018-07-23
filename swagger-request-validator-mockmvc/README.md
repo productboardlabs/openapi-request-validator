@@ -2,7 +2,7 @@
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-mockmvc/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-mockmvc)
 
-Integrations between the Swagger Request Validator with [Spring MockMvc](http://docs.spring.io/spring-security/site/docs/current/reference/html/test-mockmvc.html).
+Integrations between the Swagger Request Validator and [Spring MockMvc](http://docs.spring.io/spring-security/site/docs/current/reference/html/test-mockmvc.html).
 
 This module includes request/response adaptors that allow validation of Spring MockMvc interactions with the Swagger Request
 Validator, and a `ResultMatcher` that can be used to add validation to a MockMvc interaction.

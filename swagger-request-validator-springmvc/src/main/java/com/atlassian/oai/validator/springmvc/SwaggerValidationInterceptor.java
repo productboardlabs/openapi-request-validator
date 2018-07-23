@@ -17,8 +17,8 @@ public class SwaggerValidationInterceptor extends HandlerInterceptorAdapter {
 
     private final OpenApiValidationInterceptor delegate;
 
-    public SwaggerValidationInterceptor(final EncodedResource swaggerInterface) throws IOException {
-        delegate = new OpenApiValidationInterceptor(swaggerInterface);
+    public SwaggerValidationInterceptor(final EncodedResource specUrlOrPayload) throws IOException {
+        delegate = new OpenApiValidationInterceptor(specUrlOrPayload);
     }
 
     public SwaggerValidationInterceptor(final SwaggerRequestResponseValidator validator) {

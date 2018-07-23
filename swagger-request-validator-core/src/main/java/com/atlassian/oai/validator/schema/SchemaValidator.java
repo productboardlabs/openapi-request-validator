@@ -36,7 +36,7 @@ import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Validate a value against the schema defined in a Swagger/OpenAPI specification.
+ * Validate a value against the schema defined in an OpenAPI / Swagger specification.
  * <p>
  * Supports validation of properties and request/response bodies, and supports schema references.
  */

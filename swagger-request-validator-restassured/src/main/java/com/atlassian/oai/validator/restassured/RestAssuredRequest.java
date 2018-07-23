@@ -68,7 +68,7 @@ public class RestAssuredRequest implements Request {
     }
 
     /**
-     * Builds a {@link Request} for the swagger validator out of the
+     * Builds a {@link Request} for the OpenAPI validator out of the
      * original {@link FilterableRequestSpecification}.
      *
      * @param originalRequest the original {@link FilterableRequestSpecification}

@@ -7,7 +7,7 @@ import com.atlassian.oai.validator.report.ValidationReport;
 import javax.annotation.Nonnull;
 
 /**
- * Validates a HTTP request/response pair with a Swagger/OpenAPI specification.
+ * Validates a HTTP request/response pair with an OpenAPI / Swagger specification.
  * <p>
  * Validation errors are provided in a @{@link ValidationReport} that can be used to inspect the failures.
  * <p>
@@ -22,8 +22,8 @@ public class SwaggerRequestResponseValidator {
 
     private OpenApiInteractionValidator validator;
 
-    public static OpenApiInteractionValidator.Builder createFor(@Nonnull final String swaggerJsonUrlOrPayload) {
-        return OpenApiInteractionValidator.createFor(swaggerJsonUrlOrPayload);
+    public static OpenApiInteractionValidator.Builder createFor(@Nonnull final String specUrlOrPayload) {
+        return OpenApiInteractionValidator.createFor(specUrlOrPayload);
     }
 
     @Nonnull

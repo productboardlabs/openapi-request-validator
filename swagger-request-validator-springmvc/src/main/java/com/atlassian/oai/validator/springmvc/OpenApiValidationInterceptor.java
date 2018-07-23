@@ -16,7 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
- * An Interceptor which validates incoming requests against the defined Swagger / OpenAPI specification.
+ * An Interceptor which validates incoming requests against the defined OpenAPI / Swagger specification.
  */
 public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
 
@@ -24,8 +24,8 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
 
     private final OpenApiValidationService openApiValidationService;
 
-    public OpenApiValidationInterceptor(final EncodedResource swaggerInterface) throws IOException {
-        this(new OpenApiValidationService(swaggerInterface));
+    public OpenApiValidationInterceptor(final EncodedResource apiSpecification) throws IOException {
+        this(new OpenApiValidationService(apiSpecification));
     }
 
     public OpenApiValidationInterceptor(final OpenApiInteractionValidator validator) {
@@ -37,21 +37,21 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
     }
 
     /**
-     * Validates the given requests. If a request is defined but invalid against the Swagger / OpenAPI specification
+     * Validates the given requests. If a request is defined but invalid against the OpenAPI / Swagger specification
      * an {@link InvalidRequestException} will be thrown leading to an error response.
      * <p>
      * Only {@link ResettableRequestServletWrapper} can be validated. Wrapping is done within the
      * {@link OpenApiValidationFilter}.
      *
-     * @param servletRequest  the {@link HttpServletRequest} to validate
+     * @param servletRequest the {@link HttpServletRequest} to validate
      * @param servletResponse the servlet response
-     * @param handler         a handler
+     * @param handler a handler
      *
      * @return {@code true} if the request is valid against or not defined in the API specification or
      * the servlet is not a {@link ResettableRequestServletWrapper}
      *
      * @throws Exception if the request is invalid against the Swagger schema or the requests body
-     *                   can't be read
+     * can't be read
      */
     @Override
     public boolean preHandle(final HttpServletRequest servletRequest,
@@ -85,18 +85,18 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
 
     /**
      * Validates the given response. If a request is defined but its response is invalid against
-     * the Swagger / OpenAPI specification an {@link InvalidResponseException} will be thrown leading
+     * the OpenAPI / Swagger specification an {@link InvalidResponseException} will be thrown leading
      * to an error response.
      * <p>
      * Only {@link ContentCachingResponseWrapper} can be validated. Wrapping is done within the
      * {@link OpenApiValidationFilter}.
      *
-     * @param servletRequest  the servlet request
+     * @param servletRequest the servlet request
      * @param servletResponse the {@link HttpServletResponse} to validate
-     * @param handler         a handler
-     * @param modelAndView    a model and view
+     * @param handler a handler
+     * @param modelAndView a model and view
      *
-     * @throws Exception if the response is invalid against the Swagger schema or the response body can't be read
+     * @throws Exception if the response is invalid against the API spec or the response body can't be read
      */
     @Override
     public void postHandle(final HttpServletRequest servletRequest,

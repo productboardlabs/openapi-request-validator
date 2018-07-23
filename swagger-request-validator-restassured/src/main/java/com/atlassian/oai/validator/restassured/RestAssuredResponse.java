@@ -39,7 +39,7 @@ public class RestAssuredResponse implements Response {
     }
 
     /**
-     * Builds a {@link Response} for the Swagger validator out of the
+     * Builds a {@link Response} for the OpenAPI validator out of the
      * original {@link io.restassured.response.Response}.
      *
      * @param originalResponse the original {@link io.restassured.response.Response}

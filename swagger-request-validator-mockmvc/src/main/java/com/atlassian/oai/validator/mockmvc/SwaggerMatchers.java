@@ -5,7 +5,7 @@ import com.atlassian.oai.validator.report.ValidationReport;
 import org.springframework.test.web.servlet.ResultMatcher;
 
 /**
- * Factory for Swagger / OpenAPI assertions.
+ * Factory for OpenAPI / Swagger assertions.
  *
  * @deprecated Replaced with {@link OpenApiMatchers}
  */

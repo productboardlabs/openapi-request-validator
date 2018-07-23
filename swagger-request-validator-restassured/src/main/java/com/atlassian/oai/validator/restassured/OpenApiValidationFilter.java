@@ -14,7 +14,7 @@ import java.util.Objects;
 import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
 
 /**
- * A {@link Filter} that performs Swagger API validation on a request/response interaction.
+ * A {@link Filter} that performs OpenAPI / Swagger validation on a request/response interaction.
  * <p>
  * To use, simply add it as a filter to your rest-assured given-when-then interaction:
  * <pre>

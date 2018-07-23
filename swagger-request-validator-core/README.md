@@ -153,7 +153,7 @@ These keys will override any other key that has been set.
 There are scenarios where simple control of message levels is not enough. 
 Perhaps you want to treat all messages of certain types as errors but not in this one 
 particular endpoint. Or maybe the validator reports some errors incorrectly in a few obscure edge
-cases. Or maybe your swagger spec is not really that precise but for whatever reason you can't
+cases. Or maybe your OpenAPI / Swagger spec is not really that precise but for whatever reason you can't
 make it 100% correct.
 
 If that's the case, you can define whitelists to ignore messages based on fine-grained rules, 

@@ -29,22 +29,29 @@ public class ValidatedPactProviderRule implements TestRule {
     private final Object target;
     private final OpenApiInteractionValidator validator;
 
-    public ValidatedPactProviderRule(final String swaggerJsonUrl, final String basePathOverride,
-                                     final String providerId, final Object target) {
-        this(swaggerJsonUrl, basePathOverride, providerId, target,
-                new PactProviderRule(providerId, target));
+    public ValidatedPactProviderRule(final String specUrlOrPayload,
+                                     final String basePathOverride,
+                                     final String providerId,
+                                     final Object target) {
+        this(specUrlOrPayload, basePathOverride, providerId, target, new PactProviderRule(providerId, target));
     }
 
-    public ValidatedPactProviderRule(final String swaggerJsonUrl, final String basePathOverride,
-                                     final String providerId, final String host, final Integer port, final Object target) {
-        this(swaggerJsonUrl, basePathOverride, providerId, target,
-                new PactProviderRule(providerId, host, port, target));
+    public ValidatedPactProviderRule(final String specUrlOrPayload,
+                                     final String basePathOverride,
+                                     final String providerId,
+                                     final String host,
+                                     final Integer port,
+                                     final Object target) {
+        this(specUrlOrPayload, basePathOverride, providerId, target, new PactProviderRule(providerId, host, port, target));
     }
 
-    private ValidatedPactProviderRule(final String swaggerJsonUrl, final String basePathOverride,
-                                      final String providerId, final Object target, final PactProviderRule delegate) {
+    private ValidatedPactProviderRule(final String specUrlOrPayload,
+                                      final String basePathOverride,
+                                      final String providerId,
+                                      final Object target,
+                                      final PactProviderRule delegate) {
         validator = OpenApiInteractionValidator
-                .createFor(swaggerJsonUrl)
+                .createFor(specUrlOrPayload)
                 .withLevelResolver(PactLevelResolverFactory.create())
                 .withBasePathOverride(basePathOverride)
                 .build();

@@ -8,7 +8,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.ResultMatcher;
 
 /**
- * Factory for Swagger / OpenAPI assertions.
+ * Factory for OpenAPI / Swagger assertions.
  */
 public class OpenApiMatchers {
 

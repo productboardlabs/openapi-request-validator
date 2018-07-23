@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A WireMock request listener that applies Swagger / OpenAPI validation to WireMock interactions.
+ * A WireMock request listener that applies OpenAPI / Swagger validation to WireMock interactions.
  * <p>
  * The listener can be added to a {@link com.github.tomakehurst.wiremock.junit.WireMockRule} or
  * {@link com.github.tomakehurst.wiremock.WireMockServer} instance

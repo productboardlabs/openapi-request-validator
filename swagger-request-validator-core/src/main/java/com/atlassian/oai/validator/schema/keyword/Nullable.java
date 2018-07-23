@@ -20,7 +20,7 @@ import java.util.Collection;
 /**
  * Support for the {@code nullable} keyword introduced in OpenAPI v3
  *
- * @see <a href="https://swagger.io/specification/#schemaNullable">Swagger specification</a>
+ * @see <a href="https://swagger.io/specification/#schemaNullable">OpenAPI specification</a>
  */
 public class Nullable {
 

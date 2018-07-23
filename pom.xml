@@ -15,7 +15,7 @@
 
     <name>Swagger Request Validator</name>
     <description>
-        Validation of request/responses against a Swagger/OpenAPI specification.
+        Validation of request/responses against an OpenAPI / Swagger specification.
         Includes a standalone validator, as well as adapters for Pact and other mocking/http libraries.
     </description>
     <inceptionYear>2016</inceptionYear>

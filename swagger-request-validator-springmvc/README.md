@@ -49,12 +49,12 @@ public class OpenApiValidationConfig extends WebMvcConfigurerAdapter {
     private final OpenApiValidationInterceptor validationInterceptor;
 
     /**
-     * @param swaggerApi the {@link Resource} to your Swagger schema
+     * @param apiSpecification the {@link Resource} to your OpenAPI / Swagger schema
      */
     @Autowired
-    public OpenApiValidationConfig(@Value("classpath:swagger-api.json") final Resource swaggerApi) throws IOException {
-        final EncodedResource swaggerResource = new EncodedResource(swaggerApi, "UTF-8");
-        this.validationInterceptor = new OpenApiValidationInterceptor(swaggerResource);
+    public OpenApiValidationConfig(@Value("classpath:api.json") final Resource apiSpecification) throws IOException {
+        final EncodedResource specResource = new EncodedResource(apiSpecification, "UTF-8");
+        this.validationInterceptor = new OpenApiValidationInterceptor(specResource);
     }
 
     @Bean
@@ -76,9 +76,9 @@ To get better control over the validation a custom `OpenApiInteractionValidator`
 
 ```java
     @Autowired
-    public OpenApiValidationConfig(@Value("classpath:swagger-api.json") final Resource swaggerApi) throws IOException {
+    public OpenApiValidationConfig(@Value("classpath:api.json") final Resource apiSpecification) throws IOException {
         final OpenApiInteractionValidator validator = OpenApiInteractionValidator
-                .createFor(swaggerSchema.getURL().getPath())
+                .createFor(apiSpecification.getURL().getPath())
                 .withLevelResolver(SpringMVCLevelResolverFactory.create())
                 .withBasePathOverride("/v1")
                 .build();

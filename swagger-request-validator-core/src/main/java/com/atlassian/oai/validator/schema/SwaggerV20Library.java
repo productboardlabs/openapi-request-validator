@@ -25,7 +25,7 @@ import static com.github.fge.msgsimple.load.MessageBundles.getBundle;
 
 /**
  * Library that extends the JSON Schema v4 and adds the additional keywords introduced by the
- * Swagger/OAI v2.0 specification.
+ * OpenAPI / Swagger v2.0 specification.
  */
 public class SwaggerV20Library {
 
@@ -49,8 +49,8 @@ public class SwaggerV20Library {
     }
 
     /**
-     * @return A {@link JsonSchemaFactory} instance configured with the Swagger/OAI V20 metaschema library suitable
-     * for use in validating Swagger/OpenAPI documents
+     * @return A {@link JsonSchemaFactory} instance configured with the OpenAPI / Swagger V20 metaschema library suitable
+     * for use in validating OpenAPI / Swagger documents
      */
     public static JsonSchemaFactory schemaFactory() {
         return JsonSchemaFactory
@@ -70,8 +70,8 @@ public class SwaggerV20Library {
     /**
      * @param logLevel log level
      * @param exceptionThreshold exception threshold
-     * @return A {@link JsonSchemaFactory} instance configured with the Swagger/OAI V20 metaschema library suitable
-     * for use in validating Swagger/OpenAPI documents
+     * @return A {@link JsonSchemaFactory} instance configured with the OpenAPI / Swagger V20 metaschema library suitable
+     * for use in validating OpenAPI / Swagger documents
      */
     public static JsonSchemaFactory schemaFactory(final LogLevel logLevel, final LogLevel exceptionThreshold) {
         return JsonSchemaFactory

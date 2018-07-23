@@ -49,7 +49,7 @@ public class OpenApiInteractionValidator {
     private final ValidationErrorsWhitelist whitelist;
 
     /**
-     * Create a new instance using the Swagger / OpenAPI specification at the given location OR an actual specification payload.
+     * Create a new instance using the OpenAPI / Swagger specification at the given location OR an actual specification payload.
      * <p>
      * Supports both Swagger v2 and OpenAPI v3 specifications, in both JSON and YAML formats.
      * <p>
@@ -66,11 +66,11 @@ public class OpenApiInteractionValidator {
      *     // Create from a classpath resource in the /api package
      *     .createFor("/api/swagger.json");
      *
-     *     // Create from a Swagger / OpenAPI payload
+     *     // Create from an OpenAPI / Swagger payload
      *     .createFor("{\"swagger\": \"2.0\", ...}")
      * </pre>
      *
-     * @param specUrlOrPayload The location of the Swagger / OpenAPI specification to use in the validator,
+     * @param specUrlOrPayload The location of the OpenAPI / Swagger specification to use in the validator,
      * or the inline specification to use.
      *
      * @return A new builder instance to use for creating configuring {@link OpenApiInteractionValidator} instances.
@@ -82,7 +82,7 @@ public class OpenApiInteractionValidator {
     /**
      * Construct a new validator for the given specification.
      *
-     * @param specUrlOrPayload The location of the Swagger / OpenAPI specification to use in the validator,
+     * @param specUrlOrPayload The location of the OpenAPI / Swagger specification to use in the validator,
      * or the inline specification to use.
      * @param basePathOverride (Optional) override for the base path defined in the Swagger specification.
      * @param messages The message resolver to use for resolving validation messages.
@@ -98,9 +98,9 @@ public class OpenApiInteractionValidator {
     /**
      * Construct a new validator for the specification at the given URL with authentication data.
      *
-     * @param specUrlOrPayload The location of the Swagger / OpenAPI specification to use in the validator,
+     * @param specUrlOrPayload The location of the OpenAPI / Swagger specification to use in the validator,
      * or the inline specification to use.
-     * @param basePathOverride (Optional) override for the base path defined in the Swagger specification.
+     * @param basePathOverride (Optional) override for the base path defined in the specification.
      * @param messages The message resolver to use for resolving validation messages.
      * @param whitelist The validation errors whitelist.
      * @param authData (Optional) A List of authentication data to add to spec retrieval request.
@@ -269,7 +269,7 @@ public class OpenApiInteractionValidator {
         private ValidationErrorsWhitelist whitelist = ValidationErrorsWhitelist.create();
 
         /**
-         * The location of the Swagger / OpenAPI specification to use in the validator, or the inline specification to use.
+         * The location of the OpenAPI / Swagger specification to use in the validator, or the inline specification to use.
          * <p>
          * Supports both Swagger v2 and OpenAPI v3 specifications, in both JSON and YAML formats.
          * <p>
@@ -287,7 +287,7 @@ public class OpenApiInteractionValidator {
          *     .withSwaggerJsonUrl("/api/swagger.json");
          * </pre>
          *
-         * @param specUrlOrPayload The Swagger / OpenAPI specification to use in the validator.
+         * @param specUrlOrPayload The OpenAPI / Swagger specification to use in the validator.
          *
          * @return this builder instance.
          *
@@ -299,7 +299,7 @@ public class OpenApiInteractionValidator {
         }
 
         /**
-         * The location of the Swagger / OpenAPI specification to use in the validator, or the inline specification to use.
+         * The location of the OpenAPI / Swagger specification to use in the validator, or the inline specification to use.
          * <p>
          * Supports both Swagger v2 and OpenAPI v3 specifications, in both JSON and YAML formats.
          * <p>
@@ -317,7 +317,7 @@ public class OpenApiInteractionValidator {
          *     .withSwaggerJsonUrl("/api/swagger.json");
          * </pre>
          *
-         * @param specUrlOrPayload The Swagger / OpenAPI specification to use in the validator.
+         * @param specUrlOrPayload The OpenAPI / Swagger specification to use in the validator.
          *
          * @return this builder instance.
          */
@@ -327,12 +327,12 @@ public class OpenApiInteractionValidator {
         }
 
         /**
-         * An optional basepath override to override the one defined in the Swagger spec.
+         * An optional basepath override to override the one defined in the OpenAPI / Swagger spec.
          * <p>
          * This can be useful if e.g. your Swagger specification has been created for a public URL but you are validating
          * requests against an internal URL where the URL paths differ.
          *
-         * @param basePathOverride An optional basepath override to override the one defined in the Swagger spec.
+         * @param basePathOverride An optional basepath override to override the one defined in the spec.
          *
          * @return this builder instance.
          */
@@ -372,16 +372,17 @@ public class OpenApiInteractionValidator {
         }
 
         /**
-         * An optional key value header to add to the Swagger spec retrieval request.
+         * An optional key value header to add to the OpenAPI / Swagger spec retrieval request.
          * <p>
-         * This is necessary if e.g. your Swagger specification is retrieved from a remote host and the path to retrieve is secured by an api key in the request header.
+         * This is necessary if e.g. your specification is retrieved from a remote host and the path to retrieve is secured by an api key in the request header.
          *
          * @param key A key name to add as request header key.
          * @param value (Optional) A value to add as request header value for the given key.
          *
          * @return this builder instance.
          */
-        public Builder withAuthHeaderData(final String key, final String value) {
+        public Builder withAuthHeaderData(final String key,
+                                          final String value) {
             requireNonNull(key, "A key for the auth header is required");
 
             authData = singletonList(new AuthorizationValue(key, value, "header"));

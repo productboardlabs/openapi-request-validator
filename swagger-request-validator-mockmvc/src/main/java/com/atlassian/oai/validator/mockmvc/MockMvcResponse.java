@@ -25,7 +25,7 @@ public class MockMvcResponse implements Response {
      */
     @Deprecated
     public MockMvcResponse(@Nonnull final MockHttpServletResponse originalResponse) {
-        this.delegate = MockMvcResponse.of(originalResponse);
+        delegate = MockMvcResponse.of(originalResponse);
     }
 
     @Override
@@ -46,7 +46,7 @@ public class MockMvcResponse implements Response {
     }
 
     /**
-     * Builds a {@link Response} for the Swagger validator out of the
+     * Builds a {@link Response} for the OpenAPI validator out of the
      * original {@link MockHttpServletResponse}.
      *
      * @param originalResponse the original {@link MockHttpServletResponse}

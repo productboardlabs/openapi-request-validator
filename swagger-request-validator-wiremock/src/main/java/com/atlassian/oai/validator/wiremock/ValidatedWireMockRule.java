@@ -5,7 +5,7 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
 /**
  * A near drop-in replacement for the {@link WireMockRule} that adds support for validating the request/response
- * interactions against a Swagger API specification.
+ * interactions against an OpenAPI / Swagger specification.
  * <p>
  * If a validation failure is found, will throw a
  * {@link OpenApiValidationListener.OpenApiValidationException} that will
@@ -17,32 +17,38 @@ public class ValidatedWireMockRule extends WireMockRule {
 
     private OpenApiValidationListener validationListener;
 
-    public ValidatedWireMockRule(final String swaggerJsonUrl, final Options options) {
+    public ValidatedWireMockRule(final String specUrlOrPayload,
+                                 final Options options) {
         super(options);
-        setupValidationListener(swaggerJsonUrl);
+        setupValidationListener(specUrlOrPayload);
     }
 
-    public ValidatedWireMockRule(final String swaggerJsonUrl, final Options options, final boolean failOnUnmatchedStubs) {
+    public ValidatedWireMockRule(final String specUrlOrPayload,
+                                 final Options options,
+                                 final boolean failOnUnmatchedStubs) {
         super(options, failOnUnmatchedStubs);
-        setupValidationListener(swaggerJsonUrl);
+        setupValidationListener(specUrlOrPayload);
     }
 
-    public ValidatedWireMockRule(final String swaggerJsonUrl, final int port) {
+    public ValidatedWireMockRule(final String specUrlOrPayload,
+                                 final int port) {
         super(port);
-        setupValidationListener(swaggerJsonUrl);
+        setupValidationListener(specUrlOrPayload);
     }
 
-    public ValidatedWireMockRule(final String swaggerJsonUrl, final int port, final Integer httpsPort) {
+    public ValidatedWireMockRule(final String specUrlOrPayload,
+                                 final int port,
+                                 final Integer httpsPort) {
         super(port, httpsPort);
-        setupValidationListener(swaggerJsonUrl);
+        setupValidationListener(specUrlOrPayload);
     }
 
-    public ValidatedWireMockRule(final String swaggerJsonUrl) {
-        setupValidationListener(swaggerJsonUrl);
+    public ValidatedWireMockRule(final String specUrlOrPayload) {
+        setupValidationListener(specUrlOrPayload);
     }
 
-    private void setupValidationListener(final String swaggerJsonUrl) {
-        validationListener = new OpenApiValidationListener(swaggerJsonUrl);
+    private void setupValidationListener(final String specUrlOrPayload) {
+        validationListener = new OpenApiValidationListener(specUrlOrPayload);
         addMockServiceRequestListener(validationListener);
     }
 

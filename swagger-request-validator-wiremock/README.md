@@ -6,7 +6,7 @@ Integrations between the Swagger Request Validator and the [WireMock HTTP mockin
 
 This module includes request/response adaptors that allow validation of WireMock stubs with the Swagger Request
 Validator, and a `ValidatedWireMockRule` that can be used as a drop-in replacement for the standard WireMock
-`WireMockRule` to enable Swagger validation of stubs.
+`WireMockRule` to enable OpenAPI / Swagger validation of stubs.
 
 ## Usage ##
 

@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Representation of a path within an OAI/Swagger specification.
+ * Representation of a path within an OpenAPI / Swagger specification.
  * <p>
  * Has methods for extracting path params from path parts and comparing against a request path.
  */

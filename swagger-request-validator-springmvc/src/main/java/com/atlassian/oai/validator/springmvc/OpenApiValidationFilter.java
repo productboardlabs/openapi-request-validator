@@ -23,7 +23,7 @@ import java.io.IOException;
  * needs the pure request body to unmarshal the JSON.
  * <p>
  * But a {@link javax.servlet.ServletInputStream} can only be read once and needs to be rewind after
- * successful validation against the Swagger definition. So the controller can then access it again.
+ * successful validation against the OpenAPI / Swagger definition. So the controller can then access it again.
  */
 public class OpenApiValidationFilter extends OncePerRequestFilter {
 

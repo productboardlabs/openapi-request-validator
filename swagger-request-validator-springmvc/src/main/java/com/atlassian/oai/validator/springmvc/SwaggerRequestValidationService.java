@@ -17,8 +17,8 @@ public class SwaggerRequestValidationService {
 
     private final OpenApiValidationService delegate;
 
-    SwaggerRequestValidationService(final EncodedResource restInterface) throws IOException {
-        delegate = new OpenApiValidationService(restInterface);
+    SwaggerRequestValidationService(final EncodedResource specUrlOrPayload) throws IOException {
+        delegate = new OpenApiValidationService(specUrlOrPayload);
     }
 
     SwaggerRequestValidationService(final SwaggerRequestResponseValidator validator) {

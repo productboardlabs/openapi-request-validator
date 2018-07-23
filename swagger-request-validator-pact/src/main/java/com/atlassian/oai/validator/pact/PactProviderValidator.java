@@ -29,7 +29,7 @@ import static java.util.stream.Collectors.toList;
 
 /**
  * A validator that can be used on the Provider side to validate Consumer Pacts against the
- * Provider's Swagger API specification.
+ * Provider's OpenAPI / Swagger specification.
  * <p>
  * The validator can be used to validate against all Consumers with Pacts registered in a broker, and/or
  * against individual Consumer Pact files sourced from other locations (the file system etc.)
@@ -37,7 +37,7 @@ import static java.util.stream.Collectors.toList;
  * To validate against all Consumers in a broker:
  * <pre>
  *     final PactProviderValidator validator = PactProviderValidator
- *                                                  .createFor(SWAGGER_JSON_URL)
+ *                                                  .createFor(SPEC_URL)
  *                                                  .withPactsFrom(BROKER_URL, PROVIDER_ID)
  *                                                  .build();
  * </pre>
@@ -45,7 +45,7 @@ import static java.util.stream.Collectors.toList;
  * To validate against specific Consumer Pact files:
  * <pre>
  *     final PactProviderValidator validator = PactProviderValidator
- *                                                  .createFor(SWAGGER_JSON_URL)
+ *                                                  .createFor(SPEC_URL)
  *                                                  .withConsumer(CONSUMER_ID, CONSUMER_PACT_URL)
  *                                                  .build();
  * </pre>
@@ -61,12 +61,12 @@ public class PactProviderValidator {
     private final OpenApiInteractionValidator validator;
     private final Collection<ConsumerInfo> consumers = new ArrayList<>();
 
-    private PactProviderValidator(@Nonnull final String swaggerJsonUrl,
+    private PactProviderValidator(@Nonnull final String specUrlOrPayload,
                                   @Nullable final Collection<ConsumerInfo> consumers) {
-        requireNonNull(swaggerJsonUrl, "A Swagger JSON Url is required");
+        requireNonNull(specUrlOrPayload, "An API spec is required");
 
-        this.validator = OpenApiInteractionValidator
-                .createFor(swaggerJsonUrl)
+        validator = OpenApiInteractionValidator
+                .createFor(specUrlOrPayload)
                 .withLevelResolver(PactLevelResolverFactory.create())
                 .build();
 
@@ -76,17 +76,21 @@ public class PactProviderValidator {
     }
 
     /**
-     * Create a new {@link PactProviderValidator} that validates Consumers against the given Swagger API specification.
+     * Create a new {@link PactProviderValidator} that validates Consumers against the given OpenAPI / Swagger specification.
+     * <p>
+     * The provided param can be either a URL to the API specification, or an inline specification.
+     * Supports both JSON and YAML formats.
      *
-     * @param swaggerJsonUrl The URL of the Swagger API specification to use
+     * @param specUrlOrPayload The URL of the OpenAPI / Swagger specification to use, or an inline specification
+     *
      * @return A builder that can create configured {@link PactProviderValidator} instances.
      */
-    public static Builder createFor(@Nonnull final String swaggerJsonUrl) {
-        return new Builder().withSwaggerJsonUrl(swaggerJsonUrl);
+    public static Builder createFor(@Nonnull final String specUrlOrPayload) {
+        return new Builder().withApiSpecification(specUrlOrPayload);
     }
 
     /**
-     * Perform the validation of Consumer Pacts against the configured Swagger API specification.
+     * Perform the validation of Consumer Pacts against the configured OpenAPI / Swagger specification.
      *
      * @return The results of validation for each Consumer.
      */
@@ -148,35 +152,47 @@ public class PactProviderValidator {
      */
     public static class Builder {
 
-        private String swaggerJsonUrl;
-        private List<ConsumerInfo> consumers = new ArrayList<>();
+        private String specUrlOrPayload;
+        private final List<ConsumerInfo> consumers = new ArrayList<>();
 
         private String brokerUrl;
         private String providerName;
-        private Map<String, Object> brokerOptions = new HashMap<>();
+        private final Map<String, Object> brokerOptions = new HashMap<>();
 
         /**
-         * The location of the Swagger JSON specification to use in the validator.
+         * @deprecated Replaced with {@link #withApiSpecification(String)}
+         */
+        @Deprecated
+        public Builder withSwaggerJsonUrl(final String specUrlOrPayload) {
+            this.specUrlOrPayload = specUrlOrPayload;
+            return this;
+        }
+
+        /**
+         * The OpenAPI v3 or Swagger v2 specification to use in the validator.
          * <p>
-         * The URL can be an absolute HTTP/HTTPS URL, a File URL or a classpath location (without the classpath: scheme).
+         * Can be either a URL to a specification, or an inline specification payload, in either JSON or YAML formats.
+         * <p>
+         * A URL can be an absolute HTTP/HTTPS URL, a File URL or a classpath location (without the classpath: scheme).
          * <p>
          * For example:
          * <pre>
          *     // Create from a publicly hosted HTTP location
-         *     .withSwaggerJsonUrl("http://api.myservice.com/swagger.json")
+         *     .withApiSpecification("http://api.myservice.com/swagger.json")
          *
          *     // Create from a file on the local filesystem
-         *     .withSwaggerJsonUrl("file://Users/myuser/tmp/swagger.json");
+         *     .withApiSpecification("file://Users/myuser/tmp/api.json");
          *
          *     // Create from a classpath resource in the /api package
-         *     .withSwaggerJsonUrl("/api/swagger.json");
+         *     .withApiSpecification("/api/api.yaml");
          * </pre>
          *
-         * @param swaggerJsonUrl The location of the Swagger JSON specification to use in the validator.
+         * @param specUrlOrPayload The location of the Swagger JSON specification to use in the validator.
+         *
          * @return this builder instance.
          */
-        public Builder withSwaggerJsonUrl(final String swaggerJsonUrl) {
-            this.swaggerJsonUrl = swaggerJsonUrl;
+        public Builder withApiSpecification(final String specUrlOrPayload) {
+            this.specUrlOrPayload = specUrlOrPayload;
             return this;
         }
 
@@ -186,6 +202,7 @@ public class PactProviderValidator {
          * Note that each supplied consumer must have a <code>name</code> and <code>pactFile</code> configured.
          *
          * @param consumers The consumers to include
+         *
          * @return this builder instance.
          */
         public Builder withConsumers(final ConsumerInfo... consumers) {
@@ -197,11 +214,12 @@ public class PactProviderValidator {
          * Add a Consumer that will be included in the validation.
          *
          * @param consumerName The name of the Consumer
-         * @param pactFileUrl  The location of the Consumer Pact file to validate against
+         * @param pactFileUrl The location of the Consumer Pact file to validate against
+         *
          * @return this builder instance.
          */
         public Builder withConsumer(final String consumerName, final String pactFileUrl) {
-            this.consumers.add(new ConsumerInfo(consumerName, pactFileUrl));
+            consumers.add(new ConsumerInfo(consumerName, pactFileUrl));
             return this;
         }
 
@@ -209,11 +227,12 @@ public class PactProviderValidator {
          * Add a Consumer that will be included in the validation.
          *
          * @param consumerName The name of the Consumer
-         * @param pactFileUrl  The location of the Consumer Pact file to validate against
+         * @param pactFileUrl The location of the Consumer Pact file to validate against
+         *
          * @return this builder instance.
          */
         public Builder withConsumer(final String consumerName, final URL pactFileUrl) {
-            this.consumers.add(new ConsumerInfo(consumerName, pactFileUrl));
+            consumers.add(new ConsumerInfo(consumerName, pactFileUrl));
             return this;
         }
 
@@ -221,8 +240,9 @@ public class PactProviderValidator {
          * Configure the validator to validate against all Consumer Pacts retrieved from the given
          * broker for the given Provider.
          *
-         * @param brokerUrl    The URL of the Pact Broker to retrieve Consumer Pacts from
+         * @param brokerUrl The URL of the Pact Broker to retrieve Consumer Pacts from
          * @param providerName The ID of the Provider to retrieve Pacts for
+         *
          * @return this builder instance.
          */
         public Builder withPactsFrom(final String brokerUrl, final String providerName) {
@@ -235,16 +255,17 @@ public class PactProviderValidator {
          * Configure the validator to validate against all Consumer Pacts retrieved from the given
          * secure broker for the given Provider.
          *
-         * @param brokerUrl    The URL of the Pact Broker to retrieve Consumer Pacts from
-         * @param username     The username for the broker
-         * @param password     The password for the broker
+         * @param brokerUrl The URL of the Pact Broker to retrieve Consumer Pacts from
+         * @param username The username for the broker
+         * @param password The password for the broker
          * @param providerName The ID of the Provider to retrieve Pacts for
+         *
          * @return this builder instance.
          */
         public Builder withPactsFrom(final String brokerUrl, final String username, final String password, final String providerName) {
             withPactsFrom(brokerUrl, providerName);
-            this.brokerOptions.clear();
-            this.brokerOptions.put("authentication", Arrays.asList("basic", username, password));
+            brokerOptions.clear();
+            brokerOptions.put("authentication", Arrays.asList("basic", username, password));
             return this;
         }
 
@@ -257,7 +278,7 @@ public class PactProviderValidator {
             if (brokerUrl != null && providerName != null) {
                 consumers.addAll(retrieveConsumers(brokerUrl, providerName, brokerOptions));
             }
-            return new PactProviderValidator(swaggerJsonUrl, consumers);
+            return new PactProviderValidator(specUrlOrPayload, consumers);
         }
 
         @Nonnull
