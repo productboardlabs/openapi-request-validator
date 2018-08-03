@@ -10,7 +10,7 @@
 
     <groupId>com.atlassian.oai</groupId>
     <artifactId>swagger-request-validator</artifactId>
-    <version>1.4.7-SNAPSHOT</version>
+    <version>1.4.8-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Swagger Request Validator</name>
@@ -64,7 +64,7 @@
         <servlet.api.version>3.1.0</servlet.api.version>
         <slf4j.version>1.7.25</slf4j.version>
         <spring.version>4.3.16.RELEASE</spring.version>
-        <swagger-parser.version>1.0.34</swagger-parser.version>
+        <swagger-parser.version>1.0.36</swagger-parser.version>
         <wiremock.version>2.17.0</wiremock.version>
 
         <checkstyle.version>8.9</checkstyle.version>

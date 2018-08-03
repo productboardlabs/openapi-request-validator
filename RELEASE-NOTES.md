@@ -1,3 +1,14 @@
+#v1.4.7
+* Fixed the 'additional properties' validation for inline and nested schema definitions
+[[#131]](https://bitbucket.org/atlassian/swagger-request-validator/issues/131)
+* Bumped the version of `swagger-parser` to pick up a fix for pattern validation
+[[#44]](https://bitbucket.org/atlassian/swagger-request-validator/issues/44)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/95)
+* Added response validation to the Spring MVC adaptor 
+[[#58]](https://bitbucket.org/atlassian/swagger-request-validator/issues/58)
+* Added control over 'unknown request' validation in the Spring MVC adaptor
+[[#55]](https://bitbucket.org/atlassian/swagger-request-validator/issues/55)
+
 #v1.4.6
 * Added support for HAL+JSON content type
 [[#127]](https://bitbucket.org/atlassian/swagger-request-validator/issues/127)

@@ -142,6 +142,39 @@ public class SchemaValidatorTest {
     }
 
     @Test
+    public void validate_withExtraFields_shouldFail_whenModelInlineInArray() {
+        final String value = "{\"things\": [{\"foo\":\"bar\", \"extra\":\"value\"}]}";
+        final Property inner = new ObjectProperty().property("foo", new StringProperty().required(true));
+        final Model schema = new ModelImpl().property("things", new ArrayProperty().items(inner));
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.additionalProperties");
+    }
+
+    @Test
+    public void validate_withExtraFields_shouldFail_whenModelInlineInObject() {
+        final String value = "{\"things\": {\"foo\":\"bar\", \"extra\":\"value\"}}";
+        final Property inner = new ObjectProperty().property("foo", new StringProperty().required(true));
+        final Model schema = new ModelImpl().property("things", inner);
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.additionalProperties");
+    }
+
+    @Test
+    public void validate_withExtraFields_shouldFail_whenDeepNesting() {
+        final String value = "{\"outer\": {\"inner\": {\"innermost\": {\"field\": \"value\", \"extra\": \"value\"}}}}";
+        final Model schema = new ModelImpl()
+                .property("outer", new ObjectProperty()
+                        .property("inner", new ObjectProperty()
+                                .property("innermost", new ObjectProperty()
+                                        .property("field", new StringProperty())
+                                )
+                        )
+                );
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema), "validation.schema.additionalProperties");
+    }
+
+    @Test
     public void validate_withInvalidJsonSchema_shouldFail() {
         final String value = "{\"title\":\"bar\", \"message\":\"something\"}";
         final Model schema = new RefModel("#/definitions/{\"What\":\"This actually happened!\"}");
@@ -212,7 +245,11 @@ public class SchemaValidatorTest {
                 .property("foo", new StringProperty())
                 .property("baz", new StringProperty())
                 .property("int", new IntegerProperty())
-                .property("obj", new ObjectProperty())
+                .property("obj", new ObjectProperty()
+                        .property("obj1", new StringProperty())
+                        .property("obj2", new StringProperty())
+                        .property("obj3", new StringProperty())
+                )
                 .property("arr", new ArrayProperty())
                 .required("foo");
 

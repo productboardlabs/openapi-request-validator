@@ -5,11 +5,11 @@ import org.junit.Test;
 
 import java.util.Arrays;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.isEmptyString;
+import static org.hamcrest.text.IsEmptyString.isEmptyString;
 import static org.junit.Assert.assertThat;
 
 public class SimpleRequestTest {
@@ -86,6 +86,45 @@ public class SimpleRequestTest {
         assertThat(request.getHeaders().get("foo"), containsInAnyOrder("bar1", "bar2"));
         assertThat(request.getHeaderValues("foo"), containsInAnyOrder("bar1", "bar2"));
         assertThat(request.getHeaderValue("foo").get(), equalTo("bar1"));
+    }
+
+    @Test
+    public void header_dateValueIsNotSplit() {
+        final Request request = SimpleRequest.Builder.get("/path")
+                .withHeader("fOO", "Sun, 06 Nov 1994 08:49:37 GMT")
+                .build();
+
+        assertThat(request.getHeaders().keySet(), containsInAnyOrder("fOO"));
+        assertThat(request.getHeaders().get("foo"), containsInAnyOrder("Sun, 06 Nov 1994 08:49:37 GMT"));
+        assertThat(request.getHeaderValues("foo"), containsInAnyOrder("Sun, 06 Nov 1994 08:49:37 GMT"));
+        assertThat(request.getHeaderValue("foo").get(), equalTo("Sun, 06 Nov 1994 08:49:37 GMT"));
+    }
+
+    @Test
+    public void header_multiDateValueSplitNicely() {
+        final Request request = SimpleRequest.Builder.get("/path")
+                .withHeader("fOO", "Sun, 06 Nov 1994 08:49:37 GMT, Tue, 17 Jul 2018 11:10:04 GMT")
+                .build();
+
+        assertThat(request.getHeaders().keySet(), containsInAnyOrder("fOO"));
+        assertThat(request.getHeaders().get("foo"),
+                containsInAnyOrder("Sun, 06 Nov 1994 08:49:37 GMT", "Tue, 17 Jul 2018 11:10:04 GMT"));
+        assertThat(request.getHeaderValues("foo"),
+                containsInAnyOrder("Sun, 06 Nov 1994 08:49:37 GMT", "Tue, 17 Jul 2018 11:10:04 GMT"));
+        assertThat(request.getHeaderValue("foo").get(), equalTo("Sun, 06 Nov 1994 08:49:37 GMT"));
+    }
+
+    @Test
+    public void header_multiMixedDateValueSplit() {
+        final Request request = SimpleRequest.Builder.get("/path")
+                .withHeader("fOO", "Sun, 06 Nov 1994 08:49:37 GMT, trolls, Tue, 17 Jul 2018 11:10:04 GMT, goblins")
+                .build();
+
+        assertThat(request.getHeaders().keySet(), containsInAnyOrder("fOO"));
+        assertThat(request.getHeaders().get("foo"),
+                containsInAnyOrder("Sun, 06 Nov 1994 08:49:37 GMT", "trolls", "Tue, 17 Jul 2018 11:10:04 GMT", "goblins"));
+        assertThat(request.getHeaderValues("foo"),
+                containsInAnyOrder("Sun, 06 Nov 1994 08:49:37 GMT", "trolls", "Tue, 17 Jul 2018 11:10:04 GMT", "goblins"));
     }
 
     @Test
