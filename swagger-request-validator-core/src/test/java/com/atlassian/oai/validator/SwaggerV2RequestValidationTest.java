@@ -18,8 +18,8 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadResource;
  */
 public class SwaggerV2RequestValidationTest {
 
-    private final SwaggerRequestResponseValidator classUnderTest =
-            SwaggerRequestResponseValidator.createFor("/oai/v2/api-users.json").build();
+    private final OpenApiInteractionValidator classUnderTest =
+            OpenApiInteractionValidator.createFor("/oai/v2/api-users.json").build();
 
     private final Response validUserResponse =
             SimpleResponse.Builder.ok().withBody(loadJsonResponse("user-valid")).build();
@@ -708,8 +708,8 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withRefParams_shouldPass_whenRequiredParamSupplied() {
-        final SwaggerRequestResponseValidator classUnderTest =
-                SwaggerRequestResponseValidator.createFor("/oai/v2/api-ref-params.json").build();
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator.createFor("/oai/v2/api-ref-params.json").build();
 
         final Request request = SimpleRequest.Builder
                 .get("/myresource")
@@ -722,8 +722,8 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withRefParams_shouldFail_whenRequiredParamMissing() {
-        final SwaggerRequestResponseValidator classUnderTest =
-                SwaggerRequestResponseValidator.createFor("/oai/v2/api-ref-params.json").build();
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator.createFor("/oai/v2/api-ref-params.json").build();
 
         final Request request = SimpleRequest.Builder
                 .get("/myresource")
@@ -735,8 +735,8 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withRefParams_shouldPass_whenSpecSuppliedAsString() {
-        final SwaggerRequestResponseValidator classUnderTest =
-                SwaggerRequestResponseValidator.createFor(loadResource("/oai/v2/api-ref-params.json")).build();
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator.createFor(loadResource("/oai/v2/api-ref-params.json")).build();
 
         final Request request = SimpleRequest.Builder
                 .get("/myresource")
@@ -749,8 +749,8 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withPartPathParams_shouldPass_whenValid() {
-        final SwaggerRequestResponseValidator classUnderTest =
-                SwaggerRequestResponseValidator.createFor("/oai/v2/api-operation-finder-test.json").build();
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator.createFor("/oai/v2/api-operation-finder-test.json").build();
 
         final Request request = SimpleRequest.Builder
                 .get("/pathparams/withextension/theid.json")
@@ -761,8 +761,8 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withPartPathParams_shouldFail_whenMissing() {
-        final SwaggerRequestResponseValidator classUnderTest =
-                SwaggerRequestResponseValidator.createFor("/oai/v2/api-operation-finder-test.json").build();
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator.createFor("/oai/v2/api-operation-finder-test.json").build();
 
         final Request request = SimpleRequest.Builder
                 .get("/pathparams/withextension/.json")
@@ -773,8 +773,8 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withMultiplePathParams_shouldPass_whenAllValid() {
-        final SwaggerRequestResponseValidator classUnderTest =
-                SwaggerRequestResponseValidator.createFor("/oai/v2/api-operation-finder-test.json").build();
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator.createFor("/oai/v2/api-operation-finder-test.json").build();
 
         final Request request = SimpleRequest.Builder
                 .get("/pathparams/withmultiple/theid-thename")
@@ -785,8 +785,8 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withMultiplePathParams_shouldFail_whenMissing() {
-        final SwaggerRequestResponseValidator classUnderTest =
-                SwaggerRequestResponseValidator.createFor("/oai/v2/api-operation-finder-test.json").build();
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator.createFor("/oai/v2/api-operation-finder-test.json").build();
 
         final Request request = SimpleRequest.Builder
                 .get("/pathparams/withmultiple/-thename")
@@ -797,8 +797,8 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withXmlBody_shouldNotApplySchemaValidation() {
-        final SwaggerRequestResponseValidator classUnderTest =
-                SwaggerRequestResponseValidator.createFor("/oai/v2/api-non-json-body.json").build();
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator.createFor("/oai/v2/api-non-json-body.json").build();
 
         final Request request = SimpleRequest.Builder
                 .post("/results")
@@ -811,8 +811,8 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withPlainTextBody_shouldNotApplySchemaValidation() {
-        final SwaggerRequestResponseValidator classUnderTest =
-                SwaggerRequestResponseValidator.createFor("/oai/v2/api-non-json-body.json").build();
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator.createFor("/oai/v2/api-non-json-body.json").build();
 
         final Request request = SimpleRequest.Builder
                 .patch("/results/100")

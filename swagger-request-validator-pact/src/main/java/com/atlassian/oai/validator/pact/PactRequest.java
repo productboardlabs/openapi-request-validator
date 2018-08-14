@@ -19,7 +19,7 @@ public class PactRequest implements Request {
      */
     @Deprecated
     public PactRequest(@Nonnull final au.com.dius.pact.model.Request originalRequest) {
-        this.delegate = PactRequest.of(originalRequest);
+        delegate = PactRequest.of(originalRequest);
     }
 
     @Nonnull
@@ -65,7 +65,7 @@ public class PactRequest implements Request {
     }
 
     /**
-     * Builds a {@link Request} for the swagger validator out of the
+     * Builds a {@link Request} for the OpenAPI validator out of the
      * original {@link au.com.dius.pact.model.Request}.
      *
      * @param originalRequest the original {@link au.com.dius.pact.model.Request}

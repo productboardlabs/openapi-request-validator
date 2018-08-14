@@ -22,7 +22,7 @@ public class WireMockRequest implements Request {
      */
     @Deprecated
     public WireMockRequest(@Nonnull final com.github.tomakehurst.wiremock.http.Request originalRequest) {
-        this.delegate = WireMockRequest.of(originalRequest);
+        delegate = WireMockRequest.of(originalRequest);
     }
 
     @Nonnull
@@ -68,7 +68,7 @@ public class WireMockRequest implements Request {
     }
 
     /**
-     * Builds a {@link Request} for the swagger validator out of the
+     * Builds a {@link Request} for the OpenAPI validator out of the
      * original {@link com.github.tomakehurst.wiremock.http.Request}.
      *
      * @param originalRequest the original {@link com.github.tomakehurst.wiremock.http.Request}

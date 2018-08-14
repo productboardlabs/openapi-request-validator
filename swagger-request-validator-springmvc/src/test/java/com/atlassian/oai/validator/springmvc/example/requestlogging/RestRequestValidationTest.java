@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.springmvc.example.requestlogging;
 
+import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.springmvc.example.simple.RestServiceApplication;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
@@ -27,7 +28,7 @@ import static org.junit.Assert.assertThat;
 
 /**
  * Testing with non-default context-path and a custom created
- * {@link com.atlassian.oai.validator.SwaggerRequestResponseValidator} with base path override.
+ * {@link OpenApiInteractionValidator} with base path override.
  *
  * @see RestRequestLoggingValidationConfig#RestRequestLoggingValidationConfig(Resource)
  */

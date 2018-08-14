@@ -24,15 +24,15 @@ Designed to be be standalone and used independently of any HTTP library or mocki
 See the [examples module](https://bitbucket.org/atlassian/swagger-request-validator/src/master/swagger-request-validator-examples/?at=master)
 for examples on how the library is used.
 
-The main entry point to the library is the `com.atlassian.oai.validator.SwaggerRequestResponseValidator`.
+The main entry point to the library is the `com.atlassian.oai.validator.OpenApiInteractionValidator`.
 This validator takes a specification file (local or remote URL) and can then be used to validate request/response pairs.
 
 The validator returns a `com.atlassian.oai.validator.report.ValidationReport` which will contain any errors that
 occurred during the validation. These can be used to generate a report for users etc.
 
 ```java
-final SwaggerRequestResponseValidator validator = SwaggerRequestResponseValidator
-        .createFor(swaggerJsonUrl)
+final OpenApiInteractionValidator validator = OpenApiInteractionValidator
+        .createFor(specUrl)
         .withBasePathOverride(basePathOverride)
         .build;
 final ValidationReport report = validator.validate(request, response);
@@ -95,11 +95,11 @@ There are 4 options for controlling validation behavior in your project.
 
 #### Option 1 - Programmatically ####
 
-When creating a `SwaggerRequestResponseValidator` instance you can specify a `LevelResolver` instance 
+When creating a `OpenApiInteractionValidator` instance you can specify a `LevelResolver` instance 
 with programmatically added validation level configuration.
 
 ```
-this.validator = SwaggerRequestResponseValidator
+this.validator = OpenApiInteractionValidator
         .createFor(swaggerJsonUrl)
         .withLevelResolver(
                 LevelResolver.create()
@@ -153,7 +153,7 @@ These keys will override any other key that has been set.
 There are scenarios where simple control of message levels is not enough. 
 Perhaps you want to treat all messages of certain types as errors but not in this one 
 particular endpoint. Or maybe the validator reports some errors incorrectly in a few obscure edge
-cases. Or maybe your swagger spec is not really that precise but for whatever reason you can't
+cases. Or maybe your OpenAPI / Swagger spec is not really that precise but for whatever reason you can't
 make it 100% correct.
 
 If that's the case, you can define whitelists to ignore messages based on fine-grained rules, 
@@ -200,7 +200,7 @@ Once you have a whitelist, simply pass it on to the validator builder:
 ```java
 ValidationErrorsWhitelist whitelist = ...
 
-final SwaggerRequestResponseValidator swaggerValidator = SwaggerRequestResponseValidator.createFor(spec)
+final OpenApiInteractionValidator validator = OpenApiInteractionValidator.createFor(spec)
                 .withWhitelist(whitelist)
                 .build();
 ```

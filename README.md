@@ -2,7 +2,7 @@
 
 [![build-status](https://bitbucket-badges.atlassian.io/badge/atlassian/swagger-request-validator.svg)](https://bitbucket.org/atlassian/swagger-request-validator/addon/pipelines/home#!/) [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator)
 
-A Java library for validating HTTP request/responses against a [Swagger/OpenAPI](https://openapis.org/) specification.
+A Java library for validating HTTP request/responses against an [OpenAPI / Swagger](https://openapis.org/) specification.
 
 Designed to be used independently of any HTTP library or framework, the library can be used to validate
 request/responses from almost any source (e.g. in a REST client, in unit tests that use mocked responses,
@@ -47,17 +47,17 @@ HTTP request/responses that can be adapted to any 3rd party implementation.
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-pact/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-pact)
 
-Adapters for validating [Pact](http://docs.pact.io/) request/response expectations with the Swagger validator, 
+Adapters for validating [Pact](http://docs.pact.io/) request/response expectations with the OpenAPI / Swagger validator, 
 shortening the feedback loop when writing Consumer tests.
 
-Includes a JUnit rule that adds Swagger/OAI validation to the [Pact-JVM](https://github.com/DiUS/pact-jvm) consumer 
+Includes a JUnit rule that adds OpenAPI / Swagger validation to the [Pact-JVM](https://github.com/DiUS/pact-jvm) consumer 
 test execution.
 
 ###swagger-request-validator-wiremock 
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-wiremock/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-wiremock)
 
-Adapters for validating [WireMock](http://wiremock.org/) HTTP mocks against a Swagger/OAI specification.
+Adapters for validating [WireMock](http://wiremock.org/) HTTP mocks against an OpenAPI / Swagger specification.
 
 Includes a drop-in replacement for the `WireMockRule` that adds validation to mocked interactions, giving you 
 confidence that your mocks reflect reality. 
@@ -67,7 +67,7 @@ confidence that your mocks reflect reality.
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-restassured/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-restassured)
 
 Adapters for validating given-when-then interactions from the [REST Assured](http://rest-assured.io/) testing library 
-against a Swagger/OAI specification.
+against an OpenAPI / Swagger specification.
 
 Useful for e.g. ensuring your service implementation matches its API specification.
 
@@ -76,7 +76,7 @@ Useful for e.g. ensuring your service implementation matches its API specificati
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-mockmvc/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-mockmvc)
 
 Adapters for validating interactions using the [Spring MVC Test Framework](http://docs.spring.io/spring-framework/docs/current/spring-framework-reference/html/integration-testing.html#spring-mvc-test-framework)
-against a Swagger/OAI specification.
+against an OpenAPI / Swagger specification.
 
 Includes a [ResultMatcher](http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/test/web/servlet/ResultMatcher.html) that 
 allows you to assert your service implementation matches its API specification.
@@ -86,7 +86,7 @@ allows you to assert your service implementation matches its API specification.
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-mockmvc/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-mockmvc)
 
 Adapter for validating interactions using the [Spring Web MVC framework](https://docs.spring.io/spring/docs/current/spring-framework-reference/html/mvc.html)
-against a Swagger/OAI specification during runtime in a production environment.
+against an OpenAPI / Swagger specification during runtime in a production environment.
 
 Useful for ensuring that the client requests matching the API specification.
 

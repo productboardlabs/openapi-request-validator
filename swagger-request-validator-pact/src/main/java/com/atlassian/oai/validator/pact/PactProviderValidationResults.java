@@ -14,7 +14,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 /**
- * Results from validating Consumer Pacts against a Provider Swagger API spec.
+ * Results from validating Consumer Pacts against a Provider OpenAPI / Swagger spec.
  */
 public class PactProviderValidationResults {
 
@@ -62,7 +62,7 @@ public class PactProviderValidationResults {
      * @param result the result to add
      */
     public void addConsumerResult(final ConsumerResult result) {
-        this.results.add(result);
+        results.add(result);
     }
 
     /**
@@ -84,7 +84,7 @@ public class PactProviderValidationResults {
      */
     public String getValidationFailureReport() {
         final StringBuilder msg = new StringBuilder();
-        this.getFailedConsumerResults().forEach(r -> {
+        getFailedConsumerResults().forEach(r -> {
             msg.append("* ").append(r.getConsumerName()).append('\n');
             r.getFailedInteractions().forEach((i, v) -> {
                 msg.append("\t- ").append(i).append("\t");
@@ -109,7 +109,7 @@ public class PactProviderValidationResults {
 
         private final String consumerName;
         private final String consumerPact;
-        private Map<String, ValidationReport> interactionResults = new HashMap<>();
+        private final Map<String, ValidationReport> interactionResults = new HashMap<>();
 
         public ConsumerResult(final String consumerName, final String consumerPact) {
             this.consumerName = consumerName;

@@ -2,13 +2,13 @@
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-pact/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-pact)
 
-Integrations between the Swagger Request Validator with the [Pact Consumer Driven Contracts framework](http://docs.pact.io/).
+Integrations between the Swagger Request Validator and the [Pact Consumer Driven Contracts framework](http://docs.pact.io/).
 
 This module includes request/response adaptors that allow validation of Pact interactions with the Swagger Request
 Validator. It also includes a `ValidatedPactProviderRule` that can be used as a drop-in replacement for the standard
 [pact-jvm-consumer-junit](https://github.com/DiUS/pact-jvm/tree/master/pact-jvm-consumer-junit) `PactProviderRule`
-to enable Swagger validation of consumer expectations, and a `PactProviderValidator` that can be 
-used to validate Consumer Pacts against a Provider Swagger API.
+to enable OpenAPI / Swagger validation of consumer expectations, and a `PactProviderValidator` that can be 
+used to validate Consumer Pacts against a Provider OpenAPI / Swagger specification.
 
 ## Usage ##
 
@@ -27,7 +27,7 @@ This module includes support for Pact validation both from the Consumer and Prov
 
 ### Consumer validation
 
-On the Consumer side, the module can be used to validate Consumer expectations against a Provider Swagger API spec 
+On the Consumer side, the module can be used to validate Consumer expectations against a Provider OpenAPI / Swagger spec 
 during the Consumer test execution. This can lead to faster detection of invalid expectations on the Consumer side.
 
 There are two ways to perform Consumer-side validation:
@@ -71,7 +71,7 @@ Alternatively you can manually validate an interaction.
 
 ```java
 final RequestResponseInteraction interaction = ...
-final SwaggerRequestResponseValidator validator = SwaggerRequestResponseValidator.createFor(swaggerJsonUrl).build();
+final OpenApiInteractionValidator validator = OpenApiInteractionValidator.createFor(apiSpecUrl).build();
 final ValidationReport report = validator.validate(
                 new PactRequest(interaction.getRequest()),
                 new PactResponse(interaction.getResponse()));
@@ -79,19 +79,19 @@ final ValidationReport report = validator.validate(
 
 ### Provider validation
 
-On the Provider side, the module can be used to validate Consumer Pacts against a Provider Swagger API spec as part 
+On the Provider side, the module can be used to validate Consumer Pacts against a Provider OpenAPI / Swagger spec as part 
 of the Provider's test suite or during the CI process etc.
 
 #### PactProviderValidator
 
-The `PactProviderValidator` validates Consumer Pact files against a Provider Swagger API spec. It can be used with
+The `PactProviderValidator` validates Consumer Pact files against a Provider OpenAPI / Swagger spec. It can be used with
 Consumer Pacts from a [Pact broker](https://docs.pact.io/documentation/sharings_pacts.html), and/or with Pact files
 retrieved from specific locations (file system, remote URLs etc.)
 
 ```java
 final PactProviderValidator validator = 
         PactProviderValidator
-            .createFor(SWAGGER_JSON_URL)
+            .createFor(API_SPEC_URL)
             .withPactsFrom(BROKER_URL, PROVIDER_ID)
             .build();
             

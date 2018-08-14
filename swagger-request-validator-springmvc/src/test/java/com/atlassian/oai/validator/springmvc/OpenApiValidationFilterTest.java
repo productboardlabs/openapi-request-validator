@@ -14,12 +14,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.times;
 
-public class SwaggerValidationFilterTest {
+public class OpenApiValidationFilterTest {
 
     @Test
     public void doFilterInternal_wrapsTheServletRequestAndResponseIfNoCors() throws ServletException, IOException {
         // given:
-        final SwaggerValidationFilter classUnderTest = new SwaggerValidationFilter(true, true);
+        final OpenApiValidationFilter classUnderTest = new OpenApiValidationFilter(true, true);
 
         // and:
         final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
@@ -38,7 +38,7 @@ public class SwaggerValidationFilterTest {
     @Test
     public void doFilterInternal_noWrappingIfValidationIsDisabled() throws ServletException, IOException {
         // given:
-        final SwaggerValidationFilter classUnderTest = new SwaggerValidationFilter(false, false);
+        final OpenApiValidationFilter classUnderTest = new OpenApiValidationFilter(false, false);
 
         // and:
         final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
@@ -55,7 +55,7 @@ public class SwaggerValidationFilterTest {
     @Test
     public void doFilterInternal_wrapsTheServletRequestIfContentLengthNotToLong() throws ServletException, IOException {
         // given:
-        final SwaggerValidationFilter classUnderTest = new SwaggerValidationFilter();
+        final OpenApiValidationFilter classUnderTest = new OpenApiValidationFilter();
 
         // and:
         final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
@@ -74,7 +74,7 @@ public class SwaggerValidationFilterTest {
     @Test
     public void doFilterInternal_wrapsTheServletRequestIfContentLengthIsInvalid() throws ServletException, IOException {
         // given:
-        final SwaggerValidationFilter classUnderTest = new SwaggerValidationFilter();
+        final OpenApiValidationFilter classUnderTest = new OpenApiValidationFilter();
 
         // and:
         final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
@@ -93,7 +93,7 @@ public class SwaggerValidationFilterTest {
     @Test
     public void doFilterInternal_noRequestWrappingIfContentIsToLong() throws ServletException, IOException {
         // given:
-        final SwaggerValidationFilter classUnderTest = new SwaggerValidationFilter();
+        final OpenApiValidationFilter classUnderTest = new OpenApiValidationFilter();
 
         // and:
         final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
@@ -111,7 +111,7 @@ public class SwaggerValidationFilterTest {
     @Test
     public void doFilterInternal_noWrappingIfCorsPreflight() throws ServletException, IOException {
         // given:
-        final SwaggerValidationFilter classUnderTest = new SwaggerValidationFilter(true, true);
+        final OpenApiValidationFilter classUnderTest = new OpenApiValidationFilter(true, true);
 
         // and:
         final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);

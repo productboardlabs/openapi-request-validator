@@ -13,8 +13,8 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadXmlResponse
 
 public class OpenAPIV3ResponseValidationTest {
 
-    private final SwaggerRequestResponseValidator classUnderTest =
-            SwaggerRequestResponseValidator.createFor("/oai/v3/api-users.yaml").build();
+    private final OpenApiInteractionValidator classUnderTest =
+            OpenApiInteractionValidator.createFor("/oai/v3/api-users.yaml").build();
 
     @Test
     public void validate_withValidResponse_shouldSucceed() {

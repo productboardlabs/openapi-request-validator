@@ -7,7 +7,7 @@ import au.com.dius.pact.consumer.PactVerification;
 import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
 import au.com.dius.pact.model.MockProviderConfig;
 import au.com.dius.pact.model.PactFragment;
-import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
+import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.report.SimpleValidationReportFormat;
 import com.atlassian.oai.validator.report.ValidationReport;
 import org.junit.rules.TestRule;
@@ -27,24 +27,31 @@ public class ValidatedPactProviderRule implements TestRule {
     private final PactProviderRule delegate;
     private final String providerId;
     private final Object target;
-    private final SwaggerRequestResponseValidator validator;
+    private final OpenApiInteractionValidator validator;
 
-    public ValidatedPactProviderRule(final String swaggerJsonUrl, final String basePathOverride,
-                                     final String providerId, final Object target) {
-        this(swaggerJsonUrl, basePathOverride, providerId, target,
-                new PactProviderRule(providerId, target));
+    public ValidatedPactProviderRule(final String specUrlOrPayload,
+                                     final String basePathOverride,
+                                     final String providerId,
+                                     final Object target) {
+        this(specUrlOrPayload, basePathOverride, providerId, target, new PactProviderRule(providerId, target));
     }
 
-    public ValidatedPactProviderRule(final String swaggerJsonUrl, final String basePathOverride,
-                                     final String providerId, final String host, final Integer port, final Object target) {
-        this(swaggerJsonUrl, basePathOverride, providerId, target,
-                new PactProviderRule(providerId, host, port, target));
+    public ValidatedPactProviderRule(final String specUrlOrPayload,
+                                     final String basePathOverride,
+                                     final String providerId,
+                                     final String host,
+                                     final Integer port,
+                                     final Object target) {
+        this(specUrlOrPayload, basePathOverride, providerId, target, new PactProviderRule(providerId, host, port, target));
     }
 
-    private ValidatedPactProviderRule(final String swaggerJsonUrl, final String basePathOverride,
-                                      final String providerId, final Object target, final PactProviderRule delegate) {
-        validator = SwaggerRequestResponseValidator
-                .createFor(swaggerJsonUrl)
+    private ValidatedPactProviderRule(final String specUrlOrPayload,
+                                      final String basePathOverride,
+                                      final String providerId,
+                                      final Object target,
+                                      final PactProviderRule delegate) {
+        validator = OpenApiInteractionValidator
+                .createFor(specUrlOrPayload)
                 .withLevelResolver(PactLevelResolverFactory.create())
                 .withBasePathOverride(basePathOverride)
                 .build();

@@ -14,8 +14,13 @@ Provides support for both Swagger v2 and OpenAPI v3 specifications.
 
 ### Upgrade notes
 
+* `SwaggerRequestResponseValidator` has been deprecated in favor of `OpenApiInteractionValidator`. 
+The original `SwaggerRequestResponseValidator` will be removed in a future release.
+* Various filters and interceptors etc. in the adapter modules have been deprecated and replaced with versions named with `OpenApi*`.
+The original `Swagger*` named versions will be removed in a future release.
 * Schema validation errors now have the form `validation.{request|response}.{body|parameter}.schema.{keyword}`
 e.g. `validation.request.parameter.schema.type`
+* Multi-part formdata validation is currently not supported. This will be re-added in an upcoming release.
 
 #v1.4.7
 * Fixed the 'additional properties' validation for inline and nested schema definitions

@@ -1,6 +1,6 @@
 package com.atlassian.oai.validator.examples.whitelist;
 
-import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
+import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.whitelist.ValidationErrorsWhitelist;
@@ -27,7 +27,7 @@ import static org.junit.Assert.assertThat;
  */
 public class WhitelistingValidationErrorsTestExample {
 
-    private final SwaggerRequestResponseValidator validator = SwaggerRequestResponseValidator.createFor("http://petstore.swagger.io/v2/swagger.json")
+    private final OpenApiInteractionValidator validator = OpenApiInteractionValidator.createFor("http://petstore.swagger.io/v2/swagger.json")
         .withWhitelist(ValidationErrorsWhitelist.create()
             .withRule(
                 "Ignore missing security when getting store inventory",

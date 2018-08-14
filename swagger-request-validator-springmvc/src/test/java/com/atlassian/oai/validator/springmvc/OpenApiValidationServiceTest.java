@@ -1,6 +1,6 @@
 package com.atlassian.oai.validator.springmvc;
 
-import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
+import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleRequest;
@@ -34,11 +34,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
-public class SwaggerRequestValidationServiceTest {
+public class OpenApiValidationServiceTest {
 
-    private SwaggerRequestValidationService classUnderTest;
+    private OpenApiValidationService classUnderTest;
 
-    private SwaggerRequestResponseValidator requestValidator;
+    private OpenApiInteractionValidator requestValidator;
 
     private static Map<String, Collection<String>> getHeadersFromResponse(final Response response) {
         final Field headersField = ReflectionUtils.findField(SimpleResponse.class, "headers");
@@ -48,13 +48,13 @@ public class SwaggerRequestValidationServiceTest {
 
     @Before
     public void setUp() {
-        requestValidator = mock(SwaggerRequestResponseValidator.class);
-        classUnderTest = new SwaggerRequestValidationService(requestValidator);
+        requestValidator = mock(OpenApiInteractionValidator.class);
+        classUnderTest = new OpenApiValidationService(requestValidator);
     }
 
     @Test(expected = NullPointerException.class)
     public void constructor_failsWithoutRequiredValidator() throws IOException {
-        new SwaggerRequestValidationService((SwaggerRequestResponseValidator) null);
+        new OpenApiValidationService((OpenApiInteractionValidator) null);
     }
 
     @Test
@@ -63,7 +63,7 @@ public class SwaggerRequestValidationServiceTest {
         when(encodedResource.getReader())
                 .thenReturn(new InputStreamReader(getClass().getResourceAsStream("/api-spring-test.json")));
 
-        final SwaggerRequestValidationService service = new SwaggerRequestValidationService(encodedResource);
+        final OpenApiValidationService service = new OpenApiValidationService(encodedResource);
         assertThat(service, notNullValue());
     }
 
@@ -73,7 +73,7 @@ public class SwaggerRequestValidationServiceTest {
         final EncodedResource encodedResource = mock(EncodedResource.class);
         when(encodedResource.getReader())
                 .thenReturn(new InputStreamReader(getClass().getResourceAsStream("/api-spring-test.json")));
-        final SwaggerRequestValidationService service = new SwaggerRequestValidationService(encodedResource);
+        final OpenApiValidationService service = new OpenApiValidationService(encodedResource);
         assertThat(service, notNullValue());
 
         // and:

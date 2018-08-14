@@ -1,6 +1,6 @@
 package com.atlassian.oai.validator.springmvc;
 
-import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
+import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.report.ValidationReport;
@@ -22,16 +22,16 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
-public class SwaggerValidationInterceptorTest {
+public class OpenApiValidationInterceptorTest {
 
-    private SwaggerValidationInterceptor classUnderTest;
+    private OpenApiValidationInterceptor classUnderTest;
 
-    private SwaggerRequestValidationService swaggerRequestValidationService;
+    private OpenApiValidationService openApiValidationService;
 
     @Before
     public void setUp() {
-        swaggerRequestValidationService = Mockito.mock(SwaggerRequestValidationService.class);
-        classUnderTest = new SwaggerValidationInterceptor(swaggerRequestValidationService);
+        openApiValidationService = Mockito.mock(OpenApiValidationService.class);
+        classUnderTest = new OpenApiValidationInterceptor(openApiValidationService);
     }
 
     @Test
@@ -40,18 +40,18 @@ public class SwaggerValidationInterceptorTest {
         when(encodedResource.getReader())
                 .thenReturn(new InputStreamReader(getClass().getResourceAsStream("/api-spring-test.json")));
 
-        final SwaggerValidationInterceptor interceptor = new SwaggerValidationInterceptor(encodedResource);
+        final OpenApiValidationInterceptor interceptor = new OpenApiValidationInterceptor(encodedResource);
         assertThat(interceptor, notNullValue());
     }
 
     @Test
     public void constructor_withSwaggerRequestResponseValidator() {
         // given:
-        final SwaggerRequestResponseValidator swaggerRequestResponseValidator =
-                Mockito.mock(SwaggerRequestResponseValidator.class);
+        final OpenApiInteractionValidator openApiInteractionValidator =
+                Mockito.mock(OpenApiInteractionValidator.class);
 
         // when:
-        final SwaggerValidationInterceptor interceptor = new SwaggerValidationInterceptor(swaggerRequestResponseValidator);
+        final OpenApiValidationInterceptor interceptor = new OpenApiValidationInterceptor(openApiInteractionValidator);
 
         // then:
         assertThat(interceptor, notNullValue());
@@ -74,8 +74,8 @@ public class SwaggerValidationInterceptorTest {
         when(servletRequest.getMethod()).thenReturn("METHOD");
         when(servletRequest.getRequestURI()).thenReturn("/request/uri");
 
-        when(swaggerRequestValidationService.buildRequest(servletRequest)).thenReturn(request);
-        when(swaggerRequestValidationService.validateRequest(request)).thenReturn(validationReport);
+        when(openApiValidationService.buildRequest(servletRequest)).thenReturn(request);
+        when(openApiValidationService.validateRequest(request)).thenReturn(validationReport);
         when(validationReport.hasErrors()).thenReturn(false);
 
         final boolean result = classUnderTest.preHandle(servletRequest, null, null);
@@ -93,8 +93,8 @@ public class SwaggerValidationInterceptorTest {
         when(servletRequest.getMethod()).thenReturn("METHOD");
         when(servletRequest.getRequestURI()).thenReturn("/request/uri");
 
-        Mockito.when(swaggerRequestValidationService.buildRequest(servletRequest)).thenReturn(request);
-        Mockito.when(swaggerRequestValidationService.validateRequest(request)).thenReturn(validationReport);
+        Mockito.when(openApiValidationService.buildRequest(servletRequest)).thenReturn(request);
+        Mockito.when(openApiValidationService.validateRequest(request)).thenReturn(validationReport);
         Mockito.when(validationReport.hasErrors()).thenReturn(true);
         Mockito.when(validationReport.getMessages()).thenReturn(Collections.emptyList());
 
@@ -125,8 +125,8 @@ public class SwaggerValidationInterceptorTest {
         Mockito.when(servletRequest.getMethod()).thenReturn("METHOD");
         Mockito.when(servletRequest.getRequestURI()).thenReturn("/request/uri");
 
-        Mockito.when(swaggerRequestValidationService.buildResponse(servletResponse)).thenReturn(response);
-        Mockito.when(swaggerRequestValidationService.validateResponse(servletRequest, response)).thenReturn(validationReport);
+        Mockito.when(openApiValidationService.buildResponse(servletResponse)).thenReturn(response);
+        Mockito.when(openApiValidationService.validateResponse(servletRequest, response)).thenReturn(validationReport);
         Mockito.when(validationReport.hasErrors()).thenReturn(false);
 
         // when:
@@ -148,8 +148,8 @@ public class SwaggerValidationInterceptorTest {
         Mockito.when(servletRequest.getMethod()).thenReturn("METHOD");
         Mockito.when(servletRequest.getRequestURI()).thenReturn("/request/uri");
 
-        Mockito.when(swaggerRequestValidationService.buildResponse(servletResponse)).thenReturn(response);
-        Mockito.when(swaggerRequestValidationService.validateResponse(servletRequest, response)).thenReturn(validationReport);
+        Mockito.when(openApiValidationService.buildResponse(servletResponse)).thenReturn(response);
+        Mockito.when(openApiValidationService.validateResponse(servletRequest, response)).thenReturn(validationReport);
         Mockito.when(validationReport.hasErrors()).thenReturn(true);
         Mockito.when(validationReport.getMessages()).thenReturn(Collections.emptyList());
 

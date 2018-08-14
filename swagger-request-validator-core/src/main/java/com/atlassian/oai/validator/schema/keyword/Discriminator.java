@@ -46,7 +46,7 @@ public class Discriminator {
     }
 
     /**
-     * Syntax checker for the <code>discriminator</code> keyword introduced by the Swagger/OpenAPI specification.
+     * Syntax checker for the <code>discriminator</code> keyword introduced by the OpenAPI / Swagger specification.
      *
      * @see <a href="http://swagger.io/specification/#composition-and-inheritance--polymorphism--83">Swagger specification</a>
      */
@@ -111,7 +111,7 @@ public class Discriminator {
     }
 
     /**
-     * Digester for the <code>discriminator</code> keyword introduced by the Swagger/OpenAPI specification.
+     * Digester for the <code>discriminator</code> keyword introduced by the OpenAPI / Swagger specification.
      */
     public static class DiscriminatorDigester extends AbstractDigester {
 
@@ -134,7 +134,7 @@ public class Discriminator {
     }
 
     /**
-     * Keyword validator for the <code>discriminator</code> keyword introduced by the Swagger/OpenAPI specification.
+     * Keyword validator for the <code>discriminator</code> keyword introduced by the OpenAPI / Swagger specification.
      *
      * @see <a href="http://swagger.io/specification/#composition-and-inheritance--polymorphism--83">Swagger specification</a>
      */

@@ -2,11 +2,11 @@
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-wiremock/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-wiremock)
 
-Integrations between the Swagger Request Validator with the [WireMock HTTP mocking framework](http://wiremock.org/).
+Integrations between the Swagger Request Validator and the [WireMock HTTP mocking framework](http://wiremock.org/).
 
 This module includes request/response adaptors that allow validation of WireMock stubs with the Swagger Request
 Validator, and a `ValidatedWireMockRule` that can be used as a drop-in replacement for the standard WireMock
-`WireMockRule` to enable Swagger validation of stubs.
+`WireMockRule` to enable OpenAPI / Swagger validation of stubs.
 
 ## Usage ##
 
@@ -33,8 +33,7 @@ public WireMockRule wireMockRule = new WireMockRule(PORT);
 With:
 ```
 @Rule
-public ValidatedWireMockRule wireMockRule =
-    new ValidatedWireMockRule(SWAGGER_JSON_URL, PORT);
+public ValidatedWireMockRule wireMockRule = new ValidatedWireMockRule(SPEC_URL, PORT);
 ```
 
 *Note*:
@@ -51,17 +50,17 @@ To use the JUnit rule you will need to ensure the following dependencies are add
 ### Validation listener ##
 
 If you already have WireMock setup, or are using the `WireMockServer` instead of the `WireMockRule` you can use the
-`SwaggerValidationListener` to perform request/response validation on your WireMock stubs.
+`OpenApiValidationListener` to perform request/response validation on your WireMock stubs.
 
 See the javadoc for more details on usage.
 
 ```
 @Rule
 public WireMockRule wireMockRule;
-private SwaggerValidationListener validationListener;
+private OpenApiValidationListener validationListener;
 
-public SwaggerValidatedWireMockListenerTestExample() {
-    this.validationListener = new SwaggerValidationListener(SWAGGER_JSON_URL);
+public ValidatedWireMockListenerTestExample() {
+    this.validationListener = new OpenApiValidationListener(SPEC_URL);
 
     this.wireMockRule = new WireMockRule(PORT);
     this.wireMockRule.addMockServiceRequestListener(validationListener);

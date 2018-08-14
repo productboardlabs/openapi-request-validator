@@ -13,7 +13,7 @@
     <artifactId>swagger-request-validator-restassured</artifactId>
 
     <description>
-        Integrations between Swagger validation and REST-Assured REST tests.
+        Integrations between OpenAPI / Swagger validation and REST-Assured REST tests.
     </description>
 
     <dependencies>

@@ -11,7 +11,7 @@ import static org.junit.Assert.fail;
  * An example Pact Provider test that uses the {@link PactProviderValidator} to validate consumer Pacts
  * against a service Swagger API specification.
  */
-public class SwaggerValidatorPactProviderTestExample {
+public class OpenApiValidatorPactProviderTestExample {
 
     public static final String SWAGGER_JSON_URL = "http://petstore.swagger.io/v2/swagger.json";
 

@@ -18,7 +18,7 @@ public class WireMockResponse implements Response {
      */
     @Deprecated
     public WireMockResponse(@Nonnull final com.github.tomakehurst.wiremock.http.Response originalResponse) {
-        this.delegate = WireMockResponse.of(originalResponse);
+        delegate = WireMockResponse.of(originalResponse);
     }
 
     @Override
@@ -39,7 +39,7 @@ public class WireMockResponse implements Response {
     }
 
     /**
-     * Builds a {@link Response} for the Swagger validator out of the
+     * Builds a {@link Response} for the OpenAPI validator out of the
      * original {@link com.github.tomakehurst.wiremock.http.Response}.
      *
      * @param originalResponse the original {@link com.github.tomakehurst.wiremock.http.Response}

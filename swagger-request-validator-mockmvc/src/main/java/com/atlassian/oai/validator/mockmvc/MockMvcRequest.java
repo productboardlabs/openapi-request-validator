@@ -32,7 +32,7 @@ public class MockMvcRequest implements Request {
      */
     @Deprecated
     public MockMvcRequest(@Nonnull final MockHttpServletRequest originalRequest) {
-        this.delegate = MockMvcRequest.of(originalRequest);
+        delegate = MockMvcRequest.of(originalRequest);
     }
 
     @Nonnull
@@ -78,7 +78,7 @@ public class MockMvcRequest implements Request {
     }
 
     /**
-     * Builds a {@link Request} for the swagger validator out of the
+     * Builds a {@link Request} for the OpenAPI validator out of the
      * original {@link MockHttpServletRequest}.
      *
      * @param originalRequest the original {@link MockHttpServletRequest}
@@ -96,7 +96,7 @@ public class MockMvcRequest implements Request {
     }
 
     private static String getBody(@Nonnull final MockHttpServletRequest mockHttpServletRequest) {
-        try (BufferedReader reader = getReader(mockHttpServletRequest)) {
+        try (final BufferedReader reader = getReader(mockHttpServletRequest)) {
             final StringBuilder builder = new StringBuilder();
             String aux;
             int lineCount = 0;

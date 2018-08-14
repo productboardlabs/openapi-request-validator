@@ -2,9 +2,12 @@
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-springmvc/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-springmvc)
 
-Integrations between the Swagger Request Validator with the [Spring Web MVC framework](https://docs.spring.io/spring/docs/current/spring-framework-reference/html/mvc.html).
+Integrations between the Swagger Request Validator and the 
+[Spring Web MVC framework](https://docs.spring.io/spring/docs/current/spring-framework-reference/html/mvc.html).
 
-This module includes a `SwaggerValidationFilter` and a `SwaggerValidationInterceptor` that can be used to add request and / or response validation to a REST web service utilizing Spring MVC v4.2.0 or later. Including Spring Boot Starter applications utilizing Spring MVC with said version, e.g. spring-boot-starter-web-services or spring-boot-starter-web.
+This module includes an `OpenApiValidationFilter` and an `OpenApiValidationInterceptor` that can be used to add request
+and / or response validation to a REST web service utilizing Spring MVC v4.2.0 or later, including Spring Boot Starter 
+applications utilizing Spring MVC with said version, e.g. `spring-boot-starter-web-services` or `spring-boot-starter-web`.
 
 In case of invalid requests against the REST web service an `InvalidRequestException` is thrown containing the `ValidationReport`.  
 In case of invalid responses coming from the REST web service an `InvalidResponseException` is thrown containing the `ValidationReport`.
@@ -26,8 +29,8 @@ e.g. for Maven in your pom.xml:
 Add this configuration to your application.
 
 ```java
-import com.atlassian.oai.validator.springmvc.SwaggerValidationFilter;
-import com.atlassian.oai.validator.springmvc.SwaggerValidationInterceptor;
+import com.atlassian.oai.validator.springmvc.OpenApiValidationFilter;
+import com.atlassian.oai.validator.springmvc.OpenApiValidationInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -41,22 +44,22 @@ import javax.servlet.Filter;
 import java.io.IOException;
 
 @Configuration
-public class SwaggerRequestValidationConfig extends WebMvcConfigurerAdapter {
+public class OpenApiValidationConfig extends WebMvcConfigurerAdapter {
 
-    private final SwaggerValidationInterceptor swaggerValidationInterceptor;
+    private final OpenApiValidationInterceptor validationInterceptor;
 
     /**
-     * @param swaggerApi the {@link Resource} to your Swagger schema
+     * @param apiSpecification the {@link Resource} to your OpenAPI / Swagger schema
      */
     @Autowired
-    public SwaggerRequestValidationConfig(@Value("classpath:swagger-api.json") final Resource swaggerApi) throws IOException {
-        final EncodedResource swaggerResource = new EncodedResource(swaggerApi, "UTF-8");
-        this.swaggerValidationInterceptor = new SwaggerValidationInterceptor(swaggerResource);
+    public OpenApiValidationConfig(@Value("classpath:api.json") final Resource apiSpecification) throws IOException {
+        final EncodedResource specResource = new EncodedResource(apiSpecification, "UTF-8");
+        this.validationInterceptor = new OpenApiValidationInterceptor(specResource);
     }
 
     @Bean
-    public Filter swaggerValidationFilter() {
-        return new SwaggerValidationFilter(
+    public Filter validationFilter() {
+        return new OpenApiValidationFilter(
                 true, // enable request validation
                 true  // enable response validation
         );
@@ -64,22 +67,22 @@ public class SwaggerRequestValidationConfig extends WebMvcConfigurerAdapter {
 
     @Override
     public void addInterceptors(final InterceptorRegistry registry) {
-        registry.addInterceptor(swaggerValidationInterceptor);
+        registry.addInterceptor(validationInterceptor);
     }
 }
 ```
 
-To get better control over the validation a custom `SwaggerRequestResponseValidator` can be used.  
+To get better control over the validation a custom `OpenApiInteractionValidator` can be used.  
 
 ```java
     @Autowired
-    public SwaggerRequestValidationConfig(@Value("classpath:swagger-api.json") final Resource swaggerApi) throws IOException {
-        final SwaggerRequestResponseValidator swaggerRequestResponseValidator = SwaggerRequestResponseValidator
-                .createFor(swaggerSchema.getURL().getPath())
+    public OpenApiValidationConfig(@Value("classpath:api.json") final Resource apiSpecification) throws IOException {
+        final OpenApiInteractionValidator validator = OpenApiInteractionValidator
+                .createFor(apiSpecification.getURL().getPath())
                 .withLevelResolver(SpringMVCLevelResolverFactory.create())
                 .withBasePathOverride("/v1")
                 .build();
-        this.swaggerValidationInterceptor = new SwaggerValidationInterceptor(swaggerRequestResponseValidator);
+        this.validationInterceptor = new OpenApiValidationInterceptor(validator);
     }
 ```
 
@@ -93,7 +96,7 @@ Please see [the tests](https://bitbucket.org/atlassian/swagger-request-validator
 
 * There is a simple example that shows how to add the Swagger Request Validation adapter.
 * An advanced example shows how to additionally add an ExceptionHandler to map the `InvalidRequestException` and `InvalidResponseException` to a custom response.
-* Another example shows how to add custom request logging before each validation. A custom `SwaggerRequestResponseValidator` is used in this example.
+* Another example shows how to add custom request logging before each validation. A custom `OpenApiInteractionValidator` is used in this example.
 
 ## Caveats ##
 

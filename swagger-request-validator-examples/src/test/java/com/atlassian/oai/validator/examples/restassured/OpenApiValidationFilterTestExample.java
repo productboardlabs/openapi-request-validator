@@ -1,6 +1,6 @@
 package com.atlassian.oai.validator.examples.restassured;
 
-import com.atlassian.oai.validator.restassured.SwaggerValidationFilter;
+import com.atlassian.oai.validator.restassured.OpenApiValidationFilter;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import org.junit.Before;
@@ -12,7 +12,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static io.restassured.RestAssured.given;
 
 /**
- * An example that uses the {@link SwaggerValidationFilter} to validate request/response interactions
+ * An example that uses the {@link OpenApiValidationFilter} to validate request/response interactions
  * mediated by the REST-Assured library against a Swagger API specification.
  * <p>
  * The filter can be applied to any REST-Assured given-when-then interaction and allows developers to test
@@ -22,12 +22,12 @@ import static io.restassured.RestAssured.given;
  * the specification comes from metadata applied to the implementation (e.g. via annotations on the resource methods)
  * which are not checked at compile time.
  */
-public class SwaggerValidationFilterTestExample {
+public class OpenApiValidationFilterTestExample {
 
     private static final String SWAGGER_JSON_URL = "http://petstore.swagger.io/v2/swagger.json";
     private static final int PORT = 9999;
 
-    private final SwaggerValidationFilter validationFilter = new SwaggerValidationFilter(SWAGGER_JSON_URL);
+    private final OpenApiValidationFilter validationFilter = new OpenApiValidationFilter(SWAGGER_JSON_URL);
 
     // Using wiremock to simulate a production service.
     // In a real-world use case you would call out to your service (e.g. in a Spring WebMVC test,

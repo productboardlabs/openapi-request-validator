@@ -4,16 +4,13 @@ import org.junit.Test;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import static com.atlassian.oai.validator.mockmvc.SwaggerValidatorMatchers.swagger;
+import static com.atlassian.oai.validator.mockmvc.OpenApiValidationMatchers.openApi;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- *
- */
-public class SwaggerValidatorTestExample {
+public class OpenApiValidatorTestExample {
     private static final String SWAGGER_JSON_URL = "http://petstore.swagger.io/v2/swagger.json";
 
     /**
@@ -30,7 +27,7 @@ public class SwaggerValidatorTestExample {
                 .perform(get("/pet/1")
                 .header("api_key", "API_KEY"))
                 .andExpect(status().isOk())
-                .andExpect(swagger().isValid(SWAGGER_JSON_URL))
+                .andExpect(openApi().isValid(SWAGGER_JSON_URL))
                 .andExpect(jsonPath("$.id", 1)
                         .value(equalTo(1)));
     }
@@ -53,7 +50,7 @@ public class SwaggerValidatorTestExample {
                 .perform(get("/pet/ONE")
                 .header("api_key", "API_KEY"))
                 .andExpect(status().isOk())
-                .andExpect(swagger().isValid(SWAGGER_JSON_URL))
+                .andExpect(openApi().isValid(SWAGGER_JSON_URL))
                 .andExpect(jsonPath("$.id", 1)
                         .value(equalTo(1)));
     }

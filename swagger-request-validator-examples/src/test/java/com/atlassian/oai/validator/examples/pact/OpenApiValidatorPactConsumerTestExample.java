@@ -26,7 +26,7 @@ import static io.restassured.RestAssured.get;
  * @see <a href="https://github.com/realestate-com-au/pact">Pact</a>
  * @see <a href="https://github.com/DiUS/pact-jvm">Pact-jvm</a>
  */
-public class SwaggerValidatorPactConsumerTestExample {
+public class OpenApiValidatorPactConsumerTestExample {
 
     public static final String PROVIDER_ID = "Petstore";
     public static final String CONSUMER_ID = "ExampleConsumer";

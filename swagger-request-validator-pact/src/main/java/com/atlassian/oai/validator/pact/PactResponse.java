@@ -18,7 +18,7 @@ public class PactResponse implements Response {
      */
     @Deprecated
     public PactResponse(@Nonnull final au.com.dius.pact.model.Response originalResponse) {
-        this.delegate = PactResponse.of(originalResponse);
+        delegate = PactResponse.of(originalResponse);
     }
 
     @Override
@@ -39,7 +39,7 @@ public class PactResponse implements Response {
     }
 
     /**
-     * Builds a {@link Response} for the Swagger validator out of the
+     * Builds a {@link Response} for the OpenAPI validator out of the
      * original {@link au.com.dius.pact.model.Response}.
      *
      * @param originalResponse the original {@link au.com.dius.pact.model.Response}

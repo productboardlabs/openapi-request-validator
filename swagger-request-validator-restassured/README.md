@@ -2,7 +2,7 @@
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-restassured/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-restassured)
 
-Integrations between the Swagger Request Validator with the [REST Assured testing library](http://rest-assured.io/).
+Integrations between the Swagger Request Validator and the [REST Assured testing library](http://rest-assured.io/).
 
 This module includes request/response adaptors that allow validation of REST Assured interactions with the Swagger Request
 Validator, and a `SwaggerValidationFilter` that can be used to add validation to a REST Assured interaction.
@@ -21,10 +21,10 @@ See the [examples module](https://bitbucket.org/atlassian/swagger-request-valida
 for running examples of how the REST Assured module can be used.
 
 ### SwaggerValidationFilter ###
-The simplest way to use the integration is to add the `SwaggerValidationFilter` to a REST Assured interaction.
+The simplest way to use the integration is to add the `OpenApiValidationFilter` to a REST Assured interaction.
 
 ```
-private final SwaggerValidationFilter validationFilter = new SwaggerValidationFilter(SWAGGER_JSON_URL);
+private final OpenApiValidationFilter validationFilter = new OpenApiValidationFilter(API_SPEC_URL);
 
 ...
 

@@ -12,15 +12,15 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadResource;
 
 /**
- * General behavioral tests for the {@link SwaggerRequestResponseValidator}.
+ * General behavioral tests for the {@link OpenApiInteractionValidator}.
  *
  * @see SwaggerV2RequestValidationTest
  * @see SwaggerV2ResponseValidationTest
  */
 public class SwaggerV2RequestResponseValidatorTest {
 
-    private final SwaggerRequestResponseValidator classUnderTest =
-            SwaggerRequestResponseValidator.createFor("/oai/v2/api-users.json").build();
+    private final OpenApiInteractionValidator classUnderTest =
+            OpenApiInteractionValidator.createFor("/oai/v2/api-users.json").build();
 
     @Test(expected = NullPointerException.class)
     public void validate_withNullRequest_throwsNPE() {
@@ -40,8 +40,8 @@ public class SwaggerV2RequestResponseValidatorTest {
 
     @Test
     public void validate_withFailures_shoudPass_whenLevelResolverIgnoresFailures() {
-        final SwaggerRequestResponseValidator classUnderTest =
-                SwaggerRequestResponseValidator
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
                         .createFor("/oai/v2/api-users.json")
                         .withLevelResolver(LevelResolver
                                 .create()
@@ -58,17 +58,17 @@ public class SwaggerV2RequestResponseValidatorTest {
 
     @Test
     public void validate_jsonPayloadAccepted() {
-        SwaggerRequestResponseValidator.createFor(loadResource("/oai/v2/api-users.json")).build();
+        OpenApiInteractionValidator.createFor(loadResource("/oai/v2/api-users.json")).build();
     }
 
     @Test(expected = Exception.class)
     public void validate_neitherPathNorJson_throwsException() {
-        SwaggerRequestResponseValidator.createFor("<>").build();
+        OpenApiInteractionValidator.createFor("<>").build();
     }
 
     @Test(expected = NullPointerException.class)
     public void validate_withNullAuthHeaderKey_throwsNPE() throws Exception {
-        SwaggerRequestResponseValidator
+        OpenApiInteractionValidator
                 .createFor("/oai/v2/api-users.json")
                 .withAuthHeaderData(null, null)
                 .build();
@@ -76,7 +76,7 @@ public class SwaggerV2RequestResponseValidatorTest {
 
     @Test
     public void validate_withNullAuthHeaderValue() throws Exception {
-        SwaggerRequestResponseValidator
+        OpenApiInteractionValidator
                 .createFor("/oai/v2/api-users.json")
                 .withAuthHeaderData("api-key", null)
                 .build();
@@ -84,8 +84,8 @@ public class SwaggerV2RequestResponseValidatorTest {
 
     @Test
     public void validate_withBasePathOverride() throws Exception {
-        final SwaggerRequestResponseValidator classUnderTest =
-                SwaggerRequestResponseValidator
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
                         .createFor("/oai/v2/api-users.json")
                         .withBasePathOverride("/test")
                         .build();

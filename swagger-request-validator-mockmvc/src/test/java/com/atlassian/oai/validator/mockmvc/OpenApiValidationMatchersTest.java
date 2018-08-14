@@ -1,18 +1,18 @@
 package com.atlassian.oai.validator.mockmvc;
 
-import com.atlassian.oai.validator.mockmvc.SwaggerMatchers.SwaggerValidationException;
+import com.atlassian.oai.validator.mockmvc.OpenApiMatchers.OpenApiValidationException;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import static com.atlassian.oai.validator.mockmvc.SwaggerValidatorMatchers.swagger;
+import static com.atlassian.oai.validator.mockmvc.OpenApiValidationMatchers.openApi;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class SwaggerValidationMatchersTest {
+public class OpenApiValidationMatchersTest {
 
     private MockMvc mvc;
 
@@ -27,7 +27,7 @@ public class SwaggerValidationMatchersTest {
         mvc
                 .perform(get("/path"))
                 .andExpect(status().isOk())
-                .andExpect(swagger().isValid(null));
+                .andExpect(openApi().isValid(null));
     }
 
     @Test(expected = Exception.class)
@@ -35,7 +35,7 @@ public class SwaggerValidationMatchersTest {
         mvc
                 .perform(get("/path"))
                 .andExpect(status().isOk())
-                .andExpect(swagger().isValid(""));
+                .andExpect(openApi().isValid(""));
     }
 
     @Test
@@ -43,7 +43,7 @@ public class SwaggerValidationMatchersTest {
         mvc
                 .perform(get("/hello/bob"))
                 .andExpect(status().isOk())
-                .andExpect(swagger().isValid("api.json"))
+                .andExpect(openApi().isValid("api.json"))
                 .andExpect(content().string("{\"message\":\"Hello bob!\"}"));
     }
 
@@ -52,25 +52,25 @@ public class SwaggerValidationMatchersTest {
         mvc
                 .perform(get("/hello/empty"))
                 .andExpect(status().isNoContent())
-                .andExpect(swagger().isValid("api.json"))
+                .andExpect(openApi().isValid("api.json"))
                 .andExpect(content().string(""));
     }
 
-    @Test (expected = SwaggerValidationException.class)
+    @Test(expected = OpenApiValidationException.class)
     public void match_throwsException_ifValidationFails() throws  Exception {
         mvc
                 .perform(get("/hello/bill"))
                 .andExpect(status().isOk())
-                .andExpect(swagger().isValid("api.json"))
+                .andExpect(openApi().isValid("api.json"))
                 .andExpect(content().string("{\"msg\":\"Hello bill!\"}")); // Wrong field name
     }
 
-    @Test (expected = SwaggerValidationException.class)
+    @Test(expected = OpenApiValidationException.class)
     public void match_validationTakesMethodIntoAccount() throws Exception {
         mvc
                 .perform(post("/hello/bob"))
                 .andExpect(status().isMethodNotAllowed())
-                .andExpect(swagger().isValid("api.json"))
+                .andExpect(openApi().isValid("api.json"))
                 .andExpect(content().string("{\"message\":\"Hello bob!\"}"));
     }
 }
