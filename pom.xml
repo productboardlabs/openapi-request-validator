@@ -59,7 +59,7 @@
         <junit.version>4.12</junit.version>
         <logback.version>1.2.3</logback.version>
         <mockito.version>2.18.0</mockito.version>
-        <pact-jvm.version>3.2.13</pact-jvm.version>
+        <pact-jvm.version>3.5.20</pact-jvm.version>
         <rest-assured.version>3.0.7</rest-assured.version>
         <servlet.api.version>3.1.0</servlet.api.version>
         <slf4j.version>1.7.25</slf4j.version>
@@ -127,7 +127,7 @@
             </dependency>
             <dependency>
                 <groupId>au.com.dius</groupId>
-                <artifactId>pact-jvm-model_2.11</artifactId>
+                <artifactId>pact-jvm-model</artifactId>
                 <version>${pact-jvm.version}</version>
             </dependency>
             <dependency>
@@ -137,17 +137,17 @@
             </dependency>
             <dependency>
                 <groupId>au.com.dius</groupId>
-                <artifactId>pact-jvm-consumer-junit_2.11</artifactId>
+                <artifactId>pact-jvm-consumer-junit_2.12</artifactId>
                 <version>${pact-jvm.version}</version>
             </dependency>
             <dependency>
                 <groupId>au.com.dius</groupId>
-                <artifactId>pact-jvm-provider_2.11</artifactId>
+                <artifactId>pact-jvm-provider_2.12</artifactId>
                 <version>${pact-jvm.version}</version>
             </dependency>
             <dependency>
                 <groupId>au.com.dius</groupId>
-                <artifactId>pact-jvm-consumer_2.11</artifactId>
+                <artifactId>pact-jvm-consumer_2.12</artifactId>
                 <version>${pact-jvm.version}</version>
             </dependency>
             <dependency>

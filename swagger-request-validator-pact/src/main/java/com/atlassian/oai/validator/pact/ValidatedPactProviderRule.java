@@ -1,12 +1,13 @@
 package com.atlassian.oai.validator.pact;
 
 import au.com.dius.pact.consumer.ConsumerPactBuilder;
+import au.com.dius.pact.consumer.MockServer;
 import au.com.dius.pact.consumer.Pact;
-import au.com.dius.pact.consumer.PactProviderRule;
+import au.com.dius.pact.consumer.PactProviderRuleMk2;
 import au.com.dius.pact.consumer.PactVerification;
 import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
 import au.com.dius.pact.model.MockProviderConfig;
-import au.com.dius.pact.model.PactFragment;
+import au.com.dius.pact.model.RequestResponsePact;
 import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReportFormatter;
@@ -24,7 +25,7 @@ import java.util.Optional;
  * This gives consumers fast feedback if their expectations fail to meet the format expected by the Provider API.
  */
 public class ValidatedPactProviderRule implements TestRule {
-    private final PactProviderRule delegate;
+    private final PactProviderRuleMk2 delegate;
     private final String providerId;
     private final Object target;
     private final SwaggerRequestResponseValidator validator;
@@ -32,18 +33,18 @@ public class ValidatedPactProviderRule implements TestRule {
     public ValidatedPactProviderRule(final String swaggerJsonUrl, final String basePathOverride,
                                      final String providerId, final Object target) {
         this(swaggerJsonUrl, basePathOverride, providerId, target,
-                new PactProviderRule(providerId, target));
+                new PactProviderRuleMk2(providerId, target));
     }
 
     public ValidatedPactProviderRule(final String swaggerJsonUrl, final String basePathOverride,
                                      final String providerId, final String host, final Integer port, final Object target) {
         this(swaggerJsonUrl, basePathOverride, providerId, target,
-                new PactProviderRule(providerId, host, port, target));
+                new PactProviderRuleMk2(providerId, host, port, target));
     }
 
     private ValidatedPactProviderRule(final String swaggerJsonUrl, final String basePathOverride,
-                                      final String providerId, final Object target, final PactProviderRule delegate) {
-        validator = SwaggerRequestResponseValidator
+                                      final String providerId, final Object target, final PactProviderRuleMk2 delegate) {
+        this.validator = SwaggerRequestResponseValidator
                 .createFor(swaggerJsonUrl)
                 .withLevelResolver(PactLevelResolverFactory.create())
                 .withBasePathOverride(basePathOverride)
@@ -56,6 +57,14 @@ public class ValidatedPactProviderRule implements TestRule {
 
     public MockProviderConfig getConfig() {
         return delegate.getConfig();
+    }
+
+    public MockServer getMockServer() {
+        return delegate.getMockServer();
+    }
+
+    public String getUrl() {
+        return getMockServer().getUrl();
     }
 
     @Override
@@ -74,12 +83,12 @@ public class ValidatedPactProviderRule implements TestRule {
     }
 
     private void validatePactDef(final PactVerification pactVerification) throws Exception {
-        final Optional<PactFragment> pactFragment = getPactFragment(pactVerification);
-        if (!pactFragment.isPresent()) {
+        final Optional<RequestResponsePact> requestResponsePact = getRequestResponsePact(pactVerification);
+        if (!requestResponsePact.isPresent()) {
             return;
         }
 
-        final ValidationReport report = pactFragment.get().toPact()
+        final ValidationReport report = requestResponsePact.get()
                 .getInteractions()
                 .stream()
                 .map(i -> validator.validate(PactRequest.of(i.getRequest()), PactResponse.of(i.getResponse())))
@@ -90,7 +99,7 @@ public class ValidatedPactProviderRule implements TestRule {
         }
     }
 
-    private Optional<PactFragment> getPactFragment(final PactVerification pactVerification) throws Exception {
+    private Optional<RequestResponsePact> getRequestResponsePact(final PactVerification pactVerification) throws Exception {
         final Optional<Method> possiblePactMethod = findPactMethod(pactVerification);
         if (!possiblePactMethod.isPresent()) {
             // Fail silently and let the delegate Pact rule do error reporting
@@ -100,11 +109,9 @@ public class ValidatedPactProviderRule implements TestRule {
         final Method method = possiblePactMethod.get();
         final Pact pact = method.getAnnotation(Pact.class);
         final PactDslWithProvider dslBuilder = ConsumerPactBuilder.consumer(pact.consumer()).hasPactWith(providerId);
-        try {
-            return Optional.of((PactFragment) method.invoke(target, dslBuilder));
-        } catch (final Exception e) {
-            throw e;
-        }
+
+        return Optional.of((RequestResponsePact) method.invoke(target, dslBuilder));
+
     }
 
     private Optional<Method> findPactMethod(final PactVerification pactVerification) {
@@ -115,7 +122,7 @@ public class ValidatedPactProviderRule implements TestRule {
                     && (pactFragment.isEmpty() || pactFragment.equals(method.getName()))) {
 
                 final boolean hasValidPactSignature =
-                        PactFragment.class.isAssignableFrom(method.getReturnType())
+                        RequestResponsePact.class.isAssignableFrom(method.getReturnType())
                                 && method.getParameterTypes().length == 1
                                 && method.getParameterTypes()[0].isAssignableFrom(PactDslWithProvider.class);
 

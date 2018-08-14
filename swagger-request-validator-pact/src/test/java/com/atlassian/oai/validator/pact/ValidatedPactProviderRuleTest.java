@@ -42,7 +42,7 @@ public class ValidatedPactProviderRuleTest {
         // then:
         assertThat(result, notNullValue());
         assertThat(result.getConfig(), notNullValue());
-        assertThat(result.getConfig().hostname(), is(host));
-        assertThat(result.getConfig().port(), is(port));
+        assertThat(result.getConfig().getHostname(), is(host));
+        assertThat(result.getConfig().getPort(), is(port));
     }
 }

@@ -1,8 +1,12 @@
 package com.atlassian.oai.validator.pact;
 
+import au.com.dius.pact.model.BrokerUrlSource;
+import au.com.dius.pact.model.FileSource;
 import au.com.dius.pact.model.Pact;
 import au.com.dius.pact.model.PactReader;
 import au.com.dius.pact.model.RequestResponseInteraction;
+import au.com.dius.pact.model.UrlSource;
+import au.com.dius.pact.pactbroker.PactBrokerConsumer;
 import au.com.dius.pact.provider.ConsumerInfo;
 import au.com.dius.pact.provider.broker.PactBrokerClient;
 import com.atlassian.oai.validator.SwaggerRequestResponseValidator;
@@ -13,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,6 +25,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -35,6 +41,7 @@ import static java.util.stream.Collectors.toList;
  * against individual Consumer Pact files sourced from other locations (the file system etc.)
  * <p>
  * To validate against all Consumers in a broker:
+ *
  * <pre>
  *     final PactProviderValidator validator = PactProviderValidator
  *                                                  .createFor(SWAGGER_JSON_URL)
@@ -101,11 +108,9 @@ public class PactProviderValidator {
         }
         result.addConsumerResults(
                 consumers.stream()
-                        .filter(c -> c != null)
+                        .filter(Objects::nonNull)
                         .map(this::doValidate)
-                        .collect(toList())
-        );
-
+                        .collect(toList()));
         return result;
     }
 
@@ -114,7 +119,7 @@ public class PactProviderValidator {
         log.debug("Validating consumer '{}' against API spec", consumer.getName());
 
         final PactProviderValidationResults.ConsumerResult result =
-                new PactProviderValidationResults.ConsumerResult(consumer.getName(), consumer.getPactFile() + "");
+                new PactProviderValidationResults.ConsumerResult(consumer.getName(), getPactSourceLocation(consumer));
 
         final Map<String, Object> options = new HashMap<>();
         final List authOptions = consumer.getPactFileAuthentication();
@@ -122,16 +127,29 @@ public class PactProviderValidator {
             options.put("authentication", authOptions);
         }
 
-        final Pact pact = PactReader.loadPact(options, consumer.getPactFile());
+        final Pact<?> pact = PactReader.loadPact(options, consumer.getPactSource());
 
         pact.getInteractions().forEach(i -> {
+            final RequestResponseInteraction interaction = (RequestResponseInteraction) i;
             final ValidationReport report = validator.validate(
-                    PactRequest.of(((RequestResponseInteraction) i).getRequest()),
-                    PactResponse.of(((RequestResponseInteraction) i).getResponse()));
-            result.addInteractionResult(i.getDescription(), report);
+                    PactRequest.of(interaction.getRequest()),
+                    PactResponse.of(interaction.getResponse()));
+            result.addInteractionResult(interaction.getDescription(), report);
         });
 
         return result;
+    }
+
+    private String getPactSourceLocation(@Nonnull final ConsumerInfo consumer) {
+        final Object pactSource = consumer.getPactSource();
+        if (pactSource instanceof BrokerUrlSource) {
+            return ((BrokerUrlSource) pactSource).getUrl();
+        } else if (pactSource instanceof UrlSource) {
+            return ((UrlSource<?>) pactSource).getUrl();
+        } else if (pactSource instanceof FileSource) {
+            return ((FileSource<?>) pactSource).getFile().getAbsolutePath();
+        }
+        throw new IllegalStateException("Pact Source Not Valid.");
     }
 
     @VisibleForTesting
@@ -197,11 +215,12 @@ public class PactProviderValidator {
          * Add a Consumer that will be included in the validation.
          *
          * @param consumerName The name of the Consumer
-         * @param pactFileUrl  The location of the Consumer Pact file to validate against
+         * @param pactFileLocation The location of the Consumer Pact file to validate against
          * @return this builder instance.
          */
-        public Builder withConsumer(final String consumerName, final String pactFileUrl) {
-            this.consumers.add(new ConsumerInfo(consumerName, pactFileUrl));
+        @SuppressWarnings("rawtypes")
+        public Builder withConsumer(final String consumerName, final String pactFileLocation) {
+            this.consumers.add(new ConsumerInfo(consumerName, new FileSource(new File(pactFileLocation))));
             return this;
         }
 
@@ -212,8 +231,9 @@ public class PactProviderValidator {
          * @param pactFileUrl  The location of the Consumer Pact file to validate against
          * @return this builder instance.
          */
+        @SuppressWarnings("rawtypes")
         public Builder withConsumer(final String consumerName, final URL pactFileUrl) {
-            this.consumers.add(new ConsumerInfo(consumerName, pactFileUrl));
+            this.consumers.add(new ConsumerInfo(consumerName, new UrlSource(pactFileUrl.toString())));
             return this;
         }
 
@@ -241,7 +261,8 @@ public class PactProviderValidator {
          * @param providerName The ID of the Provider to retrieve Pacts for
          * @return this builder instance.
          */
-        public Builder withPactsFrom(final String brokerUrl, final String username, final String password, final String providerName) {
+        public Builder withPactsFrom(final String brokerUrl, final String username, final String password,
+                                     final String providerName) {
             withPactsFrom(brokerUrl, providerName);
             this.brokerOptions.clear();
             this.brokerOptions.put("authentication", Arrays.asList("basic", username, password));
@@ -255,36 +276,35 @@ public class PactProviderValidator {
          */
         public PactProviderValidator build() {
             if (brokerUrl != null && providerName != null) {
-                consumers.addAll(retrieveConsumers(brokerUrl, providerName, brokerOptions));
+                consumers.addAll(retrieveConsumers());
             }
             return new PactProviderValidator(swaggerJsonUrl, consumers);
         }
 
         @Nonnull
         @SuppressWarnings("unchecked")
-        private Collection<ConsumerInfo> retrieveConsumers(@Nonnull final String brokerUrl,
-                                                           @Nonnull final String providerName,
-                                                           @Nonnull final Map<String, Object> brokerOptions) {
+        private Collection<ConsumerInfo> retrieveConsumers() {
 
             log.debug("Retrieving consumers from broker '{}' for provider '{}'", brokerUrl, providerName);
 
-            final PactBrokerClient client = new PactBrokerClient(brokerUrl);
-            if (!brokerOptions.isEmpty()) {
-                client.setOptions(brokerOptions);
-            }
             try {
-                final Collection<ConsumerInfo> result = client.fetchConsumers(providerName);
-                if (result == null || result.isEmpty()) {
+                final Collection<ConsumerInfo> consumersInfo = retrievePactBrokerConsumers().stream()
+                        .map(ConsumerInfo::from)
+                        .collect(toList());
+                if (consumersInfo.isEmpty()) {
                     log.info("No consumers found for provider '{}' on broker '{}'", providerName, brokerUrl);
-                    return emptyList();
                 }
-                return result;
+                return consumersInfo;
             } catch (final Exception e) {
                 log.error(format("Exception occurred while retrieving consumers for provider '%s' from broker '%s'",
                         providerName, brokerUrl), e);
                 return emptyList();
             }
 
+        }
+
+        private Collection<PactBrokerConsumer> retrievePactBrokerConsumers() {
+            return new PactBrokerClient(brokerUrl, brokerOptions).fetchConsumers(providerName);
         }
 
     }
