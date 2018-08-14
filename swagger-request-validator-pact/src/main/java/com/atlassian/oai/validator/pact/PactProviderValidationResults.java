@@ -91,12 +91,10 @@ public class PactProviderValidationResults {
                 v.getMessages()
                         .stream()
                         .filter(m -> m.getLevel() == ValidationReport.Level.ERROR)
-                        .forEach(m -> {
-                            msg.append("\n\t\t[")
-                                    .append(m.getLevel())
-                                    .append("] ")
-                                    .append(m.getMessage().replace("\n", "\n\t\t"));
-                        });
+                        .forEach(m -> msg.append("\n\t\t[")
+                                .append(m.getLevel())
+                                .append("] ")
+                                .append(m.getMessage().replace("\n", "\n\t\t")));
             });
         });
         return msg.toString();

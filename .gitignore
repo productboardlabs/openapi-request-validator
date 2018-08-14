@@ -3,3 +3,7 @@ target/
 *.iml
 pom.xml.*
 release.properties
+/.metadata/
+.project
+.classpath
+.settings/
