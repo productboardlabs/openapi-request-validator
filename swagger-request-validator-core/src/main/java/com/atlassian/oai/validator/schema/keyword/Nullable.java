@@ -16,6 +16,7 @@ import com.github.fge.jsonschema.processors.data.FullData;
 import com.github.fge.msgsimple.bundle.MessageBundle;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * Support for the {@code nullable} keyword introduced in OpenAPI v3
@@ -95,6 +96,7 @@ public class Nullable {
                     .findParents(enumKey)
                     .stream()
                     .filter(jsonNode -> jsonNode.path(nullableKey).asBoolean(false))
+                    .filter(jsonNode -> !alreadySupportsNullEnum(jsonNode))
                     .forEach(jsonNode -> ((ArrayNode) jsonNode.get(enumKey)).addNull());
         }
 
@@ -112,6 +114,18 @@ public class Nullable {
                     if (nullType.equals(typeElem.asText())) {
                         return true;
                     }
+                }
+            }
+
+            return false;
+        }
+
+        private static boolean alreadySupportsNullEnum(final JsonNode schemaObject) {
+            final Iterator<JsonNode> iter = schemaObject.elements();
+
+            while (iter.hasNext()) {
+                if (iter.next().isNull()) {
+                    return true;
                 }
             }
 
