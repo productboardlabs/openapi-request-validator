@@ -1,8 +1,15 @@
 package com.atlassian.oai.validator;
 
+import com.atlassian.oai.validator.interaction.request.CustomRequestValidator;
+import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.SimpleRequest;
+import com.atlassian.oai.validator.report.ValidationReport;
 import org.junit.Test;
+
+import javax.annotation.Nonnull;
+import java.util.Map;
+import java.util.Optional;
 
 import static com.atlassian.oai.validator.report.LevelResolverFactory.withAdditionalPropertiesIgnored;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
@@ -681,5 +688,51 @@ public class OpenAPIV3RequestValidationTest {
 
         assertFail(classUnderTest.validateRequest(request),
                 "validation.request.body.schema.type");
+    }
+
+    @Test
+    public void validate_withCustomValidation_shouldPass() {
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createFor("/oai/v3/api-users.yaml")
+                .withCustomRequestValidation(new TestValidator())
+                .build();
+
+        final Request request = SimpleRequest.Builder
+                .get("/extensions")
+                .withHeader("Extension", "true")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withCustomValidation_shouldFail() {
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createFor("/oai/v3/api-users.yaml")
+                .withCustomRequestValidation(new TestValidator())
+                .build();
+
+        final Request request = SimpleRequest.Builder
+                .get("/extensions")
+                .withHeader("Extension", "false")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request));
+    }
+
+    private class TestValidator implements CustomRequestValidator {
+        @Override
+        public ValidationReport validate(@Nonnull final Request request, @Nonnull final ApiOperation apiOperation) {
+            final Optional<Object> extensionValue = apiOperation.getOperation().getExtensions().entrySet()
+                    .stream()
+                    .filter(entry -> entry.getKey().equalsIgnoreCase("x-test-extension"))
+                    .map(Map.Entry::getValue)
+                    .findFirst();
+            if (extensionValue.filter(value -> request.getHeaders().get("Extension").contains(value)).isPresent()) {
+                return ValidationReport.empty();
+            } else {
+                return ValidationReport.singleton(ValidationReport.Message.create("test.extension", "Header extension didn't match expected value").build());
+            }
+        }
     }
 }

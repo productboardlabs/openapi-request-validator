@@ -487,6 +487,18 @@
           }
         }
       }
+    },
+    "/extensions": {
+      "get": {
+        "summary": "Endpoint that uses extensions",
+        "operationId": "extensions",
+        "x-test-extension": "true",
+        "responses": {
+          "200": {
+            "description": "Everything is ok"
+          }
+        }
+      }
     }
   },
   "securityDefinitions": {

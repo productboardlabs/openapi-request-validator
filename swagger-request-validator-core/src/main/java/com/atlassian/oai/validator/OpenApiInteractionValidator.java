@@ -1,7 +1,9 @@
 package com.atlassian.oai.validator;
 
 import com.atlassian.oai.validator.interaction.ApiOperationResolver;
+import com.atlassian.oai.validator.interaction.request.CustomRequestValidator;
 import com.atlassian.oai.validator.interaction.request.RequestValidator;
+import com.atlassian.oai.validator.interaction.response.CustomResponseValidator;
 import com.atlassian.oai.validator.interaction.response.ResponseValidator;
 import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.ApiOperationMatch;
@@ -21,6 +23,7 @@ import io.swagger.v3.parser.core.models.SwaggerParseResult;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -95,7 +98,7 @@ public class OpenApiInteractionValidator {
                                         @Nullable final String basePathOverride,
                                         @Nonnull final MessageResolver messages,
                                         @Nonnull final ValidationErrorsWhitelist whitelist) {
-        this(specUrlOrPayload, basePathOverride, messages, whitelist, null);
+        this(specUrlOrPayload, basePathOverride, messages, whitelist, null, emptyList(), emptyList());
     }
 
     /**
@@ -107,6 +110,8 @@ public class OpenApiInteractionValidator {
      * @param messages The message resolver to use for resolving validation messages.
      * @param whitelist The validation errors whitelist.
      * @param authData (Optional) A List of authentication data to add to spec retrieval request.
+     * @param customRequestValidators A list of custom request validators to run
+     * @param customResponseValidators A list of custom response validators to run
      *
      * @throws IllegalArgumentException if the provided <code>specUrlOrPayload</code> is empty
      * @throws ApiLoadException if there was a problem loading the API spec
@@ -115,7 +120,9 @@ public class OpenApiInteractionValidator {
                                         @Nullable final String basePathOverride,
                                         @Nonnull final MessageResolver messages,
                                         @Nonnull final ValidationErrorsWhitelist whitelist,
-                                        @Nullable final List<AuthorizationValue> authData) {
+                                        @Nullable final List<AuthorizationValue> authData,
+                                        @Nonnull final List<CustomRequestValidator> customRequestValidators,
+                                        @Nonnull final List<CustomResponseValidator> customResponseValidators) {
         if (isBlank(specUrlOrPayload)) {
             throw new IllegalArgumentException("A specification URL or payload is required");
         }
@@ -125,8 +132,8 @@ public class OpenApiInteractionValidator {
         this.messages = messages;
         apiOperationResolver = new ApiOperationResolver(api, basePathOverride);
         final SchemaValidator schemaValidator = new SchemaValidator(api, messages);
-        requestValidator = new RequestValidator(schemaValidator, messages, api);
-        responseValidator = new ResponseValidator(schemaValidator, messages, api);
+        requestValidator = new RequestValidator(schemaValidator, messages, api, customRequestValidators);
+        responseValidator = new ResponseValidator(schemaValidator, messages, api, customResponseValidators);
         this.whitelist = whitelist;
     }
 
@@ -292,6 +299,8 @@ public class OpenApiInteractionValidator {
         private LevelResolver levelResolver = LevelResolver.defaultResolver();
         private List<AuthorizationValue> authData;
         private ValidationErrorsWhitelist whitelist = ValidationErrorsWhitelist.create();
+        private List<CustomRequestValidator> customRequestValidators = new ArrayList<>();
+        private List<CustomResponseValidator> customResponseValidators = new ArrayList<>();
 
         /**
          * The location of the OpenAPI / Swagger specification to use in the validator, or the inline specification to use.
@@ -415,6 +424,32 @@ public class OpenApiInteractionValidator {
         }
 
         /**
+         * An optional custom request validation step.
+         * Possible usages include validation of vendor specific extensions.
+         *
+         * @param validator The validator to apply
+         * @return this builder instance
+         */
+        public Builder withCustomRequestValidation(final CustomRequestValidator validator) {
+            requireNonNull(validator, "A validator is required");
+            customRequestValidators.add(validator);
+            return this;
+        }
+
+        /**
+         * An optional custom response validation step.
+         * Possible usages include validation of vendor specific extensions.
+         *
+         * @param validator The validator to apply
+         * @return this builder instance
+         */
+        public Builder withCustomResponseValidation(final CustomResponseValidator validator) {
+            requireNonNull(validator, "A validator is required");
+            customResponseValidators.add(validator);
+            return this;
+        }
+
+        /**
          * Build a configured {@link OpenApiInteractionValidator} instance with the values collected in this builder.
          *
          * @return The configured {@link OpenApiInteractionValidator} instance.
@@ -423,7 +458,14 @@ public class OpenApiInteractionValidator {
          * @throws ApiLoadException if there was a problem loading the API spec
          */
         public OpenApiInteractionValidator build() {
-            return new OpenApiInteractionValidator(specUrlOrPayload, basePathOverride, new MessageResolver(levelResolver), whitelist, authData);
+            return new OpenApiInteractionValidator(
+                    specUrlOrPayload,
+                    basePathOverride,
+                    new MessageResolver(levelResolver),
+                    whitelist,
+                    authData,
+                    customRequestValidators,
+                    customResponseValidators);
         }
     }
 
