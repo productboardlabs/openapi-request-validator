@@ -6,7 +6,7 @@ import au.com.dius.pact.consumer.PactVerification;
 import au.com.dius.pact.consumer.dsl.DslPart;
 import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
 import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
-import au.com.dius.pact.model.PactFragment;
+import au.com.dius.pact.model.RequestResponsePact;
 import com.atlassian.oai.validator.pact.ValidatedPactProviderRule.PactValidationError;
 import com.atlassian.oai.validator.report.ValidationReport.Message;
 import junit.framework.AssertionFailedError;
@@ -39,7 +39,7 @@ public class PactConsumerValidationTest {
     public CheckForValidationFailures rule = new CheckForValidationFailures(provider);
 
     @Pact(provider = "Test", consumer = "Test")
-    public PactFragment getObjectResponse(final PactDslWithProvider builder) {
+    public RequestResponsePact getObjectResponse(final PactDslWithProvider builder) {
         final DslPart responseBody = new PactDslJsonBody()
                 .numberValue("id", 123)
                 .stringValue("name", "the thing")
@@ -54,11 +54,11 @@ public class PactConsumerValidationTest {
                 .willRespondWith()
                 .status(200)
                 .body(responseBody)
-                .toFragment();
+                .toPact();
     }
 
     @Pact(provider = "Test", consumer = "Test")
-    public PactFragment getIncompleteObjectResponse(final PactDslWithProvider builder) {
+    public RequestResponsePact getIncompleteObjectResponse(final PactDslWithProvider builder) {
         final DslPart responseBody = new PactDslJsonBody()
                 .numberValue("id", 123)
                 .array("tags")
@@ -72,11 +72,11 @@ public class PactConsumerValidationTest {
                 .willRespondWith()
                 .status(200)
                 .body(responseBody)
-                .toFragment();
+                .toPact();
     }
 
     @Pact(provider = "Test", consumer = "Test")
-    public PactFragment getExtraFieldsInObjectResponse(final PactDslWithProvider builder) {
+    public RequestResponsePact getExtraFieldsInObjectResponse(final PactDslWithProvider builder) {
         final DslPart responseBody = new PactDslJsonBody()
                 .numberValue("id", 123)
                 .stringValue("name", "the thing")
@@ -92,11 +92,11 @@ public class PactConsumerValidationTest {
                 .willRespondWith()
                 .status(200)
                 .body(responseBody)
-                .toFragment();
+                .toPact();
     }
 
     @Pact(provider = "Test", consumer = "Test")
-    public PactFragment getExtraFieldsInObjectArrayResponse(final PactDslWithProvider builder) {
+    public RequestResponsePact getExtraFieldsInObjectArrayResponse(final PactDslWithProvider builder) {
         final DslPart responseBody = new PactDslJsonBody()
                 .array("children")
                 .object()
@@ -114,11 +114,11 @@ public class PactConsumerValidationTest {
                 .willRespondWith()
                 .status(200)
                 .body(responseBody)
-                .toFragment();
+                .toPact();
     }
 
     @Pact(provider = "Test", consumer = "Test")
-    public PactFragment getExtraFieldsInInlineObjectArrayResponse(final PactDslWithProvider builder) {
+    public RequestResponsePact getExtraFieldsInInlineObjectArrayResponse(final PactDslWithProvider builder) {
         final DslPart responseBody = new PactDslJsonBody()
                 .array("children")
                 .object()
@@ -136,40 +136,40 @@ public class PactConsumerValidationTest {
                 .willRespondWith()
                 .status(200)
                 .body(responseBody)
-                .toFragment();
+                .toPact();
     }
 
     @Test
     @PactVerification(value = "Test", fragment = "getObjectResponse")
     public void passes_withAValidResponse() {
-        get(provider.getConfig().url() + "/test/object");
+        get(provider.getUrl() + "/test/object");
     }
 
     @Test
     @PactVerification(value = "Test", fragment = "getIncompleteObjectResponse")
     public void passes_whenExpectingAnIncompleteResponse() {
-        get(provider.getConfig().url() + "/test/object");
+        get(provider.getUrl() + "/test/object");
     }
 
     @Test
     @PactVerification(value = "Test", fragment = "getExtraFieldsInObjectResponse")
     @ExpectValidationErrors("validation.schema.additionalProperties")
     public void fails_whenAdditionalFieldsInResponse_withSimpleObject() {
-        get(provider.getConfig().url() + "/test/object");
+        get(provider.getUrl() + "/test/object");
     }
 
     @Test
     @PactVerification(value = "Test", fragment = "getExtraFieldsInObjectArrayResponse")
     @ExpectValidationErrors("validation.schema.additionalProperties")
     public void fails_whenAdditionalFieldsInResponse_withArrayOfObjects() {
-        get(provider.getConfig().url() + "/test/objectsInArray");
+        get(provider.getUrl() + "/test/objectsInArray");
     }
 
     @Test
     @PactVerification(value = "Test", fragment = "getExtraFieldsInInlineObjectArrayResponse")
     @ExpectValidationErrors("validation.schema.additionalProperties")
     public void fails_whenAdditionalFieldsInResponse_withArrayOfInlineObjects() {
-        get(provider.getConfig().url() + "/test/inlineObjectsInArray");
+        get(provider.getUrl() + "/test/inlineObjectsInArray");
     }
 
     /**
