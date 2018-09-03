@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.pact;
 
+import au.com.dius.pact.model.BrokerUrlSource;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import org.junit.Rule;
@@ -17,6 +18,7 @@ import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 public class PactProviderValidatorTest {
 
@@ -51,8 +53,8 @@ public class PactProviderValidatorTest {
 
         assertThat(results.hasErrors(), is(false));
         assertThat(results.getConsumerResults().size(), is(1));
+        assertTrue(results.getConsumerResult("ExampleConsumer").isPresent());
         assertThat(results.getConsumerResult("ExampleConsumer").get().hasErrors(), is(false));
-
     }
 
     @Test
@@ -67,6 +69,7 @@ public class PactProviderValidatorTest {
 
         assertThat(results.hasErrors(), is(true));
         assertThat(results.getConsumerResults().size(), is(1));
+        assertTrue(results.getConsumerResult("ExampleConsumer").isPresent());
         assertThat(results.getConsumerResult("ExampleConsumer").get().hasErrors(), is(true));
     }
 
@@ -88,13 +91,13 @@ public class PactProviderValidatorTest {
 
         final PactProviderValidator validator =
                 PactProviderValidator
-                    .createFor("/oai/api-users.json")
-                    .withPactsFrom("http://localhost:" + wireMock.port(), "Provider")
-                    .build();
+                        .createFor("/oai/api-users.json")
+                        .withPactsFrom("http://localhost:" + wireMock.port(), "Provider")
+                        .build();
 
         assertThat(validator.getConsumers().size(), is(2));
         assertThat(validator.getConsumers().stream()
-                .map(consumerInfo -> consumerInfo.getPactFile().toString())
+                .map(consumerInfo -> ((BrokerUrlSource) (consumerInfo.getPactSource())).getUrl())
                 .collect(Collectors.toList()), everyItem(startsWith("http://localhost:" + wireMock.port())));
     }
 
