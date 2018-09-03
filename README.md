@@ -14,6 +14,9 @@ in Pact tests etc.)
 * Adapters for commonly used HTTP libraries and testing frameworks
 * JSON Schema validation support - including schema references
 * Fine-grained control over which validations are applied
+* Support for [Swagger v2](./docs/SWAGGERv2.md) and [OpenAPI v3](./docs/OPENAPIv3.md) specifications
+
+See [Features](./docs/FEATURES.md) for more details.
 
 ## Usage ##
 
