@@ -1,3 +1,10 @@
+#v1.5.0
+* Bumped version of Pact from 3.2.13 to 3.5.20
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/100) 
+  
+  *Important:* This changes the required Scala version from 2.11 to 2.12. There are also breaking changes in the Pact API.
+  Importantly, usages of the `ValidatedPactProviderRule` should now use `provider.getUrl()` instead of `provider.config().url()`.
+
 #v1.4.7
 * Fixed the 'additional properties' validation for inline and nested schema definitions
 [[#131]](https://bitbucket.org/atlassian/swagger-request-validator/issues/131)
