@@ -16,6 +16,7 @@ import com.github.fge.jsonschema.processors.data.FullData;
 import com.github.fge.msgsimple.bundle.MessageBundle;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * Support for the {@code nullable} keyword introduced in OpenAPI v3
@@ -25,6 +26,9 @@ import java.util.Collection;
 public class Nullable {
 
     public static final String KEYWORD = "nullable";
+    private static final String TYPE_KEY = "type";
+    private static final String ENUM_KEY = "enum";
+    private static final String NULLABLE_KEY = "nullable";
 
     private static final Keyword INSTANCE = Keyword.newBuilder(KEYWORD)
             .withSyntaxChecker(NullableSyntaxChecker.getInstance())
@@ -60,22 +64,20 @@ public class Nullable {
             // already "null", then we need to turn the "type" field into a list of
             // the currently specified type and "null", so that it will be properly
             // handled by the JSON-schema validation routine.
-            final String typeKey = "type";
-            final String nullableKey = "nullable";
             final String nullType = NodeType.NULL.toString();
             schemaObject
-                    .findParents(typeKey)
+                    .findParents(TYPE_KEY)
                     .stream()
-                    .filter(jsonNode -> jsonNode.path(nullableKey).asBoolean(false))
+                    .filter(jsonNode -> jsonNode.path(NULLABLE_KEY).asBoolean(false))
                     .filter(jsonNode -> !alreadySupportsNullType(jsonNode))
                     .forEach(jsonNode -> {
-                        final JsonNode type = jsonNode.get(typeKey);
+                        final JsonNode type = jsonNode.get(TYPE_KEY);
 
                         if (type.isTextual()) {
                             // If we are here, it means the type is a value
                             // like "string". So we need to transform it into
                             // an array type like [ "null", "string" ].
-                            ((ObjectNode) jsonNode).putArray(typeKey).add(nullType).add(type);
+                            ((ObjectNode) jsonNode).putArray(TYPE_KEY).add(nullType).add(type);
                         } else if (type.isArray()) {
                             // If we are here, it means the type is already an
                             // array of types, like [ "integer", "string" ]. We
@@ -89,19 +91,17 @@ public class Nullable {
             // If the node is marked as nullable, and this node is an enum, then we
             // need to extend the set of enumerated values to include null, so that
             // it will be properly handled by the JSON-schema validation routine.
-            final String enumKey = "enum";
-            final String nullableKey = "nullable";
             schemaObject
-                    .findParents(enumKey)
+                    .findParents(ENUM_KEY)
                     .stream()
-                    .filter(jsonNode -> jsonNode.path(nullableKey).asBoolean(false))
-                    .forEach(jsonNode -> ((ArrayNode) jsonNode.get(enumKey)).addNull());
+                    .filter(jsonNode -> jsonNode.path(NULLABLE_KEY).asBoolean(false))
+                    .filter(jsonNode -> !alreadySupportsNullEnum(jsonNode))
+                    .forEach(jsonNode -> ((ArrayNode) jsonNode.get(ENUM_KEY)).addNull());
         }
 
         private static boolean alreadySupportsNullType(final JsonNode schemaObject) {
             final String nullType = NodeType.NULL.toString();
-            final String typeKey = "type";
-            final JsonNode typeNode = schemaObject.get(typeKey);
+            final JsonNode typeNode = schemaObject.get(TYPE_KEY);
 
             if (typeNode.isTextual()) {
                 return nullType.equals(typeNode.asText());
@@ -112,6 +112,18 @@ public class Nullable {
                     if (nullType.equals(typeElem.asText())) {
                         return true;
                     }
+                }
+            }
+
+            return false;
+        }
+
+        private static boolean alreadySupportsNullEnum(final JsonNode schemaObject) {
+            final Iterator<JsonNode> iter = schemaObject.get(ENUM_KEY).elements();
+
+            while (iter.hasNext()) {
+                if (iter.next().isNull()) {
+                    return true;
                 }
             }
 
