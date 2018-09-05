@@ -69,13 +69,15 @@ public class PactProviderValidator {
 
     private PactProviderValidator(@Nonnull final String specUrlOrPayload,
                                   @Nullable final Collection<ConsumerInfo> consumers) {
-        requireNonNull(specUrlOrPayload, "An API spec is required");
-
-        validator = OpenApiInteractionValidator
+        this(OpenApiInteractionValidator
                 .createFor(specUrlOrPayload)
                 .withLevelResolver(PactLevelResolverFactory.create())
-                .build();
+                .build(), consumers);
+    }
 
+    private PactProviderValidator(@Nonnull final OpenApiInteractionValidator validator,
+                                  final Collection<ConsumerInfo> consumers) {
+        this.validator = requireNonNull(validator, "A validator is required");
         if (consumers != null) {
             this.consumers.addAll(consumers);
         }
@@ -93,6 +95,17 @@ public class PactProviderValidator {
      */
     public static Builder createFor(@Nonnull final String specUrlOrPayload) {
         return new Builder().withApiSpecification(specUrlOrPayload);
+    }
+
+    /**
+     * Create a new {@link PactProviderValidator} that validates Consumers against the given OpenAPI / Swagger specification.
+     *
+     * @param validator The pre-configured validator instance to use
+     *
+     * @return A builder that can create configured {@link PactProviderValidator} instances.
+     */
+    public static Builder createFor(@Nonnull final OpenApiInteractionValidator validator) {
+        return new Builder().withValidator(validator);
     }
 
     /**
@@ -170,6 +183,7 @@ public class PactProviderValidator {
     public static class Builder {
 
         private String specUrlOrPayload;
+        private OpenApiInteractionValidator validator;
         private final List<ConsumerInfo> consumers = new ArrayList<>();
 
         private String brokerUrl;
@@ -210,6 +224,20 @@ public class PactProviderValidator {
          */
         public Builder withApiSpecification(final String specUrlOrPayload) {
             this.specUrlOrPayload = specUrlOrPayload;
+            return this;
+        }
+
+        /**
+         * The pre-configured interaction validator to use.
+         * <p>
+         * If provided, will ignore any provided spec URL / payloads.
+         *
+         * @param validator The underlying validator to use
+         *
+         * @return this builder instance
+         */
+        public Builder withValidator(final OpenApiInteractionValidator validator) {
+            this.validator = validator;
             return this;
         }
 
@@ -296,6 +324,9 @@ public class PactProviderValidator {
         public PactProviderValidator build() {
             if (brokerUrl != null && providerName != null) {
                 consumers.addAll(retrieveConsumers());
+            }
+            if (validator != null) {
+                return new PactProviderValidator(validator, consumers);
             }
             return new PactProviderValidator(specUrlOrPayload, consumers);
         }

@@ -1,6 +1,7 @@
 package com.atlassian.oai.validator.pact;
 
 import au.com.dius.pact.model.BrokerUrlSource;
+import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import org.junit.Rule;
@@ -114,6 +115,26 @@ public class PactProviderValidatorTest {
 
         assertThat(validator.getConsumers().size(), is(0));
 
+    }
+
+    @Test
+    public void validator_usesConfiguredInteractionValidatorIfSupplied() {
+
+        final PactProviderValidationResults results =
+                PactProviderValidator
+                        .createFor(OpenApiInteractionValidator
+                                .createFor("/oai/api-users.json")
+                                .withLevelResolver(PactLevelResolverFactory.create())
+                                .build()
+                        )
+                        .withConsumer("ExampleConsumer", pactUrl("valid.json"))
+                        .build()
+                        .validate();
+
+        assertThat(results.hasErrors(), is(false));
+        assertThat(results.getConsumerResults().size(), is(1));
+        assertTrue(results.getConsumerResult("ExampleConsumer").isPresent());
+        assertThat(results.getConsumerResult("ExampleConsumer").get().hasErrors(), is(false));
     }
 
     private void setupBrokerLatestPactsResponse(final int status, final String responseName) {
