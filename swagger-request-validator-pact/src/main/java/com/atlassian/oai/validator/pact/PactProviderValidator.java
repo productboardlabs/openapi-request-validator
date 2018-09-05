@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
@@ -66,14 +65,6 @@ public class PactProviderValidator {
 
     private final OpenApiInteractionValidator validator;
     private final Collection<ConsumerInfo> consumers = new ArrayList<>();
-
-    private PactProviderValidator(@Nonnull final String specUrlOrPayload,
-                                  @Nullable final Collection<ConsumerInfo> consumers) {
-        this(OpenApiInteractionValidator
-                .createFor(specUrlOrPayload)
-                .withLevelResolver(PactLevelResolverFactory.create())
-                .build(), consumers);
-    }
 
     private PactProviderValidator(@Nonnull final OpenApiInteractionValidator validator,
                                   final Collection<ConsumerInfo> consumers) {
@@ -328,7 +319,12 @@ public class PactProviderValidator {
             if (validator != null) {
                 return new PactProviderValidator(validator, consumers);
             }
-            return new PactProviderValidator(specUrlOrPayload, consumers);
+
+            final OpenApiInteractionValidator validator = OpenApiInteractionValidator
+                    .createFor(specUrlOrPayload)
+                    .withLevelResolver(PactLevelResolverFactory.create())
+                    .build();
+            return new PactProviderValidator(validator, consumers);
         }
 
         @Nonnull
