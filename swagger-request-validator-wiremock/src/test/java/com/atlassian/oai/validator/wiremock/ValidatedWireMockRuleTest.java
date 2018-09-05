@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.wiremock;
 
+import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import org.junit.Before;
@@ -23,6 +24,14 @@ public class ValidatedWireMockRuleTest {
     public void setup() {
         classUnderTest = new ValidatedWireMockRule("api.json",
                 WireMockConfiguration.options().dynamicPort());
+    }
+
+    @Test
+    public void canBeCreatedWithAnExistingValidator() {
+        new ValidatedWireMockRule(
+                OpenApiInteractionValidator.createFor("api.json").build(),
+                WireMockConfiguration.options().dynamicPort()
+        );
     }
 
     @Test
