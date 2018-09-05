@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.mockmvc;
 
+import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.mockmvc.OpenApiMatchers.OpenApiValidationException;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,7 +28,7 @@ public class OpenApiValidationMatchersTest {
         mvc
                 .perform(get("/path"))
                 .andExpect(status().isOk())
-                .andExpect(openApi().isValid(null));
+                .andExpect(openApi().isValid((String) null));
     }
 
     @Test(expected = Exception.class)
@@ -71,6 +72,15 @@ public class OpenApiValidationMatchersTest {
                 .perform(post("/hello/bob"))
                 .andExpect(status().isMethodNotAllowed())
                 .andExpect(openApi().isValid("api.json"))
+                .andExpect(content().string("{\"message\":\"Hello bob!\"}"));
+    }
+
+    @Test
+    public void match_canUsePreConfiguredValidator() throws Exception {
+        mvc
+                .perform(get("/hello/bob"))
+                .andExpect(status().isOk())
+                .andExpect(openApi().isValid(OpenApiInteractionValidator.createFor("api.json").build()))
                 .andExpect(content().string("{\"message\":\"Hello bob!\"}"));
     }
 }
