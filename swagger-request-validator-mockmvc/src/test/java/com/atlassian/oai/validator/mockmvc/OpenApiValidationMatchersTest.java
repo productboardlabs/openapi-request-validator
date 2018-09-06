@@ -22,7 +22,7 @@ public class OpenApiValidationMatchersTest {
         mvc = MockMvcBuilders.standaloneSetup(testController).build();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void create_withNullString_throwsException() throws Exception {
         mvc
                 .perform(get("/path"))

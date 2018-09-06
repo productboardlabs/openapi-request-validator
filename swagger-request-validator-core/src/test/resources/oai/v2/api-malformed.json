@@ -1,0 +1,18 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Malformed - missing required responses object",
+    "version": "1.0.0"
+  },
+  "basePath": "/",
+  "paths": {
+    "/theresource": {
+      "get": {
+        "summary": "Get the resource",
+        "produces": [
+          "application/json"
+        ]
+      }
+    }
+  }
+}
