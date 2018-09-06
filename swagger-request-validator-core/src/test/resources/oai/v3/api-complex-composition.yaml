@@ -18,6 +18,22 @@ paths:
       responses:
         '201':
           description: OK
+    put:
+      summary: Exercise oneOf composition with arrays and nesting
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/OneOfComposition'
+                - type: array
+                  items:
+                    $ref: '#/components/schemas/OneOfComposition'
+        description: The request body
+        required: true
+      responses:
+        '201':
+          description: OK
   /allOf:
     post:
       summary: Exercise allOf composition
@@ -39,6 +55,22 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/AnyOfComposition'
+        description: The request body
+        required: true
+      responses:
+        '201':
+          description: OK
+    put:
+      summary: Exercise anyOf composition with arrays and nesting
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - $ref: '#/components/schemas/AnyOfComposition'
+                - type: array
+                  items:
+                    $ref: '#/components/schemas/AnyOfComposition'
         description: The request body
         required: true
       responses:

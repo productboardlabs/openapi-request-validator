@@ -199,6 +199,23 @@ public class OpenAPIV3RequestValidationTest {
     }
 
     @Test
+    public void validate_withOneOfComposition_shouldPass_whenValid_withNesting() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .withLevelResolver(withAdditionalPropertiesIgnored())
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .put("/oneOf")
+                .withContentType("application/json")
+                .withBody("[{ \"stringField\": \"foo\" }, { \"intField\": 1 }]")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
     public void validate_withOneOfComposition_fails_whenAdditionalPropertiesNotIgnored() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
@@ -227,6 +244,24 @@ public class OpenAPIV3RequestValidationTest {
                 .post("/oneOf")
                 .withContentType("application/json")
                 .withBody("{ \"stringField\": 1 }")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.body.schema.oneOf");
+    }
+
+    @Test
+    public void validate_withOneOfComposition_shouldFail_whenInvalidSchema_withNesting() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .withLevelResolver(withAdditionalPropertiesIgnored())
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .put("/oneOf")
+                .withContentType("application/json")
+                .withBody("[{ \"stringField\": \"foo\" }, { \"notAField\": 1 }]")
                 .build();
 
         assertFail(classUnderTest.validateRequest(request),
@@ -339,6 +374,23 @@ public class OpenAPIV3RequestValidationTest {
     }
 
     @Test
+    public void validate_withAnyOfComposition_shouldPass_whenValid_withNesting() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .withLevelResolver(withAdditionalPropertiesIgnored())
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .put("/anyOf")
+                .withContentType("application/json")
+                .withBody("[{ \"stringField\": \"foo\", \"intField\": 1 }, { \"boolField\": false }]")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
     public void validate_withAnyOfComposition_fails_whenAdditionalPropertiesNotIgnored() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
@@ -367,6 +419,24 @@ public class OpenAPIV3RequestValidationTest {
                 .post("/anyOf")
                 .withContentType("application/json")
                 .withBody("{ \"stringField\": 1, \"intField\": false }")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.body.schema.anyOf");
+    }
+
+    @Test
+    public void validate_withAnyOfComposition_shouldPass_whenInvalidSchema_withNesting() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .withLevelResolver(withAdditionalPropertiesIgnored())
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .put("/anyOf")
+                .withContentType("application/json")
+                .withBody("[{ \"stringField\": \"foo\", \"intField\": 1 }, 1]")
                 .build();
 
         assertFail(classUnderTest.validateRequest(request),
