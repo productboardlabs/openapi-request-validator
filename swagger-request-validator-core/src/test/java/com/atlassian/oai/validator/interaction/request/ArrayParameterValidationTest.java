@@ -2,6 +2,8 @@ package com.atlassian.oai.validator.interaction.request;
 
 import com.atlassian.oai.validator.report.MessageResolver;
 import io.swagger.v3.oas.models.media.IntegerSchema;
+import io.swagger.v3.oas.models.media.ObjectSchema;
+import io.swagger.v3.oas.models.media.Schema;
 import org.junit.Test;
 
 import java.util.Collection;
@@ -136,6 +138,15 @@ public class ArrayParameterValidationTest {
     }
 
     @Test
+    public void validate_withTooManyValues_shouldFail_whenMaxItemsSpecified_withObjectSchema() {
+
+        final Schema items = new ObjectSchema().addProperties("index", new IntegerSchema());
+        assertFail(classUnderTest.validate("{\"index\": 1},{\"index\": 2},{\"index\": 3}",
+                arrayParam(true, SIMPLE, false, 1, 2, null, items)),
+                "validation.request.parameter.collection.tooManyItems");
+    }
+
+    @Test
     public void validate_withNonUniqueValues_shouldFail_whenUniqueSpecified() {
         assertFail(classUnderTest.validate("1,2,1",
                 arrayParam(true, SIMPLE, false, null, null, true, new IntegerSchema())),
@@ -146,6 +157,15 @@ public class ArrayParameterValidationTest {
     public void validate_withNonUniqueValues_shouldPass_whenUniqueNotSpecified() {
         assertPass(classUnderTest.validate("1,2,1",
                 arrayParam(true, SIMPLE, false, null, null, false, new IntegerSchema())));
+    }
+
+    @Test
+    public void validate_withNonUniqueValues_shouldFail_whenUniqueSpecified_withObjectSchema() {
+
+        final Schema items = new ObjectSchema().addProperties("index", new IntegerSchema());
+        assertFail(classUnderTest.validate("{\"index\": 1},{\"index\": 1},{\"index\": 3}",
+                arrayParam(true, SIMPLE, false, 1, 5, true, items)),
+                "validation.request.parameter.collection.duplicateItems");
     }
 
     @Test
