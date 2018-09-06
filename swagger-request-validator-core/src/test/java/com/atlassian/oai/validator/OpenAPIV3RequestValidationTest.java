@@ -4,6 +4,7 @@ import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import org.junit.Test;
 
+import static com.atlassian.oai.validator.report.LevelResolverFactory.withAdditionalPropertiesIgnored;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadJsonRequest;
@@ -180,4 +181,213 @@ public class OpenAPIV3RequestValidationTest {
         assertPass(classUnderTest.validateRequest(request));
     }
 
+    @Test
+    public void validate_withOneOfComposition_shouldPass_whenValid() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .withLevelResolver(withAdditionalPropertiesIgnored())
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/oneOf")
+                .withContentType("application/json")
+                .withBody("{ \"stringField\": \"foo\" }")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withOneOfComposition_fails_whenAdditionalPropertiesNotIgnored() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/oneOf")
+                .withContentType("application/json")
+                .withBody("{ \"stringField\": \"foo\" }")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.body.schema.additionalProperties");
+    }
+
+    @Test
+    public void validate_withOneOfComposition_shouldFail_whenInvalidAccordingToSchema() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .withLevelResolver(withAdditionalPropertiesIgnored())
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/oneOf")
+                .withContentType("application/json")
+                .withBody("{ \"stringField\": 1 }")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.body.schema.oneOf");
+    }
+
+    @Test
+    public void validate_withOneOfComposition_shouldFail_whenMatchingMultiple() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .withLevelResolver(withAdditionalPropertiesIgnored())
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/oneOf")
+                .withContentType("application/json")
+                .withBody("{ \"stringField\": \"foo\", \"intField\": 1 }")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.body.schema.oneOf");
+    }
+
+    @Test
+    public void validate_withAllOfComposition_shouldPass_whenValid() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .withLevelResolver(withAdditionalPropertiesIgnored())
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/allOf")
+                .withContentType("application/json")
+                .withBody("{ \"stringField\": \"foo\", \"intField\": 1, \"boolField\": false }")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withAllOfComposition_fails_whenAdditionalPropertiesNotIgnored() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/allOf")
+                .withContentType("application/json")
+                .withBody("{ \"stringField\": \"foo\", \"intField\": 1, \"boolField\": false }")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.body.schema.additionalProperties");
+    }
+
+    @Test
+    public void validate_withAllOfComposition_shouldFail_whenInvalidAccordingToSchema() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .withLevelResolver(withAdditionalPropertiesIgnored())
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/allOf")
+                .withContentType("application/json")
+                .withBody("{ \"stringField\": \"foo\", \"intField\": false, \"boolField\": false }")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.body.schema.allOf");
+    }
+
+    @Test
+    public void validate_withAllOfComposition_shouldFail_whenDoesNotMatchAll() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .withLevelResolver(withAdditionalPropertiesIgnored())
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/allOf")
+                .withContentType("application/json")
+                .withBody("{ \"stringField\": \"foo\", \"boolField\": false }")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.body.schema.allOf");
+    }
+
+    @Test
+    public void validate_withAnyOfComposition_shouldPass_whenValid() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .withLevelResolver(withAdditionalPropertiesIgnored())
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/anyOf")
+                .withContentType("application/json")
+                .withBody("{ \"stringField\": \"foo\", \"intField\": 1 }")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withAnyOfComposition_fails_whenAdditionalPropertiesNotIgnored() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/anyOf")
+                .withContentType("application/json")
+                .withBody("{ \"stringField\": \"foo\", \"intField\": 1 }")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.body.schema.additionalProperties");
+    }
+
+    @Test
+    public void validate_withAnyOfComposition_shouldFail_whenInvalidAccordingToSchema() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .withLevelResolver(withAdditionalPropertiesIgnored())
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/anyOf")
+                .withContentType("application/json")
+                .withBody("{ \"stringField\": 1, \"intField\": false }")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.body.schema.anyOf");
+    }
+
+    @Test
+    public void validate_withAnyOfComposition_shouldFail_whenMatchesNone() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .withLevelResolver(withAdditionalPropertiesIgnored())
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/anyOf")
+                .withContentType("application/json")
+                .withBody("{ \"foo\": \"bar\" }")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.body.schema.anyOf");
+    }
 }

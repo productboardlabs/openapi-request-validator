@@ -81,8 +81,8 @@
 |                                  |                                                                          |                                                                                |
 | type                             | Yes                                                                      |                                                                                |
 | allOf                            | Yes                                                                      | Does not work when `additionalProperties` is `false`                           |
-| oneOf                            | ?                                                                        |                                                                                |
-| anyOf                            | ?                                                                        |                                                                                |
+| oneOf                            | Yes                                                                      |                                                                                |
+| anyOf                            | Yes                                                                      |                                                                                |
 | not                              | ?                                                                        |                                                                                |
 | items                            | Yes                                                                      |                                                                                |
 | properties                       | Yes                                                                      |                                                                                |
