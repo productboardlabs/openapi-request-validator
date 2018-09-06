@@ -19,7 +19,6 @@ public class ValidatedWireMockRuleTest {
 
     private ValidatedWireMockRule classUnderTest;
 
-
     @Test
     public void canBeCreatedWithAnExistingValidator() {
         new ValidatedWireMockRule(
