@@ -1,0 +1,10 @@
+openapi: 3.0.0
+info:
+  title: Malformed - missing required responses block
+  version: 1.0.0
+paths:
+  /theresource:
+    get:
+      summary: Get the resource
+servers:
+  - url: /

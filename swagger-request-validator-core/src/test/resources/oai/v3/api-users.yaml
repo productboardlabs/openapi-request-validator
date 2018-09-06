@@ -283,9 +283,6 @@ components:
     basic:
       x-authorize: auth.js
       type: http
-      scopes:
-        read_users: Read users
-        create_user: Create user
       scheme: basic
     bearer:
       type: apiKey

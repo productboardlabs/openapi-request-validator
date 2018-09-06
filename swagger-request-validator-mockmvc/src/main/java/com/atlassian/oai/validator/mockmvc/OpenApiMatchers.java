@@ -41,6 +41,15 @@ public class OpenApiMatchers {
                 .createFor(specUrlOrPayload)
                 .build();
 
+        return isValid(validator);
+    }
+
+    /**
+     * Assert the result can be validated using the given pre-configured validator.
+     *
+     * @param validator The pre-configured validator to use
+     */
+    public ResultMatcher isValid(final OpenApiInteractionValidator validator) {
         return result -> {
             final MockHttpServletRequest request = result.getRequest();
             final MockHttpServletResponse response = result.getResponse();

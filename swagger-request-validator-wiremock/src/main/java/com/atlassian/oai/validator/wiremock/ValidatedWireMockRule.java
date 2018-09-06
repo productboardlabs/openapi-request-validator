@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.wiremock;
 
+import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.github.tomakehurst.wiremock.core.Options;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
@@ -23,6 +24,12 @@ public class ValidatedWireMockRule extends WireMockRule {
         setupValidationListener(specUrlOrPayload);
     }
 
+    public ValidatedWireMockRule(final OpenApiInteractionValidator validator,
+                                 final Options options) {
+        super(options);
+        setupValidationListener(validator);
+    }
+
     public ValidatedWireMockRule(final String specUrlOrPayload,
                                  final Options options,
                                  final boolean failOnUnmatchedStubs) {
@@ -30,10 +37,23 @@ public class ValidatedWireMockRule extends WireMockRule {
         setupValidationListener(specUrlOrPayload);
     }
 
+    public ValidatedWireMockRule(final OpenApiInteractionValidator validator,
+                                 final Options options,
+                                 final boolean failOnUnmatchedStubs) {
+        super(options, failOnUnmatchedStubs);
+        setupValidationListener(validator);
+    }
+
     public ValidatedWireMockRule(final String specUrlOrPayload,
                                  final int port) {
         super(port);
         setupValidationListener(specUrlOrPayload);
+    }
+
+    public ValidatedWireMockRule(final OpenApiInteractionValidator validator,
+                                 final int port) {
+        super(port);
+        setupValidationListener(validator);
     }
 
     public ValidatedWireMockRule(final String specUrlOrPayload,
@@ -43,12 +63,28 @@ public class ValidatedWireMockRule extends WireMockRule {
         setupValidationListener(specUrlOrPayload);
     }
 
+    public ValidatedWireMockRule(final OpenApiInteractionValidator validator,
+                                 final int port,
+                                 final Integer httpsPort) {
+        super(port, httpsPort);
+        setupValidationListener(validator);
+    }
+
     public ValidatedWireMockRule(final String specUrlOrPayload) {
         setupValidationListener(specUrlOrPayload);
     }
 
+    public ValidatedWireMockRule(final OpenApiInteractionValidator validator) {
+        setupValidationListener(validator);
+    }
+
     private void setupValidationListener(final String specUrlOrPayload) {
         validationListener = new OpenApiValidationListener(specUrlOrPayload);
+        addMockServiceRequestListener(validationListener);
+    }
+
+    private void setupValidationListener(final OpenApiInteractionValidator validator) {
+        validationListener = new OpenApiValidationListener(validator);
         addMockServiceRequestListener(validationListener);
     }
 

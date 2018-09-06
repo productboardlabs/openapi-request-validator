@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.wiremock;
 
+import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import org.junit.Test;
 import org.junit.internal.runners.statements.InvokeMethod;
@@ -17,6 +18,14 @@ public class ValidatedWireMockRuleTest {
     private static final String INVALID_RESPONSE_BODY = "{\"msg\":\"Hello bob!\"}";
 
     private ValidatedWireMockRule classUnderTest;
+
+    @Test
+    public void canBeCreatedWithAnExistingValidator() {
+        new ValidatedWireMockRule(
+                OpenApiInteractionValidator.createFor("api-oai3.yaml").build(),
+                options().dynamicPort()
+        );
+    }
 
     @Test
     public void shouldPass_withValidInteraction_whenSwaggerv2() throws Throwable {
