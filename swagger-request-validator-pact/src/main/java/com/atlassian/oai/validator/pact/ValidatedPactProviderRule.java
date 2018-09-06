@@ -62,6 +62,26 @@ public class ValidatedPactProviderRule implements TestRule {
         this.delegate = delegate;
     }
 
+    public ValidatedPactProviderRule(final OpenApiInteractionValidator validator,
+                                     final String providerId,
+                                     final Object target) {
+        this.validator = validator;
+        this.providerId = providerId;
+        this.target = target;
+        delegate = new PactProviderRuleMk2(providerId, target);
+    }
+
+    public ValidatedPactProviderRule(final OpenApiInteractionValidator validator,
+                                     final String providerId,
+                                     final String host,
+                                     final Integer port,
+                                     final Object target) {
+        this.validator = validator;
+        this.providerId = providerId;
+        this.target = target;
+        delegate = new PactProviderRuleMk2(providerId, host, port, target);
+    }
+
     public MockProviderConfig getConfig() {
         return delegate.getConfig();
     }

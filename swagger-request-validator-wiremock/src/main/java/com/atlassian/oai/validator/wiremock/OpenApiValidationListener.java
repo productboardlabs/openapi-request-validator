@@ -9,6 +9,8 @@ import com.github.tomakehurst.wiremock.http.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A WireMock request listener that applies OpenAPI / Swagger validation to WireMock interactions.
  * <p>
@@ -58,6 +60,10 @@ public class OpenApiValidationListener implements RequestListener {
 
     public OpenApiValidationListener(final String specUrlOrDefinition) {
         validator = OpenApiInteractionValidator.createFor(specUrlOrDefinition).build();
+    }
+
+    public OpenApiValidationListener(final OpenApiInteractionValidator validator) {
+        this.validator = requireNonNull(validator, "A configured validator is required");
     }
 
     @Override

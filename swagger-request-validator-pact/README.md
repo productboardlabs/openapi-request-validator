@@ -49,6 +49,17 @@ public ValidatedPactProviderRule provider =
         new ValidatedPactProviderRule("http://petstore.swagger.io/v2/swagger.json", null, PROVIDER_ID, this);
 ```
 
+If you want more control over how the validator is configured, you can optionally pass in a pre-configured `OpenApiInteractionValidator`:
+
+```java
+@Rule
+public ValidatedPactProviderRule provider =
+        new ValidatedPactProviderRule(
+                OpenApiInteractionValidator.createFor("http://petstore.swagger.io/v2/swagger.json").build(), null, PROVIDER_ID, this);
+```
+When configuring the validator you might want to set the level resolver using `PactLevelResolverFactory.create()` to ensure that validation
+behavior matches the conventions in Pact of only defining the minimal set of fields etc. you care about.
+
 *Note*:
 To use the JUnit rule you will need to ensure the following dependencies are added to your project POM
 
