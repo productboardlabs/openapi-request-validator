@@ -17,13 +17,14 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Collections.singletonList;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -43,7 +44,7 @@ public class RestRequestValidationTest {
     @Test
     public void testGet_success() {
         final Map<String, List<String>> additionalHeaders = ImmutableMap
-                .of("headerValue", Arrays.asList("valueHeader"));
+                .of("headerValue", singletonList("valueHeader"));
         final ResponseEntity<HashMap> response = restRequest("/spring/variablePath?requestParam=paramRequest",
                 HttpMethod.GET, null /* no body */, additionalHeaders);
 
@@ -60,20 +61,21 @@ public class RestRequestValidationTest {
 
         // then: 'invalid request, the header and query parameter is missing'
         assertBadRequest(response,
-                "Header parameter 'headerValue' is required on path '/spring/{pathVariable}' but not found in request., " +
-                        "Query parameter 'requestParam' is required on path '/spring/{pathVariable}' but not found in request.");
+                "Header parameter 'headerValue' is required on path '/spring/{pathVariable}' but not found in request.");
+        assertBadRequest(response,
+                "Query parameter 'requestParam' is required on path '/spring/{pathVariable}' but not found in request.");
     }
 
     @Test
     public void testGet_invalidResponse() {
         final Map<String, List<String>> additionalHeaders = ImmutableMap
-                .of("headerValue", Arrays.asList("valueHeader"));
+                .of("headerValue", singletonList("valueHeader"));
         final ResponseEntity<HashMap> response = requestWithInvalidResponse("/spring/variablePath?requestParam=paramRequest",
                 HttpMethod.GET, null /* no body */, additionalHeaders);
 
         // then: 'invalid response, empty body'
         assertBadResponse(response,
-                "Object has missing required properties ([\"headerValue\",\"pathVariable\",\"requestParam\"])");
+                "Object has missing required properties ([\\\"headerValue\\\",\\\"pathVariable\\\",\\\"requestParam\\\"])");
     }
 
     @Test
@@ -95,8 +97,7 @@ public class RestRequestValidationTest {
 
         // then: 'invalid request, all required request fields are missing'
         assertBadRequest(response,
-                "Object has missing required properties ([\"object\",\"string\"]), " +
-                        "[Path '/integer'] Instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])");
+                "Object has missing required properties ([\\\"object\\\",\\\"string\\\"])");
     }
 
     @Test
@@ -108,7 +109,7 @@ public class RestRequestValidationTest {
 
         // then: 'invalid response, empty body'
         assertBadResponse(response,
-                "Object has missing required properties ([\"integer\",\"object\",\"string\"])");
+                "Object has missing required properties ([\\\"integer\\\",\\\"object\\\",\\\"string\\\"])");
     }
 
     @Test
@@ -139,7 +140,7 @@ public class RestRequestValidationTest {
 
         // then: 'invalid response, empty body'
         assertBadResponse(response,
-                "Object has missing required properties ([\"pathVariable\",\"putValue\"])");
+                "Object has missing required properties ([\\\"pathVariable\\\",\\\"putValue\\\"])");
     }
 
     @Test
@@ -156,7 +157,7 @@ public class RestRequestValidationTest {
 
         // then: 'invalid request, the path variable is no integer'
         assertBadRequest(response,
-                "Instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])");
+                "Instance type (string) does not match any allowed primitive type (allowed: [\\\"integer\\\"])");
     }
 
     @Test
@@ -180,7 +181,7 @@ public class RestRequestValidationTest {
     private ResponseEntity<HashMap> restRequest(final String uri, final HttpMethod method, final Object body,
                                                 final Map<String, List<String>> additionalHeader) {
         final HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+        headers.setAccept(singletonList(MediaType.APPLICATION_JSON));
         headers.putAll(additionalHeader);
         final HttpEntity<Object> entity = new HttpEntity<>(body, headers);
         return restTemplate.exchange(uri, method, entity, HashMap.class);
@@ -189,9 +190,9 @@ public class RestRequestValidationTest {
     private ResponseEntity<HashMap> requestWithInvalidResponse(final String uri, final HttpMethod method,
                                                                final Object body, final Map<String, List<String>> additionalHeader) {
         final HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+        headers.setAccept(singletonList(MediaType.APPLICATION_JSON));
         headers.putAll(additionalHeader);
-        headers.put("invalidResponse", Arrays.asList("true"));
+        headers.put("invalidResponse", singletonList("true"));
         final HttpEntity<Object> entity = new HttpEntity<>(body, headers);
         return restTemplate.exchange(uri, method, entity, HashMap.class);
     }
@@ -203,11 +204,11 @@ public class RestRequestValidationTest {
 
     private void assertBadRequest(final ResponseEntity<HashMap> response, final String message) {
         assertThat(response.getStatusCode(), equalTo(HttpStatus.BAD_REQUEST));
-        assertThat(response.getBody().get("message"), equalTo(message));
+        assertThat(response.getBody().get("message").toString(), containsString(message));
     }
 
     private void assertBadResponse(final ResponseEntity<HashMap> response, final String message) {
         assertThat(response.getStatusCode(), equalTo(HttpStatus.INTERNAL_SERVER_ERROR));
-        assertThat(response.getBody().get("message"), equalTo(message));
+        assertThat(response.getBody().get("message").toString(), containsString(message));
     }
 }

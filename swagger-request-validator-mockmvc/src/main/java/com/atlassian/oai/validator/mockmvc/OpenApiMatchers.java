@@ -1,7 +1,7 @@
 package com.atlassian.oai.validator.mockmvc;
 
 import com.atlassian.oai.validator.OpenApiInteractionValidator;
-import com.atlassian.oai.validator.report.SimpleValidationReportFormat;
+import com.atlassian.oai.validator.report.JsonValidationReportFormat;
 import com.atlassian.oai.validator.report.ValidationReport;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -65,7 +65,7 @@ public class OpenApiMatchers {
         private final ValidationReport report;
 
         public OpenApiValidationException(final ValidationReport report) {
-            super(SimpleValidationReportFormat.getInstance().apply(report));
+            super(JsonValidationReportFormat.getInstance().apply(report));
             this.report = report;
         }
 

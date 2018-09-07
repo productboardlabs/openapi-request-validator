@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.springmvc;
 
+import com.atlassian.oai.validator.report.JsonValidationReportFormat;
 import com.atlassian.oai.validator.report.ValidationReport;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -12,8 +13,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @ResponseStatus(value = HttpStatus.BAD_REQUEST)
 public class InvalidRequestException extends RuntimeException {
 
-    private static final String MESSAGE_DELIMETER = ", ";
-
     private final ValidationReport validationReport;
     private String message;
 
@@ -24,11 +23,7 @@ public class InvalidRequestException extends RuntimeException {
     @Override
     public String getMessage() {
         if (message == null) {
-            final StringBuilder sb = new StringBuilder();
-            for (final ValidationReport.Message message : validationReport.getMessages()) {
-                sb.append(MESSAGE_DELIMETER).append(message.getMessage());
-            }
-            message = sb.substring(Math.min(sb.length(), MESSAGE_DELIMETER.length()));
+            message = JsonValidationReportFormat.getInstance().apply(validationReport);
         }
         return message;
     }

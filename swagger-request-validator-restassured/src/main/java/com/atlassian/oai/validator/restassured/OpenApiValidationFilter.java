@@ -1,7 +1,7 @@
 package com.atlassian.oai.validator.restassured;
 
 import com.atlassian.oai.validator.OpenApiInteractionValidator;
-import com.atlassian.oai.validator.report.SimpleValidationReportFormat;
+import com.atlassian.oai.validator.report.JsonValidationReportFormat;
 import com.atlassian.oai.validator.report.ValidationReport;
 import io.restassured.filter.Filter;
 import io.restassured.filter.FilterContext;
@@ -68,7 +68,7 @@ public class OpenApiValidationFilter implements Filter {
         private final ValidationReport report;
 
         public OpenApiValidationException(final ValidationReport report) {
-            super(SimpleValidationReportFormat.getInstance().apply(report));
+            super(JsonValidationReportFormat.getInstance().apply(report));
             this.report = report;
         }
 
