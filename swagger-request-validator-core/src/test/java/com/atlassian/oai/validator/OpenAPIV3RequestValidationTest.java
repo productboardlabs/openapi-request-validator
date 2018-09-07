@@ -216,6 +216,23 @@ public class OpenAPIV3RequestValidationTest {
     }
 
     @Test
+    public void validate_withOneOfComposition_shouldPass_whenValid_withNestedArrays() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .withLevelResolver(withAdditionalPropertiesIgnored())
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .patch("/oneOf")
+                .withContentType("application/json")
+                .withBody("[{ \"stringField\": \"foo\" }, [{ \"intField\": 1 }, { \"boolField\": true }]]")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
     public void validate_withOneOfComposition_fails_whenAdditionalPropertiesNotIgnored() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator

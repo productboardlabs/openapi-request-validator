@@ -34,6 +34,34 @@ paths:
       responses:
         '201':
           description: OK
+    patch:
+      summary: Exercise oneOf composition with nested arrays
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                oneOf:
+                  - $ref: '#/components/schemas/OneOfComposition'
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/OneOfComposition'
+        description: The request body
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/components/schemas/OneOfComposition'
+                    - type: array
+                      items:
+                        $ref: '#/components/schemas/OneOfComposition'
   /allOf:
     post:
       summary: Exercise allOf composition

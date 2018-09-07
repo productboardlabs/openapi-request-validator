@@ -3,9 +3,11 @@ package com.atlassian.oai.validator;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleResponse;
+import com.atlassian.oai.validator.report.LevelResolverFactory;
 import org.junit.Test;
 
 import static com.atlassian.oai.validator.model.Request.Method.GET;
+import static com.atlassian.oai.validator.model.Request.Method.PATCH;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadJsonResponse;
@@ -131,5 +133,40 @@ public class OpenAPIV3ResponseValidationTest {
 
         assertFail(classUnderTest.validateResponse("/healthcheck", Request.Method.GET, response),
                 "validation.response.header.schema.type");
+    }
+
+    @Test
+    public void validate_withOneOfComposition_shouldPass_whenValid() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .withLevelResolver(LevelResolverFactory.withAdditionalPropertiesIgnored())
+                        .build();
+
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("application/json")
+                .withBody("[{ \"stringField\": \"foo\" }, [{ \"intField\": 1 }, { \"boolField\": true }]]")
+                .build();
+
+        assertPass(classUnderTest.validateResponse("/oneOf", PATCH, response));
+    }
+
+    @Test
+    public void validate_withOneOfComposition_shouldFail_whenInvalid() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .withLevelResolver(LevelResolverFactory.withAdditionalPropertiesIgnored())
+                        .build();
+
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("application/json")
+                .withBody("[{ \"stringField\": \"foo\" }, [{ \"intField\": 1 }, { \"notAField\": true }]]")
+                .build();
+
+        assertFail(classUnderTest.validateResponse("/oneOf", PATCH, response),
+                "validation.response.body.schema.oneOf");
     }
 }
