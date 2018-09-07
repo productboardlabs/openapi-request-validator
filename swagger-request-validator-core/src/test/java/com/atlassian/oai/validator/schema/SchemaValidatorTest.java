@@ -14,10 +14,12 @@ import io.swagger.v3.oas.models.media.NumberSchema;
 import io.swagger.v3.oas.models.media.ObjectSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.media.StringSchema;
+import io.swagger.v3.oas.models.media.UUIDSchema;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.UUID;
 
 import static com.atlassian.oai.validator.schema.SchemaValidator.ADDITIONAL_PROPERTIES_KEY;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFailWithoutContext;
@@ -534,6 +536,23 @@ public class SchemaValidatorTest {
 
         assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
                 "validation.prefix.schema.type");
+    }
+
+    @Test
+    public void validate_withUuidProperty_shouldPass_whenValid() {
+        final String value = UUID.randomUUID().toString();
+        final Schema schema = new UUIDSchema();
+
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
+    }
+
+    @Test
+    public void validate_withUuidProperty_shouldFail_whenInvalid() {
+        final String value = UUID.randomUUID().toString() + "}";
+        final Schema schema = new UUIDSchema();
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.format");
     }
 
     private SchemaValidator validatorWithAdditionalPropertiesIgnored(final String api) {
