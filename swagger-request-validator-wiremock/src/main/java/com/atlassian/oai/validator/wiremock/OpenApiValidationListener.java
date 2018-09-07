@@ -1,7 +1,7 @@
 package com.atlassian.oai.validator.wiremock;
 
 import com.atlassian.oai.validator.OpenApiInteractionValidator;
-import com.atlassian.oai.validator.report.SimpleValidationReportFormat;
+import com.atlassian.oai.validator.report.JsonValidationReportFormat;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.github.tomakehurst.wiremock.http.Request;
 import com.github.tomakehurst.wiremock.http.RequestListener;
@@ -120,7 +120,7 @@ public class OpenApiValidationListener implements RequestListener {
         private final ValidationReport report;
 
         public OpenApiValidationException(final ValidationReport report) {
-            super(SimpleValidationReportFormat.getInstance().apply(report));
+            super(JsonValidationReportFormat.getInstance().apply(report));
             this.report = report;
         }
 
