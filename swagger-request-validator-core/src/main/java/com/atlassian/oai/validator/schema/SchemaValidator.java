@@ -242,6 +242,10 @@ public class SchemaValidator {
     }
 
     private JsonNode readContent(@Nonnull final String value, @Nonnull final Schema schema) throws IOException {
+        if ("null".equalsIgnoreCase(value)) {
+            return Json.mapper().readTree("null");
+        }
+
         String normalisedValue = value;
         if (schema instanceof DateTimeSchema) {
             normalisedValue = normaliseDateTime(value);
