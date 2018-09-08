@@ -64,7 +64,7 @@ public class OpenApiValidationFilter implements Filter {
         return response;
     }
 
-    static class OpenApiValidationException extends RuntimeException {
+    public static class OpenApiValidationException extends RuntimeException {
         private final ValidationReport report;
 
         public OpenApiValidationException(final ValidationReport report) {
