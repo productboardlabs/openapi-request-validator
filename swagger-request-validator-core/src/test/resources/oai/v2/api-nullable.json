@@ -1,0 +1,67 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "No definitions",
+    "version": "1.0.0"
+  },
+  "basePath": "/",
+  "produces": [
+    "application/json"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "paths": {
+    "/nullablePrimitive": {
+      "post": {
+        "summary": "Test with a top-level nullable primitive",
+        "parameters": [
+          {
+            "name": "Request",
+            "in": "body",
+            "description": "The request",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "x-nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/nullableProperty": {
+      "post": {
+        "summary": "Test with an object with a nullable property",
+        "parameters": [
+          {
+            "name": "Request",
+            "in": "body",
+            "description": "The request",
+            "required": true,
+            "schema": {
+              "required": [
+                "nullable"
+              ],
+              "properties": {
+                "nullable": {
+                  "type": "string",
+                  "x-nullable": true
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,51 @@
+openapi: 3.0.0
+info:
+  title: Nullable fields
+  version: 1.0.0
+servers:
+  - url: /
+paths:
+  /nullablePrimitive:
+    post:
+      summary: Test a top-level nullable primitive
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: integer
+              nullable: true
+      responses:
+        '201':
+          description: OK
+  /nullableProperty:
+    post:
+      summary: Test an object with a nullable property
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  nullable: true
+      responses:
+        '201':
+          description: OK
+  /nullableArrayItem:
+    post:
+      summary: Test arrays with nullable items
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              minItems: 1
+              items:
+                type: string
+                nullable: true
+      responses:
+        '201':
+          description: OK
