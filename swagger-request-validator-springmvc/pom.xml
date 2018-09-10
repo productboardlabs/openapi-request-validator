@@ -12,6 +12,10 @@
 
     <artifactId>swagger-request-validator-springmvc</artifactId>
 
+    <description>
+        OpenAPI / Swagger validation for Spring MVC.
+    </description>
+
     <properties>
         <!-- Spring Boot is only used for testing -->
         <spring-boot.version>1.5.12.RELEASE</spring-boot.version>

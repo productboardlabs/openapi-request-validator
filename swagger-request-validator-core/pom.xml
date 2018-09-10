@@ -12,6 +12,10 @@
 
     <artifactId>swagger-request-validator-core</artifactId>
 
+    <description>
+        Core OpenAPI / Swagger validation logic.
+    </description>
+
     <dependencies>
         <dependency>
             <groupId>io.swagger.parser.v3</groupId>

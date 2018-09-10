@@ -13,7 +13,7 @@
     <artifactId>swagger-request-validator-mockmvc</artifactId>
 
     <description>
-        Integrations between OpenAPI / Swagger validation and Spring MVC REST tests.
+        OpenAPI / Swagger validation for Spring MVC REST tests.
     </description>
 
     <dependencies>
