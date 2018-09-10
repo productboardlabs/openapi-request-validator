@@ -822,4 +822,89 @@ public class SwaggerV2RequestValidationTest {
 
         assertPass(classUnderTest.validateRequest(request));
     }
+
+    @Test
+    public void validate_withRequiredNullablePrimitive_shouldPass_whenNull() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator.createFor("/oai/v2/api-nullable.json").build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/nullablePrimitive")
+                .withContentType("application/json")
+                .withBody("null")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withRequiredNullablePrimitive_shouldPass_whenProvided() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator.createFor("/oai/v2/api-nullable.json").build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/nullablePrimitive")
+                .withContentType("application/json")
+                .withBody("1")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withRequiredNullablePrimitive_shouldFail_whenMissing() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator.createFor("/oai/v2/api-nullable.json").build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/nullablePrimitive")
+                .withContentType("application/json")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.body.missing");
+    }
+
+    @Test
+    public void validate_withRequiredNullableProperty_shouldPass_whenNull() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator.createFor("/oai/v2/api-nullable.json").build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/nullableProperty")
+                .withContentType("application/json")
+                .withBody("{ \"nullable\": null }")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withRequiredNullableProperty_shouldPass_whenNonNull() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator.createFor("/oai/v2/api-nullable.json").build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/nullableProperty")
+                .withContentType("application/json")
+                .withBody("{ \"nullable\": \"foo\" }")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withRequiredNullableProperty_shouldFail_whenMissing() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator.createFor("/oai/v2/api-nullable.json").build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/nullableProperty")
+                .withContentType("application/json")
+                .withBody("{ }")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.body.schema.required");
+    }
 }

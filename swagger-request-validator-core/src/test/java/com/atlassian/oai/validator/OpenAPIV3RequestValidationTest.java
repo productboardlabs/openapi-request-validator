@@ -477,4 +477,134 @@ public class OpenAPIV3RequestValidationTest {
         assertFail(classUnderTest.validateRequest(request),
                 "validation.request.body.schema.anyOf");
     }
+
+    @Test
+    public void validate_withNullablePrimitive_shouldPass_whenNullProvided() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-nullable.yaml")
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/nullablePrimitive")
+                .withContentType("application/json")
+                .withBody("null")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withNullablePrimitive_shouldPass_whenValueProvided() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-nullable.yaml")
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/nullablePrimitive")
+                .withContentType("application/json")
+                .withBody("1")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withRequiredNullableProperty_shouldPass_whenNullProvided() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-nullable.yaml")
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/nullableProperty")
+                .withContentType("application/json")
+                .withBody("{ \"name\": null }")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withRequiredNullableProperty_shouldPass_whenValueProvided() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-nullable.yaml")
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/nullableProperty")
+                .withContentType("application/json")
+                .withBody("{ \"name\": \"foo\" }")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withRequiredNullableProperty_shouldFail_whenMissing() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-nullable.yaml")
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/nullableProperty")
+                .withContentType("application/json")
+                .withBody("{ }")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.body.schema.required");
+    }
+
+    @Test
+    public void validate_withNullableArrayItem_shouldPass_whenNullProvided() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-nullable.yaml")
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/nullableArrayItem")
+                .withContentType("application/json")
+                .withBody("[null]")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withNullableArrayItem_shouldPass_whenValueProvided() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-nullable.yaml")
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/nullableArrayItem")
+                .withContentType("application/json")
+                .withBody("[\"foo\"]")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withNullableArrayItem_shouldFail_whenNotProvided() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-nullable.yaml")
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/nullableArrayItem")
+                .withContentType("application/json")
+                .withBody("[]")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.body.schema.minItems");
+    }
 }
