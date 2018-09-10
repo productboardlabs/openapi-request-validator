@@ -43,7 +43,25 @@ public class ContentTypeUtils {
      * @return Whether the provided content-type is a JSON type.
      */
     public static boolean isJsonContentType(@Nullable final String contentType) {
-        return matches(contentType, JSON_UTF_8) || matches(contentType, HAL_JSON);
+        return matches(contentType, JSON_UTF_8);
+    }
+
+    /**
+     * Determine whether a given request has a formdata content-type.
+     *
+     * @return Whether the content-type of the request (defined in the Content-Type header) is a FORM_DATA type.
+     */
+    public static boolean isFormDataContentType(final Request request) {
+        return isFormDataContentType(request.getContentType().orElse(null));
+    }
+
+    /**
+     * Determine whether a given response has a formdata content-type.
+     *
+     * @return Whether the content-type of the response (defined in the Content-Type header) is a FORM_DATA type.
+     */
+    public static boolean isFormDataContentType(final Response response) {
+        return isFormDataContentType(response.getContentType().orElse(null));
     }
 
     /**
@@ -123,7 +141,6 @@ public class ContentTypeUtils {
     public static boolean hasContentType(final Request request) {
         return request.getHeaderValue(Headers.CONTENT_TYPE).isPresent();
     }
-
 
     /**
      * Determine whether a given request has a content-type header.

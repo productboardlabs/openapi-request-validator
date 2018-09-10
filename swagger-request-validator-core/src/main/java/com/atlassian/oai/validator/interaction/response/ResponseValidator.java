@@ -22,8 +22,9 @@ import java.util.Optional;
 import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.RESPONSE;
 import static com.atlassian.oai.validator.report.ValidationReport.empty;
 import static com.atlassian.oai.validator.util.ContentTypeUtils.findMostSpecificMatch;
-import static com.atlassian.oai.validator.util.ContentTypeUtils.hasContentType;
+import static com.atlassian.oai.validator.util.ContentTypeUtils.isFormDataContentType;
 import static com.atlassian.oai.validator.util.ContentTypeUtils.isJsonContentType;
+import static com.atlassian.oai.validator.util.HttpParsingUtils.parseUrlEncodedFormDataBodyAsJson;
 import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
@@ -124,19 +125,29 @@ public class ResponseValidator {
             return ValidationReport.empty();
         }
 
-        if (!response.getBody().isPresent() || response.getBody().get().isEmpty()) {
+        final Optional<String> responseBody = response.getBody();
+
+        if (!responseBody.isPresent() || responseBody.get().isEmpty()) {
             return ValidationReport.singleton(
                     messages.get("validation.response.body.missing",
                             apiOperation.getMethod(), apiOperation.getApiPath().original())
             );
         }
 
-        if (hasContentType(response) && !isJsonContentType(response)) {
-            log.debug("Non-JSON response body found. No validation will be applied.");
-            return empty();
+        if (isJsonContentType(response)) {
+            return schemaValidator.validate(responseBody.get(), apiMediaType.getSchema(), "response.body");
         }
 
-        return schemaValidator.validate(response.getBody().get(), apiMediaType.getSchema(), "response.body");
+        if (isFormDataContentType(response)) {
+            final String bodyAsJson = parseUrlEncodedFormDataBodyAsJson(responseBody.get());
+            return schemaValidator.validate(bodyAsJson, apiMediaType.getSchema(), "response.body");
+        }
+
+        if (response.getContentType().isPresent()) {
+            log.info("Validation of '{}' not supported. Response body not validated.", response.getContentType().get());
+        }
+
+        return empty();
     }
 
     @Nonnull

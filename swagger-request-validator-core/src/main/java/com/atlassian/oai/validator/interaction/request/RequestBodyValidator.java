@@ -16,7 +16,9 @@ import java.util.Optional;
 
 import static com.atlassian.oai.validator.report.ValidationReport.empty;
 import static com.atlassian.oai.validator.util.ContentTypeUtils.findMostSpecificMatch;
+import static com.atlassian.oai.validator.util.ContentTypeUtils.isFormDataContentType;
 import static com.atlassian.oai.validator.util.ContentTypeUtils.isJsonContentType;
+import static com.atlassian.oai.validator.util.HttpParsingUtils.parseUrlEncodedFormDataBodyAsJson;
 import static java.lang.Boolean.TRUE;
 import static java.util.Objects.requireNonNull;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -99,9 +101,19 @@ class RequestBodyValidator {
                     .withAdditionalContext(context);
         }
 
-        // TODO: Validate form data
+        if (isFormDataContentType(request)) {
+            final String bodyAsJson = parseUrlEncodedFormDataBodyAsJson(requestBody.get());
+            return schemaValidator
+                    .validate(
+                            bodyAsJson,
+                            maybeApiMediaTypeForRequest.get().getRight().getSchema(),
+                            "request.body")
+                    .withAdditionalContext(context);
+        }
 
-        log.debug("Validation of '{}' not supported.", maybeApiMediaTypeForRequest.get().getLeft());
+        // TODO: Validate multi-part form data
+
+        log.info("Validation of '{}' not supported. Request body not validated.", maybeApiMediaTypeForRequest.get().getLeft());
         return empty();
     }
 

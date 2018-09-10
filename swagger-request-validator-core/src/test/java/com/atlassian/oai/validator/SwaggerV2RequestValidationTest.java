@@ -108,7 +108,18 @@ public class SwaggerV2RequestValidationTest {
     }
 
     @Test
-    @Ignore("Form data validation not yet implemented")
+    public void validate_withValidFormDataBody_shouldPass() {
+        final String formData = "email=abc%40gmail.com";
+        final Request request = SimpleRequest.Builder
+                .put("/users/1")
+                .withContentType("application/x-www-form-urlencoded")
+                .withBody(formData)
+                .build();
+        assertPass(classUnderTest.validate(request, validUserResponse));
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
     public void validate_withRequestMissingRequiredFormDataBody_shouldFail() {
         final String formData = "fmail=abc%40gmail.com";
         final Request request = SimpleRequest.Builder
@@ -117,8 +128,57 @@ public class SwaggerV2RequestValidationTest {
                 .withBody(formData)
                 .build();
 
-        assertFail(classUnderTest.validate(request, validUserResponse), "validation.request.parameter.missing");
-        assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.missing");
+        assertFail(classUnderTest.validate(request, validUserResponse), "validation.request.body.schema.required");
+        assertFail(classUnderTest.validateRequest(request), "validation.request.body.schema.required");
+    }
+
+    @Test
+    public void validate_formData_manyValuesForSingleKey() {
+        final String formData = "email=abc%40gmail.com&email=";
+        final Request request = SimpleRequest.Builder
+                .put("/users/1")
+                .withBody(formData)
+                .withAuthorization("Basic EncryptedUsernameAndPassword")
+                .withContentType("application/x-www-form-urlencoded")
+                .build();
+        assertFail(classUnderTest.validate(request, validUserResponse), "validation.request.body.schema.type");
+        assertFail(classUnderTest.validateRequest(request), "validation.request.body.schema.type");
+    }
+
+    @Test
+    public void validate_withInvalidFormDataRequestBody_shouldFail() {
+        final String formData = "malformed-form-url-encoded";
+        final Request request = SimpleRequest.Builder
+                .put("/users/1")
+                .withContentType("application/x-www-form-urlencoded")
+                .withBody(formData)
+                .build();
+
+        assertFail(classUnderTest.validate(request, validUserResponse), "validation.request.body.schema.required");
+        assertFail(classUnderTest.validateRequest(request), "validation.request.body.schema.required");
+    }
+
+    @Test
+    @Ignore("Multipart form data not implemented yet")
+    public void validate_withValidMultipartFormDataBody_shouldPass() {
+        final String formData =
+                "--------------------------3046b8889e52e808\r\n" +
+                        "Content-Disposition: form-data; name=\"additionalMetadata\"\r\n" +
+                        "\r\n" +
+                        "abc@gmail.com\r\n" +
+                        "--------------------------3046b8889e52e808\r\n" +
+                        "Content-Disposition: form-data; name=\"imageFile\"; filename=\"myImageFile.jpg\"\r\n" +
+                        "\r\n" +
+                        "some content\r\n" +
+                        "--------------------------3046b8889e52e808--";
+
+        final Request request = SimpleRequest.Builder
+                .post("/secure/users/1/upload")
+                .withContentType("multipart/form-data; boundary=------------------------3046b8889e52e808")
+                .withBody(formData)
+                .build();
+        assertPass(classUnderTest.validate(request, validUserResponse));
+        assertPass(classUnderTest.validateRequest(request));
     }
 
     @Test
@@ -142,6 +202,55 @@ public class SwaggerV2RequestValidationTest {
     }
 
     @Test
+    @Ignore("Form data validation not yet implemented")
+    public void validate_multipartFormData_manyValuesForSingleKey() {
+        final String formData =
+                "--------------------------3046b8889e52e808\r\n" +
+                        "Content-Disposition: form-data; name=\"additionalMetadata\"\r\n" +
+                        "\r\n" +
+                        "abc@gmail.com\r\n" +
+                        "--------------------------3046b8889e52e808\r\n" +
+                        "Content-Disposition: form-data; name=\"imageFile\"; filename=\"myImageFile.jpg\"\r\n" +
+                        "\r\n" +
+                        "some content\r\n" +
+                        "--------------------------3046b8889e52e808\r\n" +
+                        "Content-Disposition: form-data; name=\"imageFile\"; filename=\"myImageFile.jpg\"\r\n" +
+                        "\r\n" +
+                        "\r\n" +
+                        "--------------------------3046b8889e52e808";
+        final Request request = SimpleRequest.Builder
+                .post("/secure/users/1/upload")
+                .withContentType("multipart/form-data; boundary=------------------------3046b8889e52e808")
+                .withBody(formData)
+                .build();
+
+        assertFail(classUnderTest.validate(request, validUserResponse),
+                "validation.request.parameter.missing");
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.parameter.missing");
+    }
+
+    @Test
+    @Ignore("Form data validation not yet implemented")
+    public void validate_withInvalidMultipartFormDataRequestBody_shouldFail() {
+        final String formData =
+                "--------------------------3046b8889e52e808\r\n" +
+                        "Content-Disposition: form-data; name=\"additionalMetadata\"\r\n" +
+                        "\r\n" +
+                        "abc@gmai";
+        final Request request = SimpleRequest.Builder
+                .post("/secure/users/1/upload")
+                .withContentType("multipart/form-data; boundary=------------------------3046b8889e52e808")
+                .withBody(formData)
+                .build();
+
+        assertFail(classUnderTest.validate(request, validUserResponse),
+                "validation.request.parameter.missing");
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.parameter.missing");
+    }
+
+    @Test
     public void validate_withValidJsonBody_shouldPass() {
         final Request request = SimpleRequest.Builder
                 .post("/users")
@@ -152,85 +261,6 @@ public class SwaggerV2RequestValidationTest {
 
         assertPass(classUnderTest.validate(request, validUserResponse));
         assertPass(classUnderTest.validateRequest(request));
-    }
-
-    @Test
-    public void validate_withValidFormDataBody_shouldPass() {
-        final String formData = "email=abc%40gmail.com";
-        final Request request = SimpleRequest.Builder
-                .put("/users/1")
-                .withContentType("application/x-www-form-urlencoded")
-                .withBody(formData)
-                .build();
-        assertPass(classUnderTest.validate(request, validUserResponse));
-        assertPass(classUnderTest.validateRequest(request));
-    }
-
-    @Test
-    public void validate_withValidMultipartFormDataBody_shouldPass() {
-        final String formData =
-                "--------------------------3046b8889e52e808\r\n" +
-                "Content-Disposition: form-data; name=\"additionalMetadata\"\r\n" +
-                "\r\n" +
-                "abc@gmail.com\r\n" +
-                "--------------------------3046b8889e52e808\r\n" +
-                "Content-Disposition: form-data; name=\"imageFile\"; filename=\"myImageFile.jpg\"\r\n" +
-                "\r\n" +
-                "some content\r\n" +
-                "--------------------------3046b8889e52e808--";
-
-        final Request request = SimpleRequest.Builder
-                .post("/secure/users/1/upload")
-                .withContentType("multipart/form-data; boundary=------------------------3046b8889e52e808")
-                .withBody(formData)
-                .build();
-        assertPass(classUnderTest.validate(request, validUserResponse));
-        assertPass(classUnderTest.validateRequest(request));
-    }
-
-    @Test
-    @Ignore("Form data validation not yet implemented")
-    public void validate_formData_manyValuesForSingleKey() {
-        final String formData = "email=abc%40gmail.com&email=";
-        final Request request = SimpleRequest.Builder
-                .put("/users/1")
-                .withBody(formData)
-                .withAuthorization("Basic EncryptedUsernameAndPassword")
-                .withContentType("application/x-www-form-urlencoded")
-                .build();
-        assertFail(classUnderTest.validate(request, validUserResponse),
-                "validation.request.parameter.missing");
-        assertFail(classUnderTest.validateRequest(request),
-                "validation.request.parameter.missing");
-    }
-
-    @Test
-    @Ignore("Form data validation not yet implemented")
-    public void validate_multipartFormData_manyValuesForSingleKey() {
-        final String formData =
-                "--------------------------3046b8889e52e808\r\n" +
-                "Content-Disposition: form-data; name=\"additionalMetadata\"\r\n" +
-                "\r\n" +
-                "abc@gmail.com\r\n" +
-                "--------------------------3046b8889e52e808\r\n" +
-                "Content-Disposition: form-data; name=\"imageFile\"; filename=\"myImageFile.jpg\"\r\n" +
-                "\r\n" +
-                "some content\r\n" +
-                "--------------------------3046b8889e52e808\r\n" +
-                "Content-Disposition: form-data; name=\"imageFile\"; filename=\"myImageFile.jpg\"\r\n" +
-                "\r\n" +
-                "\r\n" +
-                "--------------------------3046b8889e52e808";
-        final Request request = SimpleRequest.Builder
-                .post("/secure/users/1/upload")
-                .withContentType("multipart/form-data; boundary=------------------------3046b8889e52e808")
-                .withBody(formData)
-                .build();
-
-        assertFail(classUnderTest.validate(request, validUserResponse),
-                "validation.request.parameter.missing");
-        assertFail(classUnderTest.validateRequest(request),
-                "validation.request.parameter.missing");
     }
 
     @Test
@@ -246,42 +276,6 @@ public class SwaggerV2RequestValidationTest {
                 "validation.request.body.schema.required");
         assertFail(classUnderTest.validateRequest(request),
                 "validation.request.body.schema.required");
-    }
-
-    @Test
-    @Ignore("Form data validation not yet implemented")
-    public void validate_withInvalidFormDataRequestBody_shouldFail() {
-        final String formData = "malformed-form-url-encoded";
-        final Request request = SimpleRequest.Builder
-                .put("/users/1")
-                .withContentType("application/x-www-form-urlencoded")
-                .withBody(formData)
-                .build();
-
-        assertFail(classUnderTest.validate(request, validUserResponse),
-                "validation.request.parameter.missing");
-        assertFail(classUnderTest.validateRequest(request),
-                "validation.request.parameter.missing");
-    }
-
-    @Test
-    @Ignore("Form data validation not yet implemented")
-    public void validate_withInvalidMultipartFormDataRequestBody_shouldFail() {
-        final String formData =
-                "--------------------------3046b8889e52e808\r\n" +
-                "Content-Disposition: form-data; name=\"additionalMetadata\"\r\n" +
-                "\r\n" +
-                "abc@gmai";
-        final Request request = SimpleRequest.Builder
-                .post("/secure/users/1/upload")
-                .withContentType("multipart/form-data; boundary=------------------------3046b8889e52e808")
-                .withBody(formData)
-                .build();
-
-        assertFail(classUnderTest.validate(request, validUserResponse),
-                "validation.request.parameter.missing");
-        assertFail(classUnderTest.validateRequest(request),
-                "validation.request.parameter.missing");
     }
 
     @Test
