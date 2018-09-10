@@ -520,7 +520,6 @@ public class OpenAPIV3RequestValidationTest {
         assertFail(classUnderTest.validateRequest(request), "validation.request.body.schema.required");
     }
 
-
     @Test
     public void validate_withNullablePrimitive_shouldPass_whenNullProvided() {
         final OpenApiInteractionValidator classUnderTest =
