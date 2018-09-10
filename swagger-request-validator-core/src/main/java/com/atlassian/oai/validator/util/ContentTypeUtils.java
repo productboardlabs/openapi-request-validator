@@ -43,7 +43,7 @@ public class ContentTypeUtils {
      * @return Whether the provided content-type is a JSON type.
      */
     public static boolean isJsonContentType(@Nullable final String contentType) {
-        return matches(contentType, JSON_UTF_8);
+        return matches(contentType, JSON_UTF_8) || matches(contentType, HAL_JSON);
     }
 
     /**
