@@ -13,7 +13,7 @@
     <artifactId>swagger-request-validator-pact</artifactId>
 
     <description>
-        Integrations between OpenAPI / Swagger validation and Pact consumer driven mocks.
+        OpenAPI / Swagger validation for Pact mocks (Provider and Consumer).
     </description>
 
     <dependencies>

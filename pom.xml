@@ -18,6 +18,7 @@
         Validation of request/responses against an OpenAPI / Swagger specification.
         Includes a standalone validator, as well as adapters for Pact and other mocking/http libraries.
     </description>
+    <url>https://bitbucket.org/atlassian/swagger-request-validator</url>
     <inceptionYear>2016</inceptionYear>
     <licenses>
         <license>
@@ -40,9 +41,11 @@
 
     <developers>
         <developer>
+            <id>jnavin</id>
             <name>James Navin</name>
             <email>jnavin@atlassian.com</email>
             <organization>Atlassian</organization>
+            <timezone>Australia/Sydney</timezone>
         </developer>
     </developers>
 
