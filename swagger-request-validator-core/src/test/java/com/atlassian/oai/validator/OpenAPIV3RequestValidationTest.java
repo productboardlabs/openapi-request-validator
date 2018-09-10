@@ -479,6 +479,48 @@ public class OpenAPIV3RequestValidationTest {
     }
 
     @Test
+    public void validate_withFormData_shouldPass_whenValid() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator.createFor("/oai/v3/api-formdata.yaml").build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/formdata")
+                .withContentType("application/x-www-form-urlencoded")
+                .withBody("name=John%20Smith&email=john%40example.com&age=27")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withFormData_shouldFail_whenInvalidSchema() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator.createFor("/oai/v3/api-formdata.yaml").build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/formdata")
+                .withContentType("application/x-www-form-urlencoded")
+                .withBody("name=John%20Smith&email=john%40example.com&age=-27")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request), "validation.request.body.schema.minimum");
+    }
+
+    @Test
+    public void validate_withFormData_shouldFail_whenMissingRequiredField() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator.createFor("/oai/v3/api-formdata.yaml").build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/formdata")
+                .withContentType("application/x-www-form-urlencoded")
+                .withBody("name=John%20Smith&email=john%40example.com&sage=27")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request), "validation.request.body.schema.required");
+    }
+
+    @Test
     public void validate_withNullablePrimitive_shouldPass_whenNullProvided() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator

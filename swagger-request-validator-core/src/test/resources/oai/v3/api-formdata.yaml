@@ -1,0 +1,43 @@
+openapi: 3.0.0
+info:
+  title: Tests for formdata support
+  version: 1.0.0
+servers:
+  - url: /
+paths:
+  /formdata:
+    post:
+      summary: Form data in the request body
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SomeData'
+      responses:
+        '201':
+          description: Ok
+    get:
+      summary: Form data in the response body
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                $ref: '#/components/schemas/SomeData'
+components:
+  schemas:
+    SomeData:
+      required:
+        - name
+        - email
+        - age
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        age:
+          type: integer
+          minimum: 0

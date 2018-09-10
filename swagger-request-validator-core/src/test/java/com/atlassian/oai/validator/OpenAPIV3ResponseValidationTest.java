@@ -169,4 +169,33 @@ public class OpenAPIV3ResponseValidationTest {
         assertFail(classUnderTest.validateResponse("/oneOf", PATCH, response),
                 "validation.response.body.schema.oneOf");
     }
+
+    @Test
+    public void validate_withFormData_shouldPass_whenValid() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator.createFor("/oai/v3/api-formdata.yaml").build();
+
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("application/x-www-form-urlencoded")
+                .withBody("name=John%20Smith&email=john%40example.com&age=27")
+                .build();
+
+        assertPass(classUnderTest.validateResponse("/formdata", GET, response));
+    }
+
+    @Test
+    public void validate_withFormData_shouldFail_whenInvalidSchema() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator.createFor("/oai/v3/api-formdata.yaml").build();
+
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("application/x-www-form-urlencoded")
+                .withBody("name=John%20Smith&email=john%40example.com&age=-27")
+                .build();
+
+        assertFail(classUnderTest.validateResponse("/formdata", GET, response), "validation.response.body.schema.minimum");
+    }
+
 }

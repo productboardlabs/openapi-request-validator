@@ -1,16 +1,28 @@
 package com.atlassian.oai.validator.util;
 
-import com.google.common.collect.Multimap;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.BooleanNode;
+import com.fasterxml.jackson.databind.node.DoubleNode;
+import com.fasterxml.jackson.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.LongNode;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import org.junit.Test;
 
 import java.util.Optional;
 
 import static com.atlassian.oai.validator.util.HttpParsingUtils.extractMultipartBoundary;
 import static com.atlassian.oai.validator.util.HttpParsingUtils.isMultipartContentTypeAcceptedByConsumer;
-import static com.atlassian.oai.validator.util.HttpParsingUtils.parseMultipartFormDataBody;
+import static com.atlassian.oai.validator.util.HttpParsingUtils.parseUrlEncodedFormDataBodyAsJson;
+import static com.atlassian.oai.validator.util.StreamUtils.stream;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadRawRequest;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class HttpParsingUtilsTest {
@@ -63,15 +75,28 @@ public class HttpParsingUtilsTest {
     }
 
     @Test
-    public void parseMultipartFormDataBody_successfullyParsesData() {
-        final Multimap params = parseMultipartFormDataBody(
-                "multipart/form-data; boundary=---------------------------012345678901234567890123456",
-                loadRawRequest("multipart-request").replace("\r\n", "\n").replace("\n", "\r\n")
-        );
-        assertEquals(params.size(), 4);
-        assertEquals(params.get("foo").iterator().next(), "foo value");
-        assertEquals(params.get("bar").iterator().next(), "bar value");
-        assertEquals(params.get("baz").iterator().next(), "baz value");
-        assertEquals(params.get("html").iterator().next(), "<!DOCTYPE html><title></title>");
+    public void parseToJson_successfullyParsesData() throws Exception {
+        final String json = parseUrlEncodedFormDataBodyAsJson(loadRawRequest("formdata-request"));
+
+        final JsonNode tree = new ObjectMapper().readTree(json);
+        assertThat(tree.has("string"), is(true));
+        assertThat(tree.get("string"), instanceOf(TextNode.class));
+
+        assertThat(tree.has("double"), is(true));
+        assertThat(tree.get("double"), instanceOf(DoubleNode.class));
+
+        assertThat(tree.has("bool"), is(true));
+        assertThat(tree.get("bool"), instanceOf(BooleanNode.class));
+
+        assertThat(tree.has("stringArray"), is(true));
+        assertThat(tree.get("stringArray"), instanceOf(ArrayNode.class));
+
+        assertThat(tree.has("numArray"), is(true));
+        final JsonNode numArray = tree.get("numArray");
+        assertThat(numArray, instanceOf(ArrayNode.class));
+        assertThat(stream(numArray.elements()).allMatch(n -> n instanceof LongNode || n instanceof IntNode), is(true));
+
+        assertThat(tree.has("solo"), is(true));
+        assertThat(tree.get("solo"), instanceOf(NullNode.class));
     }
 }

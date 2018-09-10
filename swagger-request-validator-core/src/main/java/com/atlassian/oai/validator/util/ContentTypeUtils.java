@@ -47,6 +47,24 @@ public class ContentTypeUtils {
     }
 
     /**
+     * Determine whether a given request has a formdata content-type.
+     *
+     * @return Whether the content-type of the request (defined in the Content-Type header) is a FORM_DATA type.
+     */
+    public static boolean isFormDataContentType(final Request request) {
+        return isFormDataContentType(request.getContentType().orElse(null));
+    }
+
+    /**
+     * Determine whether a given response has a formdata content-type.
+     *
+     * @return Whether the content-type of the response (defined in the Content-Type header) is a FORM_DATA type.
+     */
+    public static boolean isFormDataContentType(final Response response) {
+        return isFormDataContentType(response.getContentType().orElse(null));
+    }
+
+    /**
      * @return Whether the provided content-type is a form data type.
      */
     public static boolean isFormDataContentType(@Nullable final String contentType) {
@@ -123,7 +141,6 @@ public class ContentTypeUtils {
     public static boolean hasContentType(final Request request) {
         return request.getHeaderValue(Headers.CONTENT_TYPE).isPresent();
     }
-
 
     /**
      * Determine whether a given request has a content-type header.
