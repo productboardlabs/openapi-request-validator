@@ -22,6 +22,8 @@ The original `Swagger*` named versions will be removed in a future release.
 e.g. `validation.request.parameter.schema.type`
 * Multi-part formdata validation is currently not supported. This will be re-added in an upcoming release.
 
+See [OpenAPI v3 feature coverage](./docs/OPENAPIv3.md) for details on supported OpenAPI v3 features.
+
 #v1.5.0
 * Bumped version of Pact from 3.2.13 to 3.5.20
 [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/100) 
