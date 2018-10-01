@@ -8,20 +8,19 @@ import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.google.common.collect.Lists;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.web.util.ContentCachingResponseWrapper;
-import org.springframework.web.util.UriComponents;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 
 class OpenApiValidationService {
 
@@ -50,8 +49,7 @@ class OpenApiValidationService {
         requireNonNull(servletRequest, "A request is required.");
 
         final Request.Method method = Request.Method.valueOf(servletRequest.getMethod());
-        final UriComponents uriComponents = getUriComponents(servletRequest);
-        final String path = uriComponents.getPath();
+        final String path = servletRequest.getServletPath();
         final SimpleRequest.Builder builder = new SimpleRequest.Builder(method, path);
         final String body = readReader(servletRequest.getReader());
         // The content length of a request does not need to be set. It might by "-1" and
@@ -60,8 +58,8 @@ class OpenApiValidationService {
         if (servletRequest.getContentLength() >= 0 || (body != null && !body.isEmpty())) {
             builder.withBody(body);
         }
-        for (final Map.Entry<String, List<String>> entry : uriComponents.getQueryParams().entrySet()) {
-            builder.withQueryParam(entry.getKey(), entry.getValue());
+        for (final String queryParameterName : getQueryParameterNames(servletRequest)) {
+            builder.withQueryParam(queryParameterName, servletRequest.getParameterValues(queryParameterName));
         }
         for (final String headerName : Collections.list(servletRequest.getHeaderNames())) {
             builder.withHeader(headerName, Collections.list(servletRequest.getHeaders(headerName)));
@@ -107,7 +105,7 @@ class OpenApiValidationService {
     ValidationReport validateResponse(final HttpServletRequest servletRequest,
                                       final Response response) {
         final Request.Method method = Request.Method.valueOf(servletRequest.getMethod());
-        final String path = getUriComponents(servletRequest).getPath();
+        final String path = servletRequest.getServletPath();
         return validator.validateResponse(path, method, response);
     }
 
@@ -117,17 +115,10 @@ class OpenApiValidationService {
         }
     }
 
-    private static UriComponents getUriComponents(final HttpServletRequest servletRequest) {
-        final String requestUri = getCompleteRequestUri(servletRequest);
-        return UriComponentsBuilder
-                .fromUriString(requestUri)
-                .build();
-    }
-
-    private static String getCompleteRequestUri(final HttpServletRequest servletRequest) {
-        if (isBlank(servletRequest.getQueryString())) {
-            return servletRequest.getRequestURI();
-        }
-        return servletRequest.getRequestURI() + "?" + servletRequest.getQueryString();
+    private static Set<String> getQueryParameterNames(final HttpServletRequest servletRequest) {
+        return Stream.of(StringUtils.split(StringUtils.defaultIfBlank(servletRequest.getQueryString(), ""), "&"))
+                .map(str -> StringUtils.split(str, "=")[0])
+                .filter(StringUtils::isNotEmpty)
+                .collect(Collectors.toSet());
     }
 }

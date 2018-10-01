@@ -6,12 +6,32 @@ import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.ValidationReport;
+import com.atlassian.oai.validator.springmvc.example.simple.RestServiceApplication;
 import com.google.common.collect.ImmutableMap;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.io.support.EncodedResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import javax.servlet.http.HttpServletRequest;
@@ -20,6 +40,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -34,7 +55,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
+@RunWith(SpringRunner.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {"server.contextPath=/v1"})
 public class OpenApiValidationServiceTest {
+
+    @Autowired
+    private TestRestTemplate restTemplate;
 
     private OpenApiValidationService classUnderTest;
 
@@ -96,7 +122,7 @@ public class OpenApiValidationServiceTest {
         final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
         when(servletRequest.getMethod()).thenReturn("GET");
         when(servletRequest.getQueryString()).thenReturn("");
-        when(servletRequest.getRequestURI()).thenReturn("/swagger-request-validator");
+        when(servletRequest.getServletPath()).thenReturn("/swagger-request-validator");
         when(servletRequest.getContentLength()).thenReturn(-1);
         final BufferedReader reader = new BufferedReader(new StringReader(""));
         when(servletRequest.getReader()).thenReturn(reader);
@@ -116,7 +142,7 @@ public class OpenApiValidationServiceTest {
         final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
         when(servletRequest.getMethod()).thenReturn("PUT");
         when(servletRequest.getQueryString()).thenReturn("");
-        when(servletRequest.getRequestURI()).thenReturn("/swagger-request-validator");
+        when(servletRequest.getServletPath()).thenReturn("/swagger-request-validator");
         when(servletRequest.getContentLength()).thenReturn(0);
         final BufferedReader reader = new BufferedReader(new StringReader(""));
         when(servletRequest.getReader()).thenReturn(reader);
@@ -134,11 +160,15 @@ public class OpenApiValidationServiceTest {
         final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
         when(servletRequest.getMethod()).thenReturn("POST");
         when(servletRequest.getQueryString())
-                .thenReturn("query1=QUERY_ONE&query2=query_two&query2=QUERY_TWO");
-        when(servletRequest.getRequestURI()).thenReturn("/swagger-request-validator");
+                .thenReturn("query1=QUERY_ONE&&query2=query_two&query2=QUERY_TWO&");
+        when(servletRequest.getServletPath()).thenReturn("/swagger-request-validator");
         when(servletRequest.getContentLength()).thenReturn(-1);
         final BufferedReader reader = new BufferedReader(new StringReader("Body"));
         when(servletRequest.getReader()).thenReturn(reader);
+        when(servletRequest.getParameterValues("query1"))
+                .thenReturn(new String[]{"QUERY_1"});
+        when(servletRequest.getParameterValues("query2"))
+                .thenReturn(new String[]{"query_2", "QUERY_2"});
         when(servletRequest.getHeaderNames())
                 .thenReturn(Collections.enumeration(asList("header1", "header2")));
         when(servletRequest.getHeaders("header1"))
@@ -158,9 +188,9 @@ public class OpenApiValidationServiceTest {
                 equalTo(asList("header_two", "HEADER_TWO")));
         assertThat(result.getQueryParameters().size(), equalTo(2));
         assertThat(result.getQueryParameterValues("query1"),
-                equalTo(asList("QUERY_ONE")));
+                equalTo(asList("QUERY_1")));
         assertThat(result.getQueryParameterValues("query2"),
-                equalTo(asList("query_two", "QUERY_TWO")));
+                equalTo(asList("query_2", "QUERY_2")));
     }
 
     @Test(expected = NullPointerException.class)
@@ -237,8 +267,7 @@ public class OpenApiValidationServiceTest {
 
         // and:
         when(servletRequest.getMethod()).thenReturn("POST");
-        when(servletRequest.getQueryString()).thenReturn(null);
-        when(servletRequest.getRequestURI()).thenReturn("/swagger-request-validator");
+        when(servletRequest.getServletPath()).thenReturn("/swagger-request-validator");
 
         when(requestValidator.validateResponse("/swagger-request-validator",
                 Request.Method.POST, response)).thenReturn(validationReport);
@@ -250,5 +279,63 @@ public class OpenApiValidationServiceTest {
         Mockito.verify(requestValidator, times(1))
                 .validateResponse("/swagger-request-validator", Request.Method.POST, response);
         assertThat(result, is(validationReport));
+    }
+
+    @Test
+    public void buildRequest_realServletRequestTest() {
+        // setup: prepare request
+        final HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+        headers.put("headerValue", Arrays.asList("header value"));
+        final HttpEntity<Object> entity = new HttpEntity<>(null, headers);
+
+        // when: send request
+        final ResponseEntity<Map> responseEntity = restTemplate
+                .exchange("/test controller/path variable?queryParam=query param", HttpMethod.GET, entity, Map.class);
+
+        // then: assert the values that spring has been set in the controller method
+        final Map springRequest = (Map) responseEntity.getBody().get("springRequest");
+        Assert.assertThat(springRequest.get("pathVariable"), is("path variable"));
+        Assert.assertThat(springRequest.get("queryParam"), is("query param"));
+        Assert.assertThat(springRequest.get("headerValue"), is("header value"));
+
+        // and: assert the values that the validation service has been set from the servlet request
+        final Map validationRequest = (Map) responseEntity.getBody().get("validationRequest");
+        Assert.assertThat(validationRequest.get("path"), is("/test controller/path variable"));
+        Assert.assertThat(validationRequest.get("queryParam"), is("query param"));
+        Assert.assertThat(validationRequest.get("headerValue"), is("header value"));
+    }
+
+    @SpringBootApplication
+    @RestController
+    @RequestMapping(value = "/test controller", produces = "application/json")
+    public static class TestController {
+
+        public static void main(final String[] args) {
+            SpringApplication.run(RestServiceApplication.class, args);
+        }
+
+        @RequestMapping(method = RequestMethod.GET, value = "/{pathVariable}", produces = "application/json")
+        public Map get(@PathVariable("pathVariable") final String pathVariable, @RequestParam("queryParam") final String queryParam,
+                       @RequestHeader("headerValue") final String headerValue, final HttpServletRequest servletRequest) throws IOException {
+            final OpenApiValidationService openApiValidationService = new OpenApiValidationService(Mockito.mock(OpenApiInteractionValidator.class));
+            final Request request = openApiValidationService.buildRequest(servletRequest);
+            return new ImmutableMap.Builder()
+                    .put("springRequest",
+                            new ImmutableMap.Builder()
+                                    .put("pathVariable", pathVariable)
+                                    .put("queryParam", queryParam)
+                                    .put("headerValue", headerValue)
+                                    .build()
+                    )
+                    .put("validationRequest",
+                            new ImmutableMap.Builder()
+                                    .put("path", request.getPath())
+                                    .put("queryParam", request.getQueryParameterValues("queryParam").iterator().next())
+                                    .put("headerValue", request.getHeaderValue("headerValue"))
+                                    .build()
+                    )
+                    .build();
+        }
     }
 }
