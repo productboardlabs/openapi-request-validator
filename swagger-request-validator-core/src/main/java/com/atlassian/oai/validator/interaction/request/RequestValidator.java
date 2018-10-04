@@ -136,6 +136,12 @@ public class RequestValidator {
             return empty();
         }
 
+        if (specMediaTypes
+                .stream()
+                .allMatch("*/*"::equals)) {
+            return empty();
+        }
+
         return specMediaTypes
                 .stream()
                 .map(MediaType::parse)
