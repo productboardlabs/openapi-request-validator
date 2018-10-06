@@ -137,6 +137,8 @@ public class OpenApiInteractionValidator {
         final OpenAPIParser openAPIParser = new OpenAPIParser();
         final ParseOptions parseOptions = new ParseOptions();
         parseOptions.setResolve(true);
+        parseOptions.setResolveFully(true);
+        parseOptions.setResolveCombinators(false);
 
         SwaggerParseResult parseResult;
         try {

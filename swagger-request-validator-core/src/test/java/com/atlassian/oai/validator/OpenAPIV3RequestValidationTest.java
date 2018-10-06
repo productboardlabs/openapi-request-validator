@@ -649,4 +649,37 @@ public class OpenAPIV3RequestValidationTest {
         assertFail(classUnderTest.validateRequest(request),
                 "validation.request.body.schema.minItems");
     }
+
+    @Test
+    public void validate_withReferencedRequestBody_shouldPass_whenValidBody() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-referenced-requestbody.yaml")
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/test")
+                .withContentType("application/json")
+                .withBody("{\"intField\": 1}")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withReferencedRequestBody_shouldFail_whenInvalidBody() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-referenced-requestbody.yaml")
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/test")
+                .withContentType("application/json")
+                .withBody("{\"intField\": 1.0}")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.body.schema.type");
+    }
 }
