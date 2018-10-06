@@ -1,3 +1,14 @@
+#v2.0.1
+* Decode query params before validation in Spring MVC
+[[#155]](https://bitbucket.org/atlassian/swagger-request-validator/issues/155)
+* Bumped version of `swagger-parser` to 2.0.5
+* Fixed behavior of validation with referenced request bodies
+[[#165]](https://bitbucket.org/atlassian/swagger-request-validator/issues/165)
+
+#v1.5.1
+* Decode query params before validation in Spring MVC
+[[#155]](https://bitbucket.org/atlassian/swagger-request-validator/issues/155)
+
 #v2.0.0
 
 Major release milestone. 
