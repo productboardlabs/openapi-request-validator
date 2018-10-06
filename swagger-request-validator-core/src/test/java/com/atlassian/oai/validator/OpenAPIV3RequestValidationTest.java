@@ -479,6 +479,23 @@ public class OpenAPIV3RequestValidationTest {
     }
 
     @Test
+    public void validate_withAnyOfDiscriminators_shouldPass_whenValid() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-discriminator.yaml")
+                        .withLevelResolver(withAdditionalPropertiesIgnored())
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/anyOf")
+                .withContentType("application/json")
+                .withBody("{ \"type\": \"Item1\", \"intField\": 1 }")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
     public void validate_withFormData_shouldPass_whenValid() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator.createFor("/oai/v3/api-formdata.yaml").build();
