@@ -96,7 +96,8 @@ public class MockMvcRequest implements Request {
     }
 
     private static String getBody(@Nonnull final MockHttpServletRequest mockHttpServletRequest) {
-        try (final BufferedReader reader = getReader(mockHttpServletRequest)) {
+        try {
+            final BufferedReader reader = getReader(mockHttpServletRequest);
             final StringBuilder builder = new StringBuilder();
             String aux;
             int lineCount = 0;
