@@ -44,34 +44,34 @@ public class JsonValidationReportFormatTest {
                 .reduce(ValidationReport.empty(), ValidationReport::merge);
 
         final String expected =
-                "{\n" +
-                        "  \"messages\" : [ {\n" +
-                        "    \"key\" : \"key1\",\n" +
-                        "    \"level\" : \"ERROR\",\n" +
-                        "    \"message\" : \"message 1\",\n" +
-                        "    \"context\" : {\n" +
-                        "      \"requestPath\" : \"/some/path\",\n" +
-                        "      \"parameter\" : {\n" +
-                        "        \"name\" : \"param\",\n" +
-                        "        \"in\" : \"header\"\n" +
-                        "      },\n" +
-                        "      \"location\" : \"RESPONSE\",\n" +
-                        "      \"requestMethod\" : \"POST\"\n" +
-                        "    }\n" +
-                        "  }, {\n" +
-                        "    \"key\" : \"key2\",\n" +
-                        "    \"level\" : \"WARN\",\n" +
-                        "    \"message\" : \"message 2\",\n" +
-                        "    \"context\" : {\n" +
-                        "      \"requestPath\" : \"/some/path\",\n" +
-                        "      \"location\" : \"REQUEST\",\n" +
-                        "      \"requestMethod\" : \"GET\"\n" +
-                        "    }\n" +
-                        "  }, {\n" +
-                        "    \"key\" : \"key3\",\n" +
-                        "    \"level\" : \"INFO\",\n" +
-                        "    \"message\" : \"message 3\"\n" +
-                        "  } ]\n" +
+                "{" + System.lineSeparator() +
+                        "  \"messages\" : [ {" + System.lineSeparator() +
+                        "    \"key\" : \"key1\"," + System.lineSeparator() +
+                        "    \"level\" : \"ERROR\"," + System.lineSeparator() +
+                        "    \"message\" : \"message 1\"," + System.lineSeparator() +
+                        "    \"context\" : {" + System.lineSeparator() +
+                        "      \"requestPath\" : \"/some/path\"," + System.lineSeparator() +
+                        "      \"parameter\" : {" + System.lineSeparator() +
+                        "        \"name\" : \"param\"," + System.lineSeparator() +
+                        "        \"in\" : \"header\"" + System.lineSeparator() +
+                        "      }," + System.lineSeparator() +
+                        "      \"location\" : \"RESPONSE\"," + System.lineSeparator() +
+                        "      \"requestMethod\" : \"POST\"" + System.lineSeparator() +
+                        "    }" + System.lineSeparator() +
+                        "  }, {" + System.lineSeparator() +
+                        "    \"key\" : \"key2\"," + System.lineSeparator() +
+                        "    \"level\" : \"WARN\"," + System.lineSeparator() +
+                        "    \"message\" : \"message 2\"," + System.lineSeparator() +
+                        "    \"context\" : {" + System.lineSeparator() +
+                        "      \"requestPath\" : \"/some/path\"," + System.lineSeparator() +
+                        "      \"location\" : \"REQUEST\"," + System.lineSeparator() +
+                        "      \"requestMethod\" : \"GET\"" + System.lineSeparator() +
+                        "    }" + System.lineSeparator() +
+                        "  }, {" + System.lineSeparator() +
+                        "    \"key\" : \"key3\"," + System.lineSeparator() +
+                        "    \"level\" : \"INFO\"," + System.lineSeparator() +
+                        "    \"message\" : \"message 3\"" + System.lineSeparator() +
+                        "  } ]" + System.lineSeparator() +
                         "}";
 
         assertThat(classUnderTest.apply(report), is(expected));
