@@ -13,9 +13,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
 
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toCollection;
 
 /**
  * A report of validation errors that occurred during validation.
@@ -345,6 +348,19 @@ public interface ValidationReport {
      */
     default boolean hasErrors() {
         return getMessages().stream().anyMatch(m -> m.getLevel() == Level.ERROR);
+    }
+
+
+    /**
+     * Return sorted set of levels found during validation
+     *
+     * @return sorted set of levels, e.g. [ERROR, IGNORE]
+     */
+    default Set<Level> sortedValidationLevels() {
+        return getMessages()
+                .stream()
+                .map(ValidationReport.Message::getLevel)
+                .collect(toCollection(TreeSet::new));
     }
 
     /**
