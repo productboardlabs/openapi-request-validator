@@ -547,6 +547,20 @@ public class SwaggerV2RequestValidationTest {
     }
 
     @Test
+    public void validate_withApplicationJsonAcceptButEmptyConsumesInSpec_shouldPass() {
+        final Request request = SimpleRequest.Builder
+                .post("/users2")
+                .withBody(loadJsonRequest("newuser-valid"))
+                .withContentType("application/json;charset=UTF-8")
+                .withAccept("application/json;charset=UTF-8")
+                .withAuthorization("Basic EncryptedUsernameAndPassword")
+                .build();
+
+        assertPass(classUnderTest.validate(request, validUserResponse));
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
     public void validate_withMultipleAcceptHeaders_shouldPass_whenOneMatches() {
         final Request request = SimpleRequest.Builder
                 .post("/users")
