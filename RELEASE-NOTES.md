@@ -1,3 +1,9 @@
+#v2.0.2
+* Fixed a bug in validation when consumes clause is empty in a swagger v2 spec 
+[[#167]](https://bitbucket.org/atlassian/swagger-request-validator/issues/167)
+* Fixed cause exceptions in the spring-mockmvc module when the request body is empty 
+[[#163]](https://bitbucket.org/atlassian/swagger-request-validator/issues/163)
+
 #v2.0.1
 * Decode query params before validation in Spring MVC
 [[#155]](https://bitbucket.org/atlassian/swagger-request-validator/issues/155)
