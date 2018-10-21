@@ -59,8 +59,8 @@ public class DefaultValidationReportHandlerTest {
 
         final ILoggingEvent loggingEvent = listAppender.list.get(0);
         assertThat(loggingEvent.getLevel(), is(Level.ERROR));
-        assertThat(loggingEvent.getMessage(), is("OpenAPI location={} key={} levels={} message={}"));
-        assertThat(loggingEvent.getArgumentArray(), is(new String[] {"REQUEST", "GET#/api", "ERROR", "log message"}));
+        assertThat(loggingEvent.getMessage(), is("OpenAPI location={} key={} levels={} messages={}"));
+        assertThat(loggingEvent.getArgumentArray(), is(new String[] {"REQUEST", "GET#/api", "ERROR", "Validation failed.\n[ERROR] log message"}));
     }
 
     @Test
@@ -77,8 +77,8 @@ public class DefaultValidationReportHandlerTest {
 
         final ILoggingEvent loggingEvent = listAppender.list.get(0);
         assertThat(loggingEvent.getLevel(), is(Level.ERROR));
-        assertThat(loggingEvent.getMessage(), is("OpenAPI location={} key={} levels={} message={}"));
-        assertThat(loggingEvent.getArgumentArray(), is(new String[] {"RESPONSE", "GET#/api", "ERROR", "log message"}));
+        assertThat(loggingEvent.getMessage(), is("OpenAPI location={} key={} levels={} messages={}"));
+        assertThat(loggingEvent.getArgumentArray(), is(new String[] {"RESPONSE", "GET#/api", "ERROR", "Validation failed.\n[ERROR] log message"}));
     }
 
     @Test
@@ -90,8 +90,8 @@ public class DefaultValidationReportHandlerTest {
 
         final ILoggingEvent loggingEvent = listAppender.list.get(0);
         assertThat(loggingEvent.getLevel(), is(Level.INFO));
-        assertThat(loggingEvent.getMessage(), is("OpenAPI location={} key={} levels={} message={}"));
-        assertThat(loggingEvent.getArgumentArray(), is(new String[] {"REQUEST", "GET#/api", "WARN,INFO", "log message"}));
+        assertThat(loggingEvent.getMessage(), is("OpenAPI location={} key={} levels={} messages={}"));
+        assertThat(loggingEvent.getArgumentArray(), is(new String[] {"REQUEST", "GET#/api", "WARN,INFO", "No validation errors.\n[WARN] log message"}));
     }
 
     @Test
@@ -103,8 +103,8 @@ public class DefaultValidationReportHandlerTest {
 
         final ILoggingEvent loggingEvent = listAppender.list.get(0);
         assertThat(loggingEvent.getLevel(), is(Level.INFO));
-        assertThat(loggingEvent.getMessage(), is("OpenAPI location={} key={} levels={} message={}"));
-        assertThat(loggingEvent.getArgumentArray(), is(new String[] {"RESPONSE", "GET#/api", "WARN,INFO", "log message"}));
+        assertThat(loggingEvent.getMessage(), is("OpenAPI location={} key={} levels={} messages={}"));
+        assertThat(loggingEvent.getArgumentArray(), is(new String[] {"RESPONSE", "GET#/api", "WARN,INFO", "No validation errors.\n[WARN] log message"}));
     }
 
     @Test
@@ -133,11 +133,15 @@ public class DefaultValidationReportHandlerTest {
 
     private ValidationReport mockValidationReport(final List<ValidationReport.Level> levels, final String message) {
         final ValidationReport.Message mockedMessage = mock(ValidationReport.Message.class);
-        when(mockedMessage.toString()).thenReturn(message);
+        if (levels.size() > 0) {
+            when(mockedMessage.getMessage()).thenReturn(message);
+            when(mockedMessage.getLevel()).thenReturn(levels.get(0));
+        }
 
         final ValidationReport mockedValidationReport = mock(ValidationReport.class);
         when(mockedValidationReport.sortedValidationLevels()).thenReturn(new TreeSet<>(levels));
         when(mockedValidationReport.getMessages()).thenReturn(singletonList(mockedMessage));
+        when(mockedValidationReport.hasErrors()).thenReturn(levels.contains(ERROR));
         return mockedValidationReport;
     }
 }
