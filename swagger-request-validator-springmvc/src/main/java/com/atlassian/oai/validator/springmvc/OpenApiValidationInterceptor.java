@@ -4,7 +4,6 @@ import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.report.ValidationReport;
-import com.atlassian.oai.validator.report.ValidationReport.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.support.EncodedResource;
@@ -15,23 +14,19 @@ import org.springframework.web.util.ContentCachingResponseWrapper;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Objects;
-import java.util.Set;
-import java.util.function.BiConsumer;
-
-import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.REQUEST;
-import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.RESPONSE;
-import static java.util.stream.Collectors.joining;
 
 /**
  * An Interceptor which validates incoming requests against the defined OpenAPI / Swagger specification.
+ *
+ * <p>You can customize logging output of interceptor by implementing
+ * interface {@link ValidationReportHandler} and providing instance
+ * to constructor.</p>
  */
 public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
-
     private static final Logger LOG = LoggerFactory.getLogger(OpenApiValidationInterceptor.class);
-    private static final String DELIMITER = ",";
 
     protected final OpenApiValidationService openApiValidationService;
+    private final ValidationReportHandler validationReportHandler;
 
     public OpenApiValidationInterceptor(final EncodedResource apiSpecification) throws IOException {
         this(new OpenApiValidationService(apiSpecification));
@@ -41,8 +36,16 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
         this(new OpenApiValidationService(validator));
     }
 
-    OpenApiValidationInterceptor(final OpenApiValidationService openApiValidationService) {
+    public OpenApiValidationInterceptor(final OpenApiValidationService openApiValidationService) {
+        this(openApiValidationService, new DefaultValidationReportHandler());
+    }
+
+    public OpenApiValidationInterceptor(
+            final OpenApiValidationService openApiValidationService,
+            final ValidationReportHandler validationReportHandler
+    ) {
         this.openApiValidationService = openApiValidationService;
+        this.validationReportHandler = validationReportHandler;
     }
 
     /**
@@ -75,12 +78,12 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
         // validate the request
         final ResettableRequestServletWrapper resettableRequest = (ResettableRequestServletWrapper) servletRequest;
         final String requestLoggingKey = servletRequest.getMethod() + "#" + servletRequest.getRequestURI();
-        LOG.debug("OpenAPI validation: {}", requestLoggingKey);
+        LOG.debug("OpenAPI request validation: {}", requestLoggingKey);
 
         final Request request = openApiValidationService.buildRequest(resettableRequest);
         final ValidationReport validationReport = openApiValidationService.validateRequest(request);
 
-        processApiValidationReport(REQUEST, validationReport, requestLoggingKey);
+        validationReportHandler.handleRequestReport(requestLoggingKey, validationReport);
 
         // reset the requests servlet input stream after reading it on former step
         resettableRequest.resetInputStream();
@@ -122,66 +125,11 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
         final ValidationReport validationReport = openApiValidationService.validateResponse(servletRequest, response);
 
         try {
-            processApiValidationReport(RESPONSE, validationReport, requestLoggingKey);
+            validationReportHandler.handleResponseReport(requestLoggingKey, validationReport);
         } catch (final InvalidResponseException e) {
             // as an exception will rewrite the current, cached response it has to be reset
             cachedResponse.reset();
             throw e;
-        }
-    }
-
-    /**
-     * Method which gives you simple way how to override logging of validation issues.
-     *
-     * @param location request or response
-     * @param validationReport result of validation
-     * @param loggingKey method and request path unique string
-     */
-    protected void processApiValidationReport(final ValidationReport.MessageContext.Location location,
-                                              final ValidationReport validationReport,
-                                              final String loggingKey) {
-        final Set<Level> validationLevels = validationReport.sortedValidationLevels();
-
-        if (validationLevels.contains(Level.ERROR)) {
-            final RuntimeException validationException = createValidationException(validationReport, location);
-            logApiValidation(LOG::error, validationLevels, location, loggingKey, validationException.getMessage());
-            throw validationException;
-        } else if (validationLevels.contains(Level.INFO) || validationLevels.contains(Level.WARN) || validationLevels.contains(Level.IGNORE)) {
-            final String messages = validationReport
-                    .getMessages()
-                    .stream()
-                    .map(Objects::toString)
-                    .collect(joining(DELIMITER));
-            logApiValidation(LOG::info, validationLevels, location, loggingKey, messages);
-        } else {
-            LOG.debug("OpenAPI validation: {} - The {} is valid.", loggingKey, location);
-        }
-    }
-
-    private void logApiValidation(final BiConsumer<String, String[]> logConsumer,
-                                  final Set<Level> validationLevels,
-                                  final ValidationReport.MessageContext.Location location,
-                                  final String loggingKey,
-                                  final String message) {
-        final String logTemplate = "OpenAPI {} levels={} key={} message={}";
-        final String joinedLevels = validationLevels
-                .stream()
-                .map(Objects::toString)
-                .collect(joining(DELIMITER));
-
-        logConsumer.accept(logTemplate, new String[] {
-                location.toString(), joinedLevels, loggingKey, message
-        });
-    }
-
-    public RuntimeException createValidationException(
-            final ValidationReport validationReport,
-            final ValidationReport.MessageContext.Location location
-    ) {
-        if (location == REQUEST) {
-            return new InvalidRequestException(validationReport);
-        } else {
-            return new InvalidResponseException(validationReport);
         }
     }
 }

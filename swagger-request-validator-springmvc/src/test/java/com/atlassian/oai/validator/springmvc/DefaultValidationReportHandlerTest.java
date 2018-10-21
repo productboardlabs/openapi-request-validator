@@ -1,0 +1,143 @@
+package com.atlassian.oai.validator.springmvc;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+import com.atlassian.oai.validator.report.ValidationReport;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.TreeSet;
+
+import static com.atlassian.oai.validator.report.ValidationReport.Level.ERROR;
+import static com.atlassian.oai.validator.report.ValidationReport.Level.INFO;
+import static com.atlassian.oai.validator.report.ValidationReport.Level.WARN;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+public class DefaultValidationReportHandlerTest {
+    private static final Logger logger = (Logger) LoggerFactory.getLogger(DefaultValidationReportHandler.class);
+    private ListAppender<ILoggingEvent> listAppender;
+    private DefaultValidationReportHandler validationHandler;
+
+    @Before
+    public void setUp() {
+        listAppender = new ListAppender<>();
+        listAppender.start();
+
+        logger.addAppender(listAppender);
+        logger.setLevel(Level.DEBUG);
+
+        validationHandler = new DefaultValidationReportHandler();
+    }
+
+    @After
+    public void tearDown() {
+        logger.detachAppender(listAppender);
+    }
+
+    @Test
+    public void requestWithErrorLogsErrorAndThrowsException() {
+        final ValidationReport validationReport = mockValidationReport(singletonList(ERROR), "log message");
+
+        try {
+            validationHandler.handleRequestReport("GET#/api", validationReport);
+        } catch (final InvalidRequestException e) {
+            //Expected
+        }
+
+        assertThat(listAppender.list.size(), is(1));
+
+        final ILoggingEvent loggingEvent = listAppender.list.get(0);
+        assertThat(loggingEvent.getLevel(), is(Level.ERROR));
+        assertThat(loggingEvent.getMessage(), is("OpenAPI location={} key={} levels={} message={}"));
+        assertThat(loggingEvent.getArgumentArray(), is(new String[] {"REQUEST", "GET#/api", "ERROR", "log message"}));
+    }
+
+    @Test
+    public void responseWithErrorLogsErrorAndThrowsException() {
+        final ValidationReport validationReport = mockValidationReport(singletonList(ERROR), "log message");
+
+        try {
+            validationHandler.handleResponseReport("GET#/api", validationReport);
+        } catch (final InvalidResponseException e) {
+            //Expected
+        }
+
+        assertThat(listAppender.list.size(), is(1));
+
+        final ILoggingEvent loggingEvent = listAppender.list.get(0);
+        assertThat(loggingEvent.getLevel(), is(Level.ERROR));
+        assertThat(loggingEvent.getMessage(), is("OpenAPI location={} key={} levels={} message={}"));
+        assertThat(loggingEvent.getArgumentArray(), is(new String[] {"RESPONSE", "GET#/api", "ERROR", "log message"}));
+    }
+
+    @Test
+    public void requestWithWarnAndInfoLogsInfoMessage() {
+        final ValidationReport validationReport = mockValidationReport(asList(WARN, INFO), "log message");
+        validationHandler.handleRequestReport("GET#/api", validationReport);
+
+        assertThat(listAppender.list.size(), is(1));
+
+        final ILoggingEvent loggingEvent = listAppender.list.get(0);
+        assertThat(loggingEvent.getLevel(), is(Level.INFO));
+        assertThat(loggingEvent.getMessage(), is("OpenAPI location={} key={} levels={} message={}"));
+        assertThat(loggingEvent.getArgumentArray(), is(new String[] {"REQUEST", "GET#/api", "WARN,INFO", "log message"}));
+    }
+
+    @Test
+    public void responseWithWarnAndInfoLogsInfoMessage() {
+        final ValidationReport validationReport = mockValidationReport(asList(WARN, INFO), "log message");
+        validationHandler.handleResponseReport("GET#/api", validationReport);
+
+        assertThat(listAppender.list.size(), is(1));
+
+        final ILoggingEvent loggingEvent = listAppender.list.get(0);
+        assertThat(loggingEvent.getLevel(), is(Level.INFO));
+        assertThat(loggingEvent.getMessage(), is("OpenAPI location={} key={} levels={} message={}"));
+        assertThat(loggingEvent.getArgumentArray(), is(new String[] {"RESPONSE", "GET#/api", "WARN,INFO", "log message"}));
+    }
+
+    @Test
+    public void requestWithoutFindingsLogsValidDebugMessage() {
+        final ValidationReport validationReport = mockValidationReport(emptyList(), null);
+        validationHandler.handleRequestReport("GET#/api", validationReport);
+
+        assertThat(listAppender.list.size(), is(1));
+        final ILoggingEvent loggingEvent = listAppender.list.get(0);
+        assertThat(loggingEvent.getLevel(), is(Level.DEBUG));
+        assertThat(loggingEvent.getMessage(), is("OpenAPI validation: {} - The {} is valid."));
+        assertThat(loggingEvent.getArgumentArray(), is(new String[] {"GET#/api", "REQUEST"}));
+    }
+
+    @Test
+    public void responseWithoutFindingsLogsValidDebugMessage() {
+        final ValidationReport validationReport = mockValidationReport(emptyList(), null);
+        validationHandler.handleResponseReport("GET#/api", validationReport);
+
+        assertThat(listAppender.list.size(), is(1));
+        final ILoggingEvent loggingEvent = listAppender.list.get(0);
+        assertThat(loggingEvent.getLevel(), is(Level.DEBUG));
+        assertThat(loggingEvent.getMessage(), is("OpenAPI validation: {} - The {} is valid."));
+        assertThat(loggingEvent.getArgumentArray(), is(new String[] {"GET#/api", "RESPONSE"}));
+    }
+
+    private ValidationReport mockValidationReport(final List<ValidationReport.Level> levels, final String message) {
+        final ValidationReport.Message mockedMessage = mock(ValidationReport.Message.class);
+        when(mockedMessage.toString()).thenReturn(message);
+
+        final ValidationReport mockedValidationReport = mock(ValidationReport.class);
+        when(mockedValidationReport.sortedValidationLevels()).thenReturn(new TreeSet<>(levels));
+        when(mockedValidationReport.getMessages()).thenReturn(singletonList(mockedMessage));
+        return mockedValidationReport;
+    }
+}
