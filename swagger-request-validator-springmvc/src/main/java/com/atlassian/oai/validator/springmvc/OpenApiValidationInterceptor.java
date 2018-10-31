@@ -11,9 +11,12 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
+import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * An Interceptor which validates incoming requests against the defined OpenAPI / Swagger specification.
@@ -28,22 +31,23 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
     protected final OpenApiValidationService openApiValidationService;
     private final ValidationReportHandler validationReportHandler;
 
-    public OpenApiValidationInterceptor(final EncodedResource apiSpecification) throws IOException {
+    public OpenApiValidationInterceptor(@Nonnull final EncodedResource apiSpecification) throws IOException {
         this(new OpenApiValidationService(apiSpecification));
     }
 
-    public OpenApiValidationInterceptor(final OpenApiInteractionValidator validator) {
+    public OpenApiValidationInterceptor(@Nonnull final OpenApiInteractionValidator validator) {
         this(new OpenApiValidationService(validator));
     }
 
-    public OpenApiValidationInterceptor(final OpenApiValidationService openApiValidationService) {
+    public OpenApiValidationInterceptor(@Nonnull final OpenApiValidationService openApiValidationService) {
         this(openApiValidationService, new DefaultValidationReportHandler());
     }
 
     public OpenApiValidationInterceptor(
-            final OpenApiValidationService openApiValidationService,
-            final ValidationReportHandler validationReportHandler
-    ) {
+            @Nonnull final OpenApiValidationService openApiValidationService,
+            @Nonnull final ValidationReportHandler validationReportHandler) {
+        requireNonNull(openApiValidationService, "openApiValidationService must not be null");
+        requireNonNull(validationReportHandler, "validationReportHandler must not be null");
         this.openApiValidationService = openApiValidationService;
         this.validationReportHandler = validationReportHandler;
     }

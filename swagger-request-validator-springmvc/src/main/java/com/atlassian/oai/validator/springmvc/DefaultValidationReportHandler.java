@@ -6,12 +6,14 @@ import com.atlassian.oai.validator.report.ValidationReportFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
 import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.REQUEST;
 import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.RESPONSE;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 
 /**
@@ -31,13 +33,14 @@ public class DefaultValidationReportHandler implements ValidationReportHandler {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultValidationReportHandler.class);
     private static final String DELIMITER = ",";
 
-    protected final ValidationReportFormat validationReportFormat;
+    private final ValidationReportFormat validationReportFormat;
 
     public DefaultValidationReportHandler() {
         this(SimpleValidationReportFormat.getInstance());
     }
 
-    public DefaultValidationReportHandler(final ValidationReportFormat validationReportFormat) {
+    public DefaultValidationReportHandler(@Nonnull final ValidationReportFormat validationReportFormat) {
+        requireNonNull(validationReportFormat, "validationReportFormat must not be null");
         this.validationReportFormat = validationReportFormat;
     }
 
@@ -89,8 +92,7 @@ public class DefaultValidationReportHandler implements ValidationReportHandler {
 
     protected RuntimeException createValidationException(
             final ValidationReport validationReport,
-            final ValidationReport.MessageContext.Location location
-    ) {
+            final ValidationReport.MessageContext.Location location) {
         if (location == REQUEST) {
             return new InvalidRequestException(validationReport);
         } else {
