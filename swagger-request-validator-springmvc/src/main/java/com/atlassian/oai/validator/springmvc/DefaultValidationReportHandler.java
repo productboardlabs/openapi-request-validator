@@ -75,10 +75,10 @@ public class DefaultValidationReportHandler implements ValidationReportHandler {
     }
 
     protected void logApiValidation(final BiConsumer<String, String[]> logConsumer,
-                                  final ValidationReport.MessageContext.Location location,
-                                  final String loggingKey,
-                                  final Set<ValidationReport.Level> validationLevels,
-                                  final String message) {
+                                    final ValidationReport.MessageContext.Location location,
+                                    final String loggingKey,
+                                    final Set<ValidationReport.Level> validationLevels,
+                                    final String message) {
         final String logTemplate = "OpenAPI location={} key={} levels={} messages={}";
         final String joinedLevels = validationLevels
                 .stream()
@@ -90,9 +90,8 @@ public class DefaultValidationReportHandler implements ValidationReportHandler {
         });
     }
 
-    protected RuntimeException createValidationException(
-            final ValidationReport validationReport,
-            final ValidationReport.MessageContext.Location location) {
+    protected RuntimeException createValidationException(final ValidationReport validationReport,
+                                                         final ValidationReport.MessageContext.Location location) {
         if (location == REQUEST) {
             return new InvalidRequestException(validationReport);
         } else {
