@@ -11,29 +11,45 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
+import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * An Interceptor which validates incoming requests against the defined OpenAPI / Swagger specification.
+ *
+ * <p>You can customize logging output of interceptor by implementing
+ * interface {@link ValidationReportHandler} and providing instance
+ * to constructor.</p>
  */
 public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
-
     private static final Logger LOG = LoggerFactory.getLogger(OpenApiValidationInterceptor.class);
 
-    private final OpenApiValidationService openApiValidationService;
+    protected final OpenApiValidationService openApiValidationService;
+    private final ValidationReportHandler validationReportHandler;
 
-    public OpenApiValidationInterceptor(final EncodedResource apiSpecification) throws IOException {
+    public OpenApiValidationInterceptor(@Nonnull final EncodedResource apiSpecification) throws IOException {
         this(new OpenApiValidationService(apiSpecification));
     }
 
-    public OpenApiValidationInterceptor(final OpenApiInteractionValidator validator) {
+    public OpenApiValidationInterceptor(@Nonnull final OpenApiInteractionValidator validator) {
         this(new OpenApiValidationService(validator));
     }
 
-    OpenApiValidationInterceptor(final OpenApiValidationService openApiValidationService) {
+    public OpenApiValidationInterceptor(@Nonnull final OpenApiValidationService openApiValidationService) {
+        this(openApiValidationService, new DefaultValidationReportHandler());
+    }
+
+    public OpenApiValidationInterceptor(
+            @Nonnull final OpenApiValidationService openApiValidationService,
+            @Nonnull final ValidationReportHandler validationReportHandler) {
+        requireNonNull(openApiValidationService, "openApiValidationService must not be null");
+        requireNonNull(validationReportHandler, "validationReportHandler must not be null");
         this.openApiValidationService = openApiValidationService;
+        this.validationReportHandler = validationReportHandler;
     }
 
     /**
@@ -59,24 +75,19 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
                              final Object handler) throws Exception {
         // only wrapped servlet requests can be validated - see: OpenApiValidationFilter
         if (!(servletRequest instanceof ResettableRequestServletWrapper)) {
+            LOG.debug("OpenAPI request validation disabled");
             return true;
         }
 
         // validate the request
         final ResettableRequestServletWrapper resettableRequest = (ResettableRequestServletWrapper) servletRequest;
         final String requestLoggingKey = servletRequest.getMethod() + "#" + servletRequest.getRequestURI();
-        LOG.debug("OpenAPI validation: {}", requestLoggingKey);
+        LOG.debug("OpenAPI request validation: {}", requestLoggingKey);
 
         final Request request = openApiValidationService.buildRequest(resettableRequest);
         final ValidationReport validationReport = openApiValidationService.validateRequest(request);
-        if (!validationReport.hasErrors()) {
-            LOG.debug("OpenAPI validation: {} - The request is valid.", requestLoggingKey);
-        } else {
-            final InvalidRequestException invalidRequestException = new InvalidRequestException(validationReport);
-            LOG.info("OpenAPI validation: {} - The request is invalid: {}", requestLoggingKey,
-                    invalidRequestException.getMessage());
-            throw invalidRequestException;
-        }
+
+        validationReportHandler.handleRequestReport(requestLoggingKey, validationReport);
 
         // reset the requests servlet input stream after reading it on former step
         resettableRequest.resetInputStream();
@@ -105,6 +116,7 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
                            final ModelAndView modelAndView) throws Exception {
         // only cached servlet responses can be validated - see: OpenApiValidationFilter
         if (!(servletResponse instanceof ContentCachingResponseWrapper)) {
+            LOG.debug("OpenAPI response validation disabled");
             return;
         }
 
@@ -115,15 +127,13 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
 
         final Response response = openApiValidationService.buildResponse(cachedResponse);
         final ValidationReport validationReport = openApiValidationService.validateResponse(servletRequest, response);
-        if (!validationReport.hasErrors()) {
-            LOG.debug("OpenAPI response validation: {} - The response is valid.", requestLoggingKey);
-        } else {
-            final InvalidResponseException invalidResponseException = new InvalidResponseException(validationReport);
-            LOG.info("OpenAPI response validation: {} - The response is invalid: {}", requestLoggingKey,
-                    invalidResponseException.getMessage());
+
+        try {
+            validationReportHandler.handleResponseReport(requestLoggingKey, validationReport);
+        } catch (final InvalidResponseException e) {
             // as an exception will rewrite the current, cached response it has to be reset
             cachedResponse.reset();
-            throw invalidResponseException;
+            throw e;
         }
     }
 }
