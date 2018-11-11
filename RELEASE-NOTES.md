@@ -1,3 +1,8 @@
+#v2.0.3
+* Added ability to change behavior in the `OpenApiValidationInterceptor` to suit
+consumer use cases
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/117)
+
 #v2.0.2
 * Fixed a bug in validation when consumes clause is empty in a swagger v2 spec 
 [[#167]](https://bitbucket.org/atlassian/swagger-request-validator/issues/167)
