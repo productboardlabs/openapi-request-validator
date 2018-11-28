@@ -131,9 +131,6 @@
         ],
         "summary": "Get all users",
         "operationId": "get all users",
-        "produces": [
-          "application/json"
-        ],
         "security": [
           {
             "basic": [
