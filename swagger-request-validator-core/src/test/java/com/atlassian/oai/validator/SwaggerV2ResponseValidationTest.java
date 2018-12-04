@@ -157,6 +157,24 @@ public class SwaggerV2ResponseValidationTest {
     }
 
     @Test
+    public void validate_withResponseContentTypeAndEmptyProduces_shouldPass() {
+        final Request getUsers2Request = SimpleRequest.Builder
+                .get("/users2")
+                .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
+                .build();
+        
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withBody(loadJsonResponse("users-valid"))
+                .withHeader("Content-Type", "application/json;charset=UTF-8")
+                .build();
+        
+
+        assertPass(classUnderTest.validate(getUsers2Request, response));
+        assertPass(classUnderTest.validateResponse("/users2", Request.Method.GET, response));
+    }
+
+    @Test
     public void validate_withResponseContentTypeNotMatchingProduces_shouldFail() {
         final Response response = SimpleResponse.Builder
                 .ok()

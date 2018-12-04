@@ -173,6 +173,12 @@ public class ResponseValidator {
             return ValidationReport.empty();
         }
 
+        if (responseMediaTypes
+                .stream()
+                .allMatch("*/*"::equals)) {
+            return empty();
+        }
+
         final boolean contentTypeMatchesProduces = responseMediaTypes.stream()
                 .map(com.google.common.net.MediaType::parse)
                 .anyMatch(m -> m.withoutParameters().is(requestMediaType.withoutParameters()));
