@@ -1,3 +1,7 @@
+#v2.0.4
+* Fixed a bug when the `produces` clause is empty in a swagger v2 spec
+[[#179]](https://bitbucket.org/atlassian/swagger-request-validator/issues/179)
+
 #v2.0.3
 * Added ability to change behavior in the `OpenApiValidationInterceptor` to suit
 consumer use cases
