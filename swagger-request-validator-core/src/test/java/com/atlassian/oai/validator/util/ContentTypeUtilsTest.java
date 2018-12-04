@@ -83,8 +83,38 @@ public class ContentTypeUtilsTest {
     }
 
     @Test
+    public void isJsonContentType_returnsTrue_whenHalJson() {
+        assertThat(isJsonContentType("application/hal+json"), is(true));
+    }
+
+    @Test
+    public void isJsonContentType_returnsTrue_whenJsonSuffix() {
+        assertThat(isJsonContentType("application/custom+json"), is(true));
+    }
+
+    @Test
+    public void isJsonContentType_returnsTrue_whenJsonWithWildcard() {
+        assertThat(isJsonContentType("application/*+json"), is(true));
+    }
+
+    @Test
     public void isJsonContentType_returnsFalse_whenNotJson() {
         assertThat(isJsonContentType("application/xml"), is(false));
+    }
+
+    @Test
+    public void isJsonContentType_returnsFalse_whenNotValid() {
+        assertThat(isJsonContentType("invalid-media-type"), is(false));
+    }
+
+    @Test
+    public void isJsonContentType_returnsFalse_whenNotJsonWithWildcard() {
+        assertThat(isJsonContentType("application/*"), is(false));
+    }
+
+    @Test
+    public void isJsonContentType_returnsFalse_whenNull() {
+        assertThat(isJsonContentType((String) null), is(false));
     }
 
     @Test
