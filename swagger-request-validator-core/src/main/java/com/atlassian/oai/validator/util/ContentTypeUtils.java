@@ -10,7 +10,6 @@ import javax.annotation.Nullable;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 
 import static com.google.common.net.MediaType.FORM_DATA;
 import static com.google.common.net.MediaType.JSON_UTF_8;
@@ -19,15 +18,9 @@ import static java.util.Optional.empty;
 public class ContentTypeUtils {
     //https://github.com/google/guava/issues/3184
     private static final MediaType HAL_JSON = MediaType.create("application", "hal+json");
-    private static Function<String, Boolean> jsonMediaTypes =
-        value -> matches(value, HAL_JSON) || matches(value, JSON_UTF_8);
 
     private ContentTypeUtils() {
 
-    }
-
-    public static void setJsonMediaType(final Function<String, Boolean> func) {
-        jsonMediaTypes = func;
     }
 
     /**
@@ -50,7 +43,7 @@ public class ContentTypeUtils {
      * @return Whether the provided content-type is a JSON type.
      */
     public static boolean isJsonContentType(@Nullable final String contentType) {
-        return jsonMediaTypes.apply(contentType);
+        return matches(contentType, JSON_UTF_8) || matches(contentType, HAL_JSON);
     }
 
     /**
