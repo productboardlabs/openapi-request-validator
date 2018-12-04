@@ -168,7 +168,6 @@ public class SwaggerV2ResponseValidationTest {
                 .withBody(loadJsonResponse("users-valid"))
                 .withHeader("Content-Type", "application/json;charset=UTF-8")
                 .build();
-        
 
         assertPass(classUnderTest.validate(getUsers2Request, response));
         assertPass(classUnderTest.validateResponse("/users2", Request.Method.GET, response));
