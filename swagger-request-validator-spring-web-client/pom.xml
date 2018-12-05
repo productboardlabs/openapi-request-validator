@@ -13,7 +13,7 @@
     <artifactId>swagger-request-validator-spring-web-client</artifactId>
 
     <description>
-        OpenAPI / Swagger validation for REST Assured tests.
+        OpenAPI / Swagger validation for Spring web client.
     </description>
 
     <dependencies>
