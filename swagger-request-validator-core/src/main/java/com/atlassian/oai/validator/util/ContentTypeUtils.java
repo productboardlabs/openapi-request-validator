@@ -16,9 +16,6 @@ import static com.google.common.net.MediaType.JSON_UTF_8;
 import static java.util.Optional.empty;
 
 public class ContentTypeUtils {
-    //https://github.com/google/guava/issues/3184
-    private static final MediaType HAL_JSON = MediaType.create("application", "hal+json");
-
     private ContentTypeUtils() {
 
     }
@@ -40,10 +37,19 @@ public class ContentTypeUtils {
     }
 
     /**
-     * @return Whether the provided content-type is a JSON type.
+     * @return Whether the provided content-type is a JSON type (includes JSON suffix).
      */
     public static boolean isJsonContentType(@Nullable final String contentType) {
-        return matches(contentType, JSON_UTF_8) || matches(contentType, HAL_JSON);
+        final Optional<MediaType> optionalMediaType = parseContentType(contentType);
+        return optionalMediaType.map(mediaType -> {
+            if (mediaType.withoutParameters().is(JSON_UTF_8.withoutParameters())) {
+                return true;
+            }
+            if (mediaType.type().equals("application")) {
+                return mediaType.subtype().endsWith("+json");
+            }
+            return false;
+        }).orElse(false);
     }
 
     /**
@@ -211,6 +217,17 @@ public class ContentTypeUtils {
             return empty();
         }
 
+    }
+
+    private static Optional<MediaType> parseContentType(@Nullable final String contentType) {
+        if (contentType == null) {
+            return empty();
+        }
+        try {
+            return Optional.ofNullable(MediaType.parse(contentType));
+        } catch (final IllegalArgumentException e) {
+            return empty();
+        }
     }
 
     private static class ContentTypeComparator implements Comparator<MediaType> {
