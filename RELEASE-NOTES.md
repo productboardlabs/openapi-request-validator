@@ -1,3 +1,9 @@
+#v2.1.0
+* Added a new module for performing Swagger / Open API validation with Spring Web Client
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/120)
+* Changed JSON mediatype detection to support `+json` suffixes
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/118)
+
 #v2.0.4
 * Fixed a bug when the `produces` clause is empty in a swagger v2 spec
 [[#179]](https://bitbucket.org/atlassian/swagger-request-validator/issues/179)

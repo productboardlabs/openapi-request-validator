@@ -93,6 +93,14 @@ against an OpenAPI / Swagger specification during runtime in a production enviro
 
 Useful for ensuring that the client requests matching the API specification.
 
+###swagger-request-validator-spring-web-client 
+
+[![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-spring-web-client/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-spring-web-client)
+
+Adapter for adding OpenAPI / Swagger validation to the [Spring Web HTTP client](https://docs.spring.io/spring/docs/4.3.16.RELEASE/javadoc-api/org/springframework/http/client/package-summary.html).
+
+Useful for ensuring that a service implementation matches its API specification.
+
 ###swagger-request-validator-examples
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-examples/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-examples)
