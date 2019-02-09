@@ -7,7 +7,7 @@
 
 **Important**
 
-If you use versions of Spring prior to 5.1.0.RELEASE you will need to change your
+If you use versions of Spring prior to 5.1.0.RELEASE (or Spring Boot prior to 2.1.0) you will need to change your
 dependency from `swagger-request-validator-mockmvc` to `swagger-request-validator-mockmvc-legacy`.  
 
 
