@@ -128,13 +128,40 @@ public class SecurityValidationTest {
 
     @Test
     public void andCombinedAuth_shouldFail_whenOneMissing() {
-        final Request request = SimpleRequest.Builder
+        final Request requestMissingBasicAuth = SimpleRequest.Builder
                 .get("/secured/combined/and")
                 .withQueryParam("apiKey", "some-key")
                 .withContentType("application/json")
                 .build();
 
-        assertFail(validator.validateRequest(request), "validation.request.security.missing");
+        final Request requestMissingApiKey = SimpleRequest.Builder
+                .get("/secured/combined/and")
+                .withAuthorization("Basic foo")
+                .withContentType("application/json")
+                .build();
+
+        assertFail(validator.validateRequest(requestMissingBasicAuth), "validation.request.security.missing");
+        assertFail(validator.validateRequest(requestMissingApiKey), "validation.request.security.missing");
+    }
+
+    @Test
+    public void andCombinedAuth_shouldFail_whenOneInvalid() {
+        final Request requestWithEmptyApiKey = SimpleRequest.Builder
+                .get("/secured/combined/and")
+                .withQueryParam("apiKey")
+                .withAuthorization("Basic foo")
+                .withContentType("application/json")
+                .build();
+
+        final Request requestWithInvalidBasicAuth = SimpleRequest.Builder
+                .get("/secured/combined/and")
+                .withQueryParam("apiKey", "foo")
+                .withAuthorization("Basics foo")
+                .withContentType("application/json")
+                .build();
+
+        assertFail(validator.validateRequest(requestWithEmptyApiKey), "validation.request.security.missing");
+        assertFail(validator.validateRequest(requestWithInvalidBasicAuth), "validation.request.security.invalid");
     }
 
     @Test
@@ -150,10 +177,50 @@ public class SecurityValidationTest {
     }
 
     @Test
-    public void orCombinedAuth_shouldPass_whenOneMissing() {
+    public void orCombinedAuth_shouldFail_whenAllMissing() {
+        final Request request = SimpleRequest.Builder
+                .get("/secured/combined/or")
+                .withContentType("application/json")
+                .build();
+
+        assertFail(validator.validateRequest(request), "validation.request.security.missing");
+    }
+
+    @Test
+    public void orCombinedAuth_shouldFail_whenAllInvalid() {
+        final Request request = SimpleRequest.Builder
+                .get("/secured/combined/or")
+                .withAuthorization("Basics foo")
+                .withContentType("application/json")
+                .build();
+
+        assertFail(validator.validateRequest(request), "validation.request.security.invalid");
+    }
+
+    @Test
+    public void orCombinedAuth_shouldPass_whenOnlyOneProvided() {
+        final Request requestWithApiKey = SimpleRequest.Builder
+                .get("/secured/combined/or")
+                .withQueryParam("apiKey", "some-key")
+                .withContentType("application/json")
+                .build();
+
+        final Request requestWithBasicAuth = SimpleRequest.Builder
+                .get("/secured/combined/or")
+                .withAuthorization("Basic foo")
+                .withContentType("application/json")
+                .build();
+
+        assertPass(validator.validateRequest(requestWithApiKey));
+        assertPass(validator.validateRequest(requestWithBasicAuth));
+    }
+
+    @Test
+    public void orCombinedAuth_shouldPass_whenOneInvalid() {
         final Request request = SimpleRequest.Builder
                 .get("/secured/combined/or")
                 .withQueryParam("apiKey", "some-key")
+                .withAuthorization("Basics foo")
                 .withContentType("application/json")
                 .build();
 
