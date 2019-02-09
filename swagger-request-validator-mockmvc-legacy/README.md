@@ -2,7 +2,7 @@
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-mockmvc-legacy/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-mockmvc-legacy)
 
-Integrations between the Swagger Request Validator and V4.x and V5.0 of [Spring MockMvc](http://docs.spring.io/spring-security/site/docs/current/reference/html/test-mockmvc.html).
+Integrations between the Swagger Request Validator and V4.x and V5.0 of [Spring MockMvc](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/test/web/servlet/MockMvc.html).
 
 For integration with later versions of Spring MockMvc see [swagger-request-validator-mockmvc](../swagger-request-validator-mockmvc).
 
@@ -35,3 +35,21 @@ public void testGetValidPet() {
         .andExpect(openApi().isValid("api.json"));
 }
 ```
+
+If you need to customise the validation behavior you can supply a pre-initialised validator to the `isValid` matcher.
+
+```java
+@BeforeClass
+public static void setup() {
+    validator = ...some validator initialisation and configuration...
+}
+
+@Test
+public void testStuff() throws Exception {
+    this.mvc
+        .perform(post("/hello/bob")
+        .andExpect(openApi().isValid(validator));
+}
+```
+
+See the [README for swagger-request-validator-core](../swagger-request-validator-core/README.md) for details on how to configure the validator.
