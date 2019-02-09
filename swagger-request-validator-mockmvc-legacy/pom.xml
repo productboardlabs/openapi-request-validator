@@ -10,15 +10,11 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>swagger-request-validator-mockmvc</artifactId>
+    <artifactId>swagger-request-validator-mockmvc-legacy</artifactId>
 
     <description>
         OpenAPI / Swagger validation for Spring MVC REST tests.
     </description>
-
-    <properties>
-        <spring.version>5.1.0.RELEASE</spring.version>
-    </properties>
 
     <dependencies>
         <dependency>
@@ -73,12 +69,6 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.rest-assured</groupId>
-            <artifactId>spring-mock-mvc</artifactId>
-            <version>3.2.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
