@@ -1,3 +1,9 @@
+#v2.2.1
+* Fixed NPE when `security` defined but no `securitySchemes` defined
+[[#188]](https://bitbucket.org/atlassian/swagger-request-validator/issues/188)
+* Added better support for [using multiple authentication types](https://swagger.io/docs/specification/authentication/#multiple)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/123)
+
 #v2.2.0
 * To address a breaking change in `spring-test-5.1.0.RELEASE`, introduced 
 `swagger-request-validator-mockmvc-legacy` for pre-5.1 versions.
