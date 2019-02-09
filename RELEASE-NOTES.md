@@ -1,3 +1,16 @@
+#v2.2.0
+* To address a breaking change in `spring-test-5.1.0.RELEASE`, introduced 
+`swagger-request-validator-mockmvc-legacy` for pre-5.1 versions.
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/121)
+[[#181]](https://bitbucket.org/atlassian/swagger-request-validator/issues/181)
+[[#190]](https://bitbucket.org/atlassian/swagger-request-validator/issues/190)
+
+**Important**
+
+If you use versions of Spring prior to 5.1.0.RELEASE you will need to change your
+dependency from `swagger-request-validator-mockmvc` to `swagger-request-validator-mockmvc-legacy`.  
+
+
 #v2.1.0
 * Added a new module for performing Swagger / Open API validation with Spring Web Client
 [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/120)
