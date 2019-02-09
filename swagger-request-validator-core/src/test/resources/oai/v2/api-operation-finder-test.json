@@ -199,6 +199,23 @@
           }
         }
       }
+    },
+    "/path/with/dot/v1.0/{id}": {
+      "get": {
+        "description": "GET:/path/with/dot/v1.0/{id}",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
     }
   }
 }
