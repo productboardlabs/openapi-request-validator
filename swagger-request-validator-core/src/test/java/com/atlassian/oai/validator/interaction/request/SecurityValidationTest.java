@@ -8,6 +8,11 @@ import org.junit.Test;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 
+/**
+ * Tests for behavior of security validation
+ * <p>
+ * See https://swagger.io/docs/specification/authentication/
+ */
 public class SecurityValidationTest {
 
     private final OpenApiInteractionValidator validator =
@@ -107,6 +112,52 @@ public class SecurityValidationTest {
                 .build();
 
         assertFail(validator.validateRequest(request), "validation.request.security.missing");
+    }
+
+    @Test
+    public void andCombinedAuth_shouldPass_whenAllProvided() {
+        final Request request = SimpleRequest.Builder
+                .get("/secured/combined/and")
+                .withQueryParam("apiKey", "some-key")
+                .withAuthorization("Basic foo")
+                .withContentType("application/json")
+                .build();
+
+        assertPass(validator.validateRequest(request));
+    }
+
+    @Test
+    public void andCombinedAuth_shouldFail_whenOneMissing() {
+        final Request request = SimpleRequest.Builder
+                .get("/secured/combined/and")
+                .withQueryParam("apiKey", "some-key")
+                .withContentType("application/json")
+                .build();
+
+        assertFail(validator.validateRequest(request), "validation.request.security.missing");
+    }
+
+    @Test
+    public void orCombinedAuth_shouldPass_whenAllProvided() {
+        final Request request = SimpleRequest.Builder
+                .get("/secured/combined/or")
+                .withQueryParam("apiKey", "some-key")
+                .withAuthorization("Basic foo")
+                .withContentType("application/json")
+                .build();
+
+        assertPass(validator.validateRequest(request));
+    }
+
+    @Test
+    public void orCombinedAuth_shouldPass_whenOneMissing() {
+        final Request request = SimpleRequest.Builder
+                .get("/secured/combined/or")
+                .withQueryParam("apiKey", "some-key")
+                .withContentType("application/json")
+                .build();
+
+        assertPass(validator.validateRequest(request));
     }
 
     @Test

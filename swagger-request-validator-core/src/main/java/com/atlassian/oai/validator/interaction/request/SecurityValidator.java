@@ -10,16 +10,14 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
-import java.util.TreeSet;
 
 import static com.atlassian.oai.validator.model.Headers.AUTHORIZATION;
 import static com.atlassian.oai.validator.report.ValidationReport.empty;
 import static com.atlassian.oai.validator.report.ValidationReport.singleton;
+import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -56,45 +54,46 @@ class SecurityValidator {
             return empty();
         }
 
-        boolean foundSecurity = false;
-        ValidationReport report = empty();
-        for (final Map.Entry<String, SecurityScheme> s : api.getComponents().getSecuritySchemes().entrySet()) {
-            final Map<String, SecurityScheme> filtered = new HashMap<>();
-            securityRequired.stream().filter(item -> item.containsKey(s.getKey())).forEach(item -> filtered.put(s.getKey(), s.getValue()));
+        // Each 'SecurityRequirement' in the list is an 'OR' - at least one needs to pass
+        // The map within each 'SecurityRequirement' is an 'AND' - all must pass
+        // See https://swagger.io/docs/specification/authentication/#multiple
 
-            if (!filtered.isEmpty()) {
-                final Set<String> missingDefinitions = new TreeSet<>();
-                final ValidationReport subReport = filtered.entrySet().stream().map(e -> {
-                    final ValidationReport validationReport = validateSingleSecurityParameter(request, e.getValue());
+        final List<ValidationReport> reports = securityRequired.stream()
+                .map(requirement -> validateSecurityRequirement(request, requirement))
+                .collect(toList());
 
-                    if (validationReport.getMessages().stream().filter(m -> MISSING_SECURITY_PARAMETER_KEY.equals(m.getKey())).count() > 0) {
-                        missingDefinitions.add(e.getKey());
-                    }
-
-                    return validationReport;
-                }).reduce(empty(), ValidationReport::merge);
-
-                if (missingDefinitions.isEmpty()) {
-                    foundSecurity = true;
-                    report = report.merge(subReport);
-                } else {
-                    // do not append subReport if security definition of 's' is missing/incomplete
-                    log.debug("Security definition not found for {}", s.getKey());
-                }
-            }
+        if (atLeastOneRequirementFulfilled(reports)) {
+            // At least one security requirement was met
+            return empty();
         }
 
-        if (!foundSecurity) {
-            // none of security headers was found
+        if (allSecurityRequirementsMissing(reports)) {
+            // Collapse all 'missing arg' messages to a single reported message
             return singleton(messages.get(MISSING_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
         }
 
-        return report;
+        // Otherwise try to select the 'most fulfilled' requirement, or just return everything
+        return findMostFulfilledRequirement(reports).orElse(combineAllReports(reports));
     }
 
     @Nonnull
-    private ValidationReport validateSingleSecurityParameter(final Request request,
-                                                             final SecurityScheme securityScheme) {
+    private ValidationReport validateSecurityRequirement(final Request request, final SecurityRequirement requirement) {
+        return requirement.keySet().stream()
+                .map(schemeName -> {
+                    final SecurityScheme scheme = api.getComponents().getSecuritySchemes().get(schemeName);
+                    if (scheme == null) {
+                        log.warn("Security scheme definition not found for {}", schemeName);
+                    }
+                    return scheme;
+                })
+                .filter(Objects::nonNull)
+                .map(scheme -> validateSecurityScheme(request, scheme))
+                .reduce(empty(), ValidationReport::merge);
+    }
+
+    @Nonnull
+    private ValidationReport validateSecurityScheme(final Request request,
+                                                    final SecurityScheme securityScheme) {
         switch (securityScheme.getType()) {
             case APIKEY:
                 switch (securityScheme.getIn()) {
@@ -116,7 +115,6 @@ class SecurityValidator {
     @Nonnull
     private ValidationReport checkBasicAuthorization(final Request request,
                                                      final SecurityScheme securityScheme) {
-
         if (!request.getHeaderValue(AUTHORIZATION).isPresent()) {
             // Authorization HTTP header not found
             return singleton(messages.get(MISSING_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
@@ -145,13 +143,34 @@ class SecurityValidator {
     @Nonnull
     private ValidationReport checkApiKeyAuthorizationByHeader(final Request request,
                                                               final SecurityScheme securityScheme) {
-
         final Optional<String> headerValue = request.getHeaderValue(securityScheme.getName());
         if (!headerValue.isPresent() || headerValue.get().isEmpty()) {
             return singleton(messages.get(MISSING_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
         }
         // API key header found, additional checks can be placed here
         return empty();
+    }
+
+    @Nonnull
+    private Optional<ValidationReport> findMostFulfilledRequirement(final List<ValidationReport> reports) {
+        // Try to find a report that does not include a 'missing' param
+        // Assume this means that all params were supplied, but that at least one was invalid in some way
+        // Assume this was the requirement that was being attempted
+        return reports.stream().filter(r -> r.getMessages().stream().noneMatch(m -> MISSING_SECURITY_PARAMETER_KEY.equals(m.getKey()))).findFirst();
+    }
+
+    private boolean atLeastOneRequirementFulfilled(final List<ValidationReport> reports) {
+        return reports.stream().anyMatch(r -> !r.hasErrors());
+    }
+
+    private boolean allSecurityRequirementsMissing(final List<ValidationReport> reports) {
+        return reports.stream()
+                .allMatch(r -> r.getMessages().stream().anyMatch(m -> MISSING_SECURITY_PARAMETER_KEY.equals(m.getKey())));
+    }
+
+    @Nonnull
+    private ValidationReport combineAllReports(final List<ValidationReport> reports) {
+        return reports.stream().reduce(empty(), ValidationReport::merge);
     }
 
 }

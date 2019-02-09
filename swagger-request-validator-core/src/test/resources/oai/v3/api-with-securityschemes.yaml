@@ -33,6 +33,26 @@ paths:
       security:
         - apiKeyQuery: []
       responses: {}
+  /secured/combined/and:
+    get:
+      tags:
+        - secure
+      summary: Test operation with security that requires both forms to be provided
+      description: logical 'AND' auth
+      security:
+        - apiKeyQuery: []
+          basicAuth: []
+      responses: {}
+  /secured/combined/or:
+    get:
+      tags:
+        - secure
+      summary: Test operation with security that requires one form to be provided
+      description: logical 'OR' auth
+      security:
+        - apiKeyQuery: []
+        - basicAuth: []
+      responses: {}
   /secured/unsupported:
     get:
       tags:
