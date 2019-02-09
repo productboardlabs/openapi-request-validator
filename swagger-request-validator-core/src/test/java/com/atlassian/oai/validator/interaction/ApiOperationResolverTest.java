@@ -70,6 +70,8 @@ public class ApiOperationResolverTest {
 
                 {"doesNotMatch_whenMethodNotAllowed", DELETE, "/id", operationNotAllowed()},
                 {"doesNotMatch_whenMethodNotAllowed_multiplePathParams", GET, "/update/id/action", operationNotAllowed()},
+
+                {"matches_whenPathContainsDot", GET, "/path/with/dot/v1.0/id", matches("GET:/path/with/dot/v1.0/{id}")},
         });
     }
 

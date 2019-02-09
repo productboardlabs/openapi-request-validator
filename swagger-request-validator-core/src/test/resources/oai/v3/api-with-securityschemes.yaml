@@ -1,0 +1,85 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: An API with security definitions
+  description: test
+servers:
+  - url: "/api"
+paths:
+  /secured/basic:
+    get:
+      tags:
+        - secure
+      summary: Test operation with basic auth
+      description: basic auth
+      security:
+        - basicAuth: []
+      responses: {}
+  /secured/apikey/header:
+    get:
+      tags:
+        - secure
+      summary: Test operation with header-specified API keys
+      description: apikey auth - header
+      security:
+        - apiKeyHeader: []
+      responses: {}
+  /secured/apikey/query:
+    get:
+      tags:
+        - secure
+      summary: Test operation with query-specified API keys
+      description: apikey auth - query
+      security:
+        - apiKeyQuery: []
+      responses: {}
+  /secured/combined/and:
+    get:
+      tags:
+        - secure
+      summary: Test operation with security that requires both forms to be provided
+      description: logical 'AND' auth
+      security:
+        - apiKeyQuery: []
+          basicAuth: []
+      responses: {}
+  /secured/combined/or:
+    get:
+      tags:
+        - secure
+      summary: Test operation with security that requires one form to be provided
+      description: logical 'OR' auth
+      security:
+        - apiKeyQuery: []
+        - basicAuth: []
+      responses: {}
+  /secured/unsupported:
+    get:
+      tags:
+        - secure
+      summary: Test operation with (currently) unsupported security scheme
+      description: unsupported auth
+      security:
+        - unsupported: []
+      responses: {}
+components:
+  securitySchemes:
+
+    basicAuth:
+      type: http
+      scheme: basic
+
+    apiKeyHeader:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+
+    apiKeyQuery:
+      type: apiKey
+      in: query
+      name: apiKey
+
+    # Validation of openIdConnect currently not supported
+    unsupported:
+      type: openIdConnect
+      openIdConnectUrl: http://example.com

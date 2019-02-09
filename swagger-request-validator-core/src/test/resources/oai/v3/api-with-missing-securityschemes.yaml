@@ -1,0 +1,18 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: An API with security definitions but missing securitySchemes
+  description: test
+servers:
+  - url: "/v1"
+paths:
+  "/secured":
+    post:
+      tags:
+        - secure
+      summary: Test operation with a security def
+      description: test
+      security:
+        - clientCredentials:
+            - test
+      responses: {}
