@@ -63,16 +63,13 @@ class SecurityValidator {
                 .collect(toList());
 
         if (atLeastOneRequirementFulfilled(reports)) {
-            // At least one security requirement was met
             return empty();
         }
 
         if (allSecurityRequirementsMissing(reports)) {
-            // Collapse all 'missing arg' messages to a single reported message
-            return singleton(messages.get(MISSING_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
+            return missingSecurityParameter(request);
         }
 
-        // Otherwise try to select the 'most fulfilled' requirement, or just return everything
         return findMostFulfilledRequirement(reports).orElse(combineAllReports(reports));
     }
 
@@ -98,14 +95,14 @@ class SecurityValidator {
             case APIKEY:
                 switch (securityScheme.getIn()) {
                     case HEADER:
-                        return checkApiKeyAuthorizationByHeader(request, securityScheme);
+                        return validateApiKeyAuthByHeader(request, securityScheme);
                     case QUERY:
-                        return checkApiKeyAuthorizationByQueryParameter(request, securityScheme);
+                        return validateApiKeyAuthByQueryParameter(request, securityScheme);
                     default:
                         return empty();
                 }
             case HTTP:
-                return checkBasicAuthorization(request, securityScheme);
+                return validateHttpAuthorization(request, securityScheme);
             default:
                 log.info("Security scheme '{}' not currently supported", securityScheme.getType());
                 return empty();
@@ -113,42 +110,61 @@ class SecurityValidator {
     }
 
     @Nonnull
-    private ValidationReport checkBasicAuthorization(final Request request,
-                                                     final SecurityScheme securityScheme) {
-        if (!request.getHeaderValue(AUTHORIZATION).isPresent()) {
-            // Authorization HTTP header not found
-            return singleton(messages.get(MISSING_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
+    private ValidationReport validateHttpAuthorization(final Request request,
+                                                       final SecurityScheme securityScheme) {
+        if ("BASIC".equalsIgnoreCase(securityScheme.getScheme())) {
+            return validateBasicAuthHeader(request);
         }
 
-        if (!request.getHeaderValue(AUTHORIZATION).get().startsWith("Basic ")) {
-            // Authorization HTTP header found but not a Basic authentication token
-            return singleton(messages.get(INVALID_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
+        if ("BEARER".equalsIgnoreCase(securityScheme.getScheme())) {
+            return validateBearerAuthHeader(request);
         }
 
-        // HTTP basic authentication header found, additional checks can be placed here
         return empty();
     }
 
+    private ValidationReport validateBasicAuthHeader(Request request) {
+        return request
+                .getHeaderValue(AUTHORIZATION)
+                .map(header -> header.startsWith("Basic ") ? empty() : invalidSecurityParameter(request))
+                .orElse(missingSecurityParameter(request));
+    }
+
+    private ValidationReport validateBearerAuthHeader(Request request) {
+        return request
+                .getHeaderValue(AUTHORIZATION)
+                .map(header -> header.startsWith("Bearer ") ? empty() : invalidSecurityParameter(request))
+                .orElse(missingSecurityParameter(request));
+    }
+
     @Nonnull
-    private ValidationReport checkApiKeyAuthorizationByQueryParameter(final Request request,
-                                                                      final SecurityScheme securityScheme) {
+    private ValidationReport validateApiKeyAuthByQueryParameter(final Request request,
+                                                                final SecurityScheme securityScheme) {
         final Optional<String> authQueryParam = request.getQueryParameterValues(securityScheme.getName()).stream().findFirst();
         if (!authQueryParam.isPresent()) {
-            return singleton(messages.get(MISSING_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
+            return missingSecurityParameter(request);
         }
-        // API key query parameter found, additional checks can be placed here
         return empty();
     }
 
     @Nonnull
-    private ValidationReport checkApiKeyAuthorizationByHeader(final Request request,
-                                                              final SecurityScheme securityScheme) {
+    private ValidationReport validateApiKeyAuthByHeader(final Request request,
+                                                        final SecurityScheme securityScheme) {
         final Optional<String> headerValue = request.getHeaderValue(securityScheme.getName());
         if (!headerValue.isPresent() || headerValue.get().isEmpty()) {
-            return singleton(messages.get(MISSING_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
+            return missingSecurityParameter(request);
         }
-        // API key header found, additional checks can be placed here
         return empty();
+    }
+
+    @Nonnull
+    private ValidationReport missingSecurityParameter(Request request) {
+        return singleton(messages.get(MISSING_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
+    }
+
+    @Nonnull
+    private ValidationReport invalidSecurityParameter(Request request) {
+        return singleton(messages.get(INVALID_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
     }
 
     @Nonnull
@@ -156,7 +172,9 @@ class SecurityValidator {
         // Try to find a report that does not include a 'missing' param
         // Assume this means that all params were supplied, but that at least one was invalid in some way
         // Assume this was the requirement that was being attempted
-        return reports.stream().filter(r -> r.getMessages().stream().noneMatch(m -> MISSING_SECURITY_PARAMETER_KEY.equals(m.getKey()))).findFirst();
+        return reports.stream()
+                .filter(r -> r.getMessages().stream().noneMatch(m -> MISSING_SECURITY_PARAMETER_KEY.equals(m.getKey())))
+                .findFirst();
     }
 
     private boolean atLeastOneRequirementFulfilled(final List<ValidationReport> reports) {

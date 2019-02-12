@@ -51,6 +51,38 @@ public class SecurityValidationTest {
     }
 
     @Test
+    public void bearerAuth_shouldFail_whenMissing() {
+        final Request request = SimpleRequest.Builder
+                .get("/secured/bearer")
+                .withContentType("application/json")
+                .build();
+
+        assertFail(validator.validateRequest(request), "validation.request.security.missing");
+    }
+
+    @Test
+    public void bearerAuth_shouldFail_whenNotBasicAuth() {
+        final Request request = SimpleRequest.Builder
+                .get("/secured/bearer")
+                .withContentType("application/json")
+                .withAuthorization("Basic foo")
+                .build();
+
+        assertFail(validator.validateRequest(request), "validation.request.security.invalid");
+    }
+
+    @Test
+    public void bearerAuth_shouldPass_whenBearerAuthProvided() {
+        final Request request = SimpleRequest.Builder
+                .get("/secured/bearer")
+                .withAuthorization("Bearer foo")
+                .withContentType("application/json")
+                .build();
+
+        assertPass(validator.validateRequest(request));
+    }
+
+    @Test
     public void apiKeyAuth_shouldFail_whenMissing_inHeader() {
         final Request request = SimpleRequest.Builder
                 .get("/secured/apikey/header")
