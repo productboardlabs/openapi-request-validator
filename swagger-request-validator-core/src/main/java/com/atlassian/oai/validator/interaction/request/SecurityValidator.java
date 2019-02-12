@@ -123,14 +123,14 @@ class SecurityValidator {
         return empty();
     }
 
-    private ValidationReport validateBasicAuthHeader(Request request) {
+    private ValidationReport validateBasicAuthHeader(final Request request) {
         return request
                 .getHeaderValue(AUTHORIZATION)
                 .map(header -> header.startsWith("Basic ") ? empty() : invalidSecurityParameter(request))
                 .orElse(missingSecurityParameter(request));
     }
 
-    private ValidationReport validateBearerAuthHeader(Request request) {
+    private ValidationReport validateBearerAuthHeader(final Request request) {
         return request
                 .getHeaderValue(AUTHORIZATION)
                 .map(header -> header.startsWith("Bearer ") ? empty() : invalidSecurityParameter(request))
@@ -158,12 +158,12 @@ class SecurityValidator {
     }
 
     @Nonnull
-    private ValidationReport missingSecurityParameter(Request request) {
+    private ValidationReport missingSecurityParameter(final Request request) {
         return singleton(messages.get(MISSING_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
     }
 
     @Nonnull
-    private ValidationReport invalidSecurityParameter(Request request) {
+    private ValidationReport invalidSecurityParameter(final Request request) {
         return singleton(messages.get(INVALID_SECURITY_PARAMETER_KEY, request.getMethod(), request.getPath()));
     }
 
