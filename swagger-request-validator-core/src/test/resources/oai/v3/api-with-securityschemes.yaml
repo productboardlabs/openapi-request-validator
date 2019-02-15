@@ -33,6 +33,15 @@ paths:
       security:
         - apiKeyQuery: []
       responses: {}
+  /secured/bearer:
+    get:
+      tags:
+        - secure
+      summary: Test operation with bearer auth
+      description: bearer auth
+      security:
+        - bearerAuth: []
+      responses: {}
   /secured/combined/and:
     get:
       tags:
@@ -78,6 +87,10 @@ components:
       type: apiKey
       in: query
       name: apiKey
+
+    bearerAuth:
+      type: http
+      scheme: bearer
 
     # Validation of openIdConnect currently not supported
     unsupported:
