@@ -1,3 +1,7 @@
+#v2.2.2
+* Added support for basic HTTP Bearer auth validation
+[[#195]](https://bitbucket.org/atlassian/swagger-request-validator/issues/195)
+
 #v2.2.1
 * Fixed NPE when `security` defined but no `securitySchemes` defined
 [[#188]](https://bitbucket.org/atlassian/swagger-request-validator/issues/188)
