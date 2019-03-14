@@ -1,11 +1,11 @@
 package com.atlassian.oai.validator.report;
 
+import static java.lang.Math.max;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
-
-import static java.lang.Math.max;
 
 /**
  * Resolves the {@link ValidationReport.Level} for a given message key.
@@ -49,7 +49,9 @@ public class LevelResolver {
      * @return a new {@link LevelResolver} with default configuration.
      */
     public static LevelResolver defaultResolver() {
-        return new Builder().build();
+        return new Builder()
+            .withLevel("validation.request.parameter.query.unexpected", ValidationReport.Level.IGNORE)
+            .build();
     }
 
     /**

@@ -9,8 +9,10 @@ import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
 import com.atlassian.oai.validator.schema.SchemaValidator;
 import com.google.common.net.MediaType;
+import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.parameters.Parameter;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
@@ -19,7 +21,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.REQUEST;
 import static com.atlassian.oai.validator.report.ValidationReport.empty;
@@ -38,6 +42,7 @@ public class RequestValidator {
     private static final Logger log = getLogger(RequestValidator.class);
 
     private final MessageResolver messages;
+    private final Components components;
 
     private final ParameterValidator parameterValidator;
     private final SecurityValidator securityValidator;
@@ -57,6 +62,8 @@ public class RequestValidator {
                             final OpenAPI api,
                             final List<CustomRequestValidator> customRequestValidators) {
         this.messages = requireNonNull(messages, "A message resolver is required");
+        this.components = defaultIfNull(api.getComponents(), new Components());
+        
         this.customRequestValidators = customRequestValidators;
 
         parameterValidator = new ParameterValidator(schemaValidator, messages);
@@ -92,6 +99,7 @@ public class RequestValidator {
                 .merge(validatePathParameters(apiOperation))
                 .merge(requestBodyValidator.validateRequestBody(request, apiOperation.getOperation().getRequestBody()))
                 .merge(validateQueryParameters(request, apiOperation))
+                .merge(validateUnexpectedQueryParameters(request, apiOperation))
                 .merge(validateCustom(request, apiOperation))
                 .withAdditionalContext(context);
     }
@@ -228,6 +236,30 @@ public class RequestValidator {
                         "validation.request.parameter.query.missing")
                 )
                 .reduce(empty(), ValidationReport::merge);
+    }
+
+    @Nonnull
+    private ValidationReport validateUnexpectedQueryParameters(final Request request,
+        final ApiOperation apiOperation) {
+        
+        final Set<String> allowedQueryParams =
+            Stream.concat(defaultIfNull(apiOperation.getOperation().getParameters(),
+                Collections.<Parameter>emptyList())
+                    .stream()
+                    .filter(RequestValidator::isQueryParam)
+                    .map(Parameter::getName),
+                defaultIfNull(components.getSecuritySchemes(),
+                    Collections.<String, SecurityScheme>emptyMap()).values().stream()
+                    .filter(sc -> sc.getIn() != null && sc.getIn() == SecurityScheme.In.QUERY)
+                    .map(SecurityScheme::getName)
+            ).collect(Collectors.toSet());
+        
+        return request.getQueryParameters().stream()
+            .filter(queryParam -> !allowedQueryParams.contains(queryParam))
+            .map(queryParam -> ValidationReport.singleton(
+                messages.get("validation.request.parameter.query.unexpected", queryParam,
+                    apiOperation.getApiPath().original())))
+            .reduce(empty(), ValidationReport::merge);  
     }
 
     @Nonnull
