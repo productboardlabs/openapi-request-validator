@@ -255,11 +255,27 @@ public class RequestValidator {
             ).collect(Collectors.toSet());
         
         return request.getQueryParameters().stream()
-            .filter(queryParam -> !allowedQueryParams.contains(queryParam))
-            .map(queryParam -> ValidationReport.singleton(
-                messages.get("validation.request.parameter.query.unexpected", queryParam,
-                    apiOperation.getApiPath().original())))
+            .map(queryParam -> validateUnexpectedQueryParameter(allowedQueryParams, queryParam, apiOperation))
             .reduce(empty(), ValidationReport::merge);  
+    }
+
+    @Nonnull
+    private ValidationReport validateUnexpectedQueryParameter(final Set<String> allowedQueryParameters,
+        final String queryParam, final ApiOperation apiOperation) {
+
+        final ValidationReport.MessageContext context =
+            ValidationReport.MessageContext.create()
+                .withApiOperation(apiOperation)
+                .withParameter(new Parameter().name(queryParam).in("query"))
+                .build();
+
+        if (!allowedQueryParameters.contains(queryParam)) {
+            return ValidationReport.singleton(
+                messages.get("validation.request.parameter.query.unexpected", queryParam,
+                    apiOperation.getApiPath().original())).withAdditionalContext(context);
+        }
+
+        return empty();
     }
 
     @Nonnull
