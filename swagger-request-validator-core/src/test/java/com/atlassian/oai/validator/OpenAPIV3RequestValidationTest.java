@@ -738,7 +738,7 @@ public class OpenAPIV3RequestValidationTest {
     }
 
     @Test
-    public void validate_withInvalidQueryParam_shouldFail() {
+    public void validate_withUnexpectedQueryParam_shouldFail() {
         final OpenApiInteractionValidator classUnderTest =
             OpenApiInteractionValidator.createFor("/oai/v3/api-users.yaml")
                 .withLevelResolver(LevelResolver.create()

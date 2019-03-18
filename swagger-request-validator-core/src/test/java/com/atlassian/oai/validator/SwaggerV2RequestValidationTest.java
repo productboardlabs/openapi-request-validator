@@ -971,7 +971,7 @@ public class SwaggerV2RequestValidationTest {
     }
 
     @Test
-    public void validate_withInvalidQueryParam_shouldFail() {
+    public void validate_withUnexpectedQueryParam_shouldFail() {
         final OpenApiInteractionValidator classUnderTest =
             OpenApiInteractionValidator.createFor("/oai/v2/api-users.json")
                 .withLevelResolver(LevelResolver.create()
