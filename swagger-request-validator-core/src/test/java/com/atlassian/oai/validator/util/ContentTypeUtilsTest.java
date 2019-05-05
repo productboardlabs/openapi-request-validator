@@ -78,6 +78,14 @@ public class ContentTypeUtilsTest {
     }
 
     @Test
+    public void findMostSpecificMatch_returnsMostSpecificMatch_whenUppercaseParameter() {
+        assertThat(
+            findMostSpecificMatch("application/json", of("application/json;charset=UTF-8")),
+            optionalWithValue(is("application/json;charset=UTF-8"))
+        );
+    }
+
+    @Test
     public void isJsonContentType_returnsTrue_whenJson() {
         assertThat(isJsonContentType("application/json"), is(true));
     }
