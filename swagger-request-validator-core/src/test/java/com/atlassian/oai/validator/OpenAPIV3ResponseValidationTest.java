@@ -1,10 +1,17 @@
 package com.atlassian.oai.validator;
 
+import com.atlassian.oai.validator.interaction.response.CustomResponseValidator;
+import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.LevelResolverFactory;
+import com.atlassian.oai.validator.report.ValidationReport;
 import org.junit.Test;
+
+import javax.annotation.Nonnull;
+import java.util.Map;
+import java.util.Optional;
 
 import static com.atlassian.oai.validator.model.Request.Method.GET;
 import static com.atlassian.oai.validator.model.Request.Method.PATCH;
@@ -198,4 +205,49 @@ public class OpenAPIV3ResponseValidationTest {
         assertFail(classUnderTest.validateResponse("/formdata", GET, response), "validation.response.body.schema.minimum");
     }
 
+    @Test
+    public void validate_withCustomValidation_shouldPass() {
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createFor("/oai/v3/api-users.yaml")
+                .withCustomResponseValidation(new TestValidator())
+                .build();
+
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withHeader("Extension", "true")
+                .build();
+
+        assertPass(classUnderTest.validateResponse("/extensions", Request.Method.GET, response));
+    }
+
+    @Test
+    public void validate_withCustomValidation_shouldFail() {
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createFor("/oai/v3/api-users.yaml")
+                .withCustomResponseValidation(new TestValidator())
+                .build();
+
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withHeader("Extension", "false")
+                .build();
+
+        assertFail(classUnderTest.validateResponse("/extensions", Request.Method.GET, response));
+    }
+
+    private class TestValidator implements CustomResponseValidator {
+        @Override
+        public ValidationReport validate(@Nonnull final Response response, @Nonnull final ApiOperation apiOperation) {
+            final Optional<Object> extensionValue = apiOperation.getOperation().getExtensions().entrySet()
+                    .stream()
+                    .filter(entry -> entry.getKey().equalsIgnoreCase("x-test-extension"))
+                    .map(Map.Entry::getValue)
+                    .findFirst();
+            if (extensionValue.filter(value -> response.getHeaderValues("Extension").contains(value)).isPresent()) {
+                return ValidationReport.empty();
+            } else {
+                return ValidationReport.singleton(ValidationReport.Message.create("test.extension", "Header extension didn't match expected value").build());
+            }
+        }
+    }
 }

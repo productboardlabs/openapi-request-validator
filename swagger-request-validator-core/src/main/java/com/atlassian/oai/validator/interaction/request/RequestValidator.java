@@ -42,6 +42,7 @@ public class RequestValidator {
     private final ParameterValidator parameterValidator;
     private final SecurityValidator securityValidator;
     private final RequestBodyValidator requestBodyValidator;
+    private final List<CustomRequestValidator> customRequestValidators;
 
     /**
      * Construct a new request validator with the given schema validator.
@@ -49,11 +50,14 @@ public class RequestValidator {
      * @param schemaValidator The schema validator to use when validating request bodies
      * @param messages The message resolver to use
      * @param api The OpenAPI spec to validate against
+     * @param customRequestValidators The list of custom validators to run
      */
     public RequestValidator(final SchemaValidator schemaValidator,
                             final MessageResolver messages,
-                            final OpenAPI api) {
+                            final OpenAPI api,
+                            final List<CustomRequestValidator> customRequestValidators) {
         this.messages = requireNonNull(messages, "A message resolver is required");
+        this.customRequestValidators = customRequestValidators;
 
         parameterValidator = new ParameterValidator(schemaValidator, messages);
         securityValidator = new SecurityValidator(messages, api);
@@ -88,6 +92,7 @@ public class RequestValidator {
                 .merge(validatePathParameters(apiOperation))
                 .merge(requestBodyValidator.validateRequestBody(request, apiOperation.getOperation().getRequestBody()))
                 .merge(validateQueryParameters(request, apiOperation))
+                .merge(validateCustom(request, apiOperation))
                 .withAdditionalContext(context);
     }
 
@@ -257,6 +262,15 @@ public class RequestValidator {
         return parameterValues
                 .stream()
                 .map(v -> parameterValidator.validate(v, parameter))
+                .reduce(empty(), ValidationReport::merge);
+    }
+
+    @Nonnull
+    private ValidationReport validateCustom(final Request request,
+                                            final ApiOperation apiOperation) {
+        return customRequestValidators
+                .stream()
+                .map(customValidator -> customValidator.validate(request, apiOperation))
                 .reduce(empty(), ValidationReport::merge);
     }
 
