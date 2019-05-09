@@ -1,3 +1,7 @@
+#v2.2.3
+* Fixed content type matching to return un-modified content types
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/128)
+
 #v2.2.2
 * Added support for basic HTTP Bearer auth validation
 [[#195]](https://bitbucket.org/atlassian/swagger-request-validator/issues/195)
