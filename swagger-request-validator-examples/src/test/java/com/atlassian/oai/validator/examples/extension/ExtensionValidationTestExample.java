@@ -3,7 +3,11 @@ package com.atlassian.oai.validator.examples.extension;
 import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.interaction.request.CustomRequestValidator;
 import com.atlassian.oai.validator.interaction.response.CustomResponseValidator;
-import com.atlassian.oai.validator.model.*;
+import com.atlassian.oai.validator.model.ApiOperation;
+import com.atlassian.oai.validator.model.Request;
+import com.atlassian.oai.validator.model.Response;
+import com.atlassian.oai.validator.model.SimpleRequest;
+import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.ValidationReport;
 import org.junit.Test;
 
@@ -97,16 +101,16 @@ public class ExtensionValidationTestExample {
 
     private class TestExtensionValidator implements CustomRequestValidator, CustomResponseValidator {
         @Override
-        public ValidationReport validate(@Nonnull Request request, @Nonnull ApiOperation apiOperation) {
+        public ValidationReport validate(@Nonnull final Request request, @Nonnull final ApiOperation apiOperation) {
             return validate(request.getHeaderValues("Extension"), apiOperation);
         }
 
         @Override
-        public ValidationReport validate(@Nonnull Response response, @Nonnull ApiOperation apiOperation) {
+        public ValidationReport validate(@Nonnull final Response response, @Nonnull final ApiOperation apiOperation) {
             return validate(response.getHeaderValues("Extension"), apiOperation);
         }
 
-        private ValidationReport validate(@Nonnull Collection<String> extensionHeaderValues, @Nonnull ApiOperation apiOperation) {
+        private ValidationReport validate(@Nonnull final Collection<String> extensionHeaderValues, @Nonnull final ApiOperation apiOperation) {
             final Optional<String> extensionValue = apiOperation.getOperation().getExtensions().entrySet()
                     .stream()
                     .filter(entry -> entry.getKey().equalsIgnoreCase("x-test-extension"))
