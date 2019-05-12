@@ -1,3 +1,8 @@
+#v2.3.0
+* Added support for custom validation logic that can be used to e.g. provide validation for vendor extensions
+[[Docs]](https://bitbucket.org/atlassian/swagger-request-validator/src/master/swagger-request-validator-core/README.md)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/122)
+
 #v2.2.3
 * Fixed content type matching to return un-modified content types
 [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/128)
