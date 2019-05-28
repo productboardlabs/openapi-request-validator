@@ -6,6 +6,7 @@ import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.model.SimpleResponse;
+import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -967,5 +968,21 @@ public class SwaggerV2RequestValidationTest {
                 return ValidationReport.singleton(ValidationReport.Message.create("test.extension", "Header extension didn't match expected value").build());
             }
         }
+    }
+
+    @Test
+    public void validate_withUnexpectedQueryParam_shouldFail() {
+        final OpenApiInteractionValidator classUnderTest =
+            OpenApiInteractionValidator.createFor("/oai/v2/api-users.json")
+                .withLevelResolver(LevelResolver.create()
+                    .withLevel("validation.request.parameter.query.unexpected", ValidationReport.Level.ERROR)
+                    .build()).build();
+        
+        final Request request = SimpleRequest.Builder.get("/users")
+            .withAuthorization("Basic EncryptedUsernameAndPassword")
+            .withQueryParam("UnexpectedParameter", "Value").build();
+        
+        assertFail(classUnderTest.validateRequest(request),
+            "validation.request.parameter.query.unexpected");
     }
 }
