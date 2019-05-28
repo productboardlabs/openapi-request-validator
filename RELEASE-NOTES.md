@@ -1,3 +1,9 @@
+#v2.4.0
+* Added support for failing validation on unexpected query parameters
+[[#109]](https://bitbucket.org/atlassian/swagger-request-validator/issues/109)
+[[Docs]](https://bitbucket.org/atlassian/swagger-request-validator/src/master/docs/FAQ.md)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/125)
+
 #v2.3.0
 * Added support for custom validation logic that can be used to e.g. provide validation for vendor extensions
 [[Docs]](https://bitbucket.org/atlassian/swagger-request-validator/src/master/swagger-request-validator-core/README.md)
