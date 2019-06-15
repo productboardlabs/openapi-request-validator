@@ -5,10 +5,10 @@ import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A {@link javax.servlet.http.HttpServletRequestWrapper} those {@link ServletInputStream} is
@@ -18,6 +18,7 @@ public class ResettableRequestServletWrapper extends HttpServletRequestWrapper {
 
     private ServletInputStream servletInputStream;
     private BufferedReader reader;
+    private Integer contentLength;
 
     ResettableRequestServletWrapper(final HttpServletRequest request) {
         super(request);
@@ -37,10 +38,12 @@ public class ResettableRequestServletWrapper extends HttpServletRequestWrapper {
      */
     public void resetInputStream() throws IOException {
         if (servletInputStream == null) {
-            this.servletInputStream = new CachedServletInputStream(new byte[0]);
+            this.servletInputStream = CachedServletInputStream.empty();
+            this.contentLength = -1;
         } else if (servletInputStream instanceof WrappedOriginalServletInputStream) {
-            final byte[] bytes = ((WrappedOriginalServletInputStream) servletInputStream).byteArrayOutputStream.toByteArray();
-            this.servletInputStream = new CachedServletInputStream(bytes);
+            final WrappedOriginalServletInputStream wrapped = (WrappedOriginalServletInputStream) servletInputStream;
+            this.servletInputStream = new CachedServletInputStream(wrapped.cachedContent, wrapped.chunkSize, wrapped.count);
+            this.contentLength = wrapped.count;
         } else if (servletInputStream instanceof CachedServletInputStream) {
             // just reset the already cached stream
             this.servletInputStream.reset();
@@ -51,7 +54,7 @@ public class ResettableRequestServletWrapper extends HttpServletRequestWrapper {
     @Override
     public ServletInputStream getInputStream() throws IOException {
         if (servletInputStream == null) {
-            this.servletInputStream = new WrappedOriginalServletInputStream(super.getInputStream(), super.getContentLength());
+            this.servletInputStream = new WrappedOriginalServletInputStream(super.getInputStream());
         }
         return this.servletInputStream;
     }
@@ -67,17 +70,25 @@ public class ResettableRequestServletWrapper extends HttpServletRequestWrapper {
         return this.reader;
     }
 
+    @Override
+    public int getContentLength() {
+        return contentLength != null ? contentLength : super.getContentLength();
+    }
+
     /**
      * A {@link ServletInputStream} wrapping the original request and saving all read bytes.
      */
     private static class WrappedOriginalServletInputStream extends ServletInputStream {
 
         private final ServletInputStream originalServletInputStream;
-        private final ByteArrayOutputStream byteArrayOutputStream;
+        private final List<byte[]> cachedContent;
+        private final int chunkSize;
+        private int count = 0;
 
-        private WrappedOriginalServletInputStream(final ServletInputStream originalServletInputStream, final int contentLength) {
+        private WrappedOriginalServletInputStream(final ServletInputStream originalServletInputStream) {
             this.originalServletInputStream = originalServletInputStream;
-            this.byteArrayOutputStream = new ByteArrayOutputStream(contentLength > 0 ? contentLength : 1024);
+            this.cachedContent = new ArrayList<>();
+            this.chunkSize = 8192;
         }
 
         @Override
@@ -96,21 +107,38 @@ public class ResettableRequestServletWrapper extends HttpServletRequestWrapper {
         }
 
         @Override
-        public int read() throws IOException {
+        public synchronized int read() throws IOException {
             final int value = originalServletInputStream.read();
             if (value != -1) {
-                byteArrayOutputStream.write(value);
+                ensureCapacity();
+                cachedContent.get(cachedContent.size() - 1)[count++ % chunkSize] = (byte) value;
             }
             return value;
         }
 
         @Override
-        public int read(final byte[] b, final int off, final int len) throws IOException {
+        public synchronized int read(final byte[] b, final int off, final int len) throws IOException {
             final int result = originalServletInputStream.read(b, off, len);
             if (result > 0) {
-                byteArrayOutputStream.write(b, off, result);
+                int leftLen = result;
+                int srcPos = off;
+                while (leftLen > 0) {
+                    ensureCapacity();
+                    final int destPos = count % chunkSize;
+                    final int length = Math.min(leftLen, chunkSize - destPos);
+                    System.arraycopy(b, srcPos, cachedContent.get(cachedContent.size() - 1), destPos, length);
+                    leftLen -= length;
+                    srcPos += length;
+                    this.count += length;
+                }
             }
             return result;
+        }
+
+        private void ensureCapacity() {
+            if (count % chunkSize == 0) {
+                cachedContent.add(new byte[chunkSize]);
+            }
         }
     }
 
@@ -120,25 +148,59 @@ public class ResettableRequestServletWrapper extends HttpServletRequestWrapper {
      */
     private static class CachedServletInputStream extends ServletInputStream {
 
-        private final ByteArrayInputStream inputStream;
+        private final List<byte[]> cachedContent;
+        private final int chunkSize;
+        private final int count;
+        private int pos = 0;
 
-        private CachedServletInputStream(final byte[] bytes) {
-            this.inputStream = new ByteArrayInputStream(bytes);
+        private CachedServletInputStream(final List<byte[]> cachedContent, final int chunkSize, final int count) {
+            this.cachedContent = cachedContent;
+            this.chunkSize = chunkSize;
+            this.count = count;
+        }
+
+        private static CachedServletInputStream empty() {
+            return new CachedServletInputStream(null, -1, -1);
         }
 
         @Override
-        public int read() throws IOException {
-            return inputStream.read();
+        public synchronized int read() {
+            // mostly copied from ByteArrayInputStream#read()
+            return this.pos < this.count ? cachedContent.get(pos / chunkSize)[pos++ % chunkSize] & 255 : -1;
         }
 
         @Override
-        public int read(final byte[] b, final int off, final int len) throws IOException {
-            return inputStream.read(b, off, len);
+        public synchronized int read(final byte[] b, final int off, int len) {
+            // mostly copied from ByteArrayInputStream#read(byte[], int, int)
+            if (this.pos >= this.count) {
+                return -1;
+            } else {
+                final int avail = this.count - this.pos;
+                if (len > avail) {
+                    len = avail;
+                }
+
+                if (len <= 0) {
+                    return 0;
+                } else {
+                    int leftLen = len;
+                    int destPos = off;
+                    while (leftLen > 0) {
+                        final int srcPos = pos % chunkSize;
+                        final int length = Math.min(leftLen, chunkSize - srcPos);
+                        System.arraycopy(cachedContent.get(pos / chunkSize), srcPos, b, destPos, length);
+                        leftLen -= length;
+                        destPos += length;
+                        this.pos += length;
+                    }
+                    return len;
+                }
+            }
         }
 
         @Override
         public boolean isFinished() {
-            return inputStream.available() == 0;
+            return pos >= count;
         }
 
         @Override
@@ -153,7 +215,7 @@ public class ResettableRequestServletWrapper extends HttpServletRequestWrapper {
 
         @Override
         public void reset() {
-            inputStream.reset();
+            pos = 0;
         }
     }
 }
