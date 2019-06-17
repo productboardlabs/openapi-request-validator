@@ -1,3 +1,8 @@
+#v2.4.1
+* Improve memory usage in the Spring MVC adapter
+[[#213]](https://bitbucket.org/atlassian/swagger-request-validator/issues/109)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/129)
+
 #v2.4.0
 * Added support for failing validation on unexpected query parameters
 [[#109]](https://bitbucket.org/atlassian/swagger-request-validator/issues/109)
