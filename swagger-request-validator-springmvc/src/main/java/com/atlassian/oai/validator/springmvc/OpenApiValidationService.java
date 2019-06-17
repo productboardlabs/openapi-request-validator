@@ -15,6 +15,7 @@ import org.springframework.web.util.ContentCachingResponseWrapper;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -28,7 +29,7 @@ class OpenApiValidationService {
 
     OpenApiValidationService(final EncodedResource specUrlOrPayload) throws IOException {
         this(OpenApiInteractionValidator
-                .createFor(readReader(specUrlOrPayload.getReader()))
+                .createFor(readReader(specUrlOrPayload.getReader(), -1))
                 .withLevelResolver(SpringMVCLevelResolverFactory.create())
                 .build());
     }
@@ -51,11 +52,12 @@ class OpenApiValidationService {
         final Request.Method method = Request.Method.valueOf(servletRequest.getMethod());
         final String path = servletRequest.getServletPath();
         final SimpleRequest.Builder builder = new SimpleRequest.Builder(method, path);
-        final String body = readReader(servletRequest.getReader());
+        final int contentLength = servletRequest.getContentLength();
+        final String body = readReader(servletRequest.getReader(), contentLength);
         // The content length of a request does not need to be set. It might by "-1" and
         // there is still a body. Only in conjunction with an empty / unset body it was
         // really empty.
-        if (servletRequest.getContentLength() >= 0 || (body != null && !body.isEmpty())) {
+        if (contentLength >= 0 || StringUtils.isNotEmpty(body)) {
             builder.withBody(body);
         }
         for (final String queryParameterName : getQueryParameterNames(servletRequest)) {
@@ -109,9 +111,11 @@ class OpenApiValidationService {
         return validator.validateResponse(path, method, response);
     }
 
-    private static String readReader(final Reader reader) throws IOException {
-        try (final Reader reassignedReader = reader) {
-            return IOUtils.toString(reassignedReader);
+    private static String readReader(final Reader reader, final int length) throws IOException {
+        try (Reader reassignedReader = reader) {
+            final StringWriter writer = length > 0 ? new StringWriter(length) : new StringWriter();
+            IOUtils.copy(reassignedReader, writer);
+            return writer.toString();
         }
     }
 

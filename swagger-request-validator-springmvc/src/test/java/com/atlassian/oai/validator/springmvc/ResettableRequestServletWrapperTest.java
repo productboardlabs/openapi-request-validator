@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.springmvc;
 
+import com.google.common.io.ByteStreams;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
@@ -20,6 +21,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 public class ResettableRequestServletWrapperTest {
@@ -130,6 +132,57 @@ public class ResettableRequestServletWrapperTest {
             // this exception was expected
             assertThat(expected, notNullValue());
         }
+    }
+
+    @Test
+    public void getContentLength_notSetOnOriginalServletInputStream() throws IOException {
+        final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
+
+        final ServletInputStream servletInputStream = new TestServletInputStream(new byte[]{0x00, 0x01, 0x02});
+        when(servletRequest.getInputStream()).thenReturn(servletInputStream);
+
+        final ResettableRequestServletWrapper classUnderTest = new ResettableRequestServletWrapper(servletRequest);
+
+        // Test: 'not set before reading stream'
+        when(servletRequest.getContentLength()).thenReturn(-1);
+        assertThat(classUnderTest.getContentLength(), is(-1));
+        verify(servletRequest).getContentLength();
+
+        // Test: 'set after exhausting and resetting stream'
+        ByteStreams.exhaust(classUnderTest.getInputStream());
+        classUnderTest.resetInputStream();
+        assertThat(classUnderTest.getContentLength(), is(3));
+    }
+
+    @Test
+    public void getContentLength_setOnOriginalServletInputStream() throws IOException {
+        final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
+
+        final ServletInputStream servletInputStream = new TestServletInputStream(new byte[]{0x00, 0x01, 0x02});
+        when(servletRequest.getInputStream()).thenReturn(servletInputStream);
+
+        final ResettableRequestServletWrapper classUnderTest = new ResettableRequestServletWrapper(servletRequest);
+
+        // Test: 'wrongly set on original request'
+        when(servletRequest.getContentLength()).thenReturn(2);
+        assertThat(classUnderTest.getContentLength(), is(2));
+        verify(servletRequest).getContentLength();
+
+        // Test: 'corrected after exhausting and resetting stream'
+        ByteStreams.exhaust(classUnderTest.getInputStream());
+        classUnderTest.resetInputStream();
+        assertThat(classUnderTest.getContentLength(), is(3));
+    }
+
+    @Test
+    public void getContentLength_withoutReadingBody() throws IOException {
+        final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
+        final ResettableRequestServletWrapper classUnderTest = new ResettableRequestServletWrapper(servletRequest);
+
+        // Test:
+        classUnderTest.resetInputStream();
+        assertThat(classUnderTest.getContentLength(), is(-1));
+        verifyZeroInteractions(servletRequest);
     }
 
     private void testingReadingAndResettingInputStream(final int contentLength, final ContentReader initialContentReader) throws IOException {
