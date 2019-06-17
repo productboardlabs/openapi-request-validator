@@ -16,7 +16,12 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -25,6 +30,7 @@ import static java.util.Objects.requireNonNull;
 
 class OpenApiValidationService {
 
+    private static final List<String> URI_CHARSETS = resolveAvailableCharsets();
     private final OpenApiInteractionValidator validator;
 
     OpenApiValidationService(final EncodedResource specUrlOrPayload) throws IOException {
@@ -37,6 +43,15 @@ class OpenApiValidationService {
     OpenApiValidationService(final OpenApiInteractionValidator validator) {
         requireNonNull(validator, "An OpenAPI validator is required.");
         this.validator = validator;
+    }
+
+    private static List<String> resolveAvailableCharsets() {
+        final List<String> uriCharsets = Charset.availableCharsets().values().stream()
+                .map(Charset::name)
+                .collect(Collectors.toList());
+        uriCharsets.remove(StandardCharsets.UTF_8.name());
+        uriCharsets.add(0, StandardCharsets.UTF_8.name());
+        return uriCharsets;
     }
 
     /**
@@ -120,9 +135,34 @@ class OpenApiValidationService {
     }
 
     private static Set<String> getQueryParameterNames(final HttpServletRequest servletRequest) {
+        final List<String> allAvailableNames = Collections.list(servletRequest.getParameterNames());
         return Stream.of(StringUtils.split(StringUtils.defaultIfBlank(servletRequest.getQueryString(), ""), "&"))
-                .map(str -> StringUtils.split(str, "=")[0])
+                .map(str -> uriDecodeParamName(allAvailableNames, StringUtils.split(str, "=")[0]))
                 .filter(StringUtils::isNotEmpty)
                 .collect(Collectors.toSet());
+    }
+
+    private static String uriDecodeParamName(final List<String> allParameterNames, final String paramName) {
+        // It is difficult to get the correct uri encoding. Ideally it does not need decoding. And if it's encoded better
+        // with UTF-8 as charset.
+        // Beyond that it's guessing. It can be verified by checking the decoded name with all available parameter names.
+        if (!allParameterNames.contains(paramName)) {
+            for (final String charset : URI_CHARSETS) {
+                final String decoded = uriDecode(paramName, charset);
+                if (allParameterNames.contains(decoded)) {
+                    return decoded;
+                }
+            }
+        }
+        return paramName;
+    }
+
+    private static String uriDecode(final String paramName, final String charset) {
+        try {
+            return URLDecoder.decode(paramName, charset);
+        } catch (final UnsupportedEncodingException e) {
+            // should not happen as only supported charsets will be used
+            return paramName;
+        }
     }
 }
