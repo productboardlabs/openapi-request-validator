@@ -49,6 +49,7 @@ class OpenApiValidationService {
         final List<String> uriCharsets = Charset.availableCharsets().values().stream()
                 .map(Charset::name)
                 .collect(Collectors.toList());
+        // put UTF-8 to the front as it is the most probable charset for the URI encoding
         uriCharsets.remove(StandardCharsets.UTF_8.name());
         uriCharsets.add(0, StandardCharsets.UTF_8.name());
         return uriCharsets;
