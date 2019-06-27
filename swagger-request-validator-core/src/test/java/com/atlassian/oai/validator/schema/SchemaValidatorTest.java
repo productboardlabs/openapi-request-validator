@@ -236,8 +236,6 @@ public class SchemaValidatorTest {
         assertThat(message.getAdditionalInfo(), hasItem(containsString("/components/schemas/User/allOf/1")));
     }
 
-
-
     @Test
     public void validate_withJsonSchemaComposition_shouldFail_whenAdditionalPropertyValidationNotIgnored() {
 
@@ -562,7 +560,7 @@ public class SchemaValidatorTest {
 
         final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
 
-        Schema schema = new OpenAPIParser().readLocation("/oai/v3/api-required-readonly-writeonly.yaml", null, new ParseOptions())
+        final Schema schema = new OpenAPIParser().readLocation("/oai/v3/api-required-readonly-writeonly.yaml", null, new ParseOptions())
                 .getOpenAPI().getComponents().getSchemas().get("ReadOnly");
 
         final String value = "{\"notReadOnly\":\"abc\", \"writeOnly\": \"123\"}";
@@ -577,7 +575,7 @@ public class SchemaValidatorTest {
 
         final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
 
-        Schema schema = new OpenAPIParser().readLocation("/oai/v3/api-required-readonly-writeonly.yaml", null, new ParseOptions())
+        final Schema schema = new OpenAPIParser().readLocation("/oai/v3/api-required-readonly-writeonly.yaml", null, new ParseOptions())
                 .getOpenAPI().getComponents().getSchemas().get("ReadOnly");
 
         final String value = "{\"notReadOnly\":\"abc\", \"readOnly\": \"123\"}";
