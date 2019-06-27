@@ -236,6 +236,8 @@ public class SchemaValidatorTest {
         assertThat(message.getAdditionalInfo(), hasItem(containsString("/components/schemas/User/allOf/1")));
     }
 
+
+
     @Test
     public void validate_withJsonSchemaComposition_shouldFail_whenAdditionalPropertyValidationNotIgnored() {
 
@@ -555,9 +557,41 @@ public class SchemaValidatorTest {
                 "validation.prefix.schema.format");
     }
 
+    @Test
+    public void validate_readOnly() {
+
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
+
+        Schema schema = new OpenAPIParser().readLocation("/oai/v3/api-required-readonly-writeonly.yaml", null, new ParseOptions())
+                .getOpenAPI().getComponents().getSchemas().get("ReadOnly");
+
+        final String value = "{\"notReadOnly\":\"abc\", \"writeOnly\": \"123\"}";
+
+        final ValidationReport report = classUnderTest.validate(value, schema, "request.body");
+        assertPass(report);
+
+    }
+
+    @Test
+    public void validate_writeOnly() {
+
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
+
+        Schema schema = new OpenAPIParser().readLocation("/oai/v3/api-required-readonly-writeonly.yaml", null, new ParseOptions())
+                .getOpenAPI().getComponents().getSchemas().get("ReadOnly");
+
+        final String value = "{\"notReadOnly\":\"abc\", \"readOnly\": \"123\"}";
+
+        final ValidationReport report = classUnderTest.validate(value, schema, "response.body");
+        assertPass(report);
+
+    }
+
     private SchemaValidator validatorWithAdditionalPropertiesIgnored(final String api) {
         final ParseOptions parseOptions = new ParseOptions();
         parseOptions.setResolve(true);
+        parseOptions.setFlatten(true);
+        parseOptions.setResolveFully(true);
         return new SchemaValidator(
                 new OpenAPIParser().readLocation(api, null, parseOptions).getOpenAPI(),
                 new MessageResolver(

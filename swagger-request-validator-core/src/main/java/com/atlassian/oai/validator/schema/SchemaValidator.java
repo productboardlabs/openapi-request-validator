@@ -22,17 +22,12 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.StreamSupport;
 
 import static com.atlassian.oai.validator.schema.SwaggerV20Library.OAI_V2_METASCHEMA_URI;
 import static com.atlassian.oai.validator.schema.SwaggerV20Library.schemaFactory;
-import static com.atlassian.oai.validator.util.StringUtils.capitalise;
-import static com.atlassian.oai.validator.util.StringUtils.quote;
-import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
+import static com.atlassian.oai.validator.util.StringUtils.*;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -88,10 +83,9 @@ public class SchemaValidator {
     /**
      * Validate the given value against the given property schema. If the schema is null then any json is valid.
      *
-     * @param value The value to validate
-     * @param schema The schema to validate the value against
+     * @param value     The value to validate
+     * @param schema    The schema to validate the value against
      * @param keyPrefix A prefix to apply to validation messages emitted by the validator
-     *
      * @return A validation report containing accumulated validation errors
      */
     @Nonnull
@@ -107,6 +101,7 @@ public class SchemaValidator {
         try {
             final JsonNode schemaObject, content;
             try {
+                updateRequired(schema, keyPrefix);
                 schemaObject = readSchema(schema);
                 content = readContent(value, schema);
 
@@ -145,6 +140,29 @@ public class SchemaValidator {
         }
     }
 
+    private void updateRequired(Schema schema, @Nullable String keyPrefix) {
+
+        if (keyPrefix == null)
+            return;
+
+        Map<String, Schema> properties = schema.getProperties();
+        List<String> required = schema.getRequired();
+        List<String> requiredUpdated = new ArrayList<>(required);
+        required.forEach(property -> {
+            if (keyPrefix.equals("request.body")) {
+                if (properties.get(property).getReadOnly() != null && properties.get(property).getReadOnly()) {
+                    requiredUpdated.remove(property);
+                }
+            }
+            if (keyPrefix.equals("response.body")) {
+                if (properties.get(property).getWriteOnly() != null && properties.get(property).getWriteOnly()) {
+                    requiredUpdated.remove(property);
+                }
+            }
+        });
+        schema.setRequired(requiredUpdated);
+    }
+
     private JsonNode readSchema(@Nonnull final Object schema) throws IOException {
         final JsonNode schemaObject = Json.mapper().readTree(Json.pretty(schema));
         setupSchemaDefinitionRefs(schemaObject);
@@ -158,7 +176,6 @@ public class SchemaValidator {
         if (additionalPropertiesValidationEnabled()) {
             injectAdditionalPropertiesDirectiveIntoTree(rootNode);
         }
-
         if (api != null) {
             if (definitions == null) {
                 definitions = (api.getComponents() == null || api.getComponents().getSchemas() == null) ?
