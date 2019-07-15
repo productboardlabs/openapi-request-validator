@@ -89,8 +89,8 @@ public class SchemaValidator {
     /**
      * Validate the given value against the given property schema. If the schema is null then any json is valid.
      *
-     * @param value     The value to validate
-     * @param schema    The schema to validate the value against
+     * @param value The value to validate
+     * @param schema The schema to validate the value against
      * @param keyPrefix A prefix to apply to validation messages emitted by the validator
      * @return A validation report containing accumulated validation errors
      */

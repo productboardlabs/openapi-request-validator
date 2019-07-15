@@ -588,8 +588,6 @@ public class SchemaValidatorTest {
     private SchemaValidator validatorWithAdditionalPropertiesIgnored(final String api) {
         final ParseOptions parseOptions = new ParseOptions();
         parseOptions.setResolve(true);
-        parseOptions.setFlatten(true);
-        parseOptions.setResolveFully(true);
         return new SchemaValidator(
                 new OpenAPIParser().readLocation(api, null, parseOptions).getOpenAPI(),
                 new MessageResolver(
