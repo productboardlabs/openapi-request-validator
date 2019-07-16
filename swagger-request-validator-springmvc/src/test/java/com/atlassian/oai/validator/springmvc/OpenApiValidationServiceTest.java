@@ -8,6 +8,8 @@ import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.springmvc.example.simple.RestServiceApplication;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterators;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,6 +45,7 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.Map;
 
 import static java.util.Arrays.asList;
@@ -70,6 +73,10 @@ public class OpenApiValidationServiceTest {
         final Field headersField = ReflectionUtils.findField(SimpleResponse.class, "headers");
         ReflectionUtils.makeAccessible(headersField);
         return (Map<String, Collection<String>>) ReflectionUtils.getField(headersField, response);
+    }
+
+    private static Enumeration<String> asEnumeration(final String... values) {
+        return Iterators.asEnumeration(Arrays.asList(values).iterator());
     }
 
     @Before
@@ -126,6 +133,7 @@ public class OpenApiValidationServiceTest {
         when(servletRequest.getContentLength()).thenReturn(-1);
         final BufferedReader reader = new BufferedReader(new StringReader(""));
         when(servletRequest.getReader()).thenReturn(reader);
+        when(servletRequest.getParameterNames()).thenReturn(asEnumeration("not-a-query-parameter"));
         when(servletRequest.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
 
         final Request result = classUnderTest.buildRequest(servletRequest);
@@ -146,6 +154,7 @@ public class OpenApiValidationServiceTest {
         when(servletRequest.getContentLength()).thenReturn(0);
         final BufferedReader reader = new BufferedReader(new StringReader(""));
         when(servletRequest.getReader()).thenReturn(reader);
+        when(servletRequest.getParameterNames()).thenReturn(Collections.emptyEnumeration());
         when(servletRequest.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
 
         final Request result = classUnderTest.buildRequest(servletRequest);
@@ -165,6 +174,8 @@ public class OpenApiValidationServiceTest {
         when(servletRequest.getContentLength()).thenReturn(-1);
         final BufferedReader reader = new BufferedReader(new StringReader("Body"));
         when(servletRequest.getReader()).thenReturn(reader);
+        when(servletRequest.getParameterNames())
+                .thenReturn(asEnumeration("query1", "query2", "query3"));
         when(servletRequest.getParameterValues("query1"))
                 .thenReturn(new String[]{"QUERY_1"});
         when(servletRequest.getParameterValues("query2"))
@@ -304,6 +315,60 @@ public class OpenApiValidationServiceTest {
         Assert.assertThat(validationRequest.get("path"), is("/test controller/path variable"));
         Assert.assertThat(validationRequest.get("queryParam"), is("query param"));
         Assert.assertThat(validationRequest.get("headerValue"), is("header value"));
+    }
+
+    @Test
+    public void buildRequest_withUTF8EncodedQueryString() throws IOException {
+        final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
+
+        when(servletRequest.getMethod()).thenReturn("GET");
+        when(servletRequest.getQueryString())
+                .thenReturn("name%3Da=value%3Da&q%5Bname%5D=q%7Bvalue%7D&q%5Bname%5D=q%5Bvalue%5D");
+        when(servletRequest.getParameterNames()).thenReturn(asEnumeration("other", "name=a", "q[name]"));
+        when(servletRequest.getParameterValues("name=a")).thenReturn(new String[]{"value=a"});
+        when(servletRequest.getParameterValues("q[name]")).thenReturn(new String[]{"q{value}", "q[value]"});
+        when(servletRequest.getServletPath()).thenReturn("/swagger-request-validator");
+        when(servletRequest.getContentLength()).thenReturn(-1);
+        final BufferedReader reader = new BufferedReader(new StringReader(""));
+        when(servletRequest.getReader()).thenReturn(reader);
+        when(servletRequest.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
+
+        final Request result = classUnderTest.buildRequest(servletRequest);
+
+        assertThat(result.getPath(), equalTo("/swagger-request-validator"));
+        assertThat(result.getMethod(), equalTo(Request.Method.GET));
+        assertThat(result.getBody().isPresent(), equalTo(false));
+        assertThat(result.getHeaders().size(), equalTo(0));
+        assertThat(result.getQueryParameters().size(), equalTo(2));
+        assertThat(result.getQueryParameterValues("name=a"), equalTo(Arrays.asList("value=a")));
+        assertThat(result.getQueryParameterValues("q[name]"), equalTo(Arrays.asList("q{value}", "q[value]")));
+    }
+
+    @Test
+    public void buildRequest_withNotUTF8EncodedQueryString() throws IOException {
+        final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
+
+        when(servletRequest.getMethod()).thenReturn("GET");
+        when(servletRequest.getQueryString())
+                .thenReturn("name%3Da=value%3Da&q%5Bname%5D=q%7Bvalue%7D&q%5Bname%5D=q%5Bvalue%5D");
+        when(servletRequest.getParameterNames()).thenReturn(asEnumeration("other", "name=a", "q[name]"));
+        when(servletRequest.getParameterValues("name=a")).thenReturn(new String[]{"value=a"});
+        when(servletRequest.getParameterValues("q[name]")).thenReturn(new String[]{"q{value}", "q[value]"});
+        when(servletRequest.getServletPath()).thenReturn("/swagger-request-validator");
+        when(servletRequest.getContentLength()).thenReturn(-1);
+        final BufferedReader reader = new BufferedReader(new StringReader(""));
+        when(servletRequest.getReader()).thenReturn(reader);
+        when(servletRequest.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
+
+        final Request result = classUnderTest.buildRequest(servletRequest);
+
+        assertThat(result.getPath(), equalTo("/swagger-request-validator"));
+        assertThat(result.getMethod(), equalTo(Request.Method.GET));
+        assertThat(result.getBody().isPresent(), equalTo(false));
+        assertThat(result.getHeaders().size(), equalTo(0));
+        assertThat(result.getQueryParameters().size(), equalTo(2));
+        assertThat(result.getQueryParameterValues("name=a"), equalTo(Arrays.asList("value=a")));
+        assertThat(result.getQueryParameterValues("q[name]"), equalTo(Arrays.asList("q{value}", "q[value]")));
     }
 
     @SpringBootApplication
