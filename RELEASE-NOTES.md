@@ -1,6 +1,14 @@
+#v2.4.2
+* Bump version of `json-schema-validator` to pickup improvements
+[[#216]](https://bitbucket.org/atlassian/swagger-request-validator/issues/216)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/132)
+* Fix decoding of query param names in the `swagger-request-validator-springmvc` module
+[[#215]](https://bitbucket.org/atlassian/swagger-request-validator/issues/215)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/130)
+
 #v2.4.1
 * Improve memory usage in the Spring MVC adapter
-[[#213]](https://bitbucket.org/atlassian/swagger-request-validator/issues/109)
+[[#213]](https://bitbucket.org/atlassian/swagger-request-validator/issues/213)
 [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/129)
 
 #v2.4.0
