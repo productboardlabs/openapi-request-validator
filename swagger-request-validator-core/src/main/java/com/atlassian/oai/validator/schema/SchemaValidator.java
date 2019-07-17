@@ -4,6 +4,7 @@ import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -107,8 +109,12 @@ public class SchemaValidator {
         try {
             final JsonNode schemaObject, content;
             try {
-                updateRequired(schema, keyPrefix);
                 schemaObject = readSchema(schema);
+                final List<String> required = getRequired(schema, keyPrefix);
+                if (required != null && !required.isEmpty()) {
+                    setRequired((ObjectNode) schemaObject, required);
+                }
+
                 content = readContent(value, schema);
 
                 checkForKnownGotchasAndLogMessage(schemaObject);
@@ -146,9 +152,16 @@ public class SchemaValidator {
         }
     }
 
-    private void updateRequired(final Schema schema, @Nullable final String keyPrefix) {
+    private void setRequired(final ObjectNode schemaObject, final List<String> required) throws IOException {
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        final ObjectMapper mapper = new ObjectMapper();
+        mapper.writeValue(out, required);
+        schemaObject.set("required", Json.mapper().readTree(out.toString()));
+    }
+
+    private List<String> getRequired(final Schema schema, @Nullable final String keyPrefix) {
         if (keyPrefix == null || schema.getRequired() == null) {
-            return;
+            return null;
         }
 
         final Map<String, Schema> properties = schema.getProperties();
@@ -158,7 +171,7 @@ public class SchemaValidator {
             removeReadOnlyRequiredPropertyForRequestBody(keyPrefix, properties, requiredUpdated, property);
             removeWriteOnlyRequiredPropertyForResponeBody(keyPrefix, properties, requiredUpdated, property);
         });
-        schema.setRequired(requiredUpdated);
+        return requiredUpdated;
     }
 
     private void removeWriteOnlyRequiredPropertyForResponeBody(final String keyPrefix,
