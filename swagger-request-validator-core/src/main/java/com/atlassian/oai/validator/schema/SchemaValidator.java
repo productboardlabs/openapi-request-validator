@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.report.ListProcessingReport;
 import com.github.fge.jsonschema.core.report.ProcessingMessage;
@@ -31,7 +32,6 @@ import java.util.stream.StreamSupport;
 import static com.atlassian.oai.validator.schema.SwaggerV20Library.OAI_V2_METASCHEMA_URI;
 import static com.atlassian.oai.validator.schema.SwaggerV20Library.schemaFactory;
 import static com.atlassian.oai.validator.util.StringUtils.capitalise;
-import static com.atlassian.oai.validator.util.StringUtils.quote;
 import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
 import static java.util.Objects.requireNonNull;
 
@@ -246,28 +246,33 @@ public class SchemaValidator {
             return Json.mapper().readTree("null");
         }
 
-        String normalisedValue = value;
         if (schema instanceof DateTimeSchema) {
-            normalisedValue = normaliseDateTime(value);
-        } else if ("string".equalsIgnoreCase(schema.getType())) {
-            normalisedValue = quote(value);
-        } else if ("number".equalsIgnoreCase(schema.getType()) ||
-                "integer".equalsIgnoreCase(schema.getType())) {
-            normalisedValue = normaliseNumber(value);
+            return createStringNode(normaliseDateTime(value));
         }
-        return Json.mapper().readTree(normalisedValue);
+        if ("string".equalsIgnoreCase(schema.getType())) {
+            return createStringNode(value);
+        }
+        if ("number".equalsIgnoreCase(schema.getType()) ||
+                "integer".equalsIgnoreCase(schema.getType())) {
+            return createNumericNode(value);
+        }
+
+        return Json.mapper().readTree(value);
     }
 
-    private String normaliseNumber(final String value) {
+    private JsonNode createStringNode(final String value) {
+        return new TextNode(value);
+    }
+
+    private JsonNode createNumericNode(final String value) throws IOException {
         try {
             Double.parseDouble(value);
             // Valid number. Leave unquoted.
-            return value;
+            return Json.mapper().readTree(value);
         } catch (final NumberFormatException e) {
             // Invalid number. Schema validator will generate appropriate errors.
-            return quote(value);
+            return createStringNode(value);
         }
-
     }
 
     private String normaliseDateTime(final String dateTime) {
@@ -283,7 +288,7 @@ public class SchemaValidator {
             // Could not parse to RFC3339 format. Schema validator will throw the appropriate error
         }
         //CHECKSTYLE:ON
-        return quote(formatedDateTime);
+        return formatedDateTime;
     }
 
     private boolean additionalPropertiesValidationEnabled() {
