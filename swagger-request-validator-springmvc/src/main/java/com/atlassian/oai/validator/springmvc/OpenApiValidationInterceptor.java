@@ -10,6 +10,7 @@ import org.springframework.core.io.support.EncodedResource;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 import org.springframework.web.util.ContentCachingResponseWrapper;
+import org.springframework.web.util.UrlPathHelper;
 
 import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
@@ -32,11 +33,11 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
     private final ValidationReportHandler validationReportHandler;
 
     public OpenApiValidationInterceptor(@Nonnull final EncodedResource apiSpecification) throws IOException {
-        this(new OpenApiValidationService(apiSpecification));
+        this(new OpenApiValidationService(apiSpecification, new UrlPathHelper()));
     }
 
     public OpenApiValidationInterceptor(@Nonnull final OpenApiInteractionValidator validator) {
-        this(new OpenApiValidationService(validator));
+        this(new OpenApiValidationService(validator, new UrlPathHelper()));
     }
 
     public OpenApiValidationInterceptor(@Nonnull final OpenApiValidationService openApiValidationService) {

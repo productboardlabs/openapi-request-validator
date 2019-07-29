@@ -35,6 +35,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.ContentCachingResponseWrapper;
+import org.springframework.web.util.UrlPathHelper;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
@@ -68,6 +69,7 @@ public class OpenApiValidationServiceTest {
     private OpenApiValidationService classUnderTest;
 
     private OpenApiInteractionValidator requestValidator;
+    private UrlPathHelper urlPathHelper;
 
     private static Map<String, Collection<String>> getHeadersFromResponse(final Response response) {
         final Field headersField = ReflectionUtils.findField(SimpleResponse.class, "headers");
@@ -82,12 +84,13 @@ public class OpenApiValidationServiceTest {
     @Before
     public void setUp() {
         requestValidator = mock(OpenApiInteractionValidator.class);
-        classUnderTest = new OpenApiValidationService(requestValidator);
+        urlPathHelper = mock(UrlPathHelper.class);
+        classUnderTest = new OpenApiValidationService(requestValidator, urlPathHelper);
     }
 
     @Test(expected = NullPointerException.class)
-    public void constructor_failsWithoutRequiredValidator() throws IOException {
-        new OpenApiValidationService((OpenApiInteractionValidator) null);
+    public void constructor_failsWithoutRequiredValidator() {
+        new OpenApiValidationService((OpenApiInteractionValidator) null, urlPathHelper);
     }
 
     @Test
@@ -96,7 +99,7 @@ public class OpenApiValidationServiceTest {
         when(encodedResource.getReader())
                 .thenReturn(new InputStreamReader(getClass().getResourceAsStream("/api-spring-test.json")));
 
-        final OpenApiValidationService service = new OpenApiValidationService(encodedResource);
+        final OpenApiValidationService service = new OpenApiValidationService(encodedResource, urlPathHelper);
         assertThat(service, notNullValue());
     }
 
@@ -106,7 +109,7 @@ public class OpenApiValidationServiceTest {
         final EncodedResource encodedResource = mock(EncodedResource.class);
         when(encodedResource.getReader())
                 .thenReturn(new InputStreamReader(getClass().getResourceAsStream("/api-spring-test.json")));
-        final OpenApiValidationService service = new OpenApiValidationService(encodedResource);
+        final OpenApiValidationService service = new OpenApiValidationService(encodedResource, urlPathHelper);
         assertThat(service, notNullValue());
 
         // and:
@@ -129,7 +132,7 @@ public class OpenApiValidationServiceTest {
         final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
         when(servletRequest.getMethod()).thenReturn("GET");
         when(servletRequest.getQueryString()).thenReturn("");
-        when(servletRequest.getServletPath()).thenReturn("/swagger-request-validator");
+        when(urlPathHelper.getPathWithinApplication(servletRequest)).thenReturn("/swagger-request-validator");
         when(servletRequest.getContentLength()).thenReturn(-1);
         final BufferedReader reader = new BufferedReader(new StringReader(""));
         when(servletRequest.getReader()).thenReturn(reader);
@@ -150,7 +153,7 @@ public class OpenApiValidationServiceTest {
         final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
         when(servletRequest.getMethod()).thenReturn("PUT");
         when(servletRequest.getQueryString()).thenReturn("");
-        when(servletRequest.getServletPath()).thenReturn("/swagger-request-validator");
+        when(urlPathHelper.getPathWithinApplication(servletRequest)).thenReturn("/swagger-request-validator");
         when(servletRequest.getContentLength()).thenReturn(0);
         final BufferedReader reader = new BufferedReader(new StringReader(""));
         when(servletRequest.getReader()).thenReturn(reader);
@@ -170,7 +173,7 @@ public class OpenApiValidationServiceTest {
         when(servletRequest.getMethod()).thenReturn("POST");
         when(servletRequest.getQueryString())
                 .thenReturn("query1=QUERY_ONE&&query2=query_two&query2=QUERY_TWO&");
-        when(servletRequest.getServletPath()).thenReturn("/swagger-request-validator");
+        when(urlPathHelper.getPathWithinApplication(servletRequest)).thenReturn("/swagger-request-validator");
         when(servletRequest.getContentLength()).thenReturn(-1);
         final BufferedReader reader = new BufferedReader(new StringReader("Body"));
         when(servletRequest.getReader()).thenReturn(reader);
@@ -278,7 +281,7 @@ public class OpenApiValidationServiceTest {
 
         // and:
         when(servletRequest.getMethod()).thenReturn("POST");
-        when(servletRequest.getServletPath()).thenReturn("/swagger-request-validator");
+        when(urlPathHelper.getPathWithinApplication(servletRequest)).thenReturn("/swagger-request-validator");
 
         when(requestValidator.validateResponse("/swagger-request-validator",
                 Request.Method.POST, response)).thenReturn(validationReport);
@@ -327,7 +330,7 @@ public class OpenApiValidationServiceTest {
         when(servletRequest.getParameterNames()).thenReturn(asEnumeration("other", "name=a", "q[name]"));
         when(servletRequest.getParameterValues("name=a")).thenReturn(new String[]{"value=a"});
         when(servletRequest.getParameterValues("q[name]")).thenReturn(new String[]{"q{value}", "q[value]"});
-        when(servletRequest.getServletPath()).thenReturn("/swagger-request-validator");
+        when(urlPathHelper.getPathWithinApplication(servletRequest)).thenReturn("/swagger-request-validator");
         when(servletRequest.getContentLength()).thenReturn(-1);
         final BufferedReader reader = new BufferedReader(new StringReader(""));
         when(servletRequest.getReader()).thenReturn(reader);
@@ -354,7 +357,7 @@ public class OpenApiValidationServiceTest {
         when(servletRequest.getParameterNames()).thenReturn(asEnumeration("other", "name=a", "q[name]"));
         when(servletRequest.getParameterValues("name=a")).thenReturn(new String[]{"value=a"});
         when(servletRequest.getParameterValues("q[name]")).thenReturn(new String[]{"q{value}", "q[value]"});
-        when(servletRequest.getServletPath()).thenReturn("/swagger-request-validator");
+        when(urlPathHelper.getPathWithinApplication(servletRequest)).thenReturn("/swagger-request-validator");
         when(servletRequest.getContentLength()).thenReturn(-1);
         final BufferedReader reader = new BufferedReader(new StringReader(""));
         when(servletRequest.getReader()).thenReturn(reader);
@@ -383,7 +386,8 @@ public class OpenApiValidationServiceTest {
         @RequestMapping(method = RequestMethod.GET, value = "/{pathVariable}", produces = "application/json")
         public Map get(@PathVariable("pathVariable") final String pathVariable, @RequestParam("queryParam") final String queryParam,
                        @RequestHeader("headerValue") final String headerValue, final HttpServletRequest servletRequest) throws IOException {
-            final OpenApiValidationService openApiValidationService = new OpenApiValidationService(Mockito.mock(OpenApiInteractionValidator.class));
+            final OpenApiValidationService openApiValidationService = new OpenApiValidationService(Mockito.mock(OpenApiInteractionValidator.class),
+                    new UrlPathHelper());
             final Request request = openApiValidationService.buildRequest(servletRequest);
             return new ImmutableMap.Builder()
                     .put("springRequest",
