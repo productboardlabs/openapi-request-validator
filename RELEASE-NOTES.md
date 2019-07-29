@@ -1,3 +1,8 @@
+#v2.4.3
+* Fix NPE in the `IsEntityWhitelistRule` when there is no content in the response
+[[#222]](https://bitbucket.org/atlassian/swagger-request-validator/issues/222)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/135)
+
 #v2.4.2
 * Bump version of `json-schema-validator` to pickup improvements
 [[#216]](https://bitbucket.org/atlassian/swagger-request-validator/issues/216)
