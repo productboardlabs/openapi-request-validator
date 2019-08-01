@@ -1,3 +1,8 @@
+#v2.4.4
+* Fix problem where the request path can be null under some circumstances in Spring MVC
+[[#218]](https://bitbucket.org/atlassian/swagger-request-validator/issues/218)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/136)
+
 #v2.4.3
 * Fix NPE in the `IsEntityWhitelistRule` when there is no content in the response
 [[#222]](https://bitbucket.org/atlassian/swagger-request-validator/issues/222)
