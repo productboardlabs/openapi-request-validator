@@ -1,5 +1,10 @@
+#v2.4.5
+* Fixed a bug where backslashes in query params etc. are treated incorrectly during validation
+[[#220]](https://bitbucket.org/atlassian/swagger-request-validator/issues/220)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/134)
+
 #v2.4.4
-* Fix problem where the request path can be null under some circumstances in Spring MVC
+* Fixed a problem where the request path can be null under some circumstances in Spring MVC
 [[#218]](https://bitbucket.org/atlassian/swagger-request-validator/issues/218)
 [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/136)
 
