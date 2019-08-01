@@ -93,6 +93,14 @@ public class SchemaValidatorTest {
     }
 
     @Test
+    public void validate_withBackslash_shouldPass() {
+        final String value = "foo\\car";
+        final Schema schema = new StringSchema();
+
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
+    }
+
+    @Test
     public void validate_withValidModel_shouldPass_whenModelInline() {
         final String value = "{\"foo\":\"bar\"}";
         final Schema schema = new ObjectSchema()
