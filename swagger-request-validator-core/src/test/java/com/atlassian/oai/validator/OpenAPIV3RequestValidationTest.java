@@ -752,4 +752,35 @@ public class OpenAPIV3RequestValidationTest {
         assertFail(classUnderTest.validateRequest(request),
             "validation.request.parameter.query.unexpected");
     }
+
+    @Test
+    public void validate_withValidCookieParams_shouldPass() {
+        final OpenApiInteractionValidator classUnderTest =
+            OpenApiInteractionValidator.createFor("/oai/v3/api-with-cookie-param.yaml")
+                .build();
+
+        final Request request = SimpleRequest.Builder
+            .get("/users")
+            .withHeader("Cookie", "maxCount=10")
+            .withAuthorization("Basic EncryptedUsernameAndPassword")
+            .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withInvalidCookieParams_shouldFail() {
+        final OpenApiInteractionValidator classUnderTest =
+            OpenApiInteractionValidator.createFor("/oai/v3/api-with-cookie-param.yaml")
+                .build();
+
+        final Request request = SimpleRequest.Builder
+            .get("/users")
+            .withHeader("Cookie", "maxCount=aaa")
+            .withAuthorization("Basic EncryptedUsernameAndPassword")
+            .build();
+
+
+        assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.schema.type");
+    }
 }

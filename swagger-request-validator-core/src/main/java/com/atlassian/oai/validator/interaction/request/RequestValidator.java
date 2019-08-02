@@ -13,6 +13,9 @@ import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
@@ -100,6 +103,7 @@ public class RequestValidator {
                 .merge(requestBodyValidator.validateRequestBody(request, apiOperation.getOperation().getRequestBody()))
                 .merge(validateQueryParameters(request, apiOperation))
                 .merge(validateUnexpectedQueryParameters(request, apiOperation))
+                .merge(validateCookieParameters(request, apiOperation))
                 .merge(validateCustom(request, apiOperation))
                 .withAdditionalContext(context);
     }
@@ -293,6 +297,42 @@ public class RequestValidator {
     }
 
     @Nonnull
+    private ValidationReport validateCookieParameters(final Request request,
+        final ApiOperation apiOperation) {
+        Map<String, Collection<String>> cookieParams = getCookieParameterValues(request);
+        return defaultIfNull(apiOperation.getOperation().getParameters(), Collections.<Parameter>emptyList())
+            .stream()
+            .filter(RequestValidator::isCookieParam)
+            .map(p -> validateParameter(
+                apiOperation, p,
+                defaultIfNull(cookieParams.get(p.getName()), Collections.<String>emptyList()),
+                "validation.request.parameter.cookie.missing")
+            )
+            .reduce(empty(), ValidationReport::merge);
+    }
+
+    private Map<String, Collection<String>> getCookieParameterValues(Request request) {
+        Map<String, Collection<String>> paramsMap = new HashMap<>();
+
+        Optional<String> cookieValuesStr = request.getHeaderValue("Cookie");
+        if (cookieValuesStr.isPresent()) {
+            // cookie list are separated by a semicolon and a space ('; ')
+            String[] cookieValuesArray = cookieValuesStr.get().split("; ");
+            for (String cookieVal : cookieValuesArray) {
+                // look for the first '='
+                int index = cookieVal.indexOf('=');
+                if (index > 0) {
+                    String name = cookieVal.substring(0, index);
+                    String value = cookieVal.substring(index);
+                    paramsMap.putIfAbsent(name, new ArrayList<>());
+                    paramsMap.get(name).add(value);
+                }
+            }
+        }
+        return paramsMap;
+    }
+
+    @Nonnull
     private ValidationReport validateParameter(final ApiOperation apiOperation,
                                                final Parameter parameter,
                                                final Collection<String> parameterValues,
@@ -332,6 +372,10 @@ public class RequestValidator {
 
     private static boolean isHeaderParam(final Parameter p) {
         return isParam(p, "header");
+    }
+
+    private static boolean isCookieParam(final Parameter p) {
+        return isParam(p, "cookie");
     }
 
     private static boolean isParam(final Parameter p, final String type) {
