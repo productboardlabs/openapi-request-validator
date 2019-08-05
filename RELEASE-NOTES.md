@@ -1,3 +1,11 @@
+#v2.4.6
+* Improved performance for validation of long Base64 encoded strings
+[[#220]](https://bitbucket.org/atlassian/swagger-request-validator/issues/225)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/137)
+* Fixed treatment of the `required` flag when used with `readOnly` and `writeOnly` in request/response bodies
+[[#220]](https://bitbucket.org/atlassian/swagger-request-validator/issues/207)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/133)
+
 #v2.4.5
 * Fixed a bug where backslashes in query params etc. are treated incorrectly during validation
 [[#220]](https://bitbucket.org/atlassian/swagger-request-validator/issues/220)
