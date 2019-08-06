@@ -324,6 +324,8 @@ public class RequestValidator {
                     final String name = cookieVal.substring(0, index);
                     // skip '='
                     final String value = cookieVal.substring(index + 1);
+                    // this approach will always put a single value into paramsMap
+                    // even if it is something like [1,2,3]
                     paramsMap.putIfAbsent(name, new ArrayList<>());
                     paramsMap.get(name).add(value);
                 }
