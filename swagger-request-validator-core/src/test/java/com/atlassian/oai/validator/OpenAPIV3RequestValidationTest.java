@@ -780,7 +780,6 @@ public class OpenAPIV3RequestValidationTest {
             .withAuthorization("Basic EncryptedUsernameAndPassword")
             .build();
 
-
         assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.schema.type");
     }
 }

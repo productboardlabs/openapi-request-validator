@@ -14,7 +14,6 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import org.slf4j.Logger;
 
@@ -299,7 +298,7 @@ public class RequestValidator {
     @Nonnull
     private ValidationReport validateCookieParameters(final Request request,
         final ApiOperation apiOperation) {
-        Map<String, Collection<String>> cookieParams = getCookieParameterValues(request);
+        final Map<String, Collection<String>> cookieParams = getCookieParameterValues(request);
         return defaultIfNull(apiOperation.getOperation().getParameters(), Collections.<Parameter>emptyList())
             .stream()
             .filter(RequestValidator::isCookieParam)
@@ -311,20 +310,20 @@ public class RequestValidator {
             .reduce(empty(), ValidationReport::merge);
     }
 
-    private Map<String, Collection<String>> getCookieParameterValues(Request request) {
-        Map<String, Collection<String>> paramsMap = new HashMap<>();
+    private Map<String, Collection<String>> getCookieParameterValues(final Request request) {
+        final Map<String, Collection<String>> paramsMap = new HashMap<>();
 
-        Optional<String> cookieValuesStr = request.getHeaderValue("Cookie");
+        final Optional<String> cookieValuesStr = request.getHeaderValue("Cookie");
         if (cookieValuesStr.isPresent()) {
             // cookie list are separated by a semicolon and a space ('; ')
-            String[] cookieValuesArray = cookieValuesStr.get().split("; ");
+            final String[] cookieValuesArray = cookieValuesStr.get().split("; ");
             for (String cookieVal : cookieValuesArray) {
                 // look for the first '='
-                int index = cookieVal.indexOf('=');
+                final int index = cookieVal.indexOf('=');
                 if (index > 0) {
-                    String name = cookieVal.substring(0, index);
+                    final String name = cookieVal.substring(0, index);
                     // skip '='
-                    String value = cookieVal.substring(index + 1);
+                    final String value = cookieVal.substring(index + 1);
                     paramsMap.putIfAbsent(name, new ArrayList<>());
                     paramsMap.get(name).add(value);
                 }
