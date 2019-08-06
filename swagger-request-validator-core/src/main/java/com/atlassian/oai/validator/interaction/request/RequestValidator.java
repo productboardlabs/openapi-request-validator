@@ -323,7 +323,8 @@ public class RequestValidator {
                 int index = cookieVal.indexOf('=');
                 if (index > 0) {
                     String name = cookieVal.substring(0, index);
-                    String value = cookieVal.substring(index);
+                    // skip '='
+                    String value = cookieVal.substring(index + 1);
                     paramsMap.putIfAbsent(name, new ArrayList<>());
                     paramsMap.get(name).add(value);
                 }
