@@ -776,7 +776,7 @@ public class OpenAPIV3RequestValidationTest {
 
         final Request request = SimpleRequest.Builder
             .get("/users")
-            .withHeader("Cookie", "maxCount=10; sorting=field; authorization=EncryptedUsernameAndPassword")
+            .withHeader("Cookie", "maxCount=10; sorting=name,email; authorization=EncryptedUsernameAndPassword")
             .withAuthorization("Basic EncryptedUsernameAndPassword")
             .build();
 
@@ -791,11 +791,11 @@ public class OpenAPIV3RequestValidationTest {
 
         final Request request = SimpleRequest.Builder
             .get("/users")
-            .withHeader("Cookie", "maxCount=aaa; sorting=field; authorization=EncryptedUsernameAndPassword")
+            .withHeader("Cookie", "maxCount=10; sorting=name; authorization=EncryptedUsernameAndPassword")
             .withAuthorization("Basic EncryptedUsernameAndPassword")
             .build();
 
-        assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.schema.type");
+        assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.schema.enum");
     }
 
     @Test

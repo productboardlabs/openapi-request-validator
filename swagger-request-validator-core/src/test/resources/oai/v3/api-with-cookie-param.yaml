@@ -45,10 +45,13 @@ paths:
         - name: sorting
           in: cookie
           description: >-
-            sorting fields
+            Comma-separated sorting fields (created only for testing that query
+            parameters are not split!)
           required: false
           schema:
             type: string
+            enum:
+              - 'name,email'
       responses:
         '200':
           description: Users response
