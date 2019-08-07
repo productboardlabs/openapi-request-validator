@@ -4,6 +4,7 @@ import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -19,14 +20,16 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.ArrayList;
 import java.util.stream.StreamSupport;
 
 import static com.atlassian.oai.validator.schema.SwaggerV20Library.OAI_V2_METASCHEMA_URI;
@@ -91,7 +94,6 @@ public class SchemaValidator {
      * @param value The value to validate
      * @param schema The schema to validate the value against
      * @param keyPrefix A prefix to apply to validation messages emitted by the validator
-     *
      * @return A validation report containing accumulated validation errors
      */
     @Nonnull
@@ -108,6 +110,11 @@ public class SchemaValidator {
             final JsonNode schemaObject, content;
             try {
                 schemaObject = readSchema(schema);
+                final List<String> required = getRequired(schema, keyPrefix);
+                if (required != null && !required.isEmpty()) {
+                    setRequired((ObjectNode) schemaObject, required);
+                }
+
                 content = readContent(value, schema);
 
                 checkForKnownGotchasAndLogMessage(schemaObject);
@@ -145,6 +152,50 @@ public class SchemaValidator {
         }
     }
 
+    private void setRequired(final ObjectNode schemaObject, final List<String> required) throws IOException {
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        final ObjectMapper mapper = new ObjectMapper();
+        mapper.writeValue(out, required);
+        schemaObject.set("required", Json.mapper().readTree(out.toString()));
+    }
+
+    private List<String> getRequired(final Schema schema, @Nullable final String keyPrefix) {
+        if (keyPrefix == null || schema.getRequired() == null) {
+            return null;
+        }
+
+        final Map<String, Schema> properties = schema.getProperties();
+        final List<String> required = schema.getRequired();
+        final List<String> requiredUpdated = new ArrayList<>(required);
+        required.forEach(property -> {
+            removeReadOnlyRequiredPropertyForRequestBody(keyPrefix, properties, requiredUpdated, property);
+            removeWriteOnlyRequiredPropertyForResponeBody(keyPrefix, properties, requiredUpdated, property);
+        });
+        return requiredUpdated;
+    }
+
+    private void removeWriteOnlyRequiredPropertyForResponeBody(final String keyPrefix,
+                                                               final Map<String, Schema> properties,
+                                                               final List<String> requiredUpdated,
+                                                               final String property) {
+        if (keyPrefix.equals("response.body")
+                && properties.get(property).getWriteOnly() != null
+                && properties.get(property).getWriteOnly()) {
+            requiredUpdated.remove(property);
+        }
+    }
+
+    private void removeReadOnlyRequiredPropertyForRequestBody(final String keyPrefix,
+                                                              final Map<String, Schema> properties,
+                                                              final List<String> requiredUpdated,
+                                                              final String property) {
+        if (keyPrefix.equals("request.body")
+                && properties.get(property).getReadOnly() != null
+                && properties.get(property).getReadOnly()) {
+            requiredUpdated.remove(property);
+        }
+    }
+
     private JsonNode readSchema(@Nonnull final Object schema) throws IOException {
         final JsonNode schemaObject = Json.mapper().readTree(Json.pretty(schema));
         setupSchemaDefinitionRefs(schemaObject);
@@ -158,7 +209,6 @@ public class SchemaValidator {
         if (additionalPropertiesValidationEnabled()) {
             injectAdditionalPropertiesDirectiveIntoTree(rootNode);
         }
-
         if (api != null) {
             if (definitions == null) {
                 definitions = (api.getComponents() == null || api.getComponents().getSchemas() == null) ?
