@@ -8,6 +8,7 @@ import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
 import com.atlassian.oai.validator.schema.SchemaValidator;
+import com.google.common.base.Joiner;
 import com.google.common.net.MediaType;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -312,11 +313,13 @@ public class RequestValidator {
 
     private Map<String, Collection<String>> getCookieParameterValues(final Request request) {
         final Map<String, Collection<String>> paramsMap = new HashMap<>();
-
-        final Optional<String> cookieValuesStr = request.getHeaderValue("Cookie");
-        if (cookieValuesStr.isPresent()) {
+        // SimpleRequest will split the header value with ',' by default, so here we join
+        // the split values to get back original header value string
+        final Collection<String> cookieValues = request.getHeaderValues("Cookie");
+        if (!cookieValues.isEmpty()) {
+            final String cookieValuesStr = Joiner.on(",").join(cookieValues);
             // cookie list are separated by a semicolon and a space ('; ')
-            final String[] cookieValuesArray = cookieValuesStr.get().split("; ");
+            final String[] cookieValuesArray = cookieValuesStr.split("; ");
             for (String cookieVal : cookieValuesArray) {
                 // look for the first '='
                 final int index = cookieVal.indexOf('=');
@@ -324,8 +327,6 @@ public class RequestValidator {
                     final String name = cookieVal.substring(0, index);
                     // skip '='
                     final String value = cookieVal.substring(index + 1);
-                    // this approach will always put a single value into paramsMap
-                    // even if it is something like [1,2,3]
                     paramsMap.putIfAbsent(name, new ArrayList<>());
                     paramsMap.get(name).add(value);
                 }

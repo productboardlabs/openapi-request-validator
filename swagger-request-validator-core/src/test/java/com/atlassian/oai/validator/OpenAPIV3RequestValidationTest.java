@@ -6,7 +6,6 @@ import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.annotation.Nonnull;
@@ -829,35 +828,45 @@ public class OpenAPIV3RequestValidationTest {
     }
 
     @Test
-    @Ignore("Cookie param array data type not implemented yet")
     public void validate_withArrayCookieParam_shouldPass_whenValid() {
+        final OpenApiInteractionValidator classUnderTest =
+            OpenApiInteractionValidator.createFor("/oai/v3/api-with-cookie-param.yaml")
+                .build();
+
         final Request request = SimpleRequest.Builder
             .get("/users")
             .withAuthorization("Basic EncryptedUsernameAndPassword")
-            // .withCookieParam("filter", "1", "2", "3")
+            .withHeader("Cookie", "maxCount=10; filter=1; filter=2; filter=3")
             .build();
 
         assertPass(classUnderTest.validateRequest(request));
     }
 
     @Test
-    @Ignore("Cookie param array data type not implemented yet")
     public void validate_withArrayCookieParam_shouldFail_whenInvalidAccordingToDefinedStyle() {
+        final OpenApiInteractionValidator classUnderTest =
+            OpenApiInteractionValidator.createFor("/oai/v3/api-with-cookie-param.yaml")
+                .build();
+
         final Request request = SimpleRequest.Builder
             .get("/users")
             .withAuthorization("Basic EncryptedUsernameAndPassword")
-            // .withCookieParam("filter", "1,2,3")
+            .withHeader("Cookie", "maxCount=10; filter=1,2,3")
             .build();
 
         assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.schema.type");
     }
 
     @Test
-    @Ignore("Cookie param array data type not implemented yet")
     public void validate_withArrayCookieParam_shouldFail_whenInvalidFormat() {
+        final OpenApiInteractionValidator classUnderTest =
+            OpenApiInteractionValidator.createFor("/oai/v3/api-with-cookie-param.yaml")
+                .build();
+
         final Request request = SimpleRequest.Builder
             .get("/users")
-            // .withCookieParam("filter", "1", "bob", "3")
+            .withAuthorization("Basic EncryptedUsernameAndPassword")
+            .withHeader("Cookie", "maxCount=10; filter=1; filter=bob; filter=3")
             .build();
 
         assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.schema.type");
