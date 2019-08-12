@@ -40,6 +40,11 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
         this(new OpenApiValidationService(validator, new UrlPathHelper()));
     }
 
+    public OpenApiValidationInterceptor(@Nonnull final OpenApiInteractionValidator validator,
+                                        @Nonnull final ValidationReportHandler validationReportHandler) {
+        this(new OpenApiValidationService(validator, new UrlPathHelper()), validationReportHandler);
+    }
+
     public OpenApiValidationInterceptor(@Nonnull final OpenApiValidationService openApiValidationService) {
         this(openApiValidationService, new DefaultValidationReportHandler());
     }
