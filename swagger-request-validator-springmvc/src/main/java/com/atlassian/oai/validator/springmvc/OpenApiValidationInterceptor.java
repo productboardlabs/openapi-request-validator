@@ -40,6 +40,11 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
         this(new OpenApiValidationService(validator, new UrlPathHelper()));
     }
 
+    public OpenApiValidationInterceptor(@Nonnull final OpenApiInteractionValidator validator,
+                                        @Nonnull final ValidationReportHandler validationReportHandler) {
+        this(new OpenApiValidationService(validator, new UrlPathHelper()), validationReportHandler);
+    }
+
     public OpenApiValidationInterceptor(@Nonnull final OpenApiValidationService openApiValidationService) {
         this(openApiValidationService, new DefaultValidationReportHandler());
     }
@@ -60,15 +65,13 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
      * Only {@link ResettableRequestServletWrapper} can be validated. Wrapping is done within the
      * {@link OpenApiValidationFilter}.
      *
-     * @param servletRequest the {@link HttpServletRequest} to validate
+     * @param servletRequest  the {@link HttpServletRequest} to validate
      * @param servletResponse the servlet response
-     * @param handler a handler
-     *
+     * @param handler         a handler
      * @return {@code true} if the request is valid against or not defined in the API specification or
      * the servlet is not a {@link ResettableRequestServletWrapper}
-     *
      * @throws Exception if the request is invalid against the API specification or the requests body
-     * can't be read
+     *                   can't be read
      */
     @Override
     public boolean preHandle(final HttpServletRequest servletRequest,
@@ -103,11 +106,10 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
      * Only {@link ContentCachingResponseWrapper} can be validated. Wrapping is done within the
      * {@link OpenApiValidationFilter}.
      *
-     * @param servletRequest the servlet request
+     * @param servletRequest  the servlet request
      * @param servletResponse the {@link HttpServletResponse} to validate
-     * @param handler a handler
-     * @param modelAndView a model and view
-     *
+     * @param handler         a handler
+     * @param modelAndView    a model and view
      * @throws Exception if the response is invalid against the API specification or the response body can't be read
      */
     @Override
