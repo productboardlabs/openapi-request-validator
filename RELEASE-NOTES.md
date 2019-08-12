@@ -1,6 +1,3 @@
-#v2.4.7
-* Adding another overloaded constructor for OpenApiValidationInterceptor
- - This will help to have custom validation report handler and also validator
 #v2.4.6
 * Improved performance for validation of long Base64 encoded strings
 [[#225]](https://bitbucket.org/atlassian/swagger-request-validator/issues/225)
