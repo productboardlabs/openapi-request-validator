@@ -55,6 +55,10 @@ public interface ValidationReport {
 
         List<String> getAdditionalInfo();
 
+        default Optional<List<Message>> getNestedMessages() {
+            return Optional.empty();
+        }
+
         /**
          * Returns contextual information about this message, if it is available.
          */
@@ -69,6 +73,13 @@ public interface ValidationReport {
          * Returns a new instance, the same as this message, but with additional info attached.
          */
         Message withAdditionalInfo(String info);
+
+        /**
+         * Returns a new instance, the same as this message, but with nested messages attached.
+         */
+        default Message withNestedMessages(Collection<Message> messages) {
+            return this;
+        }
 
         /**
          * Returns a new instance, the same as this message, but additional context attached.

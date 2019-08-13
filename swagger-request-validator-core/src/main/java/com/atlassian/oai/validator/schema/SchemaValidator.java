@@ -356,7 +356,15 @@ public class SchemaValidator {
     private ValidationReport getProcessingMessage(final ProcessingMessage pm,
                                                   final String keywordOverride,
                                                   final String keyPrefix) {
-        final JsonNode processingMessage = pm.asJson();
+
+        return ValidationReport.singleton(
+                toValidationReportMessage(pm.asJson(), keywordOverride, keyPrefix));
+    }
+
+    private ValidationReport.Message toValidationReportMessage(final JsonNode processingMessage,
+                                                               final String keywordOverride,
+                                                               final String keyPrefix) {
+
         final String validationKeyword = keywordOverride != null ? keywordOverride : processingMessage.get("keyword").textValue();
         final String pointer = processingMessage.has("instance") ? processingMessage.get("instance").get("pointer").textValue() : "";
 
@@ -372,14 +380,33 @@ public class SchemaValidator {
 
         final String message =
                 (pointer.isEmpty() ? "" : "[Path '" + pointer + "'] ")
-                        + capitalise(pm.getMessage());
+                        + capitalise(processingMessage.get("message").textValue());
 
-        return ValidationReport.singleton(
-                messages.create(
-                        "validation." + keyPrefix + ".schema." + validationKeyword,
-                        message, subReports.toArray(new String[0])
-                )
-        );
+        final ValidationReport.Message validationReportMessage = messages.create(
+                "validation." + keyPrefix + ".schema." + validationKeyword,
+                message, subReports.toArray(new String[0]));
+
+        return withNestedMessages(processingMessage, keywordOverride, keyPrefix, validationReportMessage);
+    }
+
+    private ValidationReport.Message withNestedMessages(final JsonNode processingMessage,
+                                                        final String keywordOverride,
+                                                        final String keyPrefix,
+                                                        final ValidationReport.Message validationReportMessage) {
+        if (!processingMessage.has("reports")) {
+            return validationReportMessage;
+        }
+
+        // Recursively convert 'reports' node children to ValidationReport.Message and add as nested messages
+        final List<ValidationReport.Message> nestedMessages = new ArrayList<>();
+        final JsonNode reports = processingMessage.get("reports");
+        reports.fields().forEachRemaining(field -> {
+            field.getValue().elements().forEachRemaining(report -> {
+                nestedMessages.add(toValidationReportMessage(report, keywordOverride, keyPrefix));
+            });
+        });
+
+        return validationReportMessage.withNestedMessages(nestedMessages);
     }
 
 }
