@@ -1,3 +1,8 @@
+#v2.4.7
+* Added a constructor to `com.atlassian.oai.validator.springmvc.OpenApiValidationInterceptor` to allow a custom 
+report handler to be provided
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/139)
+
 #v2.4.6
 * Improved performance for validation of long Base64 encoded strings
 [[#225]](https://bitbucket.org/atlassian/swagger-request-validator/issues/225)
