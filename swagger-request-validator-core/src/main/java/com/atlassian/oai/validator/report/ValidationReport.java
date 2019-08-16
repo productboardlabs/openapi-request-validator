@@ -11,6 +11,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -55,8 +56,8 @@ public interface ValidationReport {
 
         List<String> getAdditionalInfo();
 
-        default Optional<List<Message>> getNestedMessages() {
-            return Optional.empty();
+        default List<Message> getNestedMessages() {
+            return Collections.emptyList();
         }
 
         /**

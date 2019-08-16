@@ -3,6 +3,7 @@ package com.atlassian.oai.validator.schema;
 import com.atlassian.oai.validator.report.JsonValidationReportFormat;
 import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.MessageResolver;
+import com.atlassian.oai.validator.report.SimpleValidationReportFormat;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.google.common.collect.ImmutableList;
 import io.swagger.parser.OpenAPIParser;
@@ -612,9 +613,13 @@ public class SchemaValidatorTest {
         assertFailWithoutContext(reportShallow);
         assertFailWithoutContext(reportDeep);
 
-        final String expectedError = "Instance value (\\\"Doggo\\\") not found in enum";
-        Assert.assertTrue(JsonValidationReportFormat.getInstance().apply(reportShallow).contains(expectedError));
-        Assert.assertTrue(JsonValidationReportFormat.getInstance().apply(reportDeep).contains(expectedError));
+        final String expectedSimpleFormatError = "Instance value (\"Doggo\") not found in enum";
+        Assert.assertTrue(SimpleValidationReportFormat.getInstance().apply(reportShallow).contains(expectedSimpleFormatError));
+        Assert.assertTrue(SimpleValidationReportFormat.getInstance().apply(reportDeep).contains(expectedSimpleFormatError));
+
+        final String expectedJsonFormatError = "Instance value (\\\"Doggo\\\") not found in enum";
+        Assert.assertTrue(JsonValidationReportFormat.getInstance().apply(reportShallow).contains(expectedJsonFormatError));
+        Assert.assertTrue(JsonValidationReportFormat.getInstance().apply(reportDeep).contains(expectedJsonFormatError));
     }
 
     private SchemaValidator validatorWithAdditionalPropertiesIgnored(final String api) {

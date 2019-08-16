@@ -7,6 +7,8 @@ import java.util.Objects;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 
+import com.atlassian.oai.validator.util.StringUtils;
+
 /**
  * Format a {@link ValidationReport} instance into human-readable String representation for use in e.g. logs or exceptions.
  */
@@ -42,6 +44,9 @@ public class SimpleValidationReportFormat implements ValidationReportFormat {
         msg.getAdditionalInfo().stream()
                 .filter(Objects::nonNull)
                 .forEach(info -> b.append("\n\t* ").append(info.replace("\n", "\n\t\t")));
+        msg.getNestedMessages().stream()
+                .forEach(message -> b.append(StringUtils.indentString("\n- " + formatMessage(message), "\t")));
+
         return b.toString();
     }
 

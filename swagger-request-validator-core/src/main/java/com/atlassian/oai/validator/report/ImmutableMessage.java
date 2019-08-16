@@ -1,11 +1,12 @@
 package com.atlassian.oai.validator.report;
 
+import com.atlassian.oai.validator.util.StringUtils;
 import com.google.common.collect.ImmutableList;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,8 +21,6 @@ class ImmutableMessage implements ValidationReport.Message {
     private final ValidationReport.Level level;
     private final String message;
     private final List<String> additionalInfo;
-
-    @Nullable
     private final List<ValidationReport.Message> nestedMessages;
 
     @Nullable
@@ -39,21 +38,21 @@ class ImmutableMessage implements ValidationReport.Message {
                      @Nonnull final String message,
                      @Nonnull final List<String> additionalInfo,
                      @Nullable final ValidationReport.MessageContext context) {
-        this(key, level, message, additionalInfo, null, context);
+        this(key, level, message, additionalInfo, Collections.emptyList(), context);
     }
 
     ImmutableMessage(@Nonnull final String key,
                      @Nonnull final ValidationReport.Level level,
                      @Nonnull final String message,
                      @Nonnull final List<String> additionalInfo,
-                     @Nullable final List<ValidationReport.Message> nestedMessages,
+                     @Nonnull final List<ValidationReport.Message> nestedMessages,
                      @Nullable final ValidationReport.MessageContext context) {
 
         this.key = requireNonNull(key, "A key is required");
         this.level = requireNonNull(level, "A level is required");
         this.message = requireNonNull(message, "A message is required");
         this.additionalInfo = unmodifiableList(requireNonNull(additionalInfo));
-        this.nestedMessages = nestedMessages;
+        this.nestedMessages = unmodifiableList(requireNonNull(nestedMessages));
         this.context = context;
     }
 
@@ -74,17 +73,11 @@ class ImmutableMessage implements ValidationReport.Message {
 
     @Override
     public ValidationReport.Message withNestedMessages(final Collection<ValidationReport.Message> messages) {
-        List<ValidationReport.Message> newMessages = nestedMessages;
-        if (messages != null) {
-            newMessages = ImmutableList.<ValidationReport.Message>builder()
-                    .addAll(this.nestedMessages != null ? this.nestedMessages : new ArrayList<>())
-                    .addAll(messages)
-                    .build();
-        }
+        final Collection<ValidationReport.Message> newMessages = messages != null ? messages : Collections.emptyList();
         return new ImmutableMessage(
                 key, level, message,
                 additionalInfo,
-                newMessages,
+                ImmutableList.<ValidationReport.Message>builder().addAll(nestedMessages).addAll(newMessages).build(),
                 context
         );
     }
@@ -115,13 +108,7 @@ class ImmutableMessage implements ValidationReport.Message {
         return level + " - "
                 + message.replace("\n", "\n\t")
                 + ": [" + additionalInfo.stream().collect(joining(", ")) + "]"
-                + (nestedMessages == null
-                        ? ""
-                        : "\n" + nestedMessages.stream().map(message->this.indent(message, "\t")).collect(joining("\n")));
-    }
-
-    private String indent(final ValidationReport.Message msg, final String indentStr) {
-        return indentStr + msg.toString().replace("\t", "\t" + indentStr);
+                + nestedMessages.stream().map(message -> "\n" + StringUtils.indentString(message.toString(), "\t")).collect(joining());
     }
 
     @Override
@@ -130,8 +117,8 @@ class ImmutableMessage implements ValidationReport.Message {
     }
 
     @Override
-    public Optional<List<ValidationReport.Message>> getNestedMessages() {
-        return Optional.ofNullable(nestedMessages);
+    public List<ValidationReport.Message> getNestedMessages() {
+        return nestedMessages;
     }
 
     @Override
