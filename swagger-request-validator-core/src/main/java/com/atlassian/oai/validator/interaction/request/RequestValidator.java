@@ -8,11 +8,14 @@ import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
 import com.atlassian.oai.validator.schema.SchemaValidator;
+import com.google.common.base.Joiner;
 import com.google.common.net.MediaType;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import java.util.HashMap;
+import java.util.Map;
 import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
@@ -100,6 +103,7 @@ public class RequestValidator {
                 .merge(requestBodyValidator.validateRequestBody(request, apiOperation.getOperation().getRequestBody()))
                 .merge(validateQueryParameters(request, apiOperation))
                 .merge(validateUnexpectedQueryParameters(request, apiOperation))
+                .merge(validateCookieParameters(request, apiOperation))
                 .merge(validateCustom(request, apiOperation))
                 .withAdditionalContext(context);
     }
@@ -293,6 +297,45 @@ public class RequestValidator {
     }
 
     @Nonnull
+    private ValidationReport validateCookieParameters(final Request request,
+        final ApiOperation apiOperation) {
+        final Map<String, Collection<String>> cookieParams = getCookieParameterValues(request);
+        return defaultIfNull(apiOperation.getOperation().getParameters(), Collections.<Parameter>emptyList())
+            .stream()
+            .filter(RequestValidator::isCookieParam)
+            .map(p -> validateParameter(
+                apiOperation, p,
+                defaultIfNull(cookieParams.get(p.getName()), Collections.<String>emptyList()),
+                "validation.request.parameter.cookie.missing")
+            )
+            .reduce(empty(), ValidationReport::merge);
+    }
+
+    private Map<String, Collection<String>> getCookieParameterValues(final Request request) {
+        final Map<String, Collection<String>> paramsMap = new HashMap<>();
+        // SimpleRequest will split the header value with ',' by default, so here we join
+        // the split values to get back original header value string
+        final Collection<String> cookieValues = request.getHeaderValues("Cookie");
+        if (!cookieValues.isEmpty()) {
+            final String cookieValuesStr = Joiner.on(",").join(cookieValues);
+            // cookie list are separated by a semicolon and a space ('; ')
+            final String[] cookieValuesArray = cookieValuesStr.split("; ");
+            for (String cookieVal : cookieValuesArray) {
+                // look for the first '='
+                final int index = cookieVal.indexOf('=');
+                if (index > 0) {
+                    final String name = cookieVal.substring(0, index);
+                    // skip '='
+                    final String value = cookieVal.substring(index + 1);
+                    paramsMap.putIfAbsent(name, new ArrayList<>());
+                    paramsMap.get(name).add(value);
+                }
+            }
+        }
+        return paramsMap;
+    }
+
+    @Nonnull
     private ValidationReport validateParameter(final ApiOperation apiOperation,
                                                final Parameter parameter,
                                                final Collection<String> parameterValues,
@@ -332,6 +375,10 @@ public class RequestValidator {
 
     private static boolean isHeaderParam(final Parameter p) {
         return isParam(p, "header");
+    }
+
+    private static boolean isCookieParam(final Parameter p) {
+        return isParam(p, "cookie");
     }
 
     private static boolean isParam(final Parameter p, final String type) {
