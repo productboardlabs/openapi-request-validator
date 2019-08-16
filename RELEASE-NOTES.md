@@ -1,3 +1,11 @@
+#v2.5.0
+* Added support for Cookie parameter validation
+[[#224]](https://bitbucket.org/atlassian/swagger-request-validator/issues/224)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/138)
+* Improved validation messages by including messages from deeply nested objects during schema validation
+[[#221]](https://bitbucket.org/atlassian/swagger-request-validator/issues/221)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/140)
+
 #v2.4.7
 * Added a constructor to `com.atlassian.oai.validator.springmvc.OpenApiValidationInterceptor` to allow a custom 
 report handler to be provided
