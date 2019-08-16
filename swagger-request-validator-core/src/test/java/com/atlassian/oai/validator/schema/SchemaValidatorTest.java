@@ -1,7 +1,9 @@
 package com.atlassian.oai.validator.schema;
 
+import com.atlassian.oai.validator.report.JsonValidationReportFormat;
 import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.MessageResolver;
+import com.atlassian.oai.validator.report.SimpleValidationReportFormat;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.google.common.collect.ImmutableList;
 import io.swagger.parser.OpenAPIParser;
@@ -16,6 +18,7 @@ import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.media.UUIDSchema;
 import io.swagger.v3.parser.core.models.ParseOptions;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.List;
@@ -591,6 +594,32 @@ public class SchemaValidatorTest {
         final ValidationReport report = classUnderTest.validate(value, schema, "response.body");
         assertPass(report);
 
+    }
+
+    @Test
+    public void validate_nestedProperties() {
+
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-with-deeply-nested-elements.yaml");
+
+        final Schema schema = new OpenAPIParser().readLocation("/oai/v3/api-with-deeply-nested-elements.yaml", null, new ParseOptions())
+                .getOpenAPI().getComponents().getSchemas().get("Pet");
+
+        final String deeplyNested = "{\"details\": { \"type\": \"Doggo\", \"breed\": \"lappie\", \"colour\": \"tan\" } }";
+        final String shallowNested = "{\"sibling\": { \"type\": \"Doggo\", \"breed\": \"lappie\" } }";
+
+        final ValidationReport reportShallow = classUnderTest.validate(shallowNested, schema, "response.body");
+        final ValidationReport reportDeep = classUnderTest.validate(deeplyNested, schema, "response.body");
+
+        assertFailWithoutContext(reportShallow);
+        assertFailWithoutContext(reportDeep);
+
+        final String expectedSimpleFormatError = "Instance value (\"Doggo\") not found in enum";
+        Assert.assertTrue(SimpleValidationReportFormat.getInstance().apply(reportShallow).contains(expectedSimpleFormatError));
+        Assert.assertTrue(SimpleValidationReportFormat.getInstance().apply(reportDeep).contains(expectedSimpleFormatError));
+
+        final String expectedJsonFormatError = "Instance value (\\\"Doggo\\\") not found in enum";
+        Assert.assertTrue(JsonValidationReportFormat.getInstance().apply(reportShallow).contains(expectedJsonFormatError));
+        Assert.assertTrue(JsonValidationReportFormat.getInstance().apply(reportDeep).contains(expectedJsonFormatError));
     }
 
     private SchemaValidator validatorWithAdditionalPropertiesIgnored(final String api) {

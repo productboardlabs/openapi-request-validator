@@ -11,6 +11,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -55,6 +56,10 @@ public interface ValidationReport {
 
         List<String> getAdditionalInfo();
 
+        default List<Message> getNestedMessages() {
+            return Collections.emptyList();
+        }
+
         /**
          * Returns contextual information about this message, if it is available.
          */
@@ -69,6 +74,13 @@ public interface ValidationReport {
          * Returns a new instance, the same as this message, but with additional info attached.
          */
         Message withAdditionalInfo(String info);
+
+        /**
+         * Returns a new instance, the same as this message, but with nested messages attached.
+         */
+        default Message withNestedMessages(Collection<Message> messages) {
+            return this;
+        }
 
         /**
          * Returns a new instance, the same as this message, but additional context attached.

@@ -52,4 +52,16 @@ public class StringUtils {
         }
         return withNewlines.toString();
     }
+
+    /**
+     * Inserts indentStr before every line
+     *
+     * @param stringToIndent
+     * @param indentStr
+     * @return
+     */
+    public static String indentString(final String stringToIndent, final String indentStr) {
+        return indentStr + stringToIndent.replace("\n", "\n" + indentStr);
+    }
+
 }
