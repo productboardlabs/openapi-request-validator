@@ -265,7 +265,7 @@ public class RequestValidator {
                 defaultIfNull(apiOperation.getOperation().getParameters(),
                     Collections.<Parameter>emptyList())
                     .stream()
-                    .filter(p -> isQueryParam(p) && isDeepObjectParam(p))
+                    .filter(p -> isQueryParam(p) && !isDeepObjectParam(p))
                     .map(Parameter::getName),
                 defaultIfNull(components.getSecuritySchemes(),
                     Collections.<String, SecurityScheme>emptyMap()).values().stream()
