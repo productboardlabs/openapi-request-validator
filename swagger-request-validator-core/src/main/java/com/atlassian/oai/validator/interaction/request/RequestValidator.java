@@ -401,7 +401,7 @@ public class RequestValidator {
     }
 
     private static boolean isDeepObjectParam(final Parameter p) {
-        return p != null && p.getStyle().equals(StyleEnum.DEEPOBJECT);
+        return p != null && p.getStyle() != null && p.getStyle().equals(StyleEnum.DEEPOBJECT);
     }
 
     private static boolean isParam(final Parameter p, final String type) {
