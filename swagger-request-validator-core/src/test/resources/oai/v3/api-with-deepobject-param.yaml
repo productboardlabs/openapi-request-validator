@@ -24,6 +24,8 @@ paths:
           explode: true
           schema:
             type: object
+            required: 
+              - name_eq
             properties:
               name_eq:
                 type: string
@@ -33,6 +35,12 @@ paths:
                 type: string
               email_lk:
                 type: string
+              status_eq:
+                type: string
+                enum:
+                  - new
+                  - verified
+                  - closed
       responses:
         '200':
           description: Users response
