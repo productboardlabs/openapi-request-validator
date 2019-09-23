@@ -8,6 +8,7 @@ import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
 import com.atlassian.oai.validator.schema.SchemaValidator;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.net.MediaType;
@@ -24,6 +25,7 @@ import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -55,7 +57,6 @@ public class RequestValidator {
     private final ParameterValidator parameterValidator;
     private final SecurityValidator securityValidator;
     private final RequestBodyValidator requestBodyValidator;
-    private final SchemaValidator schemaValidator;
     private final List<CustomRequestValidator> customRequestValidators;
 
     /**
@@ -67,13 +68,10 @@ public class RequestValidator {
      * @param api                     The OpenAPI spec to validate against
      * @param customRequestValidators The list of custom validators to run
      */
-    public RequestValidator(final SchemaValidator schemaValidator, 
-                            final MessageResolver messages, 
-                            final OpenAPI api,
-                            final List<CustomRequestValidator> customRequestValidators) {
+    public RequestValidator(final SchemaValidator schemaValidator, final MessageResolver messages, final OpenAPI api,
+            final List<CustomRequestValidator> customRequestValidators) {
         this.messages = requireNonNull(messages, "A message resolver is required");
         this.components = defaultIfNull(api.getComponents(), new Components());
-        this.schemaValidator = schemaValidator;
         this.customRequestValidators = customRequestValidators;
 
         parameterValidator = new ParameterValidator(schemaValidator, messages);
@@ -276,31 +274,30 @@ public class RequestValidator {
                 request.getQueryParameterValues(matcher.group(0)).iterator().next())
             );
 
+        // We need to handle where the parameter is not required, and there aren't any values
         if (deepObject.isEmpty() && !TRUE.equals(parameter.getRequired())) {
             return empty();  
         }
-
-        final ValidationReport.MessageContext context = ValidationReport.MessageContext.create()
-            .withApiOperation(apiOperation)
-            .withParameter(new Parameter().name(queryParam).in("query"))
-            .build();
-
-        if (deepObject.isEmpty() && TRUE.equals(parameter.getRequired())) {
-            return ValidationReport.singleton(
-                    messages.get(queryParam, parameter.getName(), apiOperation.getApiPath().original())
-            ).withAdditionalContext(context);
-        }
-    
+        
+        // It's possible that the values cause an error  writing to a json string
+        final String deepObjectAsJson;
         try {
-            final String value = new ObjectMapper().writeValueAsString(deepObject);
-            return schemaValidator.validate(value, parameter.getSchema(), "request.parameter");
+            deepObjectAsJson = new ObjectMapper().writeValueAsString(deepObject);
             
-        } catch (final Exception e) {
+        } catch (final JsonProcessingException e) {
+
+            final ValidationReport.MessageContext context = ValidationReport.MessageContext.create()
+                .withApiOperation(apiOperation)
+                .withParameter(parameter)
+                .build();
 
             return ValidationReport.singleton(
                 messages.get("validation.request.parameter.query.unexpected", queryParam,
                     apiOperation.getApiPath().original())).withAdditionalContext(context);
         }
+
+        return validateParameter(apiOperation, parameter, Arrays.asList(deepObjectAsJson), 
+                                    "validation.request.parameter.query.missing");
     }
 
     @Nonnull
