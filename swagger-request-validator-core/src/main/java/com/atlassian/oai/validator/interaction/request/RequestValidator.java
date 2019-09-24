@@ -62,14 +62,15 @@ public class RequestValidator {
     /**
      * Construct a new request validator with the given schema validator.
      *
-     * @param schemaValidator         The schema validator to use when validating
-     *                                request bodies
-     * @param messages                The message resolver to use
-     * @param api                     The OpenAPI spec to validate against
+     * @param schemaValidator The schema validator to use when validating request bodies
+     * @param messages The message resolver to use
+     * @param api The OpenAPI spec to validate against
      * @param customRequestValidators The list of custom validators to run
      */
-    public RequestValidator(final SchemaValidator schemaValidator, final MessageResolver messages, final OpenAPI api,
-            final List<CustomRequestValidator> customRequestValidators) {
+    public RequestValidator(final SchemaValidator schemaValidator,
+                            final MessageResolver messages,
+                            final OpenAPI api,
+                            final List<CustomRequestValidator> customRequestValidators) {
         this.messages = requireNonNull(messages, "A message resolver is required");
         this.components = defaultIfNull(api.getComponents(), new Components());
         this.customRequestValidators = customRequestValidators;
@@ -88,7 +89,7 @@ public class RequestValidator {
      * @return A validation report containing validation errors
      */
     @Nonnull
-    public ValidationReport validateRequest(final Request request, 
+    public ValidationReport validateRequest(final Request request,
                                             final ApiOperation apiOperation) {
         requireNonNull(request, "A request is required");
         requireNonNull(apiOperation, "An API operation is required");
@@ -115,20 +116,20 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private ValidationReport validateContentType(final Request request, 
+    private ValidationReport validateContentType(final Request request,
                                                  final ApiOperation apiOperation) {
-        return validateMediaTypes(request, 
-                Headers.CONTENT_TYPE, 
+        return validateMediaTypes(request,
+                Headers.CONTENT_TYPE,
                 getConsumes(apiOperation),
                 "validation.request.contentType.invalid",
                 "validation.request.contentType.notAllowed");
     }
 
     @Nonnull
-    private ValidationReport validateAccepts(final Request request, 
+    private ValidationReport validateAccepts(final Request request,
                                              final ApiOperation apiOperation) {
-        return validateMediaTypes(request, 
-                Headers.ACCEPT, 
+        return validateMediaTypes(request,
+                Headers.ACCEPT,
                 getProduces(apiOperation),
                 "validation.request.accept.invalid",
                 "validation.request.accept.notAllowed");
@@ -137,8 +138,8 @@ public class RequestValidator {
     @Nonnull
     private ValidationReport validateMediaTypes(final Request request,
                                                 final String headerName,
-                                                final Collection<String> specMediaTypes, 
-                                                final String invalidTypeKey, 
+                                                final Collection<String> specMediaTypes,
+                                                final String invalidTypeKey,
                                                 final String notAllowedKey) {
 
         final Collection<String> requestHeaderValues = request.getHeaderValues(headerName);
@@ -168,9 +169,9 @@ public class RequestValidator {
         return specMediaTypes
                 .stream()
                 .map(MediaType::parse)
-                .filter(specType -> 
+                .filter(specType ->
                         requestMediaTypes.stream()
-                                .anyMatch(requestType -> 
+                                .anyMatch(requestType ->
                                         specType.withoutParameters().is(requestType.withoutParameters())
                                 )
                 )
@@ -235,14 +236,14 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private ValidationReport validateQueryParameters(final Request request, 
+    private ValidationReport validateQueryParameters(final Request request,
                                                      final ApiOperation apiOperation) {
         return defaultIfNull(apiOperation.getOperation().getParameters(), Collections.<Parameter>emptyList())
                 .stream()
                 .filter(p -> isQueryParam(p) && !isDeepObjectParam(p))
                 .map(p -> validateParameter(
                         apiOperation, p,
-                        request.getQueryParameterValues(p.getName()), 
+                        request.getQueryParameterValues(p.getName()),
                         "validation.request.parameter.query.missing"))
                 .reduce(empty(), ValidationReport::merge);
     }

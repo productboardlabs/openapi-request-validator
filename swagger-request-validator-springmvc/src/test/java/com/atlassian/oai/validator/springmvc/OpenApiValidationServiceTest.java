@@ -373,7 +373,7 @@ public class OpenApiValidationServiceTest {
         assertThat(result.getQueryParameterValues("name=a"), equalTo(Arrays.asList("value=a")));
         assertThat(result.getQueryParameterValues("q[name]"), equalTo(Arrays.asList("q{value}", "q[value]")));
     }
- 
+
     @SpringBootApplication
     @RestController
     @RequestMapping(value = "/test controller", produces = "application/json")
