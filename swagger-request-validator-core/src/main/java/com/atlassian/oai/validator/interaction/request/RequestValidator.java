@@ -73,6 +73,7 @@ public class RequestValidator {
                             final List<CustomRequestValidator> customRequestValidators) {
         this.messages = requireNonNull(messages, "A message resolver is required");
         this.components = defaultIfNull(api.getComponents(), new Components());
+        
         this.customRequestValidators = customRequestValidators;
 
         parameterValidator = new ParameterValidator(schemaValidator, messages);
@@ -223,7 +224,7 @@ public class RequestValidator {
     }
 
     @Nonnull
-    private ValidationReport validatePathParameter(final ApiOperation apiOperation, 
+    private ValidationReport validatePathParameter(final ApiOperation apiOperation,
                                                    final String paramName,
                                                    final Optional<String> paramValue) {
         return defaultIfNull(apiOperation.getOperation().getParameters(), Collections.<Parameter>emptyList())
