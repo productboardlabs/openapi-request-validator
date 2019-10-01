@@ -35,7 +35,7 @@ public class ExtensionValidationTestExample {
     private static final String VALIDATION_REPORT_MESSAGE_VALUE = "Header Extension did not match expected value";
 
     private final TestExtensionValidator testExtensionValidator = new TestExtensionValidator();
-    private final OpenApiInteractionValidator validator = OpenApiInteractionValidator.createFor(OPENAPI_SPEC_URL)
+    private final OpenApiInteractionValidator validator = OpenApiInteractionValidator.createForSpecificationUrl(OPENAPI_SPEC_URL)
             .withCustomRequestValidation(testExtensionValidator)
             .withCustomResponseValidation(testExtensionValidator)
             .build();

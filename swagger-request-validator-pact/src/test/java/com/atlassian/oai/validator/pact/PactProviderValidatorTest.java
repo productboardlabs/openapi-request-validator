@@ -123,7 +123,7 @@ public class PactProviderValidatorTest {
         final PactProviderValidationResults results =
                 PactProviderValidator
                         .createFor(OpenApiInteractionValidator
-                                .createFor("/oai/api-users.json")
+                                .createForSpecificationUrl("/oai/api-users.json")
                                 .withLevelResolver(PactLevelResolverFactory.create())
                                 .build()
                         )

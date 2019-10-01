@@ -20,10 +20,10 @@ public class ValidationErrorWhitelistingTest {
     @Test
     public void whitelistedRequestFailuresShouldBeIgnored() {
         final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
-                .createFor("/oai/v2/api-users.json")
+                .createForSpecificationUrl("/oai/v2/api-users.json")
                 .withWhitelist(ValidationErrorsWhitelist.create()
                         .withRule("Ignore paths", WhitelistRules.messageContains("No API path"))
-                    .withRule("Ignore NewUser entity errors", WhitelistRules.entityIs("NewUser")))
+                        .withRule("Ignore NewUser entity errors", WhitelistRules.entityIs("NewUser")))
                 .build();
 
         final ValidationReport report = classUnderTest.validateRequest(SimpleRequest.Builder.get("/non-existent-path").build());
@@ -36,7 +36,7 @@ public class ValidationErrorWhitelistingTest {
     @Test
     public void whitelistedResponseFailuresShouldBeIgnored() {
         final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
-                .createFor("/oai/v2/api-users.json")
+                .createForSpecificationUrl("/oai/v2/api-users.json")
                 .withWhitelist(ValidationErrorsWhitelist.create()
                         .withRule("Ignore PATCH operation missing", WhitelistRules.messageContains("PATCH operation not allowed"))
                         .withRule("Ignore schema type", WhitelistRules.messageHasKey("validation.response.body.schema.type")))

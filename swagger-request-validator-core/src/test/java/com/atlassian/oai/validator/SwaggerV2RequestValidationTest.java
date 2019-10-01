@@ -27,7 +27,7 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadResource;
 public class SwaggerV2RequestValidationTest {
 
     private final OpenApiInteractionValidator classUnderTest =
-            OpenApiInteractionValidator.createFor("/oai/v2/api-users.json").build();
+            OpenApiInteractionValidator.createForSpecificationUrl("/oai/v2/api-users.json").build();
 
     private final Response validUserResponse =
             SimpleResponse.Builder.ok().withBody(loadJsonResponse("user-valid")).build();
@@ -194,10 +194,10 @@ public class SwaggerV2RequestValidationTest {
     public void validate_withRequestMissingRequiredMultipartFormDataBody_shouldFail() {
         final String formData =
                 "--------------------------3046b8889e52e808\r\n" +
-                "Content-Disposition: form-data; name=\"additionalMetadata\"\r\n" +
-                "\r\n" +
-                "abc@gmail.com\r\n" +
-                "--------------------------3046b8889e52e808";
+                        "Content-Disposition: form-data; name=\"additionalMetadata\"\r\n" +
+                        "\r\n" +
+                        "abc@gmail.com\r\n" +
+                        "--------------------------3046b8889e52e808";
 
         final Request request = SimpleRequest.Builder
                 .post("/secure/users/1/upload")
@@ -724,8 +724,9 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withRefParams_shouldPass_whenRequiredParamSupplied() {
-        final OpenApiInteractionValidator classUnderTest =
-                OpenApiInteractionValidator.createFor("/oai/v2/api-ref-params.json").build();
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v2/api-ref-params.json")
+                .build();
 
         final Request request = SimpleRequest.Builder
                 .get("/myresource")
@@ -738,8 +739,9 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withRefParams_shouldFail_whenRequiredParamMissing() {
-        final OpenApiInteractionValidator classUnderTest =
-                OpenApiInteractionValidator.createFor("/oai/v2/api-ref-params.json").build();
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v2/api-ref-params.json")
+                .build();
 
         final Request request = SimpleRequest.Builder
                 .get("/myresource")
@@ -751,8 +753,9 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withRefParams_shouldPass_whenSpecSuppliedAsString() {
-        final OpenApiInteractionValidator classUnderTest =
-                OpenApiInteractionValidator.createFor(loadResource("/oai/v2/api-ref-params.json")).build();
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForInlineApiSpecification(loadResource("/oai/v2/api-ref-params.json"))
+                .build();
 
         final Request request = SimpleRequest.Builder
                 .get("/myresource")
@@ -765,8 +768,9 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withPartPathParams_shouldPass_whenValid() {
-        final OpenApiInteractionValidator classUnderTest =
-                OpenApiInteractionValidator.createFor("/oai/v2/api-operation-finder-test.json").build();
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v2/api-operation-finder-test.json")
+                .build();
 
         final Request request = SimpleRequest.Builder
                 .get("/pathparams/withextension/theid.json")
@@ -777,8 +781,9 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withPartPathParams_shouldFail_whenMissing() {
-        final OpenApiInteractionValidator classUnderTest =
-                OpenApiInteractionValidator.createFor("/oai/v2/api-operation-finder-test.json").build();
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v2/api-operation-finder-test.json")
+                .build();
 
         final Request request = SimpleRequest.Builder
                 .get("/pathparams/withextension/.json")
@@ -789,8 +794,9 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withMultiplePathParams_shouldPass_whenAllValid() {
-        final OpenApiInteractionValidator classUnderTest =
-                OpenApiInteractionValidator.createFor("/oai/v2/api-operation-finder-test.json").build();
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v2/api-operation-finder-test.json")
+                .build();
 
         final Request request = SimpleRequest.Builder
                 .get("/pathparams/withmultiple/theid-thename")
@@ -801,8 +807,9 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withMultiplePathParams_shouldFail_whenMissing() {
-        final OpenApiInteractionValidator classUnderTest =
-                OpenApiInteractionValidator.createFor("/oai/v2/api-operation-finder-test.json").build();
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v2/api-operation-finder-test.json")
+                .build();
 
         final Request request = SimpleRequest.Builder
                 .get("/pathparams/withmultiple/-thename")
@@ -813,8 +820,9 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withXmlBody_shouldNotApplySchemaValidation() {
-        final OpenApiInteractionValidator classUnderTest =
-                OpenApiInteractionValidator.createFor("/oai/v2/api-non-json-body.json").build();
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v2/api-non-json-body.json")
+                .build();
 
         final Request request = SimpleRequest.Builder
                 .post("/results")
@@ -827,8 +835,9 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withPlainTextBody_shouldNotApplySchemaValidation() {
-        final OpenApiInteractionValidator classUnderTest =
-                OpenApiInteractionValidator.createFor("/oai/v2/api-non-json-body.json").build();
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v2/api-non-json-body.json")
+                .build();
 
         final Request request = SimpleRequest.Builder
                 .patch("/results/100")
@@ -841,8 +850,9 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withRequiredNullablePrimitive_shouldPass_whenNull() {
-        final OpenApiInteractionValidator classUnderTest =
-                OpenApiInteractionValidator.createFor("/oai/v2/api-nullable.json").build();
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v2/api-nullable.json")
+                .build();
 
         final Request request = SimpleRequest.Builder
                 .post("/nullablePrimitive")
@@ -855,8 +865,9 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withRequiredNullablePrimitive_shouldPass_whenProvided() {
-        final OpenApiInteractionValidator classUnderTest =
-                OpenApiInteractionValidator.createFor("/oai/v2/api-nullable.json").build();
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v2/api-nullable.json")
+                .build();
 
         final Request request = SimpleRequest.Builder
                 .post("/nullablePrimitive")
@@ -869,8 +880,9 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withRequiredNullablePrimitive_shouldFail_whenMissing() {
-        final OpenApiInteractionValidator classUnderTest =
-                OpenApiInteractionValidator.createFor("/oai/v2/api-nullable.json").build();
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v2/api-nullable.json")
+                .build();
 
         final Request request = SimpleRequest.Builder
                 .post("/nullablePrimitive")
@@ -883,8 +895,9 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withRequiredNullableProperty_shouldPass_whenNull() {
-        final OpenApiInteractionValidator classUnderTest =
-                OpenApiInteractionValidator.createFor("/oai/v2/api-nullable.json").build();
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v2/api-nullable.json")
+                .build();
 
         final Request request = SimpleRequest.Builder
                 .post("/nullableProperty")
@@ -897,8 +910,9 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withRequiredNullableProperty_shouldPass_whenNonNull() {
-        final OpenApiInteractionValidator classUnderTest =
-                OpenApiInteractionValidator.createFor("/oai/v2/api-nullable.json").build();
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v2/api-nullable.json")
+                .build();
 
         final Request request = SimpleRequest.Builder
                 .post("/nullableProperty")
@@ -911,8 +925,9 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withRequiredNullableProperty_shouldFail_whenMissing() {
-        final OpenApiInteractionValidator classUnderTest =
-                OpenApiInteractionValidator.createFor("/oai/v2/api-nullable.json").build();
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v2/api-nullable.json")
+                .build();
 
         final Request request = SimpleRequest.Builder
                 .post("/nullableProperty")
@@ -927,7 +942,7 @@ public class SwaggerV2RequestValidationTest {
     @Test
     public void validate_withCustomValidation_shouldPass() {
         final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
-                .createFor("/oai/v2/api-users.json")
+                .createForSpecificationUrl("/oai/v2/api-users.json")
                 .withCustomRequestValidation(new TestValidator())
                 .build();
 
@@ -942,7 +957,7 @@ public class SwaggerV2RequestValidationTest {
     @Test
     public void validate_withCustomValidation_shouldFail() {
         final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
-                .createFor("/oai/v2/api-users.json")
+                .createForSpecificationUrl("/oai/v2/api-users.json")
                 .withCustomRequestValidation(new TestValidator())
                 .build();
 
@@ -972,17 +987,17 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withUnexpectedQueryParam_shouldFail() {
-        final OpenApiInteractionValidator classUnderTest =
-            OpenApiInteractionValidator.createFor("/oai/v2/api-users.json")
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v2/api-users.json")
                 .withLevelResolver(LevelResolver.create()
-                    .withLevel("validation.request.parameter.query.unexpected", ValidationReport.Level.ERROR)
-                    .build()).build();
-        
+                        .withLevel("validation.request.parameter.query.unexpected", ValidationReport.Level.ERROR)
+                        .build()).build();
+
         final Request request = SimpleRequest.Builder.get("/users")
-            .withAuthorization("Basic EncryptedUsernameAndPassword")
-            .withQueryParam("UnexpectedParameter", "Value").build();
-        
+                .withAuthorization("Basic EncryptedUsernameAndPassword")
+                .withQueryParam("UnexpectedParameter", "Value").build();
+
         assertFail(classUnderTest.validateRequest(request),
-            "validation.request.parameter.query.unexpected");
+                "validation.request.parameter.query.unexpected");
     }
 }
