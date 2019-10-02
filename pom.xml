@@ -70,7 +70,7 @@
         <swagger-parser.version>2.0.5</swagger-parser.version>
         <wiremock.version>2.25.0</wiremock.version>
 
-        <checkstyle.version>8.19</checkstyle.version>
+        <checkstyle.version>8.25</checkstyle.version>
         <license-maven-plugin.version>1.20</license-maven-plugin.version>
         <maven-checkstyle-plugin.version>3.1.0</maven-checkstyle-plugin.version>
     </properties>
