@@ -17,6 +17,7 @@
     </description>
 
     <properties>
+        <!-- Use a different version of rest-assured during tests to address incompatible versions of Groovy -->
         <rest-assured.test.version>4.1.1</rest-assured.test.version>
     </properties>
 
