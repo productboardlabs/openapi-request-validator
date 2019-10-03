@@ -1,4 +1,4 @@
-#v2.6.0
+#v2.7.0
 * Bumped versions of a number of dependencies
 
 ### Upgrade notes
@@ -16,6 +16,12 @@ builders on the `PactProviderValidator`) please review your usage.
 
 The Pact JUnit fragment builder now also requires returning a `RequestResponsePact` rather than a `PactFragment`. 
 See `OpenApiValidatorPactConsumerTestExample` for examples.  
+
+#v2.6.0
+* Added factory methods to create `OpenApiInteractionValidator` instances with a spec or URL to avoid having to guess at
+what has been provided.
+[[#236]](https://bitbucket.org/atlassian/swagger-request-validator/issues/236)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/142)
 
 #v2.5.0
 * Added support for Cookie parameter validation
