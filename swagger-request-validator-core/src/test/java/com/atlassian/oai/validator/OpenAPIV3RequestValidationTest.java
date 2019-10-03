@@ -21,7 +21,7 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadRequest;
 public class OpenAPIV3RequestValidationTest {
 
     private final OpenApiInteractionValidator classUnderTest =
-            OpenApiInteractionValidator.createFor("/oai/v3/api-users.yaml").build();
+            OpenApiInteractionValidator.createForSpecificationUrl("/oai/v3/api-users.yaml").build();
 
     @Test
     public void validate_withValidRequest_shouldSucceed() {
@@ -193,7 +193,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withOneOfComposition_shouldPass_whenValid() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-complex-composition.yaml")
                         .withLevelResolver(withAdditionalPropertiesIgnored())
                         .build();
 
@@ -210,7 +210,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withOneOfComposition_shouldPass_whenValid_withNesting() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-complex-composition.yaml")
                         .withLevelResolver(withAdditionalPropertiesIgnored())
                         .build();
 
@@ -227,7 +227,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withOneOfComposition_shouldPass_whenValid_withNestedArrays() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-complex-composition.yaml")
                         .withLevelResolver(withAdditionalPropertiesIgnored())
                         .build();
 
@@ -244,7 +244,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withOneOfComposition_fails_whenAdditionalPropertiesNotIgnored() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-complex-composition.yaml")
                         .build();
 
         final Request request = SimpleRequest.Builder
@@ -261,7 +261,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withOneOfComposition_shouldFail_whenInvalidAccordingToSchema() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-complex-composition.yaml")
                         .withLevelResolver(withAdditionalPropertiesIgnored())
                         .build();
 
@@ -279,7 +279,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withOneOfComposition_shouldFail_whenInvalidSchema_withNesting() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-complex-composition.yaml")
                         .withLevelResolver(withAdditionalPropertiesIgnored())
                         .build();
 
@@ -297,7 +297,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withOneOfComposition_shouldFail_whenMatchingMultiple() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-complex-composition.yaml")
                         .withLevelResolver(withAdditionalPropertiesIgnored())
                         .build();
 
@@ -315,7 +315,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withAllOfComposition_shouldPass_whenValid() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-complex-composition.yaml")
                         .withLevelResolver(withAdditionalPropertiesIgnored())
                         .build();
 
@@ -332,7 +332,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withAllOfComposition_fails_whenAdditionalPropertiesNotIgnored() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-complex-composition.yaml")
                         .build();
 
         final Request request = SimpleRequest.Builder
@@ -349,7 +349,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withAllOfComposition_shouldFail_whenInvalidAccordingToSchema() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-complex-composition.yaml")
                         .withLevelResolver(withAdditionalPropertiesIgnored())
                         .build();
 
@@ -367,7 +367,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withAllOfComposition_shouldFail_whenDoesNotMatchAll() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-complex-composition.yaml")
                         .withLevelResolver(withAdditionalPropertiesIgnored())
                         .build();
 
@@ -385,7 +385,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withAnyOfComposition_shouldPass_whenValid() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-complex-composition.yaml")
                         .withLevelResolver(withAdditionalPropertiesIgnored())
                         .build();
 
@@ -402,7 +402,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withAnyOfComposition_shouldPass_whenValid_withNesting() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-complex-composition.yaml")
                         .withLevelResolver(withAdditionalPropertiesIgnored())
                         .build();
 
@@ -419,7 +419,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withAnyOfComposition_fails_whenAdditionalPropertiesNotIgnored() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-complex-composition.yaml")
                         .build();
 
         final Request request = SimpleRequest.Builder
@@ -436,7 +436,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withAnyOfComposition_shouldFail_whenInvalidAccordingToSchema() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-complex-composition.yaml")
                         .withLevelResolver(withAdditionalPropertiesIgnored())
                         .build();
 
@@ -454,7 +454,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withAnyOfComposition_shouldPass_whenInvalidSchema_withNesting() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-complex-composition.yaml")
                         .withLevelResolver(withAdditionalPropertiesIgnored())
                         .build();
 
@@ -472,7 +472,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withAnyOfComposition_shouldFail_whenMatchesNone() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-complex-composition.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-complex-composition.yaml")
                         .withLevelResolver(withAdditionalPropertiesIgnored())
                         .build();
 
@@ -489,7 +489,7 @@ public class OpenAPIV3RequestValidationTest {
     @Test
     public void validate_withFormData_shouldPass_whenValid() {
         final OpenApiInteractionValidator classUnderTest =
-                OpenApiInteractionValidator.createFor("/oai/v3/api-formdata.yaml").build();
+                OpenApiInteractionValidator.createForSpecificationUrl("/oai/v3/api-formdata.yaml").build();
 
         final Request request = SimpleRequest.Builder
                 .post("/formdata")
@@ -503,7 +503,7 @@ public class OpenAPIV3RequestValidationTest {
     @Test
     public void validate_withFormData_shouldFail_whenInvalidSchema() {
         final OpenApiInteractionValidator classUnderTest =
-                OpenApiInteractionValidator.createFor("/oai/v3/api-formdata.yaml").build();
+                OpenApiInteractionValidator.createForSpecificationUrl("/oai/v3/api-formdata.yaml").build();
 
         final Request request = SimpleRequest.Builder
                 .post("/formdata")
@@ -517,7 +517,7 @@ public class OpenAPIV3RequestValidationTest {
     @Test
     public void validate_withFormData_shouldFail_whenMissingRequiredField() {
         final OpenApiInteractionValidator classUnderTest =
-                OpenApiInteractionValidator.createFor("/oai/v3/api-formdata.yaml").build();
+                OpenApiInteractionValidator.createForSpecificationUrl("/oai/v3/api-formdata.yaml").build();
 
         final Request request = SimpleRequest.Builder
                 .post("/formdata")
@@ -532,7 +532,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withNullablePrimitive_shouldPass_whenNullProvided() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-nullable.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-nullable.yaml")
                         .build();
 
         final Request request = SimpleRequest.Builder
@@ -548,7 +548,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withNullablePrimitive_shouldPass_whenValueProvided() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-nullable.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-nullable.yaml")
                         .build();
 
         final Request request = SimpleRequest.Builder
@@ -564,7 +564,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withRequiredNullableProperty_shouldPass_whenNullProvided() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-nullable.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-nullable.yaml")
                         .build();
 
         final Request request = SimpleRequest.Builder
@@ -580,7 +580,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withRequiredNullableProperty_shouldPass_whenValueProvided() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-nullable.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-nullable.yaml")
                         .build();
 
         final Request request = SimpleRequest.Builder
@@ -596,7 +596,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withRequiredNullableProperty_shouldFail_whenMissing() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-nullable.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-nullable.yaml")
                         .build();
 
         final Request request = SimpleRequest.Builder
@@ -613,7 +613,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withNullableArrayItem_shouldPass_whenNullProvided() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-nullable.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-nullable.yaml")
                         .build();
 
         final Request request = SimpleRequest.Builder
@@ -629,7 +629,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withNullableArrayItem_shouldPass_whenValueProvided() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-nullable.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-nullable.yaml")
                         .build();
 
         final Request request = SimpleRequest.Builder
@@ -645,7 +645,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withNullableArrayItem_shouldFail_whenNotProvided() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-nullable.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-nullable.yaml")
                         .build();
 
         final Request request = SimpleRequest.Builder
@@ -662,7 +662,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withReferencedRequestBody_shouldPass_whenValidBody() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-referenced-requestbody.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-referenced-requestbody.yaml")
                         .build();
 
         final Request request = SimpleRequest.Builder
@@ -678,7 +678,7 @@ public class OpenAPIV3RequestValidationTest {
     public void validate_withReferencedRequestBody_shouldFail_whenInvalidBody() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-referenced-requestbody.yaml")
+                        .createForSpecificationUrl("/oai/v3/api-referenced-requestbody.yaml")
                         .build();
 
         final Request request = SimpleRequest.Builder
@@ -694,7 +694,7 @@ public class OpenAPIV3RequestValidationTest {
     @Test
     public void validate_withCustomValidation_shouldPass() {
         final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
-                .createFor("/oai/v3/api-users.yaml")
+                .createForSpecificationUrl("/oai/v3/api-users.yaml")
                 .withCustomRequestValidation(new TestValidator())
                 .build();
 
@@ -709,7 +709,7 @@ public class OpenAPIV3RequestValidationTest {
     @Test
     public void validate_withCustomValidation_shouldFail() {
         final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
-                .createFor("/oai/v3/api-users.yaml")
+                .createForSpecificationUrl("/oai/v3/api-users.yaml")
                 .withCustomRequestValidation(new TestValidator())
                 .build();
 
@@ -719,6 +719,51 @@ public class OpenAPIV3RequestValidationTest {
                 .build();
 
         assertFail(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withPatterns_shouldPass_whenValid() {
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-with-patterns.yaml")
+                .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/pattern")
+                .withContentType("application/json")
+                .withBody("{\"patternInline\": \"bbbbbba\", \"patternByRef\": \"aaaaaabbbbb\"}")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withPatterns_shouldFail_whenInvalidInline() {
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-with-patterns.yaml")
+                .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/pattern")
+                .withContentType("application/json")
+                .withBody("{\"patternInline\": \"aaa\", \"patternByRef\": \"abbbbb\"}")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request), "validation.request.body.schema.pattern");
+    }
+
+    @Test
+    public void validate_withPatterns_shouldFail_whenInvalidByRef() {
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-with-patterns.yaml")
+                .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/pattern")
+                .withContentType("application/json")
+                .withBody("{\"patternInline\": \"baaa\", \"patternByRef\": \"bbbbb\"}")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request), "validation.request.body.schema.pattern");
     }
 
     private class TestValidator implements CustomRequestValidator {
@@ -740,16 +785,16 @@ public class OpenAPIV3RequestValidationTest {
     @Test
     public void validate_withUnexpectedQueryParam_shouldFail() {
         final OpenApiInteractionValidator classUnderTest =
-            OpenApiInteractionValidator.createFor("/oai/v3/api-users.yaml")
-                .withLevelResolver(LevelResolver.create()
-                    .withLevel("validation.request.parameter.query.unexpected", ValidationReport.Level.ERROR)
-                    .build()).build();
+                OpenApiInteractionValidator.createForSpecificationUrl("/oai/v3/api-users.yaml")
+                        .withLevelResolver(LevelResolver.create()
+                                .withLevel("validation.request.parameter.query.unexpected", ValidationReport.Level.ERROR)
+                                .build()).build();
 
         final Request request = SimpleRequest.Builder.get("/users")
-            .withAuthorization("Basic EncryptedUsernameAndPassword")
-            .withQueryParam("UnexpectedParameter", "Value").build();
+                .withAuthorization("Basic EncryptedUsernameAndPassword")
+                .withQueryParam("UnexpectedParameter", "Value").build();
 
         assertFail(classUnderTest.validateRequest(request),
-            "validation.request.parameter.query.unexpected");
+                "validation.request.parameter.query.unexpected");
     }
 }

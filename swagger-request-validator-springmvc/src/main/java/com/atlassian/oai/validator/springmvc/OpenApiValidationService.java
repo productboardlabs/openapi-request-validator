@@ -11,6 +11,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.web.util.ContentCachingResponseWrapper;
+import org.springframework.web.util.UrlPathHelper;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -32,17 +33,19 @@ class OpenApiValidationService {
 
     private static final List<String> URI_CHARSETS = resolveAvailableCharsets();
     private final OpenApiInteractionValidator validator;
+    private final UrlPathHelper urlPathHelper;
 
-    OpenApiValidationService(final EncodedResource specUrlOrPayload) throws IOException {
+    OpenApiValidationService(final EncodedResource specUrlOrPayload, final UrlPathHelper urlPathHelper) throws IOException {
         this(OpenApiInteractionValidator
                 .createFor(readReader(specUrlOrPayload.getReader(), -1))
                 .withLevelResolver(SpringMVCLevelResolverFactory.create())
-                .build());
+                .build(), urlPathHelper);
     }
 
-    OpenApiValidationService(final OpenApiInteractionValidator validator) {
+    OpenApiValidationService(final OpenApiInteractionValidator validator, final UrlPathHelper urlPathHelper) {
         requireNonNull(validator, "An OpenAPI validator is required.");
         this.validator = validator;
+        this.urlPathHelper = urlPathHelper;
     }
 
     private static List<String> resolveAvailableCharsets() {
@@ -53,6 +56,12 @@ class OpenApiValidationService {
         uriCharsets.remove(StandardCharsets.UTF_8.name());
         uriCharsets.add(0, StandardCharsets.UTF_8.name());
         return uriCharsets;
+    }
+
+    private String resolveServletPath(final HttpServletRequest servletRequest) {
+        // The method HttpServletRequest#getServletPath might return NULL even in case there is an actual
+        // servlet path. The UrlPathHelper is helping getting the servlet path.
+        return urlPathHelper.getPathWithinApplication(servletRequest);
     }
 
     /**
@@ -66,7 +75,7 @@ class OpenApiValidationService {
         requireNonNull(servletRequest, "A request is required.");
 
         final Request.Method method = Request.Method.valueOf(servletRequest.getMethod());
-        final String path = servletRequest.getServletPath();
+        final String path = resolveServletPath(servletRequest);
         final SimpleRequest.Builder builder = new SimpleRequest.Builder(method, path);
         final int contentLength = servletRequest.getContentLength();
         final String body = readReader(servletRequest.getReader(), contentLength);
@@ -123,7 +132,7 @@ class OpenApiValidationService {
     ValidationReport validateResponse(final HttpServletRequest servletRequest,
                                       final Response response) {
         final Request.Method method = Request.Method.valueOf(servletRequest.getMethod());
-        final String path = servletRequest.getServletPath();
+        final String path = resolveServletPath(servletRequest);
         return validator.validateResponse(path, method, response);
     }
 

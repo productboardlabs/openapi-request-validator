@@ -4,8 +4,10 @@ import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.report.ListProcessingReport;
 import com.github.fge.jsonschema.core.report.ProcessingMessage;
@@ -18,20 +20,21 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.ArrayList;
 import java.util.stream.StreamSupport;
 
 import static com.atlassian.oai.validator.schema.SwaggerV20Library.OAI_V2_METASCHEMA_URI;
 import static com.atlassian.oai.validator.schema.SwaggerV20Library.schemaFactory;
 import static com.atlassian.oai.validator.util.StringUtils.capitalise;
-import static com.atlassian.oai.validator.util.StringUtils.quote;
 import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
 import static java.util.Objects.requireNonNull;
 
@@ -91,7 +94,6 @@ public class SchemaValidator {
      * @param value The value to validate
      * @param schema The schema to validate the value against
      * @param keyPrefix A prefix to apply to validation messages emitted by the validator
-     *
      * @return A validation report containing accumulated validation errors
      */
     @Nonnull
@@ -108,6 +110,11 @@ public class SchemaValidator {
             final JsonNode schemaObject, content;
             try {
                 schemaObject = readSchema(schema);
+                final List<String> required = getRequired(schema, keyPrefix);
+                if (required != null && !required.isEmpty()) {
+                    setRequired((ObjectNode) schemaObject, required);
+                }
+
                 content = readContent(value, schema);
 
                 checkForKnownGotchasAndLogMessage(schemaObject);
@@ -145,6 +152,50 @@ public class SchemaValidator {
         }
     }
 
+    private void setRequired(final ObjectNode schemaObject, final List<String> required) throws IOException {
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        final ObjectMapper mapper = new ObjectMapper();
+        mapper.writeValue(out, required);
+        schemaObject.set("required", Json.mapper().readTree(out.toString()));
+    }
+
+    private List<String> getRequired(final Schema schema, @Nullable final String keyPrefix) {
+        if (keyPrefix == null || schema.getRequired() == null) {
+            return null;
+        }
+
+        final Map<String, Schema> properties = schema.getProperties();
+        final List<String> required = schema.getRequired();
+        final List<String> requiredUpdated = new ArrayList<>(required);
+        required.forEach(property -> {
+            removeReadOnlyRequiredPropertyForRequestBody(keyPrefix, properties, requiredUpdated, property);
+            removeWriteOnlyRequiredPropertyForResponeBody(keyPrefix, properties, requiredUpdated, property);
+        });
+        return requiredUpdated;
+    }
+
+    private void removeWriteOnlyRequiredPropertyForResponeBody(final String keyPrefix,
+                                                               final Map<String, Schema> properties,
+                                                               final List<String> requiredUpdated,
+                                                               final String property) {
+        if (keyPrefix.equals("response.body")
+                && properties.get(property).getWriteOnly() != null
+                && properties.get(property).getWriteOnly()) {
+            requiredUpdated.remove(property);
+        }
+    }
+
+    private void removeReadOnlyRequiredPropertyForRequestBody(final String keyPrefix,
+                                                              final Map<String, Schema> properties,
+                                                              final List<String> requiredUpdated,
+                                                              final String property) {
+        if (keyPrefix.equals("request.body")
+                && properties.get(property).getReadOnly() != null
+                && properties.get(property).getReadOnly()) {
+            requiredUpdated.remove(property);
+        }
+    }
+
     private JsonNode readSchema(@Nonnull final Object schema) throws IOException {
         final JsonNode schemaObject = Json.mapper().readTree(Json.pretty(schema));
         setupSchemaDefinitionRefs(schemaObject);
@@ -158,7 +209,6 @@ public class SchemaValidator {
         if (additionalPropertiesValidationEnabled()) {
             injectAdditionalPropertiesDirectiveIntoTree(rootNode);
         }
-
         if (api != null) {
             if (definitions == null) {
                 definitions = (api.getComponents() == null || api.getComponents().getSchemas() == null) ?
@@ -246,28 +296,33 @@ public class SchemaValidator {
             return Json.mapper().readTree("null");
         }
 
-        String normalisedValue = value;
         if (schema instanceof DateTimeSchema) {
-            normalisedValue = normaliseDateTime(value);
-        } else if ("string".equalsIgnoreCase(schema.getType())) {
-            normalisedValue = quote(value);
-        } else if ("number".equalsIgnoreCase(schema.getType()) ||
-                "integer".equalsIgnoreCase(schema.getType())) {
-            normalisedValue = normaliseNumber(value);
+            return createStringNode(normaliseDateTime(value));
         }
-        return Json.mapper().readTree(normalisedValue);
+        if ("string".equalsIgnoreCase(schema.getType())) {
+            return createStringNode(value);
+        }
+        if ("number".equalsIgnoreCase(schema.getType()) ||
+                "integer".equalsIgnoreCase(schema.getType())) {
+            return createNumericNode(value);
+        }
+
+        return Json.mapper().readTree(value);
     }
 
-    private String normaliseNumber(final String value) {
+    private JsonNode createStringNode(final String value) {
+        return new TextNode(value);
+    }
+
+    private JsonNode createNumericNode(final String value) throws IOException {
         try {
             Double.parseDouble(value);
             // Valid number. Leave unquoted.
-            return value;
+            return Json.mapper().readTree(value);
         } catch (final NumberFormatException e) {
             // Invalid number. Schema validator will generate appropriate errors.
-            return quote(value);
+            return createStringNode(value);
         }
-
     }
 
     private String normaliseDateTime(final String dateTime) {
@@ -283,7 +338,7 @@ public class SchemaValidator {
             // Could not parse to RFC3339 format. Schema validator will throw the appropriate error
         }
         //CHECKSTYLE:ON
-        return quote(formatedDateTime);
+        return formatedDateTime;
     }
 
     private boolean additionalPropertiesValidationEnabled() {
@@ -301,7 +356,15 @@ public class SchemaValidator {
     private ValidationReport getProcessingMessage(final ProcessingMessage pm,
                                                   final String keywordOverride,
                                                   final String keyPrefix) {
-        final JsonNode processingMessage = pm.asJson();
+
+        return ValidationReport.singleton(
+                toValidationReportMessage(pm.asJson(), keywordOverride, keyPrefix));
+    }
+
+    private ValidationReport.Message toValidationReportMessage(final JsonNode processingMessage,
+                                                               final String keywordOverride,
+                                                               final String keyPrefix) {
+
         final String validationKeyword = keywordOverride != null ? keywordOverride : processingMessage.get("keyword").textValue();
         final String pointer = processingMessage.has("instance") ? processingMessage.get("instance").get("pointer").textValue() : "";
 
@@ -317,14 +380,33 @@ public class SchemaValidator {
 
         final String message =
                 (pointer.isEmpty() ? "" : "[Path '" + pointer + "'] ")
-                        + capitalise(pm.getMessage());
+                        + capitalise(processingMessage.get("message").textValue());
 
-        return ValidationReport.singleton(
-                messages.create(
-                        "validation." + keyPrefix + ".schema." + validationKeyword,
-                        message, subReports.toArray(new String[0])
-                )
-        );
+        final ValidationReport.Message validationReportMessage = messages.create(
+                "validation." + keyPrefix + ".schema." + validationKeyword,
+                message, subReports.toArray(new String[0]));
+
+        return withNestedMessages(processingMessage, keywordOverride, keyPrefix, validationReportMessage);
+    }
+
+    private ValidationReport.Message withNestedMessages(final JsonNode processingMessage,
+                                                        final String keywordOverride,
+                                                        final String keyPrefix,
+                                                        final ValidationReport.Message validationReportMessage) {
+        if (!processingMessage.has("reports")) {
+            return validationReportMessage;
+        }
+
+        // Recursively convert 'reports' node children to ValidationReport.Message and add as nested messages
+        final List<ValidationReport.Message> nestedMessages = new ArrayList<>();
+        final JsonNode reports = processingMessage.get("reports");
+        reports.fields().forEachRemaining(field -> {
+            field.getValue().elements().forEachRemaining(report -> {
+                nestedMessages.add(toValidationReportMessage(report, keywordOverride, keyPrefix));
+            });
+        });
+
+        return validationReportMessage.withNestedMessages(nestedMessages);
     }
 
 }

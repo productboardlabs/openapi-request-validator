@@ -39,7 +39,7 @@ class IsEntityWhitelistRule implements RequestOrResponseWhitelistRule {
         }
 
         final ApiResponse apiResponse = getApiResponse(response, operation);
-        if (apiResponse == null) {
+        if (apiResponse == null || apiResponse.getContent() == null) {
             return false;
         }
 

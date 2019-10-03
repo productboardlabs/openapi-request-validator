@@ -22,7 +22,7 @@ public class ValidatedWireMockRuleTest {
     @Test
     public void canBeCreatedWithAnExistingValidator() {
         new ValidatedWireMockRule(
-                OpenApiInteractionValidator.createFor("api-oai3.yaml").build(),
+                OpenApiInteractionValidator.createForSpecificationUrl("api-oai3.yaml").build(),
                 options().dynamicPort()
         );
     }

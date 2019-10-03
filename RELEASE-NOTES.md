@@ -1,6 +1,56 @@
+#v2.6.0
+* Added factory methods to create `OpenApiInteractionValidator` instances with a spec or URL to avoid having to guess at
+what has been provided.
+[[#236]](https://bitbucket.org/atlassian/swagger-request-validator/issues/236)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/142)
+
+#v2.5.0
+* Added support for Cookie parameter validation
+[[#224]](https://bitbucket.org/atlassian/swagger-request-validator/issues/224)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/138)
+* Improved validation messages by including messages from deeply nested objects during schema validation
+[[#221]](https://bitbucket.org/atlassian/swagger-request-validator/issues/221)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/140)
+
+#v2.4.7
+* Added a constructor to `com.atlassian.oai.validator.springmvc.OpenApiValidationInterceptor` to allow a custom 
+report handler to be provided
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/139)
+
+#v2.4.6
+* Improved performance for validation of long Base64 encoded strings
+[[#225]](https://bitbucket.org/atlassian/swagger-request-validator/issues/225)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/137)
+* Fixed treatment of the `required` flag when used with `readOnly` and `writeOnly` in request/response bodies
+[[#207]](https://bitbucket.org/atlassian/swagger-request-validator/issues/207)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/133)
+
+#v2.4.5
+* Fixed a bug where backslashes in query params etc. are treated incorrectly during validation
+[[#220]](https://bitbucket.org/atlassian/swagger-request-validator/issues/220)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/134)
+
+#v2.4.4
+* Fixed a problem where the request path can be null under some circumstances in Spring MVC
+[[#218]](https://bitbucket.org/atlassian/swagger-request-validator/issues/218)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/136)
+
+#v2.4.3
+* Fix NPE in the `IsEntityWhitelistRule` when there is no content in the response
+[[#222]](https://bitbucket.org/atlassian/swagger-request-validator/issues/222)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/135)
+
+#v2.4.2
+* Bump version of `json-schema-validator` to pickup improvements
+[[#216]](https://bitbucket.org/atlassian/swagger-request-validator/issues/216)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/132)
+* Fix decoding of query param names in the `swagger-request-validator-springmvc` module
+[[#215]](https://bitbucket.org/atlassian/swagger-request-validator/issues/215)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/130)
+
 #v2.4.1
 * Improve memory usage in the Spring MVC adapter
-[[#213]](https://bitbucket.org/atlassian/swagger-request-validator/issues/109)
+[[#213]](https://bitbucket.org/atlassian/swagger-request-validator/issues/213)
 [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/129)
 
 #v2.4.0
