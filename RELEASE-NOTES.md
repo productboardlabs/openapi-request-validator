@@ -5,7 +5,10 @@
 
 If you use the Pact adapter, the change from version `v3.5.20` to `v3.6.14` of the Pact JVM library
 has brought some changes to the `ConsumerInfo` constructor. If you create these directly (rather than using the 
-builders on the `PactProviderValidator`) please review your usage.
+builders on the `PactProviderValidator`) please review your usage. 
+
+The Pact JUnit fragment builder now also requires returning a `RequestResponsePact` rather than a `PactFragment`. 
+See `OpenApiValidatorPactConsumerTestExample` for examples.  
 
 
 #v2.5.0
