@@ -1,3 +1,9 @@
+#v2.6.0
+* Added factory methods to create `OpenApiInteractionValidator` instances with a spec or URL to avoid having to guess at
+what has been provided.
+[[#236]](https://bitbucket.org/atlassian/swagger-request-validator/issues/236)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/142)
+
 #v2.5.0
 * Added support for Cookie parameter validation
 [[#224]](https://bitbucket.org/atlassian/swagger-request-validator/issues/224)
