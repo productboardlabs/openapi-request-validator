@@ -721,6 +721,51 @@ public class OpenAPIV3RequestValidationTest {
         assertFail(classUnderTest.validateRequest(request));
     }
 
+    @Test
+    public void validate_withPatterns_shouldPass_whenValid() {
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-with-patterns.yaml")
+                .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/pattern")
+                .withContentType("application/json")
+                .withBody("{\"patternInline\": \"bbbbbba\", \"patternByRef\": \"aaaaaabbbbb\"}")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withPatterns_shouldFail_whenInvalidInline() {
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-with-patterns.yaml")
+                .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/pattern")
+                .withContentType("application/json")
+                .withBody("{\"patternInline\": \"aaa\", \"patternByRef\": \"abbbbb\"}")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request), "validation.request.body.schema.pattern");
+    }
+
+    @Test
+    public void validate_withPatterns_shouldFail_whenInvalidByRef() {
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-with-patterns.yaml")
+                .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/pattern")
+                .withContentType("application/json")
+                .withBody("{\"patternInline\": \"baaa\", \"patternByRef\": \"bbbbb\"}")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request), "validation.request.body.schema.pattern");
+    }
+
     private class TestValidator implements CustomRequestValidator {
         @Override
         public ValidationReport validate(@Nonnull final Request request, @Nonnull final ApiOperation apiOperation) {
