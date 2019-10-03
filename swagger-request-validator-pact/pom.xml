@@ -16,6 +16,10 @@
         OpenAPI / Swagger validation for Pact mocks (Provider and Consumer).
     </description>
 
+    <properties>
+        <rest-assured.test.version>4.1.1</rest-assured.test.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.atlassian.oai</groupId>
@@ -78,6 +82,7 @@
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
+            <version>${rest-assured.test.version}</version>
             <scope>test</scope>
         </dependency>
 

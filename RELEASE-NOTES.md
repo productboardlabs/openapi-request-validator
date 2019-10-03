@@ -1,3 +1,13 @@
+#v2.6.0
+* Bumped versions of a number of dependencies
+
+**Important**
+
+If you use the Pact adapter, the change from version `v3.5.20` to `v3.6.14` of the Pact JVM library
+has brought some changes to the `ConsumerInfo` constructor. If you create these directly (rather than using the 
+builders on the `PactProviderValidator`) please review your usage.
+
+
 #v2.5.0
 * Added support for Cookie parameter validation
 [[#224]](https://bitbucket.org/atlassian/swagger-request-validator/issues/224)
