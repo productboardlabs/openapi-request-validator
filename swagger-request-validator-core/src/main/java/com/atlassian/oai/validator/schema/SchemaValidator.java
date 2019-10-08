@@ -3,6 +3,7 @@ package com.atlassian.oai.validator.schema;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -12,6 +13,7 @@ import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import io.swagger.util.Json;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.DateTimeSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import org.slf4j.Logger;
@@ -19,6 +21,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -154,19 +158,46 @@ public class SchemaValidator {
         return schemaObject;
     }
 
+    private void setRequired(final ObjectNode schemaObject, final List<String> required) throws IOException {
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        final ObjectMapper mapper = new ObjectMapper();
+        mapper.writeValue(out, required);
+        if (schemaObject.findValue("type").asText().equalsIgnoreCase("array")) {
+            if (schemaObject.get("items") != null) {
+                JsonNode jsonNode = schemaObject.get("items");
+                ((ObjectNode) jsonNode).set("required", Json.mapper().readTree(out.toString()));
+            }
+        } else {
+            schemaObject.set("required", Json.mapper().readTree(out.toString()));
+        }
+    }
+
+
     private static List<String> getRequired(final Schema schema, @Nullable final String keyPrefix) {
         if (keyPrefix == null || schema.getRequired() == null) {
-            return null;
+            if (schema instanceof ArraySchema && ((ArraySchema) schema).getItems() != null) {
+                Schema itemsSchema = ((ArraySchema) schema).getItems();
+                return getUpdatedRequiredList(itemsSchema, keyPrefix);
+            } else {
+                return null;
+            }
         }
 
+        return getUpdatedRequiredList(schema, keyPrefix);
+    }
+
+    private static List<String> getUpdatedRequiredList(Schema schema, @NotNull String keyPrefix) {
         final Map<String, Schema> properties = schema.getProperties();
         final List<String> required = schema.getRequired();
-        final List<String> requiredUpdated = new ArrayList<>(required);
-        required.forEach(property -> {
-            removeReadOnlyRequiredPropertyForRequestBody(keyPrefix, properties, requiredUpdated, property);
-            removeWriteOnlyRequiredPropertyForResponeBody(keyPrefix, properties, requiredUpdated, property);
-        });
-        return requiredUpdated;
+        if (required != null) {
+            final List<String> requiredUpdated = new ArrayList<>(required);
+            required.forEach(property -> {
+                removeReadOnlyRequiredPropertyForRequestBody(keyPrefix, properties, requiredUpdated, property);
+                removeWriteOnlyRequiredPropertyForResponeBody(keyPrefix, properties, requiredUpdated, property);
+            });
+            return requiredUpdated;
+        }
+        return null;
     }
 
     private static void removeWriteOnlyRequiredPropertyForResponeBody(final String keyPrefix,
