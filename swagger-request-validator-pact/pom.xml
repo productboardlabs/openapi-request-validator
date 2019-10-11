@@ -16,6 +16,11 @@
         OpenAPI / Swagger validation for Pact mocks (Provider and Consumer).
     </description>
 
+    <properties>
+        <!-- Use a different version of rest-assured during tests to address incompatible versions of Groovy -->
+        <rest-assured.test.version>4.1.1</rest-assured.test.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.atlassian.oai</groupId>
@@ -67,7 +72,7 @@
         </dependency>
         <dependency>
             <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-library</artifactId>
+            <artifactId>hamcrest</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -78,6 +83,7 @@
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
+            <version>${rest-assured.test.version}</version>
             <scope>test</scope>
         </dependency>
 

@@ -130,7 +130,7 @@
           "user"
         ],
         "summary": "Get all users",
-        "operationId": "get all users",
+        "operationId": "get all users (v2)",
         "security": [
           {
             "basic": [
@@ -198,7 +198,7 @@
           "user"
         ],
         "summary": "Create a new user",
-        "operationId": "create new user",
+        "operationId": "create new user (v2)",
         "produces": [
           "application/json"
         ],
@@ -330,6 +330,16 @@
         ],
         "summary": "Get a user's name",
         "operationId": "Get a user's name",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the user to get",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
         "security": [
           {
             "bearer": []
@@ -352,7 +362,17 @@
           "user"
         ],
         "summary": "Update a user's name",
-        "operationId": "Update a user's name",
+        "operationId": "Update a user's name (secure)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the user to update",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
         "security": [
           {
             "bearer": []

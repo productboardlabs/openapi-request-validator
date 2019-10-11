@@ -17,8 +17,8 @@
     </description>
 
     <properties>
-        <spring.version>5.1.0.RELEASE</spring.version>
-        <spring-mock-mvc.version>3.2.0</spring-mock-mvc.version>
+        <spring.version>5.1.10.RELEASE</spring.version>
+        <spring-mock-mvc.version>3.3.0</spring-mock-mvc.version>
     </properties>
 
     <dependencies>
@@ -68,7 +68,7 @@
         </dependency>
         <dependency>
             <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-library</artifactId>
+            <artifactId>hamcrest</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
