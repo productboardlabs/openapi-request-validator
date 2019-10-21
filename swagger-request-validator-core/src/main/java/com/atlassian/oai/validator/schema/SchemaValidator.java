@@ -66,24 +66,12 @@ public class SchemaValidator {
     private final MessageResolver messages;
 
     /**
-     * Build a new validator with no API specification.
-     * <p>
-     * This will not perform any validation of $ref references that reference local definitions.
-     *
-     * @param messages The message resolver to use
-     */
-    public SchemaValidator(@Nonnull final MessageResolver messages) {
-        this(null, messages);
-    }
-
-    /**
      * Build a new validator for the given API specification.
      *
-     * @param api      The API to build the validator for. If provided, is used to retrieve schema definitions
-     *                 for use in references.
+     * @param api      The API to build the validator for.
      * @param messages The message resolver to use.
      */
-    public SchemaValidator(@Nullable final OpenAPI api, @Nonnull final MessageResolver messages) {
+    public SchemaValidator(final OpenAPI api, @Nonnull final MessageResolver messages) {
         this.api = api;
         this.messages = requireNonNull(messages, "A message resolver is required");
     }
