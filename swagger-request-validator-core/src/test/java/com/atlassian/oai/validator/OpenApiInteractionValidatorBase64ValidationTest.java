@@ -5,7 +5,6 @@ import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.report.ValidationReport;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
@@ -13,16 +12,15 @@ import java.util.stream.Collectors;
 
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 
-public class SwaggerV2Base64ValidationTest {
+public class OpenApiInteractionValidatorBase64ValidationTest {
 
-    private final OpenApiInteractionValidator classUnderTest =
+    private final OpenApiInteractionValidator swaggerValidator =
             OpenApiInteractionValidator.createForSpecificationUrl("/oai/v2/api-string-byte-pattern.json").build();
+    private final OpenApiInteractionValidator openApi3Validator =
+            OpenApiInteractionValidator.createForSpecificationUrl("/oai/v3/api-string-byte-pattern.yaml").build();
 
-    @Test
-    @Ignore
-    public void validBase64() {
-        // given:
-        final Request request = SimpleRequest.Builder
+    private static SimpleRequest buildValidBase64Request() {
+        return SimpleRequest.Builder
                 .post("/test/QmFzZTY0/QXJyYXkx,QXJyYXky/QmFzZTY0/QXJyYXkx,QXJyYXky/a/aa,aaa/a/aa,aaa")
                 .withContentType("application/json")
                 .withQueryParam("queryByte", "QmFzZTY0")
@@ -66,18 +64,10 @@ public class SwaggerV2Base64ValidationTest {
                         "  }\n" +
                         "}")
                 .build();
-
-        // when:
-        final ValidationReport result = classUnderTest.validateRequest(request);
-
-        // then:
-        assertPass(result);
     }
 
-    @Test
-    public void invalidBase64() {
-        // given:
-        final Request request = SimpleRequest.Builder
+    private static SimpleRequest buildInvalidBase64Request() {
+        return SimpleRequest.Builder
                 .post("/test/b/c,d/b/c,d/b/c,d/b/c,d")
                 .withContentType("application/json")
                 .withQueryParam("queryByte", "b")
@@ -121,11 +111,9 @@ public class SwaggerV2Base64ValidationTest {
                         "  }\n" +
                         "}")
                 .build();
+    }
 
-        // when:
-        final ValidationReport result = classUnderTest.validateRequest(request);
-
-        // then:
+    private static void assertInvalidBase64Result(final ValidationReport result) {
         final List<String> list = result.getMessages().stream()
                 .map(message ->
                         message.getContext().get().getParameter()
@@ -183,5 +171,53 @@ public class SwaggerV2Base64ValidationTest {
                 "refQueryPatternArray: ECMA 262 regex \"a+\" does not match input string \"c\"",
                 "refQueryPatternArray: ECMA 262 regex \"a+\" does not match input string \"d\""
         ));
+    }
+
+    @Test
+    public void validBase64_Swagger() {
+        // given:
+        final Request request = buildValidBase64Request();
+
+        // when:
+        final ValidationReport result = swaggerValidator.validateRequest(request);
+
+        // then:
+        assertPass(result);
+    }
+
+    @Test
+    public void validBase64_OpenApi3() {
+        // given:
+        final Request request = buildValidBase64Request();
+
+        // when:
+        final ValidationReport result = openApi3Validator.validateRequest(request);
+
+        // then:
+        assertPass(result);
+    }
+
+    @Test
+    public void invalidBase64_Swagger() {
+        // given:
+        final Request request = buildInvalidBase64Request();
+
+        // when:
+        final ValidationReport result = swaggerValidator.validateRequest(request);
+
+        // then:
+        assertInvalidBase64Result(result);
+    }
+
+    @Test
+    public void invalidBase64_OpenApi3() {
+        // given:
+        final Request request = buildInvalidBase64Request();
+
+        // when:
+        final ValidationReport result = openApi3Validator.validateRequest(request);
+
+        // then:
+        assertInvalidBase64Result(result);
     }
 }

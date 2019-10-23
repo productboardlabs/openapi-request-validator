@@ -60,7 +60,7 @@ public class OpenApiInteractionValidatorMalformedSpecTest {
     @Test
     public void givesReasonableError_whenEmptyString_whenUrlSource() {
         expected.expect(IllegalArgumentException.class);
-        expected.expectMessage("A specification URL or payload is required");
+        expected.expectMessage("A specification URL is required");
 
         OpenApiInteractionValidator.createForSpecificationUrl("").build();
     }
@@ -68,7 +68,7 @@ public class OpenApiInteractionValidatorMalformedSpecTest {
     @Test
     public void givesReasonableError_whenEmptyString_whenInlineSource() {
         expected.expect(IllegalArgumentException.class);
-        expected.expectMessage("A specification URL or payload is required");
+        expected.expectMessage("A specification payload is required");
 
         OpenApiInteractionValidator.createForInlineApiSpecification("").build();
     }

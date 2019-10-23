@@ -147,7 +147,10 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/TestResponse"
+            }
           }
         }
       }
@@ -247,6 +250,36 @@
   },
   "definitions": {
     "TestRequest": {
+      "type": "object",
+      "properties": {
+        "byte": {
+          "type": "string",
+          "format": "byte"
+        },
+        "byteArray": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "byte"
+          }
+        },
+        "pattern": {
+          "type": "string",
+          "pattern": "a+"
+        },
+        "patternArray": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "a+"
+          }
+        },
+        "ref": {
+          "$ref": "#/definitions/Ref"
+        }
+      }
+    },
+    "TestResponse": {
       "type": "object",
       "properties": {
         "byte": {

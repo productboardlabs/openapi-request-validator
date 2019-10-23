@@ -1,0 +1,256 @@
+openapi: 3.0.2
+servers:
+  - url: /
+info:
+  title: StringBytePattern
+  version: 1.0.0
+paths:
+  '/test/{pathByte}/{pathByteArray}/{refPathByte}/{refPathByteArray}/{pathPattern}/{pathPatternArray}/{refPathPattern}/{refPathPatternArray}':
+    post:
+      parameters:
+        - name: pathByte
+          in: path
+          schema:
+            type: string
+            format: byte
+        - name: pathByteArray
+          in: path
+          schema:
+            type: array
+            items:
+              type: string
+              format: byte
+        - $ref: '#/components/parameters/RefPathByte'
+        - $ref: '#/components/parameters/RefPathByteArray'
+        - name: pathPattern
+          in: path
+          schema:
+            type: string
+            pattern: a+
+        - name: pathPatternArray
+          in: path
+          schema:
+            type: array
+            items:
+              type: string
+              pattern: a+
+        - $ref: '#/components/parameters/RefPathPattern'
+        - $ref: '#/components/parameters/RefPathPatternArray'
+        - name: queryByte
+          in: query
+          schema:
+            type: string
+            format: byte
+        - name: queryByteArray
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              format: byte
+        - $ref: '#/components/parameters/RefQueryByte'
+        - $ref: '#/components/parameters/RefQueryByteArray'
+        - name: queryPattern
+          in: query
+          schema:
+            type: string
+            pattern: a+
+        - name: queryPatternArray
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              pattern: a+
+        - $ref: '#/components/parameters/RefQueryPattern'
+        - $ref: '#/components/parameters/RefQueryPatternArray'
+        - name: headerByte
+          in: header
+          schema:
+            type: string
+            format: byte
+        - name: headerByteArray
+          in: header
+          schema:
+            type: array
+            items:
+              type: string
+              format: byte
+        - $ref: '#/components/parameters/RefHeaderByte'
+        - $ref: '#/components/parameters/RefHeaderByteArray'
+        - name: headerPattern
+          in: header
+          schema:
+            type: string
+            pattern: a+
+        - name: headerPatternArray
+          in: header
+          schema:
+            type: array
+            items:
+              type: string
+              pattern: a+
+        - $ref: '#/components/parameters/RefHeaderPattern'
+        - $ref: '#/components/parameters/RefHeaderPatternArray'
+      requestBody:
+        $ref: '#/components/requestBodies/TestRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TestResponse'
+components:
+  parameters:
+    RefPathByte:
+      name: refPathByte
+      in: path
+      schema:
+        type: string
+        format: byte
+    RefPathByteArray:
+      name: refPathByteArray
+      in: path
+      schema:
+        type: array
+        items:
+          type: string
+          format: byte
+    RefPathPattern:
+      name: refPathPattern
+      in: path
+      schema:
+        type: string
+        pattern: a+
+    RefPathPatternArray:
+      name: refPathPatternArray
+      in: path
+      schema:
+        type: array
+        items:
+          type: string
+          pattern: a+
+    RefQueryByte:
+      name: refQueryByte
+      in: query
+      schema:
+        type: string
+        format: byte
+    RefQueryByteArray:
+      name: refQueryByteArray
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+          format: byte
+    RefQueryPattern:
+      name: refQueryPattern
+      in: query
+      schema:
+        type: string
+        pattern: a+
+    RefQueryPatternArray:
+      name: refQueryPatternArray
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+          pattern: a+
+    RefHeaderByte:
+      name: refHeaderByte
+      in: header
+      schema:
+        type: string
+        format: byte
+    RefHeaderByteArray:
+      name: refHeaderByteArray
+      in: header
+      schema:
+        type: array
+        items:
+          type: string
+          format: byte
+    RefHeaderPattern:
+      name: refHeaderPattern
+      in: header
+      schema:
+        type: string
+        pattern: a+
+    RefHeaderPatternArray:
+      name: refHeaderPatternArray
+      in: header
+      schema:
+        type: array
+        items:
+          type: string
+          pattern: a+
+  requestBodies:
+    TestRequest:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              byte:
+                type: string
+                format: byte
+              byteArray:
+                type: array
+                items:
+                  type: string
+                  format: byte
+              pattern:
+                type: string
+                pattern: a+
+              patternArray:
+                type: array
+                items:
+                  type: string
+                  pattern: a+
+              ref:
+                $ref: '#/components/schemas/Ref'
+  responses:
+    TestResponse:
+      description: ""
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              byte:
+                type: string
+                format: byte
+              byteArray:
+                type: array
+                items:
+                  type: string
+                  format: byte
+              pattern:
+                type: string
+                pattern: a+
+              patternArray:
+                type: array
+                items:
+                  type: string
+                  pattern: a+
+              ref:
+                $ref: '#/components/schemas/Ref'
+  schemas:
+    Ref:
+      type: object
+      properties:
+        byte:
+          type: string
+          format: byte
+        byteArray:
+          type: array
+          items:
+            type: string
+            format: byte
+        pattern:
+          type: string
+          pattern: a+
+        patternArray:
+          type: array
+          items:
+            type: string
+            pattern: a+
