@@ -1,0 +1,307 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "StringBytePattern",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/test/{pathByte}/{pathByteArray}/{refPathByte}/{refPathByteArray}/{pathPattern}/{pathPatternArray}/{refPathPattern}/{refPathPatternArray}": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "pathByte",
+            "in": "path",
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "pathByteArray",
+            "in": "path",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "byte"
+            }
+          },
+          {
+            "$ref": "#/parameters/RefPathByte"
+          },
+          {
+            "$ref": "#/parameters/RefPathByteArray"
+          },
+          {
+            "name": "pathPattern",
+            "in": "path",
+            "type": "string",
+            "pattern": "a+"
+          },
+          {
+            "name": "pathPatternArray",
+            "in": "path",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "a+"
+            }
+          },
+          {
+            "$ref": "#/parameters/RefPathPattern"
+          },
+          {
+            "$ref": "#/parameters/RefPathPatternArray"
+          },
+          {
+            "name": "queryByte",
+            "in": "query",
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "queryByteArray",
+            "in": "query",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "byte"
+            }
+          },
+          {
+            "$ref": "#/parameters/RefQueryByte"
+          },
+          {
+            "$ref": "#/parameters/RefQueryByteArray"
+          },
+          {
+            "name": "queryPattern",
+            "in": "query",
+            "type": "string",
+            "pattern": "a+"
+          },
+          {
+            "name": "queryPatternArray",
+            "in": "query",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "a+"
+            }
+          },
+          {
+            "$ref": "#/parameters/RefQueryPattern"
+          },
+          {
+            "$ref": "#/parameters/RefQueryPatternArray"
+          },
+          {
+            "name": "headerByte",
+            "in": "header",
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "headerByteArray",
+            "in": "header",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "byte"
+            }
+          },
+          {
+            "$ref": "#/parameters/RefHeaderByte"
+          },
+          {
+            "$ref": "#/parameters/RefHeaderByteArray"
+          },
+          {
+            "name": "headerPattern",
+            "in": "header",
+            "type": "string",
+            "pattern": "a+"
+          },
+          {
+            "name": "headerPatternArray",
+            "in": "header",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "a+"
+            }
+          },
+          {
+            "$ref": "#/parameters/RefHeaderPattern"
+          },
+          {
+            "$ref": "#/parameters/RefHeaderPatternArray"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/TestRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    }
+  },
+  "parameters": {
+    "RefPathByte": {
+      "name": "refPathByte",
+      "in": "path",
+      "type": "string",
+      "format": "byte"
+    },
+    "RefPathByteArray": {
+      "name": "refPathByteArray",
+      "in": "path",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "byte"
+      }
+    },
+    "RefPathPattern": {
+      "name": "refPathPattern",
+      "in": "path",
+      "type": "string",
+      "pattern": "a+"
+    },
+    "RefPathPatternArray": {
+      "name": "refPathPatternArray",
+      "in": "path",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "a+"
+      }
+    },
+    "RefQueryByte": {
+      "name": "refQueryByte",
+      "in": "query",
+      "type": "string",
+      "format": "byte"
+    },
+    "RefQueryByteArray": {
+      "name": "refQueryByteArray",
+      "in": "query",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "byte"
+      }
+    },
+    "RefQueryPattern": {
+      "name": "refQueryPattern",
+      "in": "query",
+      "type": "string",
+      "pattern": "a+"
+    },
+    "RefQueryPatternArray": {
+      "name": "refQueryPatternArray",
+      "in": "query",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "a+"
+      }
+    },
+    "RefHeaderByte": {
+      "name": "refHeaderByte",
+      "in": "header",
+      "type": "string",
+      "format": "byte"
+    },
+    "RefHeaderByteArray": {
+      "name": "refHeaderByteArray",
+      "in": "header",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "byte"
+      }
+    },
+    "RefHeaderPattern": {
+      "name": "refHeaderPattern",
+      "in": "header",
+      "type": "string",
+      "pattern": "a+"
+    },
+    "RefHeaderPatternArray": {
+      "name": "refHeaderPatternArray",
+      "in": "header",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "a+"
+      }
+    }
+  },
+  "definitions": {
+    "TestRequest": {
+      "type": "object",
+      "properties": {
+        "byte": {
+          "type": "string",
+          "format": "byte"
+        },
+        "byteArray": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "byte"
+          }
+        },
+        "pattern": {
+          "type": "string",
+          "pattern": "a+"
+        },
+        "patternArray": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "a+"
+          }
+        },
+        "ref": {
+          "$ref": "#/definitions/Ref"
+        }
+      }
+    },
+    "Ref": {
+      "type": "object",
+      "properties": {
+        "byte": {
+          "type": "string",
+          "format": "byte"
+        },
+        "byteArray": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "byte"
+          }
+        },
+        "pattern": {
+          "type": "string",
+          "pattern": "a+"
+        },
+        "patternArray": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "a+"
+          }
+        }
+      }
+    }
+  }
+}
