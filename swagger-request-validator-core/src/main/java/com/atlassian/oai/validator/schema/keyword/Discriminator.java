@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.atlassian.oai.validator.util.StreamUtils.stream;
+import static com.google.common.collect.Streams.stream;
 import static java.util.stream.Collectors.toList;
 
 public class Discriminator {

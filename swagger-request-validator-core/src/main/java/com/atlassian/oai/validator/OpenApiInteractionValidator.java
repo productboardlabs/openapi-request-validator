@@ -32,7 +32,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
 
 /**
  * Validates a HTTP interaction (request/response pair) with a Swagger v2 / OpenAPI v3 specification.
@@ -358,13 +358,6 @@ public class OpenApiInteractionValidator {
             return withApiSpecification(specUrlOrPayload);
         }
 
-        private static String requireNotBlank(final String string, final String message) {
-            if (isBlank(string)) {
-                throw new IllegalArgumentException(message);
-            }
-            return string;
-        }
-
         /**
          * The location of the OpenAPI / Swagger specification to use in the validator, or the inline specification to use.
          * <p>
@@ -390,7 +383,7 @@ public class OpenApiInteractionValidator {
          */
         @Deprecated
         public Builder withApiSpecification(final String specUrlOrPayload) {
-            requireNotBlank(specUrlOrPayload, "A specification URL or payload is required");
+            requireNonEmpty(specUrlOrPayload, "A specification URL or payload is required");
             this.specSource = SpecSource.unknown(specUrlOrPayload);
             return this;
         }
@@ -404,7 +397,7 @@ public class OpenApiInteractionValidator {
          * @return this builder instance.
          */
         public Builder withInlineApiSpecification(final String inlineSpecPayload) {
-            requireNotBlank(inlineSpecPayload, "A specification payload is required");
+            requireNonEmpty(inlineSpecPayload, "A specification payload is required");
             this.specSource = SpecSource.inline(inlineSpecPayload);
             return this;
         }
@@ -432,7 +425,7 @@ public class OpenApiInteractionValidator {
          * @return this builder instance.
          */
         public Builder withApiSpecificationUrl(final String specUrl) {
-            requireNotBlank(specUrl, "A specification URL is required");
+            requireNonEmpty(specUrl, "A specification URL is required");
             this.specSource = SpecSource.specUrl(specUrl);
             return this;
         }
