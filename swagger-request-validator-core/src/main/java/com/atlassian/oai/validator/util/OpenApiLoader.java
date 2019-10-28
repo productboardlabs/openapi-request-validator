@@ -25,6 +25,57 @@ import java.util.function.Function;
 public class OpenApiLoader {
 
     /**
+     * Loads the {@link OpenAPI} from the specified source and prepares it for usage.
+     * <p>
+     * See {@link this#removeRegexPatternOnStringsOfFormatByte(OpenAPI)} for more information
+     * on the preparation.
+     *
+     * @param specSource The OpenAPI / Swagger specification to use in the validator.
+     * @param authData   Authentication data for reading the specification.
+     * @return the loaded and prepared {@link OpenAPI}
+     */
+    public OpenAPI loadApi(@Nonnull final SpecSource specSource,
+                           @Nonnull final List<AuthorizationValue> authData) {
+        final SwaggerParseResult parseResult = readSwaggerParserResult(specSource, authData);
+        if (parseResult == null || parseResult.getOpenAPI() == null ||
+                (parseResult.getMessages() != null && !parseResult.getMessages().isEmpty())) {
+            throw new ApiLoadException(specSource.getValue(), parseResult);
+        }
+
+        final OpenAPI api = parseResult.getOpenAPI();
+        removeRegexPatternOnStringsOfFormatByte(api);
+        return api;
+    }
+
+    private SwaggerParseResult readSwaggerParserResult(final SpecSource specSource, final List<AuthorizationValue> authData) {
+        final OpenAPIParser openAPIParser = new OpenAPIParser();
+        final ParseOptions parseOptions = new ParseOptions();
+        parseOptions.setResolve(true);
+        parseOptions.setResolveFully(true);
+        parseOptions.setResolveCombinators(false);
+
+        try {
+            if (specSource.isInlineSpecification()) {
+                return openAPIParser.readContents(specSource.getValue(), authData, parseOptions);
+            }
+            if (specSource.isSpecUrl()) {
+                return openAPIParser.readLocation(specSource.getValue(), authData, parseOptions);
+            }
+
+            // Try to load as a URL first...
+            final SwaggerParseResult parseResult = openAPIParser.readLocation(specSource.getValue(), authData, parseOptions);
+            if (parseResult != null && parseResult.getOpenAPI() != null) {
+                return parseResult;
+            }
+
+            // ...then try to load as a content string
+            return openAPIParser.readContents(specSource.getValue(), authData, parseOptions);
+        } catch (final RuntimeException e) {
+            throw new ApiLoadException(specSource.getValue(), e);
+        }
+    }
+
+    /**
      * Removes the Base64 pattern on the {@link OpenAPI} model.
      * <p>
      * If that pattern would stay on the model all fields of type string / byte would be validated twice. Once
@@ -80,57 +131,6 @@ public class OpenApiLoader {
             if ("byte".equals(stringSchema.getFormat())) {
                 stringSchema.setPattern(null);
             }
-        }
-    }
-
-    /**
-     * Loads the {@link OpenAPI} from the specified source and prepares it for usage.
-     * <p>
-     * See {@link this#removeRegexPatternOnStringsOfFormatByte(OpenAPI)} for more information
-     * on the preparation.
-     *
-     * @param specSource The OpenAPI / Swagger specification to use in the validator.
-     * @param authData   Authentication data for reading the specification.
-     * @return the loaded and prepared {@link OpenAPI}
-     */
-    public OpenAPI loadApi(@Nonnull final SpecSource specSource,
-                           @Nonnull final List<AuthorizationValue> authData) {
-        final SwaggerParseResult parseResult = readSwaggerParserResult(specSource, authData);
-        if (parseResult == null || parseResult.getOpenAPI() == null ||
-                (parseResult.getMessages() != null && !parseResult.getMessages().isEmpty())) {
-            throw new ApiLoadException(specSource.getValue(), parseResult);
-        }
-
-        final OpenAPI api = parseResult.getOpenAPI();
-        removeRegexPatternOnStringsOfFormatByte(api);
-        return api;
-    }
-
-    private SwaggerParseResult readSwaggerParserResult(final SpecSource specSource, final List<AuthorizationValue> authData) {
-        final OpenAPIParser openAPIParser = new OpenAPIParser();
-        final ParseOptions parseOptions = new ParseOptions();
-        parseOptions.setResolve(true);
-        parseOptions.setResolveFully(true);
-        parseOptions.setResolveCombinators(false);
-
-        try {
-            if (specSource.isInlineSpecification()) {
-                return openAPIParser.readContents(specSource.getValue(), authData, parseOptions);
-            }
-            if (specSource.isSpecUrl()) {
-                return openAPIParser.readLocation(specSource.getValue(), authData, parseOptions);
-            }
-
-            // Try to load as a URL first...
-            final SwaggerParseResult parseResult = openAPIParser.readLocation(specSource.getValue(), authData, parseOptions);
-            if (parseResult != null && parseResult.getOpenAPI() != null) {
-                return parseResult;
-            }
-
-            // ...then try to load as a content string
-            return openAPIParser.readContents(specSource.getValue(), authData, parseOptions);
-        } catch (final RuntimeException e) {
-            throw new ApiLoadException(specSource.getValue(), e);
         }
     }
 }
