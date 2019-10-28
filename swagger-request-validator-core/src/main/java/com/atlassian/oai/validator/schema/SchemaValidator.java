@@ -35,9 +35,9 @@ import java.util.stream.StreamSupport;
 
 import static com.atlassian.oai.validator.schema.SwaggerV20Library.OAI_V2_METASCHEMA_URI;
 import static com.atlassian.oai.validator.schema.SwaggerV20Library.schemaFactory;
-import static com.atlassian.oai.validator.util.StringUtils.capitalise;
 import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
 import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.StringUtils.capitalize;
 
 /**
  * Validate a value against the schema defined in an OpenAPI / Swagger specification.
@@ -350,14 +350,14 @@ public class SchemaValidator {
             final JsonNode reports = processingMessage.get("reports");
             reports.fields().forEachRemaining(field -> {
                 field.getValue().elements().forEachRemaining(report -> {
-                    subReports.add(field.getKey() + ": " + capitalise(report.get("message").textValue()));
+                    subReports.add(field.getKey() + ": " + capitalize(report.get("message").textValue()));
                 });
             });
         }
 
         final String message =
                 (pointer.isEmpty() ? "" : "[Path '" + pointer + "'] ")
-                        + capitalise(processingMessage.get("message").textValue());
+                        + capitalize(processingMessage.get("message").textValue());
 
         final ValidationReport.Message validationReportMessage = messages.create(
                 "validation." + keyPrefix + ".schema." + validationKeyword,
