@@ -206,17 +206,11 @@ public class SchemaValidatorTest {
                 "validation.prefix.schema.processingError");
     }
 
-    @Test
+    @Test(expected = IllegalStateException.class)
     public void validate_withOtherException_shouldFail() {
-        final String value = "{\"title\":\"bar\", \"message\":\"something\"}";
-        final Schema schema = new Schema().$ref("#/components/schemas/Error");
-
         final OpenAPI mockApi = mock(OpenAPI.class);
         when(mockApi.getComponents()).thenThrow(new IllegalStateException("Testing exception handling"));
-        final SchemaValidator failingValidator = new SchemaValidator(mockApi, new MessageResolver());
-
-        assertFailWithoutContext(failingValidator.validate(value, schema, "prefix"),
-                "validation.prefix.schema.unknownError");
+        new SchemaValidator(mockApi, new MessageResolver());
     }
 
     @Test
