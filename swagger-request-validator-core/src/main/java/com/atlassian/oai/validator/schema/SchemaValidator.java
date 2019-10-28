@@ -16,12 +16,12 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.DateTimeSchema;
 import io.swagger.v3.oas.models.media.Schema;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Set;
+import java.util.*;
 import java.util.stream.StreamSupport;
 
 import static com.atlassian.oai.validator.schema.SwaggerV20Library.OAI_V2_METASCHEMA_URI;
@@ -162,7 +163,8 @@ public class SchemaValidator {
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         final ObjectMapper mapper = new ObjectMapper();
         mapper.writeValue(out, required);
-        if (schemaObject.findValue("type").asText().equalsIgnoreCase("array")) {
+        if (schemaObject.findValue("type") != null &&
+                schemaObject.findValue("type").asText().equalsIgnoreCase("array")) {
             if (schemaObject.get("items") != null) {
                 JsonNode jsonNode = schemaObject.get("items");
                 ((ObjectNode) jsonNode).set("required", Json.mapper().readTree(out.toString()));
@@ -186,7 +188,7 @@ public class SchemaValidator {
         return getUpdatedRequiredList(schema, keyPrefix);
     }
 
-    private static List<String> getUpdatedRequiredList(Schema schema, @NotNull String keyPrefix) {
+    private static List<String> getUpdatedRequiredList(Schema schema, @Nonnull String keyPrefix) {
         final Map<String, Schema> properties = schema.getProperties();
         final List<String> required = schema.getRequired();
         if (required != null) {
@@ -197,7 +199,7 @@ public class SchemaValidator {
             });
             return requiredUpdated;
         }
-        return null;
+        return new ArrayList<>();
     }
 
     private static void removeWriteOnlyRequiredPropertyForResponeBody(final String keyPrefix,
