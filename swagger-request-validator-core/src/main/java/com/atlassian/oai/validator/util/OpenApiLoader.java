@@ -27,7 +27,7 @@ public class OpenApiLoader {
     /**
      * Loads the {@link OpenAPI} from the specified source and prepares it for usage.
      * <p>
-     * See {@link this#removeRegexPatternOnStringsOfFormatByte(OpenAPI)} for more information
+     * See {@link #removeRegexPatternOnStringsOfFormatByte(OpenAPI)} for more information
      * on the preparation.
      *
      * @param specSource The OpenAPI / Swagger specification to use in the validator.
