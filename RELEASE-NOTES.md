@@ -1,3 +1,8 @@
+#v2.7.1
+* Removed duplicate validation of Base64 encoded String/Byte fields 
+[[#214]](https://bitbucket.org/atlassian/swagger-request-validator/issues/214)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/149)
+
 #v2.7.0
 * Bumped versions of a number of dependencies
 
