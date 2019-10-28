@@ -16,7 +16,6 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.DateTimeSchema;
 import io.swagger.v3.oas.models.media.Schema;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +34,6 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Set;
-import java.util.*;
 import java.util.stream.StreamSupport;
 
 import static com.atlassian.oai.validator.schema.SwaggerV20Library.OAI_V2_METASCHEMA_URI;
@@ -98,8 +96,8 @@ public class SchemaValidator {
     /**
      * Validate the given value against the given property schema. If the schema is null then any json is valid.
      *
-     * @param value The value to validate
-     * @param schema The schema to validate the value against
+     * @param value     The value to validate
+     * @param schema    The schema to validate the value against
      * @param keyPrefix A prefix to apply to validation messages emitted by the validator
      * @return A validation report containing accumulated validation errors
      */
@@ -115,8 +113,15 @@ public class SchemaValidator {
 
         try {
             final JsonNode content;
+            final ListProcessingReport processingReport;
             try {
                 content = readContent(value, schema);
+
+                final JsonNode schemaObject = readAndSetupSchemaObject(schema, keyPrefix);
+                processingReport = (ListProcessingReport) schemaFactory().getJsonSchema(schemaObject)
+                        .validate(content, true);
+            } catch (final ProcessingException e) {
+                return getProcessingMessage(e.getProcessingMessage(), "processingError", keyPrefix);
             } catch (final IOException e) {
                 return ValidationReport.singleton(
                         messages.create(
@@ -124,15 +129,6 @@ public class SchemaValidator {
                                 messages.get(INVALID_JSON_KEY, e.getMessage()).getMessage()
                         )
                 );
-            }
-
-            final ListProcessingReport processingReport;
-            try {
-                final JsonNode schemaObject = readAndSetupSchemaObject(schema, keyPrefix);
-                processingReport = (ListProcessingReport) schemaFactory().getJsonSchema(schemaObject)
-                        .validate(content, true);
-            } catch (final ProcessingException e) {
-                return getProcessingMessage(e.getProcessingMessage(), "processingError", keyPrefix);
             }
 
             if ((processingReport != null) && !processingReport.isSuccess()) {
@@ -152,21 +148,22 @@ public class SchemaValidator {
         }
     }
 
-    private JsonNode readAndSetupSchemaObject(final Schema schema, final String keyPrefix) {
+    private JsonNode readAndSetupSchemaObject(final Schema schema, final String keyPrefix) throws IOException {
         final List<String> required = getRequired(schema, keyPrefix);
         final JsonNode schemaObject = readSchema(schema, required);
         checkForKnownGotchasAndLogMessage(schemaObject);
         return schemaObject;
     }
 
-    private void setRequired(final ObjectNode schemaObject, final List<String> required) throws IOException {
+    private static void setRequired(final ObjectNode schemaObject, final List<String> required) throws IOException {
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         final ObjectMapper mapper = new ObjectMapper();
+
         mapper.writeValue(out, required);
         if (schemaObject.findValue("type") != null &&
                 schemaObject.findValue("type").asText().equalsIgnoreCase("array")) {
             if (schemaObject.get("items") != null) {
-                JsonNode jsonNode = schemaObject.get("items");
+                final JsonNode jsonNode = schemaObject.get("items");
                 ((ObjectNode) jsonNode).set("required", Json.mapper().readTree(out.toString()));
             }
         } else {
@@ -174,11 +171,10 @@ public class SchemaValidator {
         }
     }
 
-
     private static List<String> getRequired(final Schema schema, @Nullable final String keyPrefix) {
         if (keyPrefix == null || schema.getRequired() == null) {
             if (schema instanceof ArraySchema && ((ArraySchema) schema).getItems() != null) {
-                Schema itemsSchema = ((ArraySchema) schema).getItems();
+                final Schema itemsSchema = ((ArraySchema) schema).getItems();
                 return getUpdatedRequiredList(itemsSchema, keyPrefix);
             } else {
                 return null;
@@ -188,7 +184,7 @@ public class SchemaValidator {
         return getUpdatedRequiredList(schema, keyPrefix);
     }
 
-    private static List<String> getUpdatedRequiredList(Schema schema, @Nonnull String keyPrefix) {
+    private static List<String> getUpdatedRequiredList(final Schema schema, @Nonnull final String keyPrefix) {
         final Map<String, Schema> properties = schema.getProperties();
         final List<String> required = schema.getRequired();
         if (required != null) {
@@ -222,13 +218,13 @@ public class SchemaValidator {
         }
     }
 
-    private JsonNode readSchema(@Nonnull final Schema schema, final List<String> required) {
+    private JsonNode readSchema(@Nonnull final Schema schema, final List<String> required) throws IOException {
         final ObjectNode schemaObject = Json.mapper().convertValue(schema, ObjectNode.class);
         setupSchemaDefinitionRefs(schemaObject, required);
         return schemaObject;
     }
 
-    private void setupSchemaDefinitionRefs(final ObjectNode schemaObject, final List<String> required) {
+    private void setupSchemaDefinitionRefs(final ObjectNode schemaObject, final List<String> required) throws IOException {
         schemaObject.put(SCHEMA_REF_FIELD, OAI_V2_METASCHEMA_URI);
         if (additionalPropertiesValidationEnabled()) {
             injectAdditionalPropertiesDirectiveIntoTree(schemaObject);
@@ -236,7 +232,7 @@ public class SchemaValidator {
         schemaObject.putObject(COMPONENTS_FIELD).set(SCHEMAS_FIELD, definitions);
 
         if (required != null && !required.isEmpty()) {
-            schemaObject.set("required", Json.mapper().convertValue(required, JsonNode.class));
+            setRequired(schemaObject, required);
         }
     }
 
