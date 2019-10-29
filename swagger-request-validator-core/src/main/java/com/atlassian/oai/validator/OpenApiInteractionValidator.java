@@ -14,11 +14,10 @@ import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
 import com.atlassian.oai.validator.schema.SchemaValidator;
+import com.atlassian.oai.validator.util.OpenApiLoader;
 import com.atlassian.oai.validator.whitelist.ValidationErrorsWhitelist;
-import io.swagger.parser.OpenAPIParser;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.parser.core.models.AuthorizationValue;
-import io.swagger.v3.parser.core.models.ParseOptions;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
 
 import javax.annotation.Nonnull;
@@ -32,9 +31,8 @@ import java.util.stream.Collectors;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
 
 /**
  * Validates a HTTP interaction (request/response pair) with a Swagger v2 / OpenAPI v3 specification.
@@ -134,22 +132,10 @@ public class OpenApiInteractionValidator {
                                         @Nullable final String basePathOverride,
                                         @Nonnull final MessageResolver messages,
                                         @Nonnull final ValidationErrorsWhitelist whitelist,
-                                        @Nullable final List<AuthorizationValue> authData) {
-        this(specSource, basePathOverride, messages, whitelist, null, emptyList(), emptyList());
-    }
-
-    private OpenApiInteractionValidator(@Nonnull final SpecSource specSource,
-                                        @Nullable final String basePathOverride,
-                                        @Nonnull final MessageResolver messages,
-                                        @Nonnull final ValidationErrorsWhitelist whitelist,
                                         @Nullable final List<AuthorizationValue> authData,
                                         @Nonnull final List<CustomRequestValidator> customRequestValidators,
                                         @Nonnull final List<CustomResponseValidator> customResponseValidators) {
-        if (specSource == null || isBlank(specSource.getValue())) {
-            throw new IllegalArgumentException("A specification URL or payload is required");
-        }
-
-        final OpenAPI api = loadApi(specSource, authData);
+        final OpenAPI api = new OpenApiLoader().loadApi(specSource, authData);
 
         this.messages = messages;
         apiOperationResolver = new ApiOperationResolver(api, basePathOverride);
@@ -157,42 +143,6 @@ public class OpenApiInteractionValidator {
         requestValidator = new RequestValidator(schemaValidator, messages, api, customRequestValidators);
         responseValidator = new ResponseValidator(schemaValidator, messages, api, customResponseValidators);
         this.whitelist = whitelist;
-    }
-
-    @Nonnull
-    private OpenAPI loadApi(@Nonnull final SpecSource specSource,
-                            @Nullable final List<AuthorizationValue> authData) {
-
-        final OpenAPIParser openAPIParser = new OpenAPIParser();
-        final ParseOptions parseOptions = new ParseOptions();
-        parseOptions.setResolve(true);
-        parseOptions.setResolveFully(true);
-        parseOptions.setResolveCombinators(false);
-
-        SwaggerParseResult parseResult;
-        try {
-
-            if (specSource.isInlineSpecification()) {
-                parseResult = openAPIParser.readContents(specSource.getValue(), authData, parseOptions);
-            } else if (specSource.isSpecUrl()) {
-                parseResult = openAPIParser.readLocation(specSource.getValue(), authData, parseOptions);
-            } else {
-                // Try to load as a URL first, then as a content string if that fails
-                parseResult = openAPIParser.readLocation(specSource.getValue(), authData, parseOptions);
-                if (parseResult == null || parseResult.getOpenAPI() == null) {
-                    parseResult = openAPIParser.readContents(specSource.getValue(), authData, parseOptions);
-                }
-            }
-        } catch (final Exception e) {
-            throw new ApiLoadException(specSource.getValue(), e);
-        }
-
-        if (parseResult == null || parseResult.getOpenAPI() == null ||
-                (parseResult.getMessages() != null && !parseResult.getMessages().isEmpty())) {
-            throw new ApiLoadException(specSource.getValue(), parseResult);
-        }
-
-        return parseResult.getOpenAPI();
     }
 
     /**
@@ -322,7 +272,7 @@ public class OpenApiInteractionValidator {
      * <p>
      * May be a spec URL (remote HTTP/HTTPS, classpath or file) or an inline specification (JSON or YAML).
      */
-    private static class SpecSource {
+    public static class SpecSource {
 
         private enum Type {
             INLINE_SPEC,
@@ -354,20 +304,16 @@ public class OpenApiInteractionValidator {
             this.type = type;
         }
 
-        private boolean isInlineSpecification() {
+        public boolean isInlineSpecification() {
             return type == Type.INLINE_SPEC;
         }
 
-        private boolean isSpecUrl() {
+        public boolean isSpecUrl() {
             return type == Type.SPEC_URL;
         }
 
-        private boolean isUnknown() {
-            return type == Type.UNKNOWN;
-        }
-
         @Nullable
-        private String getValue() {
+        public String getValue() {
             return value;
         }
     }
@@ -437,6 +383,7 @@ public class OpenApiInteractionValidator {
          */
         @Deprecated
         public Builder withApiSpecification(final String specUrlOrPayload) {
+            requireNonEmpty(specUrlOrPayload, "A specification URL or payload is required");
             this.specSource = SpecSource.unknown(specUrlOrPayload);
             return this;
         }
@@ -450,6 +397,7 @@ public class OpenApiInteractionValidator {
          * @return this builder instance.
          */
         public Builder withInlineApiSpecification(final String inlineSpecPayload) {
+            requireNonEmpty(inlineSpecPayload, "A specification payload is required");
             this.specSource = SpecSource.inline(inlineSpecPayload);
             return this;
         }
@@ -477,6 +425,7 @@ public class OpenApiInteractionValidator {
          * @return this builder instance.
          */
         public Builder withApiSpecificationUrl(final String specUrl) {
+            requireNonEmpty(specUrl, "A specification URL is required");
             this.specSource = SpecSource.specUrl(specUrl);
             return this;
         }
@@ -594,8 +543,8 @@ public class OpenApiInteractionValidator {
         private final String specUrlOrPayload;
         private final List<String> parseMessages;
 
-        ApiLoadException(final String specUrlOrPayload,
-                         @Nullable final SwaggerParseResult parseResult) {
+        public ApiLoadException(final String specUrlOrPayload,
+                                @Nullable final SwaggerParseResult parseResult) {
             super("Unable to load API spec from provided URL or payload");
             this.specUrlOrPayload = specUrlOrPayload;
             if (parseResult != null) {
@@ -605,8 +554,8 @@ public class OpenApiInteractionValidator {
             }
         }
 
-        ApiLoadException(final String specUrlOrPayload,
-                         final Throwable cause) {
+        public ApiLoadException(final String specUrlOrPayload,
+                                final Throwable cause) {
             super("Unable to load API spec from provided URL or payload", cause);
             this.specUrlOrPayload = specUrlOrPayload;
             parseMessages = emptyList();
@@ -618,7 +567,7 @@ public class OpenApiInteractionValidator {
                 return super.getMessage();
             }
 
-            return super.getMessage() + ":\n\t- " + parseMessages.stream().collect(joining("\n\t- "));
+            return super.getMessage() + ":\n\t- " + String.join("\n\t- ", parseMessages);
         }
 
         public List<String> getParseMessages() {
