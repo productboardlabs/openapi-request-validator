@@ -76,9 +76,9 @@ To get better control over the validation a custom `OpenApiInteractionValidator`
 
 ```java
     @Autowired
-    public OpenApiValidationConfig(@Value("classpath:api.json") final Resource apiSpecification) throws IOException {
+    public OpenApiValidationConfig(@Value("${open.api.spec.url}") final String specificationUrl) throws IOException {
         final OpenApiInteractionValidator validator = OpenApiInteractionValidator
-                .createFor(apiSpecification.getURL().getPath())
+                .createForSpecificationUrl(specificationUrl)
                 .withLevelResolver(SpringMVCLevelResolverFactory.create())
                 .withBasePathOverride("/v1")
                 .build();
