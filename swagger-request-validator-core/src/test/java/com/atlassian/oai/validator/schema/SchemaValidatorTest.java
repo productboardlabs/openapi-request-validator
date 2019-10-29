@@ -466,6 +466,16 @@ public class SchemaValidatorTest {
     }
 
     @Test
+    public void validate_withEnumDiscriminator_shouldPass_whenValid() {
+
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v2/api-discriminator-enum.yaml");
+        final Schema schema = new Schema().$ref("#/components/schemas/Pet");
+        final String value = "{\"name\": \"Moggy\", \"petType\": \"Cat\", \"huntingSkill\":\"clueless\"}";
+
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
+    }
+
+    @Test
     public void validate_withDateProperty_shouldPass_whenValid() {
         final String value = "1985-04-12";
         final Schema schema = new DateSchema();
