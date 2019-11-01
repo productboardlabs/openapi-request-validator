@@ -3,7 +3,6 @@ package com.atlassian.oai.validator.schema;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -21,17 +20,16 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.StreamSupport;
@@ -155,19 +153,16 @@ public class SchemaValidator {
         return schemaObject;
     }
 
-    private static void setRequired(final ObjectNode schemaObject, final List<String> required) throws IOException {
-        final ByteArrayOutputStream out = new ByteArrayOutputStream();
-        final ObjectMapper mapper = new ObjectMapper();
-
-        mapper.writeValue(out, required);
+    private static void setRequired(final ObjectNode schemaObject, final List<String> required) {
+        final JsonNode requiredNode = Json.mapper().convertValue(required, JsonNode.class);
         if (schemaObject.findValue("type") != null &&
                 schemaObject.findValue("type").asText().equalsIgnoreCase("array")) {
             if (schemaObject.get("items") != null) {
                 final JsonNode jsonNode = schemaObject.get("items");
-                ((ObjectNode) jsonNode).set("required", Json.mapper().readTree(out.toString()));
+                ((ObjectNode) jsonNode).set("required", requiredNode);
             }
         } else {
-            schemaObject.set("required", Json.mapper().readTree(out.toString()));
+            schemaObject.set("required", requiredNode);
         }
     }
 
