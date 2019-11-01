@@ -1,3 +1,9 @@
+#v2.8.0
+
+* Basic support for `deepObject` style query params
+[[#234]](https://bitbucket.org/atlassian/swagger-request-validator/issues/234)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/141)
+
 #v2.7.2
 
 * Updated SpringMVC module to use new builders
