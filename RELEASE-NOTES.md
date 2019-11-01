@@ -1,3 +1,14 @@
+#v2.7.2
+
+* Updated SpringMVC module to use new builders
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/150)
+* Allow discriminator property to be a $ref
+[[#247]](https://bitbucket.org/atlassian/swagger-request-validator/issues/247)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/147)
+* Fix validation of readOnly/writeOnly properties within items in an array
+[[#240]](https://bitbucket.org/atlassian/swagger-request-validator/issues/240)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/146)
+
 #v2.7.1
 * Removed duplicate validation of Base64 encoded String/Byte fields 
 [[#214]](https://bitbucket.org/atlassian/swagger-request-validator/issues/214)
