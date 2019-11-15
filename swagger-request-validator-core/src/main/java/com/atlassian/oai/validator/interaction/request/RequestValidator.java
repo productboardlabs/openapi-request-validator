@@ -8,23 +8,27 @@ import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
 import com.atlassian.oai.validator.schema.SchemaValidator;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Joiner;
 import com.google.common.net.MediaType;
+import io.swagger.util.Json;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.parameters.Parameter;
+import io.swagger.v3.oas.models.parameters.Parameter.StyleEnum;
 import io.swagger.v3.oas.models.security.SecurityScheme;
-import java.util.HashMap;
-import java.util.Map;
 import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -33,6 +37,7 @@ import static com.atlassian.oai.validator.report.ValidationReport.empty;
 import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
+import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -55,9 +60,9 @@ public class RequestValidator {
     /**
      * Construct a new request validator with the given schema validator.
      *
-     * @param schemaValidator The schema validator to use when validating request bodies
-     * @param messages The message resolver to use
-     * @param api The OpenAPI spec to validate against
+     * @param schemaValidator         The schema validator to use when validating request bodies
+     * @param messages                The message resolver to use
+     * @param api                     The OpenAPI spec to validate against
      * @param customRequestValidators The list of custom validators to run
      */
     public RequestValidator(final SchemaValidator schemaValidator,
@@ -66,7 +71,7 @@ public class RequestValidator {
                             final List<CustomRequestValidator> customRequestValidators) {
         this.messages = requireNonNull(messages, "A message resolver is required");
         this.components = defaultIfNull(api.getComponents(), new Components());
-        
+
         this.customRequestValidators = customRequestValidators;
 
         parameterValidator = new ParameterValidator(schemaValidator, messages);
@@ -77,9 +82,8 @@ public class RequestValidator {
     /**
      * Validate the request against the given API operation
      *
-     * @param request The request to validate
+     * @param request      The request to validate
      * @param apiOperation The operation to validate the request against
-     *
      * @return A validation report containing validation errors
      */
     @Nonnull
@@ -102,6 +106,7 @@ public class RequestValidator {
                 .merge(validatePathParameters(apiOperation))
                 .merge(requestBodyValidator.validateRequestBody(request, apiOperation.getOperation().getRequestBody()))
                 .merge(validateQueryParameters(request, apiOperation))
+                .merge(validateDeepObjectQueryParameters(request, apiOperation))
                 .merge(validateUnexpectedQueryParameters(request, apiOperation))
                 .merge(validateCookieParameters(request, apiOperation))
                 .merge(validateCustom(request, apiOperation))
@@ -233,53 +238,110 @@ public class RequestValidator {
                                                      final ApiOperation apiOperation) {
         return defaultIfNull(apiOperation.getOperation().getParameters(), Collections.<Parameter>emptyList())
                 .stream()
-                .filter(RequestValidator::isQueryParam)
+                .filter(p -> isQueryParam(p) && !isDeepObjectParam(p))
                 .map(p -> validateParameter(
                         apiOperation, p,
                         request.getQueryParameterValues(p.getName()),
-                        "validation.request.parameter.query.missing")
-                )
+                        "validation.request.parameter.query.missing"))
                 .reduce(empty(), ValidationReport::merge);
     }
 
     @Nonnull
+    private ValidationReport validateDeepObjectQueryParameters(final Request request,
+                                                               final ApiOperation apiOperation) {
+        return defaultIfNull(apiOperation.getOperation().getParameters(), Collections.<Parameter>emptyList())
+                .stream()
+                .filter(p -> isQueryParam(p) && isDeepObjectParam(p))
+                .map(p -> validateDeepObjectQueryParameter(request, apiOperation, p))
+                .reduce(empty(), ValidationReport::merge);
+    }
+
+    @Nonnull
+    private ValidationReport validateDeepObjectQueryParameter(final Request request,
+                                                              final ApiOperation apiOperation,
+                                                              final Parameter parameter) {
+        final String queryParam = parameter.getName();
+        final Pattern fieldPattern = Pattern.compile(String.format("%s\\[(\\S*)\\]", queryParam));
+        final Map<String, String> deepObject = new HashMap<>();
+
+        request.getQueryParameters()
+                .stream()
+                .map(qp -> fieldPattern.matcher(qp))
+                .filter(matcher -> matcher.matches())
+                .forEach(matcher -> deepObject.putIfAbsent(
+                        matcher.group(1),
+                        request.getQueryParameterValues(matcher.group(0)).iterator().next()));
+
+        // We need to handle where the parameter is not required, and there aren't any values
+        if (deepObject.isEmpty() && !TRUE.equals(parameter.getRequired())) {
+            return empty();
+        }
+
+        // It's possible that the values cause an error writing to a json string
+        final String deepObjectAsJson;
+        try {
+            deepObjectAsJson = Json.mapper().writeValueAsString(deepObject);
+        } catch (final JsonProcessingException e) {
+            final ValidationReport.MessageContext context = ValidationReport.MessageContext.create()
+                    .withApiOperation(apiOperation)
+                    .withParameter(parameter)
+                    .build();
+
+            return ValidationReport.singleton(
+                    messages.get("validation.request.parameter.query.unexpected", queryParam,
+                            apiOperation.getApiPath().original())).withAdditionalContext(context);
+        }
+
+        return validateParameter(
+                apiOperation, parameter, singletonList(deepObjectAsJson),
+                "validation.request.parameter.query.missing"
+        );
+    }
+
+    @Nonnull
     private ValidationReport validateUnexpectedQueryParameters(final Request request,
-        final ApiOperation apiOperation) {
-        
+                                                               final ApiOperation apiOperation) {
+
         final Set<String> allowedQueryParams =
-            Stream.concat(defaultIfNull(apiOperation.getOperation().getParameters(),
-                Collections.<Parameter>emptyList())
-                    .stream()
-                    .filter(RequestValidator::isQueryParam)
-                    .map(Parameter::getName),
-                defaultIfNull(components.getSecuritySchemes(),
-                    Collections.<String, SecurityScheme>emptyMap()).values().stream()
-                    .filter(sc -> sc.getIn() != null && sc.getIn() == SecurityScheme.In.QUERY)
-                    .map(SecurityScheme::getName)
-            ).collect(Collectors.toSet());
-        
+                Stream.concat(defaultIfNull(apiOperation.getOperation().getParameters(),
+                        Collections.<Parameter>emptyList())
+                                .stream()
+                                .filter(p -> isQueryParam(p) && !isDeepObjectParam(p))
+                                .map(Parameter::getName),
+                        defaultIfNull(components.getSecuritySchemes(),
+                                Collections.<String, SecurityScheme>emptyMap()).values().stream()
+                                .filter(sc -> sc.getIn() != null && sc.getIn() == SecurityScheme.In.QUERY)
+                                .map(SecurityScheme::getName)
+                ).collect(Collectors.toSet());
+
         return request.getQueryParameters().stream()
-            .map(queryParam -> validateUnexpectedQueryParameter(allowedQueryParams, queryParam, apiOperation))
-            .reduce(empty(), ValidationReport::merge);  
+                .map(queryParam -> validateUnexpectedQueryParameter(allowedQueryParams, queryParam, apiOperation))
+                .reduce(empty(), ValidationReport::merge);
     }
 
     @Nonnull
     private ValidationReport validateUnexpectedQueryParameter(final Set<String> allowedQueryParameters,
-        final String queryParam, final ApiOperation apiOperation) {
+                                                              final String queryParam,
+                                                              final ApiOperation apiOperation) {
 
         if (allowedQueryParameters.contains(queryParam)) {
             return empty();
         }
-        
+
+        // Allow through any deepObject formatted parameters - i.e 'filter[name_eq]'
+        if (allowedQueryParameters.stream().anyMatch(p -> Pattern.matches(String.format("%s\\[(\\S*)\\]", p), queryParam))) {
+            return empty();
+        }
+
         final ValidationReport.MessageContext context =
-            ValidationReport.MessageContext.create()
-                .withApiOperation(apiOperation)
-                .withParameter(new Parameter().name(queryParam).in("query"))
-                .build();
-        
+                ValidationReport.MessageContext.create()
+                        .withApiOperation(apiOperation)
+                        .withParameter(new Parameter().name(queryParam).in("query"))
+                        .build();
+
         return ValidationReport.singleton(
-            messages.get("validation.request.parameter.query.unexpected", queryParam,
-                apiOperation.getApiPath().original())).withAdditionalContext(context);
+                messages.get("validation.request.parameter.query.unexpected", queryParam,
+                        apiOperation.getApiPath().original())).withAdditionalContext(context);
     }
 
     @Nonnull
@@ -298,17 +360,17 @@ public class RequestValidator {
 
     @Nonnull
     private ValidationReport validateCookieParameters(final Request request,
-        final ApiOperation apiOperation) {
+                                                      final ApiOperation apiOperation) {
         final Map<String, Collection<String>> cookieParams = getCookieParameterValues(request);
         return defaultIfNull(apiOperation.getOperation().getParameters(), Collections.<Parameter>emptyList())
-            .stream()
-            .filter(RequestValidator::isCookieParam)
-            .map(p -> validateParameter(
-                apiOperation, p,
-                defaultIfNull(cookieParams.get(p.getName()), Collections.<String>emptyList()),
-                "validation.request.parameter.cookie.missing")
-            )
-            .reduce(empty(), ValidationReport::merge);
+                .stream()
+                .filter(RequestValidator::isCookieParam)
+                .map(p -> validateParameter(
+                        apiOperation, p,
+                        defaultIfNull(cookieParams.get(p.getName()), Collections.<String>emptyList()),
+                        "validation.request.parameter.cookie.missing")
+                )
+                .reduce(empty(), ValidationReport::merge);
     }
 
     private Map<String, Collection<String>> getCookieParameterValues(final Request request) {
@@ -320,7 +382,7 @@ public class RequestValidator {
             final String cookieValuesStr = Joiner.on(",").join(cookieValues);
             // cookie list are separated by a semicolon and a space ('; ')
             final String[] cookieValuesArray = cookieValuesStr.split("; ");
-            for (String cookieVal : cookieValuesArray) {
+            for (final String cookieVal : cookieValuesArray) {
                 // look for the first '='
                 final int index = cookieVal.indexOf('=');
                 if (index > 0) {
@@ -379,6 +441,10 @@ public class RequestValidator {
 
     private static boolean isCookieParam(final Parameter p) {
         return isParam(p, "cookie");
+    }
+
+    private static boolean isDeepObjectParam(final Parameter p) {
+        return p != null && p.getStyle() != null && p.getStyle().equals(StyleEnum.DEEPOBJECT);
     }
 
     private static boolean isParam(final Parameter p, final String type) {

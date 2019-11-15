@@ -466,6 +466,16 @@ public class SchemaValidatorTest {
     }
 
     @Test
+    public void validate_withEnumDiscriminator_shouldPass_whenValid() {
+
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v2/api-discriminator-enum.yaml");
+        final Schema schema = new Schema().$ref("#/components/schemas/Pet");
+        final String value = "{\"name\": \"Moggy\", \"petType\": \"Cat\", \"huntingSkill\":\"clueless\"}";
+
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
+    }
+
+    @Test
     public void validate_withDateProperty_shouldPass_whenValid() {
         final String value = "1985-04-12";
         final Schema schema = new DateSchema();
@@ -576,6 +586,23 @@ public class SchemaValidatorTest {
     }
 
     @Test
+    public void validate_readOnly_withArray_asRoot_schema() {
+
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
+        final ParseOptions parseOptions = new ParseOptions();
+        parseOptions.setResolveFully(true);
+
+        final Schema schema = new OpenAPIParser().readLocation("/oai/v3/api-required-readonly-writeonly.yaml", null, parseOptions)
+                .getOpenAPI().getComponents().getSchemas().get("ReadOnlyArray");
+
+        final String value = "[{\"notReadOnly\":\"abc\", \"writeOnly\": \"123\"}]";
+
+        final ValidationReport report = classUnderTest.validate(value, schema, "request.body");
+        assertPass(report);
+
+    }
+
+    @Test
     public void validate_writeOnly() {
 
         final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
@@ -584,6 +611,23 @@ public class SchemaValidatorTest {
                 .getOpenAPI().getComponents().getSchemas().get("ReadOnly");
 
         final String value = "{\"notReadOnly\":\"abc\", \"readOnly\": \"123\"}";
+
+        final ValidationReport report = classUnderTest.validate(value, schema, "response.body");
+        assertPass(report);
+
+    }
+
+    @Test
+    public void validate_writeOnly_withArray_asRoot_schema() {
+
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
+        final ParseOptions parseOptions = new ParseOptions();
+        parseOptions.setResolveFully(true);
+
+        final Schema schema = new OpenAPIParser().readLocation("/oai/v3/api-required-readonly-writeonly.yaml", null, parseOptions)
+                .getOpenAPI().getComponents().getSchemas().get("ReadOnlyArray");
+
+        final String value = "[{\"notReadOnly\":\"abc\", \"readOnly\": \"123\"}]";
 
         final ValidationReport report = classUnderTest.validate(value, schema, "response.body");
         assertPass(report);
