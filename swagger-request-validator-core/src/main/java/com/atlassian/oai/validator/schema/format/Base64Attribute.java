@@ -26,6 +26,10 @@ public class Base64Attribute extends AbstractFormatAttribute {
     }
 
     private static boolean isBase64(final String string) {
+        // it is expected the Base64 string has padding - therefore its length is divisible by 4
+        if (string.length() % 4 != 0) {
+            return false;
+        }
         try {
             final InputStream in = BaseEncoding.base64().decodingStream(new StringReader(string));
             while (in.read() != -1) {
