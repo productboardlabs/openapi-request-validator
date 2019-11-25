@@ -1,0 +1,67 @@
+openapi: 3.0.2
+info:
+  title: Schema
+  version: 1-0
+  description: Schema to demonstrate validation messages for shallow and deeply nested objects
+paths:
+  /test:
+    post:
+      operationId: doStuff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pet'
+      responses:
+        '200':
+          description: Successful result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+
+components:
+  schemas:
+    Pet:
+      type: object
+      properties:
+        details:
+          $ref: '#/components/schemas/PetDetails'
+        sibling:
+          $ref: '#/components/schemas/Classification'
+
+
+    PetDetails:
+      allOf:
+        - $ref: '#/components/schemas/Classification'
+        - $ref: '#/components/schemas/Colour'
+
+    Classification:
+      allOf:
+        - $ref: '#/components/schemas/AnimalType'
+        - $ref: '#/components/schemas/Breed'
+
+    AnimalType:
+      type: object
+      required: [type]
+      properties:
+        type:
+          type: string
+          enum: [Dog, Cat, Bird, Fish, Reptile, Other]
+
+    Breed:
+      type: object
+      required: [breed]
+      properties:
+        breed:
+          type: string
+          minLength: 4
+
+    Colour:
+      type: object
+      required: [colour]
+      properties:
+        colour:
+          type: string
+          enum: [black, white, red, blue, tan, other]
+

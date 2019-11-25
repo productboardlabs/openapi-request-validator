@@ -186,7 +186,7 @@ paths:
       tags:
         - user
       summary: Update a user's name
-      operationId: Update a user's name
+      operationId: (Secure) Update a user's name
       security:
         - bearer: []
         - queryParam: []
@@ -197,6 +197,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+    parameters:
+      - name: id
+        in: path
+        description: The ID of the user
+        required: true
+        schema:
+          type: integer
+          format: int32
   '/secure/users/{id}/upload':
     post:
       tags:
@@ -275,6 +283,14 @@ paths:
           schema:
             type: integer
             format: int32
+      responses:
+        '200':
+          description: Everything is ok
+  /extensions:
+    get:
+      summary: Endpoint that uses extensions
+      operationId: extensions
+      x-test-extension: 'true'
       responses:
         '200':
           description: Everything is ok

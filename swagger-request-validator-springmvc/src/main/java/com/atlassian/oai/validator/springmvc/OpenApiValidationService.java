@@ -11,11 +11,18 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.web.util.ContentCachingResponseWrapper;
+import org.springframework.web.util.UrlPathHelper;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -24,18 +31,37 @@ import static java.util.Objects.requireNonNull;
 
 class OpenApiValidationService {
 
+    private static final List<String> URI_CHARSETS = resolveAvailableCharsets();
     private final OpenApiInteractionValidator validator;
+    private final UrlPathHelper urlPathHelper;
 
-    OpenApiValidationService(final EncodedResource specUrlOrPayload) throws IOException {
+    OpenApiValidationService(final EncodedResource specAsResource, final UrlPathHelper urlPathHelper) throws IOException {
         this(OpenApiInteractionValidator
-                .createFor(readReader(specUrlOrPayload.getReader()))
+                .createForInlineApiSpecification(readReader(specAsResource.getReader(), -1))
                 .withLevelResolver(SpringMVCLevelResolverFactory.create())
-                .build());
+                .build(), urlPathHelper);
     }
 
-    OpenApiValidationService(final OpenApiInteractionValidator validator) {
+    OpenApiValidationService(final OpenApiInteractionValidator validator, final UrlPathHelper urlPathHelper) {
         requireNonNull(validator, "An OpenAPI validator is required.");
         this.validator = validator;
+        this.urlPathHelper = urlPathHelper;
+    }
+
+    private static List<String> resolveAvailableCharsets() {
+        final List<String> uriCharsets = Charset.availableCharsets().values().stream()
+                .map(Charset::name)
+                .collect(Collectors.toList());
+        // put UTF-8 to the front as it is the most probable charset for the URI encoding
+        uriCharsets.remove(StandardCharsets.UTF_8.name());
+        uriCharsets.add(0, StandardCharsets.UTF_8.name());
+        return uriCharsets;
+    }
+
+    private String resolveServletPath(final HttpServletRequest servletRequest) {
+        // The method HttpServletRequest#getServletPath might return NULL even in case there is an actual
+        // servlet path. The UrlPathHelper is helping getting the servlet path.
+        return urlPathHelper.getPathWithinApplication(servletRequest);
     }
 
     /**
@@ -49,13 +75,14 @@ class OpenApiValidationService {
         requireNonNull(servletRequest, "A request is required.");
 
         final Request.Method method = Request.Method.valueOf(servletRequest.getMethod());
-        final String path = servletRequest.getServletPath();
+        final String path = resolveServletPath(servletRequest);
         final SimpleRequest.Builder builder = new SimpleRequest.Builder(method, path);
-        final String body = readReader(servletRequest.getReader());
+        final int contentLength = servletRequest.getContentLength();
+        final String body = readReader(servletRequest.getReader(), contentLength);
         // The content length of a request does not need to be set. It might by "-1" and
         // there is still a body. Only in conjunction with an empty / unset body it was
         // really empty.
-        if (servletRequest.getContentLength() >= 0 || (body != null && !body.isEmpty())) {
+        if (contentLength >= 0 || StringUtils.isNotEmpty(body)) {
             builder.withBody(body);
         }
         for (final String queryParameterName : getQueryParameterNames(servletRequest)) {
@@ -105,20 +132,47 @@ class OpenApiValidationService {
     ValidationReport validateResponse(final HttpServletRequest servletRequest,
                                       final Response response) {
         final Request.Method method = Request.Method.valueOf(servletRequest.getMethod());
-        final String path = servletRequest.getServletPath();
+        final String path = resolveServletPath(servletRequest);
         return validator.validateResponse(path, method, response);
     }
 
-    private static String readReader(final Reader reader) throws IOException {
-        try (final Reader reassignedReader = reader) {
-            return IOUtils.toString(reassignedReader);
+    private static String readReader(final Reader reader, final int length) throws IOException {
+        try (Reader reassignedReader = reader) {
+            final StringWriter writer = length > 0 ? new StringWriter(length) : new StringWriter();
+            IOUtils.copy(reassignedReader, writer);
+            return writer.toString();
         }
     }
 
     private static Set<String> getQueryParameterNames(final HttpServletRequest servletRequest) {
+        final List<String> allAvailableNames = Collections.list(servletRequest.getParameterNames());
         return Stream.of(StringUtils.split(StringUtils.defaultIfBlank(servletRequest.getQueryString(), ""), "&"))
-                .map(str -> StringUtils.split(str, "=")[0])
+                .map(str -> uriDecodeParamName(allAvailableNames, StringUtils.split(str, "=")[0]))
                 .filter(StringUtils::isNotEmpty)
                 .collect(Collectors.toSet());
+    }
+
+    private static String uriDecodeParamName(final List<String> allParameterNames, final String paramName) {
+        // It is difficult to get the correct uri encoding. Ideally it does not need decoding. And if it's encoded better
+        // with UTF-8 as charset.
+        // Beyond that it's guessing. It can be verified by checking the decoded name with all available parameter names.
+        if (!allParameterNames.contains(paramName)) {
+            for (final String charset : URI_CHARSETS) {
+                final String decoded = uriDecode(paramName, charset);
+                if (allParameterNames.contains(decoded)) {
+                    return decoded;
+                }
+            }
+        }
+        return paramName;
+    }
+
+    private static String uriDecode(final String paramName, final String charset) {
+        try {
+            return URLDecoder.decode(paramName, charset);
+        } catch (final UnsupportedEncodingException e) {
+            // should not happen as only supported charsets will be used
+            return paramName;
+        }
     }
 }

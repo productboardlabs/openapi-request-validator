@@ -28,9 +28,9 @@ public class RestRequestLoggingValidationConfig extends WebMvcConfigurerAdapter 
     private final OpenApiValidationInterceptor openApiValidationInterceptor;
 
     @Autowired
-    public RestRequestLoggingValidationConfig(@Value("classpath:api-spring-test.json") final Resource swaggerSchema) throws IOException {
+    public RestRequestLoggingValidationConfig(@Value("classpath:api-spring-test.json") final Resource specificationResource) throws IOException {
         final OpenApiInteractionValidator openApiInteractionValidator = OpenApiInteractionValidator
-                .createFor(swaggerSchema.getURL().getPath())
+                .createForSpecificationUrl(specificationResource.getURL().toExternalForm())
                 .withLevelResolver(SpringMVCLevelResolverFactory.create())
                 // the context path of the Spring application differs from the base path in the OpenAPI schema
                 .withBasePathOverride("/v1")

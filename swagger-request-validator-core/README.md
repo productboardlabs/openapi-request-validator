@@ -34,7 +34,7 @@ occurred during the validation. These can be used to generate a report for users
 
 ```java
 final OpenApiInteractionValidator validator = OpenApiInteractionValidator
-        .createFor(specUrl)
+        .createForSpecificationUrl(specUrl)
         .withBasePathOverride(basePathOverride)
         .build;
 final ValidationReport report = validator.validate(request, response);
@@ -102,7 +102,7 @@ with programmatically added validation level configuration.
 
 ```
 this.validator = OpenApiInteractionValidator
-        .createFor(swaggerJsonUrl)
+        .createForSpecificationUrl(swaggerJsonUrl)
         .withLevelResolver(
                 LevelResolver.create()
                         .withLevel("validation.schema.required", ValidationReport.Level.INFO)
@@ -208,4 +208,46 @@ final OpenApiInteractionValidator validator = OpenApiInteractionValidator.create
 ```
 
 If a message is whitelisted, it will still remain in the validation report, but its level will be changed
-to IGNORE, and additional information with the matched rule name will be attached to it.  
+to IGNORE, and additional information with the matched rule name will be attached to it.
+
+### Custom validation ###
+
+In some cases, validation may be desired that is not provided out of the box.
+To add your own validation logic, a custom validator can be created and registered.
+Custom validators can be registered to verify either the request or response.
+A registered custom validator will be run for each request or response being validated against a specified operation.
+
+An example of when to use a custom validator would be when a specification includes known extensions.
+
+```java
+final OpenApiInteractionValidator validator = OpenApiInteractionValidator.createFor(spec)
+        .withCustomRequestValidator(new SimpleRequestValidator())
+        .withCustomResponseValidator(new SimpleResponseValidator())
+        .build();
+
+...
+
+private class SimpleRequestValidator implements CustomRequestValidator {
+    @Override
+    public ValidationReport validate(@Nonnull Request request, @Nonnull ApiOperation apiOperation) {
+        if (apiOperation.getOperation().getVendorExtensions().containsKey("x-some-extension")) {
+            if (!request.getHeaderValue("foo").isPresent()) {
+                return ValidationReport.singleton((ValidationReport.Message.create("some.extension", "Required header foo missing.").build()));
+            }
+        }
+        return ValidationReport.empty();
+    }
+}
+
+private class SimpleResponseValidator implements CustomResponseValidator {
+    @Override
+    public ValidationReport validate(@Nonnull Response response, @Nonnull ApiOperation apiOperation) {
+        if (apiOperation.getOperation().getVendorExtensions().containsKey("x-some-extension")) {
+            if (!response.getHeaderValue("foo").isPresent()) {
+                return ValidationReport.singleton((ValidationReport.Message.create("some.extension", "Required header foo missing.").build()));
+            }
+        }
+        return ValidationReport.empty();
+    }
+}
+```

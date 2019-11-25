@@ -11,11 +11,15 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
 
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toCollection;
 
 /**
  * A report of validation errors that occurred during validation.
@@ -52,6 +56,10 @@ public interface ValidationReport {
 
         List<String> getAdditionalInfo();
 
+        default List<Message> getNestedMessages() {
+            return Collections.emptyList();
+        }
+
         /**
          * Returns contextual information about this message, if it is available.
          */
@@ -66,6 +74,13 @@ public interface ValidationReport {
          * Returns a new instance, the same as this message, but with additional info attached.
          */
         Message withAdditionalInfo(String info);
+
+        /**
+         * Returns a new instance, the same as this message, but with nested messages attached.
+         */
+        default Message withNestedMessages(Collection<Message> messages) {
+            return this;
+        }
 
         /**
          * Returns a new instance, the same as this message, but additional context attached.
@@ -303,7 +318,6 @@ public interface ValidationReport {
      * Return an unmodifiable report that contains a single message.
      *
      * @param message The message to add to the report
-     *
      * @return An unmodifiable validation report with a single message
      */
     static ValidationReport singleton(@Nullable final Message message) {
@@ -317,7 +331,6 @@ public interface ValidationReport {
      * Return an unmodifiable report containing all the provided messages
      *
      * @param messages The messages to add to the report
-     *
      * @return an unmodifiable report containing all the provided messages
      */
     static ValidationReport from(final Collection<Message> messages) {
@@ -328,7 +341,6 @@ public interface ValidationReport {
      * Return an unmodifiable report containing all the provided messages
      *
      * @param messages The messages to add to the report
-     *
      * @return an unmodifiable report containing all the provided messages
      */
     static ValidationReport from(final Message... messages) {
@@ -348,6 +360,18 @@ public interface ValidationReport {
     }
 
     /**
+     * Return sorted set of levels found during validation
+     *
+     * @return sorted set of levels, e.g. [ERROR, IGNORE]
+     */
+    default Set<Level> sortedValidationLevels() {
+        return getMessages()
+                .stream()
+                .map(ValidationReport.Message::getLevel)
+                .collect(toCollection(TreeSet::new));
+    }
+
+    /**
      * Get the validation messages on this report.
      *
      * @return The messages recorded on this report
@@ -360,7 +384,6 @@ public interface ValidationReport {
      * containing the messages from both reports.
      *
      * @param other The validation report to merge with this one
-     *
      * @return A new, unmodifiable validation report containing all the messages from this report
      * and the other report
      */
@@ -374,7 +397,6 @@ public interface ValidationReport {
      * returning a new unmodifiable report.
      *
      * @param context The additional context to apply to each message in the report
-     *
      * @return A new, unmodifiable validation report containing all of the messages from this report,
      * enhanced with the additional supplied context
      */

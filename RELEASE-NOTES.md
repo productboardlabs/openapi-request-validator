@@ -1,3 +1,158 @@
+#v2.8.0
+
+* Basic support for `deepObject` style query params
+[[#234]](https://bitbucket.org/atlassian/swagger-request-validator/issues/234)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/141)
+
+#v2.7.2
+
+* Updated SpringMVC module to use new builders
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/150)
+* Allow discriminator property to be a $ref
+[[#247]](https://bitbucket.org/atlassian/swagger-request-validator/issues/247)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/147)
+* Fix validation of readOnly/writeOnly properties within items in an array
+[[#240]](https://bitbucket.org/atlassian/swagger-request-validator/issues/240)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/146)
+
+#v2.7.1
+* Removed duplicate validation of Base64 encoded String/Byte fields 
+[[#214]](https://bitbucket.org/atlassian/swagger-request-validator/issues/214)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/149)
+
+#v2.7.0
+* Bumped versions of a number of dependencies
+
+### Upgrade notes
+
+#### Swagger / OpenAPI parsing
+
+The Swagger / OpenAPI parser is now stricter in applying schema validation to the parsed spec.
+If your spec does not adhere to the schema it will fail to load. 
+
+#### Pact
+
+If you use the Pact adapter, the change from version `v3.5.20` to `v3.6.14` of the Pact JVM library
+has brought some changes to the `ConsumerInfo` constructor. If you create these directly (rather than using the 
+builders on the `PactProviderValidator`) please review your usage. 
+
+The Pact JUnit fragment builder now also requires returning a `RequestResponsePact` rather than a `PactFragment`. 
+See `OpenApiValidatorPactConsumerTestExample` for examples.  
+
+#v2.6.0
+* Added factory methods to create `OpenApiInteractionValidator` instances with a spec or URL to avoid having to guess at
+what has been provided.
+[[#236]](https://bitbucket.org/atlassian/swagger-request-validator/issues/236)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/142)
+
+#v2.5.0
+* Added support for Cookie parameter validation
+[[#224]](https://bitbucket.org/atlassian/swagger-request-validator/issues/224)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/138)
+* Improved validation messages by including messages from deeply nested objects during schema validation
+[[#221]](https://bitbucket.org/atlassian/swagger-request-validator/issues/221)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/140)
+
+#v2.4.7
+* Added a constructor to `com.atlassian.oai.validator.springmvc.OpenApiValidationInterceptor` to allow a custom 
+report handler to be provided
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/139)
+
+#v2.4.6
+* Improved performance for validation of long Base64 encoded strings
+[[#225]](https://bitbucket.org/atlassian/swagger-request-validator/issues/225)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/137)
+* Fixed treatment of the `required` flag when used with `readOnly` and `writeOnly` in request/response bodies
+[[#207]](https://bitbucket.org/atlassian/swagger-request-validator/issues/207)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/133)
+
+#v2.4.5
+* Fixed a bug where backslashes in query params etc. are treated incorrectly during validation
+[[#220]](https://bitbucket.org/atlassian/swagger-request-validator/issues/220)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/134)
+
+#v2.4.4
+* Fixed a problem where the request path can be null under some circumstances in Spring MVC
+[[#218]](https://bitbucket.org/atlassian/swagger-request-validator/issues/218)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/136)
+
+#v2.4.3
+* Fix NPE in the `IsEntityWhitelistRule` when there is no content in the response
+[[#222]](https://bitbucket.org/atlassian/swagger-request-validator/issues/222)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/135)
+
+#v2.4.2
+* Bump version of `json-schema-validator` to pickup improvements
+[[#216]](https://bitbucket.org/atlassian/swagger-request-validator/issues/216)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/132)
+* Fix decoding of query param names in the `swagger-request-validator-springmvc` module
+[[#215]](https://bitbucket.org/atlassian/swagger-request-validator/issues/215)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/130)
+
+#v2.4.1
+* Improve memory usage in the Spring MVC adapter
+[[#213]](https://bitbucket.org/atlassian/swagger-request-validator/issues/213)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/129)
+
+#v2.4.0
+* Added support for failing validation on unexpected query parameters
+[[#109]](https://bitbucket.org/atlassian/swagger-request-validator/issues/109)
+[[Docs]](https://bitbucket.org/atlassian/swagger-request-validator/src/master/docs/FAQ.md)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/125)
+
+#v2.3.0
+* Added support for custom validation logic that can be used to e.g. provide validation for vendor extensions
+[[Docs]](https://bitbucket.org/atlassian/swagger-request-validator/src/master/swagger-request-validator-core/README.md)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/122)
+
+#v2.2.3
+* Fixed content type matching to return un-modified content types
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/128)
+
+#v2.2.2
+* Added support for basic HTTP Bearer auth validation
+[[#195]](https://bitbucket.org/atlassian/swagger-request-validator/issues/195)
+
+#v2.2.1
+* Fixed NPE when `security` defined but no `securitySchemes` defined
+[[#188]](https://bitbucket.org/atlassian/swagger-request-validator/issues/188)
+* Added better support for [using multiple authentication types](https://swagger.io/docs/specification/authentication/#multiple)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/123)
+
+#v2.2.0
+* To address a breaking change in `spring-test-5.1.0.RELEASE`, introduced 
+`swagger-request-validator-mockmvc-legacy` for pre-5.1 versions.
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/121)
+[[#181]](https://bitbucket.org/atlassian/swagger-request-validator/issues/181)
+[[#190]](https://bitbucket.org/atlassian/swagger-request-validator/issues/190)
+
+**Important**
+
+If you use versions of Spring prior to 5.1.0.RELEASE (or Spring Boot prior to 2.1.0) you will need to change your
+dependency from `swagger-request-validator-mockmvc` to `swagger-request-validator-mockmvc-legacy`.  
+
+
+#v2.1.0
+* Added a new module for performing Swagger / Open API validation with Spring Web Client
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/120)
+* Changed JSON mediatype detection to support `+json` suffixes
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/118)
+
+#v2.0.4
+* Fixed a bug when the `produces` clause is empty in a swagger v2 spec
+[[#179]](https://bitbucket.org/atlassian/swagger-request-validator/issues/179)
+
+#v2.0.3
+* Added ability to change behavior in the `OpenApiValidationInterceptor` to suit
+consumer use cases
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/117)
+
+#v2.0.2
+* Fixed a bug in validation when consumes clause is empty in a swagger v2 spec 
+[[#167]](https://bitbucket.org/atlassian/swagger-request-validator/issues/167)
+* Fixed cause exceptions in the spring-mockmvc module when the request body is empty 
+[[#163]](https://bitbucket.org/atlassian/swagger-request-validator/issues/163)
+
 #v2.0.1
 * Decode query params before validation in Spring MVC
 [[#155]](https://bitbucket.org/atlassian/swagger-request-validator/issues/155)

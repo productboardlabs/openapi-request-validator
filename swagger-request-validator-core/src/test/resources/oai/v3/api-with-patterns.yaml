@@ -1,0 +1,30 @@
+openapi: "3.0.2"
+info:
+  description: This is a sample for validating patterns.
+  title: Validating patterns
+  version: "1.0.0"
+paths:
+  /pattern:
+    post:
+      description: String Pattern Test Request
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatternObject'
+      responses:
+        '204':
+          description: OK
+components:
+  schemas:
+    PatternObject:
+      type: object
+      properties:
+        patternByRef:
+          $ref: '#/components/schemas/Pattern'
+        patternInline:
+          type: string
+          pattern: b+a
+    Pattern:
+      type: string
+      pattern: a+b

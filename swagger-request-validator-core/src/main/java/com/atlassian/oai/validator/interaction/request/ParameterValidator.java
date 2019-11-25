@@ -21,25 +21,14 @@ class ParameterValidator {
     private final MessageResolver messages;
 
     /**
-     * Create a new validators object with a default (empty) schema
-     * validator will be used and no <code>ref</code> validation will be performed.
+     * Create a new validators object with the given schema validator.
      *
+     * @param schemaValidator The schema validator to use.
      * @param messages The message resolver to use.
      */
-    ParameterValidator(final MessageResolver messages) {
-        this(null, messages);
-    }
-
-    /**
-     * Create a new validators object with the given schema validator. If none is provided a default (empty) schema
-     * validator will be used and no <code>ref</code> validation will be performed.
-     *
-     * @param schemaValidator The schema validator to use. If not provided a default (empty) validator will be used.
-     * @param messages The message resolver to use.
-     */
-    ParameterValidator(@Nullable final SchemaValidator schemaValidator,
+    ParameterValidator(final SchemaValidator schemaValidator,
                        final MessageResolver messages) {
-        this.schemaValidator = schemaValidator == null ? new SchemaValidator(messages) : schemaValidator;
+        this.schemaValidator = requireNonNull(schemaValidator);
         this.messages = requireNonNull(messages);
     }
 
