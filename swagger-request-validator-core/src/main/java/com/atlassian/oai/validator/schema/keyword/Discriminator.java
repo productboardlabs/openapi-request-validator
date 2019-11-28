@@ -23,11 +23,14 @@ import com.github.fge.msgsimple.bundle.MessageBundle;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Spliterators;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
-import static com.google.common.collect.Streams.stream;
 import static java.util.stream.Collectors.toList;
 
 public class Discriminator {
@@ -284,6 +287,10 @@ public class Discriminator {
 
     private static boolean arrayNodeContains(final JsonNode requiredProperties, final String element) {
         return stream(requiredProperties.elements()).anyMatch(e -> e.textValue().equals(element));
+    }
+
+    private static <T> Stream<T> stream(final Iterator<T> iterator) {
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, 0), false);
     }
 
     private Discriminator() {
