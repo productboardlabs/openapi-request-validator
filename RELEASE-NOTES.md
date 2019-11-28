@@ -1,3 +1,15 @@
+#v2.8.1
+
+* Add ability to provide a pre-parsed `OpenApi` object to the validator
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/152)
+* Improve Base64 format validation by detecting strings that are missing padding
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/151)
+* Remove usage of `@Beta` Guava methods
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/155)
+* Fix a race condition in the `LevelResolver`
+[[#251]](https://bitbucket.org/atlassian/swagger-request-validator/issues/251)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/153)
+
 #v2.8.0
 
 * Basic support for `deepObject` style query params
