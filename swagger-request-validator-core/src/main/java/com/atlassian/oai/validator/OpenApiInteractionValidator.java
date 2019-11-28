@@ -28,11 +28,11 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
-import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
 
 /**
  * Validates a HTTP interaction (request/response pair) with a Swagger v2 / OpenAPI v3 specification.
@@ -132,7 +132,6 @@ public class OpenApiInteractionValidator {
                                         @Nullable final String basePathOverride,
                                         @Nonnull final MessageResolver messages,
                                         @Nonnull final ValidationErrorsWhitelist whitelist,
-                                        @Nullable final List<AuthorizationValue> authData,
                                         @Nonnull final List<CustomRequestValidator> customRequestValidators,
                                         @Nonnull final List<CustomResponseValidator> customResponseValidators) {
         this.messages = messages;
@@ -536,7 +535,6 @@ public class OpenApiInteractionValidator {
                     basePathOverride,
                     new MessageResolver(levelResolver),
                     whitelist,
-                    authData,
                     customRequestValidators,
                     customResponseValidators);
         }
