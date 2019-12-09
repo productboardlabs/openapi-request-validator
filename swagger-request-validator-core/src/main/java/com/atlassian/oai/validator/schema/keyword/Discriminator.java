@@ -72,11 +72,14 @@ public class Discriminator {
                                   final MessageBundle bundle,
                                   final ProcessingReport report,
                                   final SchemaTree tree) throws ProcessingException {
-
             final String discriminatorFieldName = getNode(tree).get(PROPERTYNAME_KEYWORD).textValue();
             if (discriminatorFieldName.isEmpty()) {
                 report.error(msg(tree, bundle, "err.swaggerv2.discriminator.empty"));
                 return;
+            }
+
+            if (tree.getNode().get("oneOf") != null) {
+                return; // no need to check for 'properties', 'required' etc.
             }
 
             final JsonNode properties = tree.getNode().get("properties");
@@ -227,8 +230,11 @@ public class Discriminator {
 
             });
 
-            if (mappingNode != null && mappingNode.get(discriminatorNode.textValue()) != null) {
-                discriminatorNode = mappingNode.get(discriminatorNode.textValue());
+            final boolean useMappingNode = mappingNode != null && mappingNode.get(discriminatorNode.textValue()) != null;
+            if (useMappingNode) {
+                mappingNode.fields().forEachRemaining(e -> {
+                    validDiscriminatorValues.put(e.getKey(), e.getValue());
+                });
             }
 
             if (!validDiscriminatorValues.containsKey(discriminatorNode.textValue())) {
@@ -238,6 +244,10 @@ public class Discriminator {
                                 .putArgument("value", discriminatorNode.textValue())
                                 .putArgument("allowedValues", validDiscriminatorValues.keySet())
                 );
+            }
+
+            if (useMappingNode) {
+                discriminatorNode = mappingNode.get(discriminatorNode.textValue());
             }
 
             final ListProcessingReport subReport = new ListProcessingReport(report.getLogLevel(), LogLevel.FATAL);
@@ -255,15 +265,15 @@ public class Discriminator {
                         .putArgument("schema", ptr.toString())
                         .put("report", subReport.asJson()));
             }
-
         }
 
         private JsonPointer pointerToDiscriminator(final FullData data, final JsonNode discriminatorNode) {
+            final String discriminatorNodeText = sanitizeDiscriminatorNode(discriminatorNode.textValue());
             // Swagger 2.0 used 'definitions' while OpenAPI uses 'components/schemas'
             if (data.getSchema().getBaseNode().has("components")) {
-                return JsonPointer.of("components", "schemas", discriminatorNode.textValue());
+                return JsonPointer.of("components", "schemas", discriminatorNodeText);
             }
-            return JsonPointer.of("definitions", discriminatorNode.textValue());
+            return JsonPointer.of("definitions", discriminatorNodeText);
         }
 
         private JsonNode definitionsNode(final FullData data) {
@@ -273,6 +283,14 @@ public class Discriminator {
                 return baseNode.get("components").get("schemas");
             }
             return baseNode.get("definitions");
+        }
+
+        private String sanitizeDiscriminatorNode(final String discriminatorNodeText) {
+            if (discriminatorNodeText.startsWith("#/")) {
+                final int n = discriminatorNodeText.lastIndexOf('/');
+                return discriminatorNodeText.substring(n + 1);
+            }
+            return discriminatorNodeText;
         }
 
         @Override
