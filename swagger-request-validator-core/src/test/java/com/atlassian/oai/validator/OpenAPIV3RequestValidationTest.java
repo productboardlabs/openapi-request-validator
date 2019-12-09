@@ -522,6 +522,41 @@ public class OpenAPIV3RequestValidationTest {
     }
 
     @Test
+    public void validate_withOneOfDiscriminatorsWithMapping_shouldPass_whenValid() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-discriminator.yaml")
+                        .withLevelResolver(withAdditionalPropertiesIgnored())
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/oneOfWithMapping")
+                .withContentType("application/json")
+                .withBody("{ \"type\": \"IntItem\", \"intField\": 1 }")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withOneOfDiscriminatorsWithMapping_shouldFail_whenMatchesNone() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-discriminator.yaml")
+                        .withLevelResolver(withAdditionalPropertiesIgnored())
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/oneOfWithMapping")
+                .withContentType("application/json")
+                .withBody("{ \"type\": \"random-bogus\", \"whateverField\": 1 }")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.body.schema.discriminator");
+    }
+
+    @Test
     public void validate_withFormData_shouldPass_whenValid() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator.createForSpecificationUrl("/oai/v3/api-formdata.yaml").build();

@@ -232,9 +232,15 @@ public class Discriminator {
 
             final boolean useMappingNode = mappingNode != null && mappingNode.get(discriminatorNode.textValue()) != null;
             if (useMappingNode) {
-                mappingNode.fields().forEachRemaining(e -> {
-                    validDiscriminatorValues.put(e.getKey(), e.getValue());
-                });
+                mappingNode.fields().forEachRemaining(e -> validDiscriminatorValues.put(e.getKey(), e.getValue()));
+            } else if (data.getSchema().getNode().has("oneOf")) {
+                data.getSchema().getNode().get("oneOf").forEach(jsonNode ->
+                        // the oneOf $refs are resolved already, so we have to look up theirs schema names
+                        definitionsNode(data).fields().forEachRemaining(entry -> {
+                            if (entry.getValue().equals(jsonNode)) {
+                                validDiscriminatorValues.put(entry.getKey(), entry.getValue());
+                            }
+                        }));
             }
 
             if (!validDiscriminatorValues.containsKey(discriminatorNode.textValue())) {

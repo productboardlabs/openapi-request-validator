@@ -18,6 +18,19 @@ paths:
       responses:
         '201':
           description: OK
+  /oneOfWithMapping:
+    post:
+      summary: Discriminators with oneOf and mapping
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OneOfCompositionWithMapping'
+        description: The request body
+        required: true
+      responses:
+        '201':
+          description: OK
 
 components:
   schemas:
@@ -60,7 +73,16 @@ components:
         - $ref: '#/components/schemas/Item3'
       discriminator:
         propertyName: type
+
+    OneOfCompositionWithMapping:
+      type: object
+      oneOf:
+        - $ref: '#/components/schemas/Item1'
+        - $ref: '#/components/schemas/Item2'
+        - $ref: '#/components/schemas/Item3'
+      discriminator:
+        propertyName: type
         mapping:
-          Item1: '#/components/schemas/Item1'
-          Item2: '#/components/schemas/Item2'
-          Item3: '#/components/schemas/Item3'
+          IntItem: '#/components/schemas/Item1'
+          StringItem: '#/components/schemas/Item2'
+          BooleanItem: '#/components/schemas/Item3'
