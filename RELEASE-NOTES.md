@@ -1,3 +1,9 @@
+#v2.8.2
+
+* Fix a NPE when using a `discriminator` with the `oneOf` keyword
+[[#166]](https://bitbucket.org/atlassian/swagger-request-validator/issues/166)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/156)
+
 #v2.8.1
 
 * Add ability to provide a pre-parsed `OpenApi` object to the validator
