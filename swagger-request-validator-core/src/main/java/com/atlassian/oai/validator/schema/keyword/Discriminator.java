@@ -254,6 +254,13 @@ public class Discriminator {
             final JsonPointer ptr = pointerToDiscriminator(data, discriminatorNode);
             final FullData newData = data.withSchema(schemaTree.setPointer(ptr));
 
+            if (newData.getSchema().getNode() == null) {
+                report.error(msg(data, bundle, "err.swaggerv2.discriminator.reference.invalid")
+                        .putArgument("schema", ptr.toString())
+                        .put("report", subReport.asJson()));
+                return;
+            }
+
             // Mark the node to ensure we don't get in a validation loop
             visitedNodes.get().add((ObjectNode) schemaTree.getNode());
 
