@@ -4,6 +4,7 @@ import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.report.ValidationReport;
+import com.atlassian.oai.validator.report.ValidationReport.Level;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -14,8 +15,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Collections;
 
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singleton;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
@@ -76,11 +78,11 @@ public class OpenApiValidationInterceptorTest {
 
         when(openApiValidationService.buildRequest(servletRequest)).thenReturn(request);
         when(openApiValidationService.validateRequest(request)).thenReturn(validationReport);
-        when(validationReport.hasErrors()).thenReturn(false);
+        when(validationReport.sortedValidationLevels()).thenReturn(emptySet());
 
         final boolean result = classUnderTest.preHandle(servletRequest, null, null);
 
-        Mockito.verify(validationReport, times(1)).hasErrors();
+        Mockito.verify(validationReport, times(1)).sortedValidationLevels();
         assertThat(result, equalTo(true));
     }
 
@@ -96,11 +98,11 @@ public class OpenApiValidationInterceptorTest {
         Mockito.when(openApiValidationService.buildRequest(servletRequest)).thenReturn(request);
         Mockito.when(openApiValidationService.validateRequest(request)).thenReturn(validationReport);
         Mockito.when(validationReport.hasErrors()).thenReturn(true);
-        Mockito.when(validationReport.getMessages()).thenReturn(Collections.emptyList());
+        Mockito.when(validationReport.sortedValidationLevels()).thenReturn(singleton(Level.ERROR));
 
         final boolean result = classUnderTest.preHandle(servletRequest, null, null);
 
-        Mockito.verify(validationReport, times(1)).getMessages();
+        Mockito.verify(validationReport, times(1)).sortedValidationLevels();
         assertThat(result, equalTo(true));
     }
 
@@ -127,13 +129,13 @@ public class OpenApiValidationInterceptorTest {
 
         Mockito.when(openApiValidationService.buildResponse(servletResponse)).thenReturn(response);
         Mockito.when(openApiValidationService.validateResponse(servletRequest, response)).thenReturn(validationReport);
-        Mockito.when(validationReport.hasErrors()).thenReturn(false);
+        Mockito.when(validationReport.sortedValidationLevels()).thenReturn(emptySet());
 
         // when:
         classUnderTest.postHandle(servletRequest, servletResponse, null, null);
 
         // then:
-        Mockito.verify(validationReport, times(1)).hasErrors();
+        Mockito.verify(validationReport, times(1)).sortedValidationLevels();
     }
 
     @Test(expected = InvalidResponseException.class)
@@ -151,13 +153,13 @@ public class OpenApiValidationInterceptorTest {
         Mockito.when(openApiValidationService.buildResponse(servletResponse)).thenReturn(response);
         Mockito.when(openApiValidationService.validateResponse(servletRequest, response)).thenReturn(validationReport);
         Mockito.when(validationReport.hasErrors()).thenReturn(true);
-        Mockito.when(validationReport.getMessages()).thenReturn(Collections.emptyList());
+        Mockito.when(validationReport.sortedValidationLevels()).thenReturn(singleton(Level.ERROR));
 
         // when:
         classUnderTest.postHandle(servletRequest, servletResponse, null, null);
 
         // then:
-        Mockito.verify(validationReport, times(1)).getMessages();
+        Mockito.verify(validationReport, times(1)).sortedValidationLevels();
         Mockito.verify(servletResponse, times(1)).reset();
     }
 }

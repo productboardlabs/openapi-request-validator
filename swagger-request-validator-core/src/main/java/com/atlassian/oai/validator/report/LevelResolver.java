@@ -1,11 +1,12 @@
 package com.atlassian.oai.validator.report;
 
+import static java.lang.Math.max;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
-
-import static java.lang.Math.max;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Resolves the {@link ValidationReport.Level} for a given message key.
@@ -29,7 +30,7 @@ import static java.lang.Math.max;
 public class LevelResolver {
 
     private final ValidationReport.Level defaultLevel;
-    private final Map<String, ValidationReport.Level> levels = new HashMap<>();
+    private final Map<String, ValidationReport.Level> levels = new ConcurrentHashMap<>();
 
     /**
      * Create a new {@link LevelResolver} instance using a builder to obtain configuration.
@@ -49,7 +50,9 @@ public class LevelResolver {
      * @return a new {@link LevelResolver} with default configuration.
      */
     public static LevelResolver defaultResolver() {
-        return new Builder().build();
+        return new Builder()
+            .withLevel("validation.request.parameter.query.unexpected", ValidationReport.Level.IGNORE)
+            .build();
     }
 
     /**

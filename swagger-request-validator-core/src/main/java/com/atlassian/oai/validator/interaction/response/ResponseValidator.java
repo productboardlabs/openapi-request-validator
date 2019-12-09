@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -41,6 +42,7 @@ public class ResponseValidator {
     private final SchemaValidator schemaValidator;
     private final MessageResolver messages;
     private final OpenAPI api;
+    private final List<CustomResponseValidator> customResponseValidators;
 
     /**
      * Construct a new response validator with the given schema validator.
@@ -48,13 +50,16 @@ public class ResponseValidator {
      * @param schemaValidator The schema validator to use when validating response bodies
      * @param messages The message resolver to use
      * @param api The OpenAPI spec to validate against
+     * @param customResponseValidators The list of custom validators to run
      */
     public ResponseValidator(final SchemaValidator schemaValidator,
                              final MessageResolver messages,
-                             final OpenAPI api) {
+                             final OpenAPI api,
+                             final List<CustomResponseValidator> customResponseValidators) {
         this.schemaValidator = requireNonNull(schemaValidator, "A schema validator is required");
         this.messages = requireNonNull(messages, "A message resolver is required");
         this.api = requireNonNull(api, "An OAI definition is required");
+        this.customResponseValidators = customResponseValidators;
     }
 
     /**
@@ -86,6 +91,7 @@ public class ResponseValidator {
         return validateResponseBody(response, apiResponse, apiOperation)
                 .merge(validateContentType(response, apiOperation))
                 .merge(validateHeaders(response, apiResponse, apiOperation))
+                .merge(validateCustom(response, apiOperation))
                 .withAdditionalContext(
                         contextBuilder
                                 .withResponseStatus(response.getStatus())
@@ -173,6 +179,12 @@ public class ResponseValidator {
             return ValidationReport.empty();
         }
 
+        if (responseMediaTypes
+                .stream()
+                .allMatch("*/*"::equals)) {
+            return empty();
+        }
+
         final boolean contentTypeMatchesProduces = responseMediaTypes.stream()
                 .map(com.google.common.net.MediaType::parse)
                 .anyMatch(m -> m.withoutParameters().is(requestMediaType.withoutParameters()));
@@ -228,6 +240,15 @@ public class ResponseValidator {
         return propertyValues
                 .stream()
                 .map(v -> schemaValidator.validate(v, apiHeader.getSchema(), "response.header"))
+                .reduce(ValidationReport.empty(), ValidationReport::merge);
+    }
+
+    @Nonnull
+    private ValidationReport validateCustom(final Response response,
+                                            final ApiOperation apiOperation) {
+        return customResponseValidators
+                .stream()
+                .map(customResponseValidator -> customResponseValidator.validate(response, apiOperation))
                 .reduce(ValidationReport.empty(), ValidationReport::merge);
     }
 }

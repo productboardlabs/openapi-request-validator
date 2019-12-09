@@ -76,9 +76,9 @@ To get better control over the validation a custom `OpenApiInteractionValidator`
 
 ```java
     @Autowired
-    public OpenApiValidationConfig(@Value("classpath:api.json") final Resource apiSpecification) throws IOException {
+    public OpenApiValidationConfig(@Value("${open.api.spec.url}") final String specificationUrl) throws IOException {
         final OpenApiInteractionValidator validator = OpenApiInteractionValidator
-                .createFor(apiSpecification.getURL().getPath())
+                .createForSpecificationUrl(specificationUrl)
                 .withLevelResolver(SpringMVCLevelResolverFactory.create())
                 .withBasePathOverride("/v1")
                 .build();
@@ -98,7 +98,6 @@ Please see [the tests](https://bitbucket.org/atlassian/swagger-request-validator
 * An advanced example shows how to additionally add an ExceptionHandler to map the `InvalidRequestException` and `InvalidResponseException` to a custom response.
 * Another example shows how to add custom request logging before each validation. A custom `OpenApiInteractionValidator` is used in this example.
 
-## Caveats ##
+## Limitations ##
 
-Long requests with a content larger then 2GB are not supported. More specifically request with a content length longer than 2147483647 bytes. Those requests will not be validated at all.  
 A mapped `Controller` \ `RESTController` method might throw an exception, which will be mapped by Spring to a generic error response. Those error responses will not be validated.

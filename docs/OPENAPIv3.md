@@ -34,7 +34,7 @@
 | required                          | Yes                                                                      |                                                                                      |
 | deprecated                        | No                                                                       |                                                                                      |
 | allowEmptyValue                   | Yes                                                                      |                                                                                      |
-| style                             | `matrix`, `label`, `form`, `simple`, `spaceDelimited`, `pipeDelimited`   |                                                                                      |
+| style                             | `matrix`, `label`, `form`, `simple`, `spaceDelimited`, `pipeDelimited`, `deepObject` | Basic support only for deepObject - string parameters only - arrays and nested objects are not supported.                                                                                       |
 | allowReserved                     | No                                                                       |                                                                                      |
 | schema                            | Yes                                                                      |                                                                                      |
 | example                           | No                                                                       |                                                                                      |

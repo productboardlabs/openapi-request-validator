@@ -1,0 +1,85 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: RequiredReadOnly
+servers:
+  - url: /
+paths:
+  /readOnly:
+    get:
+      summary: get read only
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReadOnly'
+        '401':
+          description: Not authenticated
+        '403':
+          description: Not authorized
+    post:
+      summary: create item
+      requestBody:
+        description: Created
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReadOnly'
+      responses:
+        '201':
+          description: Created
+          headers:
+            Location:
+              schema:
+                type: string
+        '401':
+          description: Not authenticated
+        '403':
+          description: Not authorized
+    patch:
+      summary: patch an item
+      requestBody:
+        description: patched
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReadOnlyArray'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadOnlyArray'
+        '401':
+          description: Not authenticated
+        '403':
+          description: Not authorized
+components:
+  schemas:
+    ReadOnly:
+      type: object
+      properties:
+        readOnly:
+          type: string
+          readOnly: true
+          example: 'read'
+        notReadOnly:
+          type: string
+          example: 'xxx'
+        writeOnly:
+          type: string
+          writeOnly: true
+          example: 'write'
+      required:
+        - readOnly
+        - notReadOnly
+        - writeOnly
+    ReadOnlyArray:
+      type: array
+      items:
+        $ref: '#/components/schemas/ReadOnly'

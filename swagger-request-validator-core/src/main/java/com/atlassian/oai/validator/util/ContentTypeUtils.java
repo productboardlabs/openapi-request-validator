@@ -16,9 +16,6 @@ import static com.google.common.net.MediaType.JSON_UTF_8;
 import static java.util.Optional.empty;
 
 public class ContentTypeUtils {
-    //https://github.com/google/guava/issues/3184
-    private static final MediaType HAL_JSON = MediaType.create("application", "hal+json");
-
     private ContentTypeUtils() {
 
     }
@@ -40,10 +37,19 @@ public class ContentTypeUtils {
     }
 
     /**
-     * @return Whether the provided content-type is a JSON type.
+     * @return Whether the provided content-type is a JSON type (includes JSON suffix).
      */
     public static boolean isJsonContentType(@Nullable final String contentType) {
-        return matches(contentType, JSON_UTF_8) || matches(contentType, HAL_JSON);
+        final Optional<MediaType> optionalMediaType = parseContentType(contentType);
+        return optionalMediaType.map(mediaType -> {
+            if (mediaType.withoutParameters().is(JSON_UTF_8.withoutParameters())) {
+                return true;
+            }
+            if (mediaType.type().equals("application")) {
+                return mediaType.subtype().endsWith("+json");
+            }
+            return false;
+        }).orElse(false);
     }
 
     /**
@@ -202,10 +208,10 @@ public class ContentTypeUtils {
         try {
             return apiContentTypes
                     .stream()
-                    .map(MediaType::parse)
-                    .sorted(new ContentTypeComparator())
-                    .filter(ct -> MediaType.parse(candidate).withoutParameters().is(ct.withoutParameters()))
-                    .map(MediaType::toString)
+                    .map(ParsedContentType::of)
+                    .sorted(new ParsedContentTypeComparator())
+                    .filter(ct -> ct.matches(candidate))
+                    .map(ParsedContentType::getContentType)
                     .findFirst();
         } catch (final IllegalArgumentException e) {
             return empty();
@@ -213,10 +219,47 @@ public class ContentTypeUtils {
 
     }
 
-    private static class ContentTypeComparator implements Comparator<MediaType> {
+    private static Optional<MediaType> parseContentType(@Nullable final String contentType) {
+        if (contentType == null) {
+            return empty();
+        }
+        try {
+            return Optional.ofNullable(MediaType.parse(contentType));
+        } catch (final IllegalArgumentException e) {
+            return empty();
+        }
+    }
+
+    private static class ParsedContentType {
+        private final String contentType;
+        private final MediaType mediaType;
+
+        static ParsedContentType of(final String contentType) {
+            return new ParsedContentType(contentType, MediaType.parse(contentType));
+        }
+
+        private ParsedContentType(final String contentType, final MediaType mediaType) {
+            this.contentType = contentType;
+            this.mediaType = mediaType;
+        }
+
+        boolean matches(final String contentType) {
+            return MediaType.parse(contentType).withoutParameters().is(mediaType.withoutParameters());
+        }
+
+        public String getContentType() {
+            return contentType;
+        }
+
+        public MediaType getMediaType() {
+            return mediaType;
+        }
+    }
+
+    private static class ParsedContentTypeComparator implements Comparator<ParsedContentType> {
         @Override
-        public int compare(final MediaType o1, final MediaType o2) {
-            return countWildcards(o1) - countWildcards(o2);
+        public int compare(final ParsedContentType o1, final ParsedContentType o2) {
+            return countWildcards(o1.getMediaType()) - countWildcards(o2.getMediaType());
         }
 
         private int countWildcards(final MediaType mt) {

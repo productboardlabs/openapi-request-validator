@@ -1,0 +1,69 @@
+openapi: 3.0.0
+servers:
+  - url: /
+info:
+  title: Users
+  version: 1.0.0
+  description: |
+    An API used to drive tests.
+    Lots of inconsistencies and odd design choices used to test edge cases -
+    not recommended as a good example of API design :)
+tags:
+  - name: user
+    description: Operations related to Users
+paths:
+  /users:
+    get:
+      tags:
+        - user
+      summary: Get all 
+      parameters:
+        - name: filter
+          in: query
+          style: deepObject
+          explode: true
+          schema:
+            type: object
+            required: 
+              - name_eq
+            properties:
+              name_eq:
+                type: string
+              name_lk:
+                type: string
+              email_eq:
+                type: string
+              email_lk:
+                type: string
+              status_eq:
+                type: string
+                enum:
+                  - new
+                  - verified
+                  - closed
+      responses:
+        '200':
+          description: Users response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        email:
+          type: string
+      required:
+        - id
+        - name
+        - email

@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.jackson.NodeType;
 import com.github.fge.jackson.jsonpointer.JsonPointer;
+import com.github.fge.jsonschema.core.exceptions.JsonReferenceException;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.keyword.syntax.checkers.AbstractSyntaxChecker;
 import com.github.fge.jsonschema.core.processing.Processor;
+import com.github.fge.jsonschema.core.ref.JsonRef;
 import com.github.fge.jsonschema.core.report.ListProcessingReport;
 import com.github.fge.jsonschema.core.report.LogLevel;
 import com.github.fge.jsonschema.core.report.ProcessingMessage;
@@ -21,11 +23,14 @@ import com.github.fge.msgsimple.bundle.MessageBundle;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Spliterators;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
-import static com.atlassian.oai.validator.util.StreamUtils.stream;
 import static java.util.stream.Collectors.toList;
 
 public class Discriminator {
@@ -85,8 +90,8 @@ public class Discriminator {
             }
 
             final JsonNode property = properties.get(discriminatorFieldName);
-            if (!property.has("type") ||
-                    !property.get("type").textValue().equalsIgnoreCase("string")) {
+            final String type = getTypeOfProperty(tree, property);
+            if (type == null || !type.equalsIgnoreCase("string")) {
                 report.error(msg(tree, bundle, "err.swaggerv2.discriminator.wrongType")
                         .putArgument("fieldName", discriminatorFieldName)
                 );
@@ -107,6 +112,22 @@ public class Discriminator {
 
         private ProcessingMessage msg(final SchemaTree tree, final MessageBundle bundle, final String key) {
             return newMsg(tree, bundle, key).put("key", key);
+        }
+
+        private String getTypeOfProperty(final SchemaTree tree, final JsonNode property) throws JsonReferenceException {
+            if (property.has("type")) {
+                return property.get("type").textValue();
+            } else if (property.has("$ref")) {
+                final JsonRef ref = JsonRef.fromString(property.get("$ref").textValue());
+                final JsonNode referent = tree.matchingPointer(ref).get(tree.getBaseNode());
+                if (referent == null || referent.get("type") == null) {
+                    return null;
+                } else {
+                    return referent.get("type").textValue();
+                }
+            } else {
+                return null;
+            }
         }
     }
 
@@ -266,6 +287,10 @@ public class Discriminator {
 
     private static boolean arrayNodeContains(final JsonNode requiredProperties, final String element) {
         return stream(requiredProperties.elements()).anyMatch(e -> e.textValue().equals(element));
+    }
+
+    private static <T> Stream<T> stream(final Iterator<T> iterator) {
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, 0), false);
     }
 
     private Discriminator() {

@@ -45,3 +45,23 @@ validation.schema.additionalProperties=IGNORE
 ```
 
 See the [Core README](../swagger-request-validator-core/README.md) for more details on controlling validation behavior.
+
+#### I want to raise an error when I have an expected query parameter in my request
+
+By default, the validator will ignore unexpected query parameters. To raise an error in this case, 
+you will need to set `validation.request.parameter.query.unexpected` to `ERROR`
+
+e.g.
+
+```java
+
+final OpenApiInteractionValidator validator = OpenApiInteractionValidator
+         .createFor(specUrl)
+         .withLevelResolver(LevelResolver.create()
+            .withLevel("validation.request.parameter.query.unexpected",
+               ValidationReport.Level.ERROR)
+             .build())
+         .build());
+```
+
+or via a `swagger-validator` config 

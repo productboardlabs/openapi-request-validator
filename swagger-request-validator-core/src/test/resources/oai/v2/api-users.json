@@ -124,6 +124,112 @@
         }
       }
     },
+    "/users2": {
+      "get": {
+        "tags": [
+          "user"
+        ],
+        "summary": "Get all users",
+        "operationId": "get all users (v2)",
+        "security": [
+          {
+            "basic": [
+              "read_users"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "maxCount",
+            "in": "query",
+            "description": "The maximum number of results to return",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "description": "The IDs include in the results",
+            "required": false,
+            "type": "array",
+            "collectionFormat": "csv",
+            "maxItems": 10,
+            "items": {
+              "type": "number",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "sorting",
+            "in": "query",
+            "description": "Comma-separated sorting fields (created only testing that query parameters are not split!)",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "name,email"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Users response",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/User"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "default": {
+            "description": "Error response",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "user"
+        ],
+        "summary": "Create a new user",
+        "operationId": "create new user (v2)",
+        "produces": [
+          "application/json"
+        ],
+        "security": [
+          {
+            "basic": [
+              "create_user"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user",
+            "in": "body",
+            "description": "The new user details to create",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/NewUser"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User response",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          }
+        }
+      }
+    },
     "/users/{id}": {
       "get": {
         "tags": [
@@ -198,7 +304,8 @@
             "required": true,
             "type": "integer",
             "format": "int32"
-          }, {
+          },
+          {
             "name": "email",
             "in": "formData",
             "description": "The new email to set",
@@ -223,6 +330,16 @@
         ],
         "summary": "Get a user's name",
         "operationId": "Get a user's name",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the user to get",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
         "security": [
           {
             "bearer": []
@@ -245,7 +362,17 @@
           "user"
         ],
         "summary": "Update a user's name",
-        "operationId": "Update a user's name",
+        "operationId": "Update a user's name (secure)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the user to update",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
         "security": [
           {
             "bearer": []
@@ -374,6 +501,18 @@
             "format": "int32"
           }
         ],
+        "responses": {
+          "200": {
+            "description": "Everything is ok"
+          }
+        }
+      }
+    },
+    "/extensions": {
+      "get": {
+        "summary": "Endpoint that uses extensions",
+        "operationId": "extensions",
+        "x-test-extension": "true",
         "responses": {
           "200": {
             "description": "Everything is ok"

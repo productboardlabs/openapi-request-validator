@@ -7,13 +7,17 @@ import org.springframework.mock.web.MockServletConfig;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.io.BufferedReader;
 import java.util.Collections;
 import java.util.Optional;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -30,6 +34,7 @@ public class MockMvcRequestTest {
         final MockHttpServletRequest mockHttpServletRequest = MockMvcRequestBuilders
                 .get("/path")
                 .header("X-My-Header", "foo", "bar")
+                .characterEncoding(UTF_8.name())
                 .buildRequest(new MockServletConfig().getServletContext());
 
         final Request classUnderTest = MockMvcRequest.of(mockHttpServletRequest);
@@ -47,6 +52,7 @@ public class MockMvcRequestTest {
         final MockHttpServletRequest mockHttpServletRequest = MockMvcRequestBuilders
                 .get("/path")
                 .param("queryParam", "value1")
+                .characterEncoding(UTF_8.name())
                 .buildRequest(new MockServletConfig().getServletContext());
 
         final Request classUnderTest = MockMvcRequest.of(mockHttpServletRequest);
@@ -59,22 +65,8 @@ public class MockMvcRequestTest {
     public void getBody_returnsEmpty_whenNoBodyInRequest() throws Exception {
         final MockHttpServletRequest mockHttpServletRequest = MockMvcRequestBuilders
                 .get("/path")
+                .characterEncoding(UTF_8.name())
                 .buildRequest(new MockServletConfig().getServletContext());
-
-        final Request classUnderTest = MockMvcRequest.of(mockHttpServletRequest);
-
-        assertThat(classUnderTest.getBody(), is(Optional.empty()));
-    }
-
-    @Test
-    public void getBody_returnsEmpty_whenNoBodyInRequest_usingSpringPre437() throws Exception {
-        // In Spring pre 4.3.7 mockHttpServletRequest.getReader() returns null if there is no content.
-        // This was changed in 4.3.7 by SPR-15215 to return an empty reader.
-        final MockHttpServletRequest mockHttpServletRequest = mock(MockHttpServletRequest.class);
-        when(mockHttpServletRequest.getMethod()).thenReturn("GET");
-        when(mockHttpServletRequest.getPathInfo()).thenReturn("/");
-        when(mockHttpServletRequest.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
-        when(mockHttpServletRequest.getReader()).thenReturn(null);
 
         final Request classUnderTest = MockMvcRequest.of(mockHttpServletRequest);
 
@@ -85,12 +77,27 @@ public class MockMvcRequestTest {
     public void getBody_returnsBody_whenBodyInRequest() throws Exception {
         final MockHttpServletRequest mockHttpServletRequest = MockMvcRequestBuilders
                 .get("/path")
+                .characterEncoding(UTF_8.name())
                 .content("The body")
                 .buildRequest(new MockServletConfig().getServletContext());
 
         final Request classUnderTest = MockMvcRequest.of(mockHttpServletRequest);
 
         assertThat(classUnderTest.getBody().get(), is("The body"));
+    }
+
+    @Test
+    public void getBody_doesntCloseReader() throws Exception {
+        final MockHttpServletRequest mockHttpServletRequest = mock(MockHttpServletRequest.class);
+        final BufferedReader reader = mock(BufferedReader.class);
+        when(mockHttpServletRequest.getMethod()).thenReturn("GET");
+        when(mockHttpServletRequest.getPathInfo()).thenReturn("/path");
+        when(mockHttpServletRequest.getHeaderNames()).thenReturn(Collections.enumeration(Collections.emptySet()));
+        when(mockHttpServletRequest.getReader()).thenReturn(reader);
+
+        MockMvcRequest.of(mockHttpServletRequest);
+
+        verify(reader, never()).close();
     }
 
     @Test
@@ -108,6 +115,7 @@ public class MockMvcRequestTest {
                                 final Request.Method httpMethod) throws Exception {
 
         final MockHttpServletRequest mockHttpServletRequest = mockHttpServletRequestBuilder
+                .characterEncoding(UTF_8.name())
                 .buildRequest(new MockServletConfig().getServletContext());
 
         final Request classUnderTest = MockMvcRequest.of(mockHttpServletRequest);
