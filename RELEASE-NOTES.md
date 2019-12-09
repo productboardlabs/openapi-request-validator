@@ -1,8 +1,12 @@
-#v2.8.2
+#v2.8.3
 
 * Fix a NPE when using a `discriminator` with the `oneOf` keyword
 [[#166]](https://bitbucket.org/atlassian/swagger-request-validator/issues/166)
 [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/156)
+
+#v2.8.2
+
+Version burned
 
 #v2.8.1
 
