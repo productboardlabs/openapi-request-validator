@@ -281,7 +281,7 @@ public class Discriminator {
         }
 
         private JsonPointer pointerToDiscriminator(final FullData data, final JsonNode discriminatorNode) {
-            final String discriminatorNodeText = sanitizeDiscriminatorNode(discriminatorNode.textValue());
+            final String discriminatorNodeText = normalizeDiscriminatorNode(discriminatorNode.textValue());
             // Swagger 2.0 used 'definitions' while OpenAPI uses 'components/schemas'
             if (data.getSchema().getBaseNode().has("components")) {
                 return JsonPointer.of("components", "schemas", discriminatorNodeText);
@@ -298,7 +298,7 @@ public class Discriminator {
             return baseNode.get("definitions");
         }
 
-        private String sanitizeDiscriminatorNode(final String discriminatorNodeText) {
+        private String normalizeDiscriminatorNode(final String discriminatorNodeText) {
             if (discriminatorNodeText.startsWith("#/")) {
                 final int n = discriminatorNodeText.lastIndexOf('/');
                 return discriminatorNodeText.substring(n + 1);
