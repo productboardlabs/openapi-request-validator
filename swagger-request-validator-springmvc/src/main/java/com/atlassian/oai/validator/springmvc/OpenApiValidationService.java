@@ -35,9 +35,9 @@ class OpenApiValidationService {
     private final OpenApiInteractionValidator validator;
     private final UrlPathHelper urlPathHelper;
 
-    OpenApiValidationService(final EncodedResource specUrlOrPayload, final UrlPathHelper urlPathHelper) throws IOException {
+    OpenApiValidationService(final EncodedResource specAsResource, final UrlPathHelper urlPathHelper) throws IOException {
         this(OpenApiInteractionValidator
-                .createFor(readReader(specUrlOrPayload.getReader(), -1))
+                .createForInlineApiSpecification(readReader(specAsResource.getReader(), -1))
                 .withLevelResolver(SpringMVCLevelResolverFactory.create())
                 .build(), urlPathHelper);
     }

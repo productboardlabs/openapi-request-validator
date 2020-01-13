@@ -1,20 +1,8 @@
 package com.atlassian.oai.validator.util;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 public class StringUtils {
-
-    /**
-     * Capitalise the first letter of the provided string.
-     *
-     * @param value The value to capitalise.
-     * @return The capitalised string.
-     */
-    public static String capitalise(final String value) {
-        if (value == null || value.isEmpty()) {
-            return value;
-        }
-
-        return value.substring(0, 1).toUpperCase() + value.substring(1);
-    }
 
     /**
      * Require that the given value is non-empty.
@@ -27,7 +15,7 @@ public class StringUtils {
      * @throws IllegalArgumentException If the input value is null or empty
      */
     public static String requireNonEmpty(final String value, final String msg) {
-        if (value == null || value.trim().isEmpty()) {
+        if (isBlank(value)) {
             throw new IllegalArgumentException(msg);
         }
         return value;

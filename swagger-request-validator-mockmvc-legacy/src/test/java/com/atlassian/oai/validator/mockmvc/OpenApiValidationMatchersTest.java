@@ -58,7 +58,7 @@ public class OpenApiValidationMatchersTest {
     }
 
     @Test(expected = OpenApiValidationException.class)
-    public void match_throwsException_ifValidationFails() throws  Exception {
+    public void match_throwsException_ifValidationFails() throws Exception {
         mvc
                 .perform(get("/hello/bill"))
                 .andExpect(status().isOk())
@@ -80,7 +80,7 @@ public class OpenApiValidationMatchersTest {
         mvc
                 .perform(get("/hello/bob"))
                 .andExpect(status().isOk())
-                .andExpect(openApi().isValid(OpenApiInteractionValidator.createFor("api.json").build()))
+                .andExpect(openApi().isValid(OpenApiInteractionValidator.createForSpecificationUrl("api.json").build()))
                 .andExpect(content().string("{\"message\":\"Hello bob!\"}"));
     }
 }

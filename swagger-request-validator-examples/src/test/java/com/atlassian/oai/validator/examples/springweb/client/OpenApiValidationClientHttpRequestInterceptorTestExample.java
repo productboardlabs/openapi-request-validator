@@ -41,7 +41,7 @@ public class OpenApiValidationClientHttpRequestInterceptorTestExample {
     private static final int PORT = 9999;
 
     private final OpenApiValidationClientHttpRequestInterceptor validationInterceptor = new OpenApiValidationClientHttpRequestInterceptor(
-            OpenApiInteractionValidator.createFor(SWAGGER_JSON_URL)
+            OpenApiInteractionValidator.createForSpecificationUrl(SWAGGER_JSON_URL)
                     // Currently, this test doesn't verify the security definition of the petstore reference
                     .withWhitelist(ValidationErrorsWhitelist.create().withRule(
                             "Ignore missing security when getting store inventory",

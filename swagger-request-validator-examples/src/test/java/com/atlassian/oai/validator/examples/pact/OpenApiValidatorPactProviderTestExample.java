@@ -18,6 +18,8 @@ public class OpenApiValidatorPactProviderTestExample {
     /**
      * This test simulates running against a Consumer where all interactions in the Pact spec are valid according
      * to the Swagger API spec.
+     * <p>
+     * This test is expected to PASS
      */
     @Test
     public void validate_withLocalPact_withValidInteractions() {
@@ -36,14 +38,16 @@ public class OpenApiValidatorPactProviderTestExample {
      * <p>
      * This may have occurred in one of two ways:
      * <ol>
-     *     <li>
-     *         The Consumer has invalid expectations on the Provider (which could perhaps have been mitigated by
-     *         using the {@link ValidatedPactProviderRule} on the Consumer side); OR
-     *     </li>
-     *     <li>
-     *         The Provider has made a breaking change to their Swagger API specification and will break a Consumer.
-     *     </li>
+     * <li>
+     * The Consumer has invalid expectations on the Provider (which could perhaps have been mitigated by
+     * using the {@link ValidatedPactProviderRule} on the Consumer side); OR
+     * </li>
+     * <li>
+     * The Provider has made a breaking change to their Swagger API specification and will break a Consumer.
+     * </li>
      * </ol>
+     * <p>
+     * This test is expected to FAIL
      */
     @Test
     public void validate_withLocalPact_withInvalidInteractions() {

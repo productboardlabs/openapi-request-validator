@@ -11,12 +11,15 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import org.junit.Test;
 
+import java.util.Iterator;
 import java.util.Optional;
+import java.util.Spliterators;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static com.atlassian.oai.validator.util.HttpParsingUtils.extractMultipartBoundary;
 import static com.atlassian.oai.validator.util.HttpParsingUtils.isMultipartContentTypeAcceptedByConsumer;
 import static com.atlassian.oai.validator.util.HttpParsingUtils.parseUrlEncodedFormDataBodyAsJson;
-import static com.atlassian.oai.validator.util.StreamUtils.stream;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadRawRequest;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
@@ -98,5 +101,9 @@ public class HttpParsingUtilsTest {
 
         assertThat(tree.has("solo"), is(true));
         assertThat(tree.get("solo"), instanceOf(NullNode.class));
+    }
+
+    private static <T> Stream<T> stream(final Iterator<T> iterator) {
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, 0), false);
     }
 }

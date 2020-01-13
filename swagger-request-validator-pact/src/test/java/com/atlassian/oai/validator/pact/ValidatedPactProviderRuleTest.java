@@ -51,7 +51,7 @@ public class ValidatedPactProviderRuleTest {
     public void constructor_withPreConfigiredValidator() {
         // given:
         final OpenApiInteractionValidator validator = OpenApiInteractionValidator
-                .createFor("oai/api-users.json")
+                .createForSpecificationUrl("oai/api-users.json")
                 .withBasePathOverride("/api")
                 .build();
         final String providerId = "Users";

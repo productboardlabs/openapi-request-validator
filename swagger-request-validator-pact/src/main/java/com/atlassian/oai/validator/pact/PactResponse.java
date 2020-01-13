@@ -5,7 +5,6 @@ import com.atlassian.oai.validator.model.SimpleResponse;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
-import java.util.Objects;
 import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
@@ -49,8 +48,8 @@ public class PactResponse implements Response {
     public static Response of(@Nonnull final au.com.dius.pact.model.Response originalResponse) {
         requireNonNull(originalResponse, "An original response is required");
         final SimpleResponse.Builder builder = new SimpleResponse.Builder(originalResponse.getStatus());
-        if (Objects.requireNonNull(originalResponse.getBody()).isPresent()) {
-            builder.withBody(originalResponse.getBody().getValue());
+        if (originalResponse.getBody() != null && originalResponse.getBody().isPresent()) {
+            builder.withBody(originalResponse.getBody().valueAsString());
         }
         if (originalResponse.getHeaders() != null) {
             originalResponse.getHeaders().forEach(builder::withHeader);

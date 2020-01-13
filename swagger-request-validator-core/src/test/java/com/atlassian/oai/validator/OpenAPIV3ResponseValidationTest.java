@@ -23,7 +23,7 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadXmlResponse
 public class OpenAPIV3ResponseValidationTest {
 
     private final OpenApiInteractionValidator classUnderTest =
-            OpenApiInteractionValidator.createFor("/oai/v3/api-users.yaml").build();
+            OpenApiInteractionValidator.createForSpecificationUrl("/oai/v3/api-users.yaml").build();
 
     @Test
     public void validate_withValidResponse_shouldSucceed() {
@@ -144,11 +144,10 @@ public class OpenAPIV3ResponseValidationTest {
 
     @Test
     public void validate_withOneOfComposition_shouldPass_whenValid() {
-        final OpenApiInteractionValidator classUnderTest =
-                OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-complex-composition.yaml")
-                        .withLevelResolver(LevelResolverFactory.withAdditionalPropertiesIgnored())
-                        .build();
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-complex-composition.yaml")
+                .withLevelResolver(LevelResolverFactory.withAdditionalPropertiesIgnored())
+                .build();
 
         final Response response = SimpleResponse.Builder
                 .ok()
@@ -161,11 +160,10 @@ public class OpenAPIV3ResponseValidationTest {
 
     @Test
     public void validate_withOneOfComposition_shouldFail_whenInvalid() {
-        final OpenApiInteractionValidator classUnderTest =
-                OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-complex-composition.yaml")
-                        .withLevelResolver(LevelResolverFactory.withAdditionalPropertiesIgnored())
-                        .build();
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-complex-composition.yaml")
+                .withLevelResolver(LevelResolverFactory.withAdditionalPropertiesIgnored())
+                .build();
 
         final Response response = SimpleResponse.Builder
                 .ok()
@@ -179,8 +177,9 @@ public class OpenAPIV3ResponseValidationTest {
 
     @Test
     public void validate_withFormData_shouldPass_whenValid() {
-        final OpenApiInteractionValidator classUnderTest =
-                OpenApiInteractionValidator.createFor("/oai/v3/api-formdata.yaml").build();
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-formdata.yaml")
+                .build();
 
         final Response response = SimpleResponse.Builder
                 .ok()
@@ -193,8 +192,9 @@ public class OpenAPIV3ResponseValidationTest {
 
     @Test
     public void validate_withFormData_shouldFail_whenInvalidSchema() {
-        final OpenApiInteractionValidator classUnderTest =
-                OpenApiInteractionValidator.createFor("/oai/v3/api-formdata.yaml").build();
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-formdata.yaml")
+                .build();
 
         final Response response = SimpleResponse.Builder
                 .ok()
@@ -208,7 +208,7 @@ public class OpenAPIV3ResponseValidationTest {
     @Test
     public void validate_withCustomValidation_shouldPass() {
         final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
-                .createFor("/oai/v3/api-users.yaml")
+                .createForSpecificationUrl("/oai/v3/api-users.yaml")
                 .withCustomResponseValidation(new TestValidator())
                 .build();
 
@@ -223,7 +223,7 @@ public class OpenAPIV3ResponseValidationTest {
     @Test
     public void validate_withCustomValidation_shouldFail() {
         final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
-                .createFor("/oai/v3/api-users.yaml")
+                .createForSpecificationUrl("/oai/v3/api-users.yaml")
                 .withCustomResponseValidation(new TestValidator())
                 .build();
 

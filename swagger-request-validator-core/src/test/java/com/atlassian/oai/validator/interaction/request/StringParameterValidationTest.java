@@ -1,6 +1,8 @@
 package com.atlassian.oai.validator.interaction.request;
 
 import com.atlassian.oai.validator.report.MessageResolver;
+import com.atlassian.oai.validator.schema.SchemaValidator;
+import io.swagger.v3.oas.models.OpenAPI;
 import org.junit.Test;
 
 import java.util.UUID;
@@ -21,7 +23,8 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 
 public class StringParameterValidationTest {
 
-    private final ParameterValidator classUnderTest = new ParameterValidator(new MessageResolver());
+    private final ParameterValidator classUnderTest = new ParameterValidator(
+            new SchemaValidator(new OpenAPI(), new MessageResolver()), new MessageResolver());
 
     @Test
     public void validate_withNullValue_shouldPass_whenNotRequired() {

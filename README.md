@@ -37,7 +37,7 @@ Usage details for specific modules can be found in the READMEs for those modules
 
 See individual module READMEs for more information, including how to use use each module.
 
-###swagger-request-validator-core 
+### swagger-request-validator-core 
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-core/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-core)
 
@@ -46,7 +46,7 @@ The core validator logic.
 Provides a standalone validator and uses an implementation-agnostic abstraction of
 HTTP request/responses that can be adapted to any 3rd party implementation.
 
-###swagger-request-validator-pact 
+### swagger-request-validator-pact 
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-pact/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-pact)
 
@@ -56,7 +56,7 @@ shortening the feedback loop when writing Consumer tests.
 Includes a JUnit rule that adds OpenAPI / Swagger validation to the [Pact-JVM](https://github.com/DiUS/pact-jvm) consumer 
 test execution.
 
-###swagger-request-validator-wiremock 
+### swagger-request-validator-wiremock 
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-wiremock/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-wiremock)
 
@@ -65,7 +65,7 @@ Adapters for validating [WireMock](http://wiremock.org/) HTTP mocks against an O
 Includes a drop-in replacement for the `WireMockRule` that adds validation to mocked interactions, giving you 
 confidence that your mocks reflect reality. 
 
-###swagger-request-validator-restassured 
+### swagger-request-validator-restassured 
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-restassured/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-restassured)
 
@@ -74,7 +74,7 @@ against an OpenAPI / Swagger specification.
 
 Useful for e.g. ensuring your service implementation matches its API specification.
 
-###swagger-request-validator-mockmvc 
+### swagger-request-validator-mockmvc 
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-mockmvc/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-mockmvc)
 
@@ -84,7 +84,7 @@ against an OpenAPI / Swagger specification.
 Includes a [ResultMatcher](http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/test/web/servlet/ResultMatcher.html) that 
 allows you to assert your service implementation matches its API specification.
 
-###swagger-request-validator-springmvc 
+### swagger-request-validator-springmvc 
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-mockmvc/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-mockmvc)
 
@@ -93,7 +93,7 @@ against an OpenAPI / Swagger specification during runtime in a production enviro
 
 Useful for ensuring that the client requests matching the API specification.
 
-###swagger-request-validator-spring-web-client 
+### swagger-request-validator-spring-web-client 
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-spring-web-client/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-spring-web-client)
 
@@ -101,7 +101,7 @@ Adapter for adding OpenAPI / Swagger validation to the [Spring Web HTTP client](
 
 Useful for ensuring that a service implementation matches its API specification.
 
-###swagger-request-validator-examples
+### swagger-request-validator-examples
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-examples/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-examples)
 

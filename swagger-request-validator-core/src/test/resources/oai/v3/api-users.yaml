@@ -186,7 +186,7 @@ paths:
       tags:
         - user
       summary: Update a user's name
-      operationId: Update a user's name
+      operationId: (Secure) Update a user's name
       security:
         - bearer: []
         - queryParam: []
@@ -197,6 +197,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+    parameters:
+      - name: id
+        in: path
+        description: The ID of the user
+        required: true
+        schema:
+          type: integer
+          format: int32
   '/secure/users/{id}/upload':
     post:
       tags:
