@@ -24,7 +24,7 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadJsonRespons
 public class SwaggerV2ResponseValidationTest {
 
     private final OpenApiInteractionValidator classUnderTest =
-            OpenApiInteractionValidator.createFor("/oai/v2/api-users.json").build();
+            OpenApiInteractionValidator.createForSpecificationUrl("/oai/v2/api-users.json").build();
 
     private final Request getUserRequest = SimpleRequest.Builder
             .get("/users/1")
@@ -169,7 +169,7 @@ public class SwaggerV2ResponseValidationTest {
                 .get("/users2")
                 .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
                 .build();
-        
+
         final Response response = SimpleResponse.Builder
                 .ok()
                 .withBody(loadJsonResponse("users-valid"))
@@ -247,8 +247,9 @@ public class SwaggerV2ResponseValidationTest {
 
     @Test
     public void validate_withXmlBody_shouldNotApplySchemaValidation() {
-        final OpenApiInteractionValidator classUnderTest =
-                OpenApiInteractionValidator.createFor("/oai/v2/api-non-json-body.json").build();
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v2/api-non-json-body.json")
+                .build();
 
         final Response response = SimpleResponse.Builder
                 .ok()
@@ -262,7 +263,7 @@ public class SwaggerV2ResponseValidationTest {
     @Test
     public void validate_withCustomValidation_shouldPass() {
         final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
-                .createFor("/oai/v2/api-users.json")
+                .createForSpecificationUrl("/oai/v2/api-users.json")
                 .withCustomResponseValidation(new TestValidator())
                 .build();
 
@@ -277,7 +278,7 @@ public class SwaggerV2ResponseValidationTest {
     @Test
     public void validate_withCustomValidation_shouldFail() {
         final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
-                .createFor("/oai/v2/api-users.json")
+                .createForSpecificationUrl("/oai/v2/api-users.json")
                 .withCustomResponseValidation(new TestValidator())
                 .build();
 

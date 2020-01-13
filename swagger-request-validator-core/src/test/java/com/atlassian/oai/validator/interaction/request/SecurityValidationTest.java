@@ -16,7 +16,7 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 public class SecurityValidationTest {
 
     private final OpenApiInteractionValidator validator =
-            OpenApiInteractionValidator.createFor("/oai/v3/api-with-securityschemes.yaml").build();
+            OpenApiInteractionValidator.createForSpecificationUrl("/oai/v3/api-with-securityschemes.yaml").build();
 
     @Test
     public void basicAuth_shouldFail_whenMissing() {
@@ -271,10 +271,9 @@ public class SecurityValidationTest {
 
     @Test
     public void ignoresMissingSecuritySchemes() {
-        final OpenApiInteractionValidator validator =
-                OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-with-missing-securityschemes.yaml")
-                        .build();
+        final OpenApiInteractionValidator validator = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-with-missing-securityschemes.yaml")
+                .build();
 
         final Request request = SimpleRequest.Builder
                 .post("/secured")

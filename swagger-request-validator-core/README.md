@@ -34,7 +34,7 @@ occurred during the validation. These can be used to generate a report for users
 
 ```java
 final OpenApiInteractionValidator validator = OpenApiInteractionValidator
-        .createFor(specUrl)
+        .createForSpecificationUrl(specUrl)
         .withBasePathOverride(basePathOverride)
         .build;
 final ValidationReport report = validator.validate(request, response);
@@ -102,7 +102,7 @@ with programmatically added validation level configuration.
 
 ```
 this.validator = OpenApiInteractionValidator
-        .createFor(swaggerJsonUrl)
+        .createForSpecificationUrl(swaggerJsonUrl)
         .withLevelResolver(
                 LevelResolver.create()
                         .withLevel("validation.schema.required", ValidationReport.Level.INFO)

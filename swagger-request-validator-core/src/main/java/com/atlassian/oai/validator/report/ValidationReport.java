@@ -318,7 +318,6 @@ public interface ValidationReport {
      * Return an unmodifiable report that contains a single message.
      *
      * @param message The message to add to the report
-     *
      * @return An unmodifiable validation report with a single message
      */
     static ValidationReport singleton(@Nullable final Message message) {
@@ -332,7 +331,6 @@ public interface ValidationReport {
      * Return an unmodifiable report containing all the provided messages
      *
      * @param messages The messages to add to the report
-     *
      * @return an unmodifiable report containing all the provided messages
      */
     static ValidationReport from(final Collection<Message> messages) {
@@ -343,7 +341,6 @@ public interface ValidationReport {
      * Return an unmodifiable report containing all the provided messages
      *
      * @param messages The messages to add to the report
-     *
      * @return an unmodifiable report containing all the provided messages
      */
     static ValidationReport from(final Message... messages) {
@@ -361,7 +358,6 @@ public interface ValidationReport {
     default boolean hasErrors() {
         return getMessages().stream().anyMatch(m -> m.getLevel() == Level.ERROR);
     }
-
 
     /**
      * Return sorted set of levels found during validation
@@ -388,7 +384,6 @@ public interface ValidationReport {
      * containing the messages from both reports.
      *
      * @param other The validation report to merge with this one
-     *
      * @return A new, unmodifiable validation report containing all the messages from this report
      * and the other report
      */
@@ -402,7 +397,6 @@ public interface ValidationReport {
      * returning a new unmodifiable report.
      *
      * @param context The additional context to apply to each message in the report
-     *
      * @return A new, unmodifiable validation report containing all of the messages from this report,
      * enhanced with the additional supplied context
      */

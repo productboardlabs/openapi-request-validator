@@ -27,29 +27,30 @@ import static org.junit.Assert.assertThat;
  */
 public class WhitelistingValidationErrorsTestExample {
 
-    private final OpenApiInteractionValidator validator = OpenApiInteractionValidator.createFor("http://petstore.swagger.io/v2/swagger.json")
-        .withWhitelist(ValidationErrorsWhitelist.create()
-            .withRule(
-                "Ignore missing security when getting store inventory",
-                allOf(
-                    messageHasKey("validation.request.security.missing"),
-                    pathContains("/store/inventory"),
-                        methodIs(GET)))
-            .withRule(
-                "Ignore invalid format of order id for GET and POST to /store/order/{orderId}",
-                allOf(
-                    messageContains("value '.*' for parameter 'orderId' does not match type 'integer"),
-                    pathContains("/store/order/\\{orderId}"),
-                        anyOf(methodIs(GET), methodIs(POST)))))
-        .build();
+    private final OpenApiInteractionValidator validator = OpenApiInteractionValidator
+            .createForSpecificationUrl("http://petstore.swagger.io/v2/swagger.json")
+            .withWhitelist(ValidationErrorsWhitelist.create()
+                    .withRule(
+                            "Ignore missing security when getting store inventory",
+                            allOf(
+                                    messageHasKey("validation.request.security.missing"),
+                                    pathContains("/store/inventory"),
+                                    methodIs(GET)))
+                    .withRule(
+                            "Ignore invalid format of order id for GET and POST to /store/order/{orderId}",
+                            allOf(
+                                    messageContains("value '.*' for parameter 'orderId' does not match type 'integer"),
+                                    pathContains("/store/order/\\{orderId}"),
+                                    anyOf(methodIs(GET), methodIs(POST)))))
+            .build();
 
     @Test
     public void whitelistedMessagesAreIgnored() {
         assertThat(validator.validateRequest(SimpleRequest.Builder.get("/v2/store/inventory").build()),
-            hasErrorsIgnoredBy("Ignore missing security when getting store inventory"));
+                hasErrorsIgnoredBy("Ignore missing security when getting store inventory"));
 
         assertThat(validator.validateRequest(SimpleRequest.Builder.get("/v2/store/order/fhtagn").build()),
-            hasErrorsIgnoredBy("Ignore invalid format of order id for GET and POST to /store/order/{orderId}"));
+                hasErrorsIgnoredBy("Ignore invalid format of order id for GET and POST to /store/order/{orderId}"));
     }
 
     private Matcher<ValidationReport> hasErrorsIgnoredBy(final String whitelistRule) {
@@ -57,9 +58,9 @@ public class WhitelistingValidationErrorsTestExample {
             @Override
             protected boolean matchesSafely(final ValidationReport report) {
                 return report.getMessages().stream()
-                    .allMatch(message ->
-                        message.getLevel() == ValidationReport.Level.IGNORE &&
-                            message.getAdditionalInfo().stream().anyMatch(info -> info.contains(whitelistRule)));
+                        .allMatch(message ->
+                                message.getLevel() == ValidationReport.Level.IGNORE &&
+                                        message.getAdditionalInfo().stream().anyMatch(info -> info.contains(whitelistRule)));
             }
 
             @Override

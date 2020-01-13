@@ -40,6 +40,25 @@ paths:
           description: Not authenticated
         '403':
           description: Not authorized
+    patch:
+      summary: patch an item
+      requestBody:
+        description: patched
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReadOnlyArray'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadOnlyArray'
+        '401':
+          description: Not authenticated
+        '403':
+          description: Not authorized
 components:
   schemas:
     ReadOnly:
@@ -60,3 +79,7 @@ components:
         - readOnly
         - notReadOnly
         - writeOnly
+    ReadOnlyArray:
+      type: array
+      items:
+        $ref: '#/components/schemas/ReadOnly'

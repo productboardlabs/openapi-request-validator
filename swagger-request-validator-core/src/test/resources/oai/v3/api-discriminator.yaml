@@ -1,0 +1,88 @@
+openapi: 3.0.0
+info:
+  title: Tests for behavior with discriminators
+  version: 1.0.0
+servers:
+  - url: /
+paths:
+  /oneOf:
+    post:
+      summary: Discriminators with oneOf
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OneOfComposition'
+        description: The request body
+        required: true
+      responses:
+        '201':
+          description: OK
+  /oneOfWithMapping:
+    post:
+      summary: Discriminators with oneOf and mapping
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OneOfCompositionWithMapping'
+        description: The request body
+        required: true
+      responses:
+        '201':
+          description: OK
+
+components:
+  schemas:
+    Item1:
+      type: object
+      required:
+        - type
+        - intField
+      properties:
+        intField:
+          type: integer
+        type:
+          type: string
+    Item2:
+      type: object
+      required:
+        - type
+        - stringField
+      properties:
+        stringField:
+          type: string
+        type:
+          type: string
+    Item3:
+      type: object
+      required:
+        - type
+        - boolField
+      properties:
+        boolField:
+          type: boolean
+        type:
+          type: string
+
+    OneOfComposition:
+      type: object
+      oneOf:
+        - $ref: '#/components/schemas/Item1'
+        - $ref: '#/components/schemas/Item2'
+        - $ref: '#/components/schemas/Item3'
+      discriminator:
+        propertyName: type
+
+    OneOfCompositionWithMapping:
+      type: object
+      oneOf:
+        - $ref: '#/components/schemas/Item1'
+        - $ref: '#/components/schemas/Item2'
+        - $ref: '#/components/schemas/Item3'
+      discriminator:
+        propertyName: type
+        mapping:
+          IntItem: '#/components/schemas/Item1'
+          StringItem: '#/components/schemas/Item2'
+          BooleanItem: '#/components/schemas/Item3'

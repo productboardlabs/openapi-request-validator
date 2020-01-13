@@ -157,6 +157,11 @@
             "name": "id",
             "in": "path",
             "type": "string"
+          },
+          {
+            "name": "withmorespecific",
+            "in": "path",
+            "type": "string"
           }
         ],
         "responses": {

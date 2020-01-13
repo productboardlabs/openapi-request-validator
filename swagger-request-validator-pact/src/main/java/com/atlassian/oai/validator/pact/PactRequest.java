@@ -6,7 +6,6 @@ import com.atlassian.oai.validator.model.SimpleRequest;
 import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
@@ -76,8 +75,8 @@ public class PactRequest implements Request {
         requireNonNull(originalRequest, "An original request is required");
         final SimpleRequest.Builder builder =
                 new SimpleRequest.Builder(originalRequest.getMethod(), originalRequest.getPath());
-        if (Objects.requireNonNull(originalRequest.getBody()).isPresent()) {
-            builder.withBody(originalRequest.getBody().getValue());
+        if (originalRequest.getBody() != null && originalRequest.getBody().isPresent()) {
+            builder.withBody(originalRequest.getBody().valueAsString());
         }
         if (originalRequest.getHeaders() != null) {
             originalRequest.getHeaders().forEach(builder::withHeader);
