@@ -11,6 +11,8 @@ import org.junit.Test;
 
 public class OpenAPIV3RequestDeepObjectValidationTest {
 
+    // Use an empty resolver - so we can ensure that any issue is raised 
+    // correctly as an error and we don't miss anything.
     private LevelResolver allErrorsResolver = LevelResolver.create()
         .build();
 
