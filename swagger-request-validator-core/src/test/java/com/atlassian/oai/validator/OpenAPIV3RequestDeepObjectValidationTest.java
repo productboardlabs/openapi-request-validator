@@ -1,14 +1,18 @@
 package com.atlassian.oai.validator;
 
-import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.SimpleRequest;
+import com.atlassian.oai.validator.report.LevelResolver;
 
 import org.junit.Test;
 
 public class OpenAPIV3RequestDeepObjectValidationTest {
+
+    private LevelResolver allErrorsResolver = LevelResolver.create()
+        .build();
 
     @Test
     public void validate_withDeepObjectParameters_shouldPass() {
@@ -16,6 +20,7 @@ public class OpenAPIV3RequestDeepObjectValidationTest {
         final OpenApiInteractionValidator classUnderTest =
             OpenApiInteractionValidator
                 .createFor("/oai/v3/api-with-deepobject-param.yaml")
+                .withLevelResolver(allErrorsResolver)
                 .build();
 
         final Request request = SimpleRequest.Builder
@@ -32,6 +37,7 @@ public class OpenAPIV3RequestDeepObjectValidationTest {
         final OpenApiInteractionValidator classUnderTest =
             OpenApiInteractionValidator
                 .createFor("/oai/v3/api-with-deepobject-param.yaml")
+                .withLevelResolver(allErrorsResolver)
                 .build();
 
         final Request request = SimpleRequest.Builder
@@ -48,6 +54,7 @@ public class OpenAPIV3RequestDeepObjectValidationTest {
         final OpenApiInteractionValidator classUnderTest =
             OpenApiInteractionValidator
                 .createFor("/oai/v3/api-with-deepobject-param.yaml")
+                .withLevelResolver(allErrorsResolver)
                 .build();
 
         final Request request = SimpleRequest.Builder
@@ -63,6 +70,7 @@ public class OpenAPIV3RequestDeepObjectValidationTest {
         final OpenApiInteractionValidator classUnderTest =
             OpenApiInteractionValidator
                 .createFor("/oai/v3/api-with-deepobject-param.yaml")
+                .withLevelResolver(allErrorsResolver)
                 .build();
 
         final Request request = SimpleRequest.Builder
@@ -73,22 +81,6 @@ public class OpenAPIV3RequestDeepObjectValidationTest {
 
         assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.schema.additionalProperties");
     }
-    
-    @Test
-    public void validate_withInvalidJsonDeepObjectParameter_shouldFail() {
-
-        final OpenApiInteractionValidator classUnderTest =
-            OpenApiInteractionValidator
-                .createFor("/oai/v3/api-with-deepobject-param.yaml")
-                .build();
-
-        final Request request = SimpleRequest.Builder
-            .get("/users")
-            .withQueryParam("filter[name_eq]", "ALEX:{")
-            .build();
-
-        assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.query.unexpected");
-    }
 
     @Test
     public void validate_withUnexpectedEnumDeepObjectParameter_shouldFail() {
@@ -96,6 +88,7 @@ public class OpenAPIV3RequestDeepObjectValidationTest {
         final OpenApiInteractionValidator classUnderTest =
             OpenApiInteractionValidator
                 .createFor("/oai/v3/api-with-deepobject-param.yaml")
+                .withLevelResolver(allErrorsResolver)
                 .build();
 
         final Request request = SimpleRequest.Builder

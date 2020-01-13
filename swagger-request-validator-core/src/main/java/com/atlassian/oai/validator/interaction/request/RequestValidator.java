@@ -310,7 +310,7 @@ public class RequestValidator {
             Stream.concat(defaultIfNull(apiOperation.getOperation().getParameters(),
                     Collections.<Parameter>emptyList())
                     .stream()
-                    .filter(p -> isQueryParam(p) && !isDeepObjectParam(p))
+                    .filter(p -> isQueryParam(p))
                     .map(Parameter::getName),
                 defaultIfNull(components.getSecuritySchemes(),
                     Collections.<String, SecurityScheme>emptyMap()).values().stream()
