@@ -28,11 +28,11 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
-import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
 
 /**
  * Validates a HTTP interaction (request/response pair) with a Swagger v2 / OpenAPI v3 specification.
@@ -128,15 +128,12 @@ public class OpenApiInteractionValidator {
         return new Builder().withApiSpecificationUrl(specUrl);
     }
 
-    private OpenApiInteractionValidator(@Nonnull final SpecSource specSource,
+    private OpenApiInteractionValidator(@Nonnull final OpenAPI api,
                                         @Nullable final String basePathOverride,
                                         @Nonnull final MessageResolver messages,
                                         @Nonnull final ValidationErrorsWhitelist whitelist,
-                                        @Nullable final List<AuthorizationValue> authData,
                                         @Nonnull final List<CustomRequestValidator> customRequestValidators,
                                         @Nonnull final List<CustomResponseValidator> customResponseValidators) {
-        final OpenAPI api = new OpenApiLoader().loadApi(specSource, authData);
-
         this.messages = messages;
         apiOperationResolver = new ApiOperationResolver(api, basePathOverride);
         final SchemaValidator schemaValidator = new SchemaValidator(api, messages);
@@ -329,6 +326,7 @@ public class OpenApiInteractionValidator {
         private ValidationErrorsWhitelist whitelist = ValidationErrorsWhitelist.create();
         private final List<CustomRequestValidator> customRequestValidators = new ArrayList<>();
         private final List<CustomResponseValidator> customResponseValidators = new ArrayList<>();
+        private OpenAPI api;
 
         /**
          * The location of the OpenAPI / Swagger specification to use in the validator, or the inline specification to use.
@@ -430,6 +428,12 @@ public class OpenApiInteractionValidator {
             return this;
         }
 
+        public Builder withApi(final OpenAPI api) {
+            requireNonNull(api, "An API is required");
+            this.api = api;
+            return this;
+        }
+
         /**
          * An optional basepath override to override the one defined in the OpenAPI / Swagger spec.
          * <p>
@@ -523,12 +527,14 @@ public class OpenApiInteractionValidator {
          * @throws ApiLoadException         if there was a problem loading the API spec
          */
         public OpenApiInteractionValidator build() {
+            if (api == null) {
+                this.api = new OpenApiLoader().loadApi(specSource, authData);
+            }
             return new OpenApiInteractionValidator(
-                    specSource,
+                    api,
                     basePathOverride,
                     new MessageResolver(levelResolver),
                     whitelist,
-                    authData,
                     customRequestValidators,
                     customResponseValidators);
         }

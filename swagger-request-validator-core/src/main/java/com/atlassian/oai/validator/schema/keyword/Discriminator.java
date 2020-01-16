@@ -23,11 +23,14 @@ import com.github.fge.msgsimple.bundle.MessageBundle;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Spliterators;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
-import static com.google.common.collect.Streams.stream;
 import static java.util.stream.Collectors.toList;
 
 public class Discriminator {
@@ -69,11 +72,14 @@ public class Discriminator {
                                   final MessageBundle bundle,
                                   final ProcessingReport report,
                                   final SchemaTree tree) throws ProcessingException {
-
             final String discriminatorFieldName = getNode(tree).get(PROPERTYNAME_KEYWORD).textValue();
             if (discriminatorFieldName.isEmpty()) {
                 report.error(msg(tree, bundle, "err.swaggerv2.discriminator.empty"));
                 return;
+            }
+
+            if (tree.getNode().get("oneOf") != null) {
+                return; // no need to check for 'properties', 'required' etc.
             }
 
             final JsonNode properties = tree.getNode().get("properties");
@@ -224,8 +230,17 @@ public class Discriminator {
 
             });
 
-            if (mappingNode != null && mappingNode.get(discriminatorNode.textValue()) != null) {
-                discriminatorNode = mappingNode.get(discriminatorNode.textValue());
+            final boolean useMappingNode = mappingNode != null && mappingNode.get(discriminatorNode.textValue()) != null;
+            if (useMappingNode) {
+                mappingNode.fields().forEachRemaining(e -> validDiscriminatorValues.put(e.getKey(), e.getValue()));
+            } else if (data.getSchema().getNode().has("oneOf")) {
+                data.getSchema().getNode().get("oneOf").forEach(jsonNode ->
+                        // the oneOf $refs are resolved already, so we have to look up theirs schema names
+                        definitionsNode(data).fields().forEachRemaining(entry -> {
+                            if (entry.getValue().equals(jsonNode)) {
+                                validDiscriminatorValues.put(entry.getKey(), entry.getValue());
+                            }
+                        }));
             }
 
             if (!validDiscriminatorValues.containsKey(discriminatorNode.textValue())) {
@@ -237,9 +252,20 @@ public class Discriminator {
                 );
             }
 
+            if (useMappingNode) {
+                discriminatorNode = mappingNode.get(discriminatorNode.textValue());
+            }
+
             final ListProcessingReport subReport = new ListProcessingReport(report.getLogLevel(), LogLevel.FATAL);
             final JsonPointer ptr = pointerToDiscriminator(data, discriminatorNode);
             final FullData newData = data.withSchema(schemaTree.setPointer(ptr));
+
+            if (newData.getSchema().getNode() == null) {
+                report.error(msg(data, bundle, "err.swaggerv2.discriminator.reference.invalid")
+                        .putArgument("schema", ptr.toString())
+                        .put("report", subReport.asJson()));
+                return;
+            }
 
             // Mark the node to ensure we don't get in a validation loop
             visitedNodes.get().add((ObjectNode) schemaTree.getNode());
@@ -252,15 +278,15 @@ public class Discriminator {
                         .putArgument("schema", ptr.toString())
                         .put("report", subReport.asJson()));
             }
-
         }
 
         private JsonPointer pointerToDiscriminator(final FullData data, final JsonNode discriminatorNode) {
+            final String discriminatorNodeText = normalizeDiscriminatorNode(discriminatorNode.textValue());
             // Swagger 2.0 used 'definitions' while OpenAPI uses 'components/schemas'
             if (data.getSchema().getBaseNode().has("components")) {
-                return JsonPointer.of("components", "schemas", discriminatorNode.textValue());
+                return JsonPointer.of("components", "schemas", discriminatorNodeText);
             }
-            return JsonPointer.of("definitions", discriminatorNode.textValue());
+            return JsonPointer.of("definitions", discriminatorNodeText);
         }
 
         private JsonNode definitionsNode(final FullData data) {
@@ -270,6 +296,14 @@ public class Discriminator {
                 return baseNode.get("components").get("schemas");
             }
             return baseNode.get("definitions");
+        }
+
+        private String normalizeDiscriminatorNode(final String discriminatorNodeText) {
+            if (discriminatorNodeText.startsWith("#/")) {
+                final int n = discriminatorNodeText.lastIndexOf('/');
+                return discriminatorNodeText.substring(n + 1);
+            }
+            return discriminatorNodeText;
         }
 
         @Override
@@ -284,6 +318,10 @@ public class Discriminator {
 
     private static boolean arrayNodeContains(final JsonNode requiredProperties, final String element) {
         return stream(requiredProperties.elements()).anyMatch(e -> e.textValue().equals(element));
+    }
+
+    private static <T> Stream<T> stream(final Iterator<T> iterator) {
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, 0), false);
     }
 
     private Discriminator() {
