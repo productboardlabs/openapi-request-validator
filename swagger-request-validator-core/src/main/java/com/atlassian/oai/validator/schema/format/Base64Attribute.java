@@ -7,18 +7,30 @@ import com.github.fge.jsonschema.format.AbstractFormatAttribute;
 import com.github.fge.jsonschema.format.FormatAttribute;
 import com.github.fge.jsonschema.processors.data.FullData;
 import com.github.fge.msgsimple.bundle.MessageBundle;
-import com.google.common.io.BaseEncoding;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
 
 public class Base64Attribute extends AbstractFormatAttribute {
 
     private static final FormatAttribute INSTANCE = new Base64Attribute();
+    private static final boolean[] BASE64_CHARACTERS = initBase64Characters();
 
     public static FormatAttribute getInstance() {
         return INSTANCE;
+    }
+
+    private static boolean[] initBase64Characters() {
+        final boolean[] chars = new boolean[Character.MAX_VALUE];
+        chars[43] = true; // '+'
+        chars[47] = true; // '/'
+        for (int i = 48; i <= 57; ++i) { // '0' to '9'
+            chars[i] = true;
+        }
+        for (int i = 65; i <= 90; ++i) { // 'A' to 'Z'
+            chars[i] = true;
+        }
+        for (int i = 97; i <= 122; ++i) { // 'a' to 'z'
+            chars[i] = true;
+        }
+        return chars;
     }
 
     private Base64Attribute() {
@@ -26,19 +38,27 @@ public class Base64Attribute extends AbstractFormatAttribute {
     }
 
     private static boolean isBase64(final String string) {
+        final int length = string.length();
+        if (length == 0) {
+            return true;
+        }
+
         // it is expected the Base64 string has padding - therefore its length is divisible by 4
-        if (string.length() % 4 != 0) {
+        if (length % 4 != 0) {
             return false;
         }
-        try {
-            final InputStream in = BaseEncoding.base64().decodingStream(new StringReader(string));
-            while (in.read() != -1) {
-                // intentionally left blank
+
+        // check for padding at the end - which could be '', '=' or '=='
+        final int end = (string.charAt(length - 1) != 61) ? length :
+                (string.charAt(length - 2) != 61 ? length - 1 : length - 2);
+
+        // the remaining characters may only be the Base64 characters
+        for (int i = 0; i < end; ++i) {
+            if (!BASE64_CHARACTERS[string.charAt(i)]) {
+                return false;
             }
-            return true;
-        } catch (final IOException e) {
-            return false; // there was an decoding error - the Base64 string is invalid
         }
+        return true;
     }
 
     @Override
