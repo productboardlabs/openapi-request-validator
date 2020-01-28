@@ -1,3 +1,11 @@
+#v2.8.4
+* Improve performance of Base64 validation
+[[#259]](https://bitbucket.org/atlassian/swagger-request-validator/issues/259)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/158)
+* Include `deepObject` params in the unexpected param validation
+[[#258]](https://bitbucket.org/atlassian/swagger-request-validator/issues/258)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/157)
+
 #v2.8.3
 
 * Fix a NPE when using a `discriminator` with the `oneOf` keyword
