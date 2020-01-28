@@ -12,6 +12,7 @@ import com.github.fge.msgsimple.bundle.MessageBundle;
 import com.google.common.io.BaseEncoding;
 import org.junit.Test;
 
+import java.util.Base64;
 import java.util.Random;
 
 import static org.hamcrest.Matchers.equalTo;
@@ -59,6 +60,24 @@ public class Base64AttributeTest {
     }
 
     @Test
+    public void validate_validBase64_massTest() throws Exception {
+        final Random random = new Random(0); // random generator with fixed seed for deterministic tests
+
+        for (int i = 0; i < 1000; ++i) {
+            // setup:
+            final byte[] array = new byte[i];
+            random.nextBytes(array);
+            final String text = Base64.getEncoder().encodeToString(array);
+
+            // when:
+            final ProcessingReport processingReport = validate(text);
+
+            // then: 'no error is added to the report'
+            verifyNoMoreInteractions(processingReport); //
+        }
+    }
+
+    @Test
     public void validate_invalidBase64_invalidLetter() throws ProcessingException {
         // when:
         final ProcessingReport processingReport = validate("QmF@ZTY0");
@@ -69,10 +88,10 @@ public class Base64AttributeTest {
 
     @Test
     public void validate_invalidWithMissingPadding() throws Exception {
-        final Random random = new Random(0); // random generator with fixed seed for deterministic tests
+        final Random random = new Random(1); // random generator with fixed seed for deterministic tests
         int invalidCount = 0;
 
-        for (int i = 0; i < 100; ++i) {
+        for (int i = 0; i < 1000; ++i) {
             // setup:
             final byte[] array = new byte[i];
             random.nextBytes(array);
@@ -91,6 +110,6 @@ public class Base64AttributeTest {
         }
 
         // safety check: out of all tries ⅔ were invalid
-        assertThat(invalidCount, equalTo(66));
+        assertThat(invalidCount, equalTo(666));
     }
 }
