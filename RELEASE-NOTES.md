@@ -1,3 +1,7 @@
+#v2.9.0
+* Bump `swagger-parser` 2.0.14 -> 2.0.17 (including bump of `jackson` 2.9.10 -> 2.10.2 )
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/159)
+
 #v2.8.4
 * Improve performance of Base64 validation
 [[#259]](https://bitbucket.org/atlassian/swagger-request-validator/issues/259)
