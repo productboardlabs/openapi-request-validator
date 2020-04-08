@@ -12,7 +12,6 @@ import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import io.swagger.util.Json;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.DateTimeSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import org.slf4j.Logger;
@@ -25,19 +24,20 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.StreamSupport;
+import java.util.stream.Stream;
 
 import static com.atlassian.oai.validator.schema.SwaggerV20Library.OAI_V2_METASCHEMA_URI;
 import static com.atlassian.oai.validator.schema.SwaggerV20Library.schemaFactory;
 import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
+import static java.util.Collections.emptyIterator;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.StreamSupport.stream;
 import static org.apache.commons.lang3.StringUtils.capitalize;
 
 /**
@@ -56,14 +56,20 @@ public class SchemaValidator {
     private static final String ADDITIONAL_PROPERTIES_FIELD = "additionalProperties";
     private static final String DISCRIMINATOR_FIELD = "discriminator";
     private static final String PROPERTIES_FIELD = "properties";
+    private static final String REQUIRED_FIELD = "required";
+    private static final String READONLY_FIELD = "readOnly";
+    private static final String WRITEONLY_FIELD = "writeOnly";
     private static final String TYPE_FIELD = "type";
     private static final String COMPONENTS_FIELD = "components";
     private static final String SCHEMAS_FIELD = "schemas";
     private static final String ALLOF_FIELD = "allOf";
+    private static final String ANYOF_FIELD = "anyOf";
+    private static final String ONEOF_FIELD = "oneOf";
     private static final String SCHEMA_REF_FIELD = "$schema";
 
     private final JsonNode definitions;
     private final boolean definitionsContainAllOf;
+
     private final MessageResolver messages;
 
     /**
@@ -72,7 +78,8 @@ public class SchemaValidator {
      * @param api      The API to build the validator for.
      * @param messages The message resolver to use.
      */
-    public SchemaValidator(final OpenAPI api, @Nonnull final MessageResolver messages) {
+    public SchemaValidator(final OpenAPI api,
+                           @Nonnull final MessageResolver messages) {
         this.messages = requireNonNull(messages, "A message resolver is required");
 
         this.definitions = Optional.ofNullable(api.getComponents())
@@ -116,8 +123,10 @@ public class SchemaValidator {
                 content = readContent(value, schema);
 
                 final JsonNode schemaObject = readAndSetupSchemaObject(schema, keyPrefix);
-                processingReport = (ListProcessingReport) schemaFactory().getJsonSchema(schemaObject)
+                processingReport = (ListProcessingReport) schemaFactory()
+                        .getJsonSchema(schemaObject)
                         .validate(content, true);
+
             } catch (final ProcessingException e) {
                 return getProcessingMessage(e.getProcessingMessage(), "processingError", keyPrefix);
             } catch (final IOException e) {
@@ -130,7 +139,7 @@ public class SchemaValidator {
             }
 
             if ((processingReport != null) && !processingReport.isSuccess()) {
-                return StreamSupport.stream(processingReport.spliterator(), false)
+                return stream(processingReport.spliterator(), false)
                         .map(pm -> getProcessingMessage(pm, null, keyPrefix))
                         .reduce(ValidationReport.empty(), ValidationReport::merge);
             }
@@ -147,88 +156,60 @@ public class SchemaValidator {
     }
 
     private JsonNode readAndSetupSchemaObject(final Schema schema, final String keyPrefix) throws IOException {
-        final List<String> required = getRequired(schema, keyPrefix);
-        final JsonNode schemaObject = readSchema(schema, required);
+        final ObjectNode schemaObject = Json.mapper().convertValue(schema, ObjectNode.class);
+        setupSchemaDefinitionRefs(schemaObject);
+        adjustRequiredProperties(schemaObject, keyPrefix);
         checkForKnownGotchasAndLogMessage(schemaObject);
         return schemaObject;
     }
 
-    private static void setRequired(final ObjectNode schemaObject, final List<String> required) {
+    private void adjustRequiredProperties(final JsonNode schemaObject, final String keyPrefix) {
+        if (schemaObject == null) {
+            return;
+        }
+
+        if (isArrayDefinition(schemaObject)) {
+            adjustRequiredProperties(itemsDefinition(schemaObject), keyPrefix);
+            return;
+        }
+
+        if (hasRequiredFields(schemaObject)) {
+            final List<String> adjustedRequired = getRequiredFieldNames(schemaObject)
+                    .filter(fieldName ->
+                            (isRequest(keyPrefix) && !isReadOnly(property(schemaObject, fieldName))) ||
+                                    (isResponse(keyPrefix) && !isWriteOnly(property(schemaObject, fieldName))) ||
+                                    (!isRequest(keyPrefix) && !isResponse(keyPrefix))
+                    )
+                    .collect(toList());
+            setRequiredFieldNames(schemaObject, adjustedRequired);
+        }
+
+        properties(schemaObject).forEachRemaining(child -> adjustRequiredProperties(child, keyPrefix));
+        allOf(schemaObject).forEachRemaining(child -> adjustRequiredProperties(child, keyPrefix));
+        anyOf(schemaObject).forEachRemaining(child -> adjustRequiredProperties(child, keyPrefix));
+        oneOf(schemaObject).forEachRemaining(child -> adjustRequiredProperties(child, keyPrefix));
+        schemaComponents(schemaObject).forEachRemaining(child -> adjustRequiredProperties(child, keyPrefix));
+    }
+
+    private void setRequiredFieldNames(final JsonNode schemaObject, final List<String> required) {
         final JsonNode requiredNode = Json.mapper().convertValue(required, JsonNode.class);
-        if (schemaObject.findValue("type") != null &&
-                schemaObject.findValue("type").asText().equalsIgnoreCase("array")) {
-            if (schemaObject.get("items") != null) {
-                final JsonNode jsonNode = schemaObject.get("items");
-                ((ObjectNode) jsonNode).set("required", requiredNode);
-            }
-        } else {
-            schemaObject.set("required", requiredNode);
-        }
+        ((ObjectNode) schemaObject).set("required", requiredNode);
     }
 
-    private static List<String> getRequired(final Schema schema, @Nullable final String keyPrefix) {
-        if (keyPrefix == null || schema.getRequired() == null) {
-            if (schema instanceof ArraySchema && ((ArraySchema) schema).getItems() != null) {
-                final Schema itemsSchema = ((ArraySchema) schema).getItems();
-                return getUpdatedRequiredList(itemsSchema, keyPrefix);
-            } else {
-                return null;
-            }
-        }
-
-        return getUpdatedRequiredList(schema, keyPrefix);
+    private static boolean isResponse(final String keyPrefix) {
+        return keyPrefix.equalsIgnoreCase("response.body");
     }
 
-    private static List<String> getUpdatedRequiredList(final Schema schema, @Nonnull final String keyPrefix) {
-        final Map<String, Schema> properties = schema.getProperties();
-        final List<String> required = schema.getRequired();
-        if (required != null) {
-            final List<String> requiredUpdated = new ArrayList<>(required);
-            required.forEach(property -> {
-                removeReadOnlyRequiredPropertyForRequestBody(keyPrefix, properties, requiredUpdated, property);
-                removeWriteOnlyRequiredPropertyForResponeBody(keyPrefix, properties, requiredUpdated, property);
-            });
-            return requiredUpdated;
-        }
-        return new ArrayList<>();
+    private static boolean isRequest(final String keyPrefix) {
+        return keyPrefix.equalsIgnoreCase("request.body");
     }
 
-    private static void removeWriteOnlyRequiredPropertyForResponeBody(final String keyPrefix,
-                                                                      final Map<String, Schema> properties,
-                                                                      final List<String> requiredUpdated,
-                                                                      final String property) {
-        if (keyPrefix.equals("response.body")
-                && Boolean.TRUE.equals(properties.get(property).getWriteOnly())) {
-            requiredUpdated.remove(property);
-        }
-    }
-
-    private static void removeReadOnlyRequiredPropertyForRequestBody(final String keyPrefix,
-                                                                     final Map<String, Schema> properties,
-                                                                     final List<String> requiredUpdated,
-                                                                     final String property) {
-        if (keyPrefix.equals("request.body")
-                && Boolean.TRUE.equals(properties.get(property).getReadOnly())) {
-            requiredUpdated.remove(property);
-        }
-    }
-
-    private JsonNode readSchema(@Nonnull final Schema schema, final List<String> required) throws IOException {
-        final ObjectNode schemaObject = Json.mapper().convertValue(schema, ObjectNode.class);
-        setupSchemaDefinitionRefs(schemaObject, required);
-        return schemaObject;
-    }
-
-    private void setupSchemaDefinitionRefs(final ObjectNode schemaObject, final List<String> required) throws IOException {
+    private void setupSchemaDefinitionRefs(final ObjectNode schemaObject) throws IOException {
         schemaObject.put(SCHEMA_REF_FIELD, OAI_V2_METASCHEMA_URI);
         if (additionalPropertiesValidationEnabled()) {
             injectAdditionalPropertiesDirectiveIntoTree(schemaObject);
         }
-        schemaObject.putObject(COMPONENTS_FIELD).set(SCHEMAS_FIELD, definitions);
-
-        if (required != null && !required.isEmpty()) {
-            setRequired(schemaObject, required);
-        }
+        schemaObject.putObject(COMPONENTS_FIELD).set(SCHEMAS_FIELD, definitions.deepCopy());
     }
 
     private static boolean injectAdditionalPropertiesDirectiveIntoTree(@Nonnull final JsonNode n) {
@@ -281,18 +262,61 @@ public class SchemaValidator {
     }
 
     private static Iterator<JsonNode> properties(final JsonNode n) {
-        if (n.has(PROPERTIES_FIELD)) {
-            return n.get(PROPERTIES_FIELD).iterator();
+        return n.has(PROPERTIES_FIELD) ? n.get(PROPERTIES_FIELD).iterator() : emptyIterator();
+    }
+
+    private static Iterator<JsonNode> allOf(final JsonNode n) {
+        return n.has(ALLOF_FIELD) ? n.get(ALLOF_FIELD).iterator() : emptyIterator();
+    }
+
+    private static Iterator<JsonNode> anyOf(final JsonNode n) {
+        return n.has(ANYOF_FIELD) ? n.get(ANYOF_FIELD).iterator() : emptyIterator();
+    }
+
+    private static Iterator<JsonNode> oneOf(final JsonNode n) {
+        return n.has(ONEOF_FIELD) ? n.get(ONEOF_FIELD).iterator() : emptyIterator();
+    }
+
+    private static Iterator<JsonNode> schemaComponents(final JsonNode n) {
+        return n.has(COMPONENTS_FIELD) && n.get(COMPONENTS_FIELD).has(SCHEMAS_FIELD) ? n.get(COMPONENTS_FIELD).get(SCHEMAS_FIELD).iterator() : emptyIterator();
+    }
+
+    @Nullable
+    private static JsonNode property(@Nullable final JsonNode n, final String fieldName) {
+        if (n == null || !n.has(PROPERTIES_FIELD)) {
+            return null;
         }
-        return Collections.<JsonNode>emptyList().iterator();
+
+        return n.get(PROPERTIES_FIELD).get(fieldName);
     }
 
     private static boolean hasDiscriminatorField(final JsonNode n) {
-        return n.has(DISCRIMINATOR_FIELD);
+        return n != null && n.has(DISCRIMINATOR_FIELD);
     }
 
     private static boolean hasAdditionalFieldSet(final JsonNode n) {
-        return n.has(ADDITIONAL_PROPERTIES_FIELD);
+        return n != null && n.has(ADDITIONAL_PROPERTIES_FIELD);
+    }
+
+    private static boolean hasRequiredFields(final JsonNode n) {
+        return n != null && n.has(REQUIRED_FIELD);
+    }
+
+    private static Stream<String> getRequiredFieldNames(final JsonNode n) {
+        if (!hasRequiredFields(n)) {
+            return Stream.empty();
+        }
+
+        return stream(n.get(REQUIRED_FIELD).spliterator(), false)
+                .map(JsonNode::textValue);
+    }
+
+    private static boolean isReadOnly(final JsonNode n) {
+        return n != null && n.has(READONLY_FIELD) && n.get(READONLY_FIELD).booleanValue();
+    }
+
+    private static boolean isWriteOnly(final JsonNode n) {
+        return n != null && n.has(WRITEONLY_FIELD) && n.get(WRITEONLY_FIELD).booleanValue();
     }
 
     private static JsonNode readContent(@Nonnull final String value, @Nonnull final Schema schema) throws IOException {
