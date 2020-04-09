@@ -24,6 +24,10 @@ public class RequiredFieldTransformer extends SchemaTransformer {
             return;
         }
 
+        if (!(context.isRequest() || context.isResponse())) {
+            return;
+        }
+
         if (hasRequiredFields(schemaObject)) {
             final List<String> adjustedRequired = getRequiredFieldNames(schemaObject)
                     .stream()
