@@ -593,6 +593,17 @@ public class SchemaValidatorTest {
     }
 
     @Test
+    public void validate_readOnly_isRequired_inOtherLocation() {
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
+        final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnly");
+
+        final String value = "{\"notReadOnly\":\"abc\", \"writeOnly\": \"123\"}";
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "query"),
+                "validation.query.schema.required");
+    }
+
+    @Test
     public void validate_readOnly_isRequired_withNesting_inResponse() {
         final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
         final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnlyNested");
@@ -674,6 +685,17 @@ public class SchemaValidatorTest {
         final String value = "{\"notReadOnly\":\"abc\", \"readOnly\": \"123\"}";
 
         assertPass(classUnderTest.validate(value, schema, "response.body"));
+    }
+
+    @Test
+    public void validate_writeOnly_isRequired_inOtherLocation() {
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
+        final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnly");
+
+        final String value = "{\"notReadOnly\":\"abc\", \"readOnly\": \"123\"}";
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "query"),
+                "validation.query.schema.required");
     }
 
     @Test
