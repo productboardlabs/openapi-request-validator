@@ -23,19 +23,19 @@ import static java.util.stream.StreamSupport.stream;
  */
 public abstract class SchemaTransformer {
 
-    private static final String ADDITIONAL_PROPERTIES_FIELD = "additionalProperties";
-    private static final String DISCRIMINATOR_FIELD = "discriminator";
-    private static final String PROPERTIES_FIELD = "properties";
-    private static final String REQUIRED_FIELD = "required";
-    private static final String READONLY_FIELD = "readOnly";
-    private static final String WRITEONLY_FIELD = "writeOnly";
-    private static final String TYPE_FIELD = "type";
-    private static final String COMPONENTS_FIELD = "components";
-    private static final String SCHEMAS_FIELD = "schemas";
-    private static final String ALLOF_FIELD = "allOf";
-    private static final String ANYOF_FIELD = "anyOf";
-    private static final String ONEOF_FIELD = "oneOf";
-    private static final String SCHEMA_REF_FIELD = "$schema";
+    protected static final String ADDITIONAL_PROPERTIES_FIELD = "additionalProperties";
+    protected static final String DISCRIMINATOR_FIELD = "discriminator";
+    protected static final String PROPERTIES_FIELD = "properties";
+    protected static final String REQUIRED_FIELD = "required";
+    protected static final String READONLY_FIELD = "readOnly";
+    protected static final String WRITEONLY_FIELD = "writeOnly";
+    protected static final String TYPE_FIELD = "type";
+    protected static final String COMPONENTS_FIELD = "components";
+    protected static final String SCHEMAS_FIELD = "schemas";
+    protected static final String ALLOF_FIELD = "allOf";
+    protected static final String ANYOF_FIELD = "anyOf";
+    protected static final String ONEOF_FIELD = "oneOf";
+    protected static final String SCHEMA_REF_FIELD = "$schema";
 
     private static final String OBJECT_TYPE = "object";
     private static final String ARRAY_TYPE = "array";
@@ -45,7 +45,7 @@ public abstract class SchemaTransformer {
      * <p>
      * Note: Callers should assume that this will mutate the given schema object.
      */
-    abstract void apply(final JsonNode schemaObject, final SchemaTransformationContext context);
+    public abstract void apply(final JsonNode schemaObject, final SchemaTransformationContext context);
 
     /**
      * Traverse each of the schema object's 'children' and apply the given consumer.
@@ -166,6 +166,13 @@ public abstract class SchemaTransformer {
 
     protected static boolean isWriteOnly(@Nullable final JsonNode n) {
         return n != null && n.has(WRITEONLY_FIELD) && n.get(WRITEONLY_FIELD).booleanValue();
+    }
+
+    protected static void setSchemaRef(@Nullable final JsonNode n, final String value) {
+        if (!(n instanceof ObjectNode)) {
+            return;
+        }
+        ((ObjectNode) n).put(SCHEMA_REF_FIELD, value);
     }
 
 }

@@ -2,10 +2,13 @@ package com.atlassian.oai.validator.schema;
 
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
+import com.atlassian.oai.validator.schema.transform.AdditionalPropertiesInjectionTransformer;
 import com.atlassian.oai.validator.schema.transform.RequiredFieldTransformer;
+import com.atlassian.oai.validator.schema.transform.SchemaDefinitionsInjectionTransformer;
+import com.atlassian.oai.validator.schema.transform.SchemaRefInjectionTransformer;
 import com.atlassian.oai.validator.schema.transform.SchemaTransformationContext;
+import com.atlassian.oai.validator.schema.transform.SchemaTransformer;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
@@ -26,16 +29,12 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
-import static com.atlassian.oai.validator.schema.SwaggerV20Library.OAI_V2_METASCHEMA_URI;
 import static com.atlassian.oai.validator.schema.SwaggerV20Library.schemaFactory;
 import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
-import static java.util.Collections.emptyIterator;
+import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.StreamSupport.stream;
 import static org.apache.commons.lang3.StringUtils.capitalize;
@@ -53,19 +52,22 @@ public class SchemaValidator {
     public static final String INVALID_JSON_KEY = "validation.schema.invalidJson";
     public static final String UNKNOWN_ERROR_KEY = "validation.schema.unknownError";
 
-    private static final String ADDITIONAL_PROPERTIES_FIELD = "additionalProperties";
-    private static final String DISCRIMINATOR_FIELD = "discriminator";
-    private static final String PROPERTIES_FIELD = "properties";
-    private static final String TYPE_FIELD = "type";
-    private static final String COMPONENTS_FIELD = "components";
-    private static final String SCHEMAS_FIELD = "schemas";
     private static final String ALLOF_FIELD = "allOf";
-    private static final String SCHEMA_REF_FIELD = "$schema";
 
     private final JsonNode definitions;
-    private final boolean definitionsContainAllOf;
-
     private final MessageResolver messages;
+
+    /**
+     * Transformations applied to the schema before validation.
+     * <p>
+     * Order is important here - the mutations from one transformation are passed through to the subsequent transformers.
+     */
+    private final List<SchemaTransformer> transformers = asList(
+            SchemaDefinitionsInjectionTransformer.getInstance(),
+            SchemaRefInjectionTransformer.getInstance(),
+            AdditionalPropertiesInjectionTransformer.getInstance(),
+            RequiredFieldTransformer.getInstance()
+    );
 
     /**
      * Build a new validator for the given API specification.
@@ -81,16 +83,6 @@ public class SchemaValidator {
                 .map(Components::getSchemas)
                 .map(schemas -> Json.mapper().convertValue(schemas, JsonNode.class))
                 .orElseGet(() -> Json.mapper().createObjectNode());
-        final Set<Boolean> containAllOf = new HashSet<>();
-        if (additionalPropertiesValidationEnabled()) {
-            definitions.forEach(n -> {
-                // Explicitly disable additionalProperties
-                // Calling code can choose what level to emit this failure at using
-                // validation.schema.additionalProperties
-                containAllOf.add(injectAdditionalPropertiesDirectiveIntoTree(n));
-            });
-        }
-        this.definitionsContainAllOf = containAllOf.contains(Boolean.TRUE);
     }
 
     /**
@@ -117,7 +109,8 @@ public class SchemaValidator {
             try {
                 content = readContent(value, schema);
 
-                final JsonNode schemaObject = readAndSetupSchemaObject(schema, keyPrefix);
+                final JsonNode schemaObject = readAndTransformSchemaObject(schema, keyPrefix);
+
                 processingReport = (ListProcessingReport) schemaFactory()
                         .getJsonSchema(schemaObject)
                         .validate(content, true);
@@ -150,90 +143,19 @@ public class SchemaValidator {
         }
     }
 
-    private JsonNode readAndSetupSchemaObject(final Schema schema, final String keyPrefix) throws IOException {
+    private JsonNode readAndTransformSchemaObject(final Schema schema, @Nullable final String keyPrefix) {
         final ObjectNode schemaObject = Json.mapper().convertValue(schema, ObjectNode.class);
-        setupSchemaDefinitionRefs(schemaObject);
-        adjustRequiredProperties(schemaObject, keyPrefix);
-        checkForKnownGotchasAndLogMessage(schemaObject);
-        return schemaObject;
-    }
-
-    private void adjustRequiredProperties(final JsonNode schemaObject, final String keyPrefix) {
         final SchemaTransformationContext transformationContext = SchemaTransformationContext.create()
-                .forRequest(keyPrefix.equalsIgnoreCase("request.body"))
-                .forResponse(keyPrefix.equalsIgnoreCase("response.body"))
+                .forRequest("request.body".equalsIgnoreCase(keyPrefix))
+                .forResponse("response.body".equalsIgnoreCase(keyPrefix))
+                .withAdditionalPropertiesValidation(additionalPropertiesValidationEnabled())
+                .withDefinitions(definitions)
                 .build();
 
-        RequiredFieldTransformer.getInstance().apply(schemaObject, transformationContext);
-    }
+        transformers.forEach(t -> t.apply(schemaObject, transformationContext));
 
-    private void setupSchemaDefinitionRefs(final ObjectNode schemaObject) throws IOException {
-        schemaObject.put(SCHEMA_REF_FIELD, OAI_V2_METASCHEMA_URI);
-        if (additionalPropertiesValidationEnabled()) {
-            injectAdditionalPropertiesDirectiveIntoTree(schemaObject);
-        }
-        schemaObject.putObject(COMPONENTS_FIELD).set(SCHEMAS_FIELD, definitions.deepCopy());
-    }
-
-    private static boolean injectAdditionalPropertiesDirectiveIntoTree(@Nonnull final JsonNode n) {
-        if (!hasAdditionalFieldSet(n) && !hasDiscriminatorField(n)) {
-            disableAdditionalProperties((ObjectNode) n);
-        }
-        boolean hasAllOfInChildDefinition = false;
-        final Iterator<JsonNode> properties = properties(n);
-        while (properties.hasNext()) {
-            final JsonNode prop = properties.next();
-            if (isObjectDefinition(prop)) {
-                hasAllOfInChildDefinition = injectAdditionalPropertiesDirectiveIntoTree(prop) || hasAllOfInChildDefinition;
-            } else if (isArrayDefinition(prop)) {
-                final JsonNode items = itemsDefinition(prop);
-                if (isObjectDefinition(items)) {
-                    hasAllOfInChildDefinition = injectAdditionalPropertiesDirectiveIntoTree(items) || hasAllOfInChildDefinition;
-                }
-            }
-        }
-        return hasAllOfField(n) || hasAllOfInChildDefinition;
-    }
-
-    private static boolean hasAllOfField(final JsonNode n) {
-        return n.has(ALLOF_FIELD);
-    }
-
-    @Nullable
-    private static JsonNode itemsDefinition(final JsonNode n) {
-        return n.get("items");
-    }
-
-    private static boolean isObjectDefinition(@Nullable final JsonNode n) {
-        if (n == null) {
-            return false;
-        }
-        final JsonNode type = n.get(TYPE_FIELD);
-        return type != null && type.textValue().equalsIgnoreCase("object");
-    }
-
-    private static boolean isArrayDefinition(@Nullable final JsonNode n) {
-        if (n == null) {
-            return false;
-        }
-        final JsonNode type = n.get(TYPE_FIELD);
-        return type != null && type.textValue().equalsIgnoreCase("array");
-    }
-
-    private static void disableAdditionalProperties(final ObjectNode n) {
-        n.set(ADDITIONAL_PROPERTIES_FIELD, BooleanNode.getFalse());
-    }
-
-    private static Iterator<JsonNode> properties(final JsonNode n) {
-        return n.has(PROPERTIES_FIELD) ? n.get(PROPERTIES_FIELD).iterator() : emptyIterator();
-    }
-
-    private static boolean hasDiscriminatorField(final JsonNode n) {
-        return n != null && n.has(DISCRIMINATOR_FIELD);
-    }
-
-    private static boolean hasAdditionalFieldSet(final JsonNode n) {
-        return n != null && n.has(ADDITIONAL_PROPERTIES_FIELD);
+        checkForKnownGotchasAndLogMessage(schemaObject);
+        return schemaObject;
     }
 
     private static JsonNode readContent(@Nonnull final String value, @Nonnull final Schema schema) throws IOException {
@@ -288,7 +210,7 @@ public class SchemaValidator {
     }
 
     private void checkForKnownGotchasAndLogMessage(final JsonNode schemaObject) {
-        if (additionalPropertiesValidationEnabled() && (schemaObject.has(ALLOF_FIELD) || definitionsContainAllOf)) {
+        if (additionalPropertiesValidationEnabled() && (schemaObject.has(ALLOF_FIELD))) {
             log.info("Note: Schema uses the 'allOf' keyword. " +
                     "Validation of 'additionalProperties' may fail with unexpected errors. " +
                     "See the project README FAQ for more information.");
@@ -350,5 +272,4 @@ public class SchemaValidator {
 
         return validationReportMessage.withNestedMessages(nestedMessages);
     }
-
 }
