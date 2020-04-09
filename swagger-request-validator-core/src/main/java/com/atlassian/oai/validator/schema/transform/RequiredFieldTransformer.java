@@ -7,7 +7,8 @@ import java.util.List;
 import static java.util.stream.Collectors.toList;
 
 /**
- * Transformer that adjusts the "required" fields list for
+ * Transformer that adjusts the "required" fields list for nodes to remove fields marked as `readOnly` or `writeOnly`
+ * for request / response validation as appropriate.
  */
 public class RequiredFieldTransformer extends SchemaTransformer {
 

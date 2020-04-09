@@ -162,7 +162,6 @@ public class SchemaValidator {
         if ("null".equalsIgnoreCase(value)) {
             return Json.mapper().readTree("null");
         }
-
         if (schema instanceof DateTimeSchema) {
             return createStringNode(normaliseDateTime(value));
         }
@@ -173,7 +172,6 @@ public class SchemaValidator {
                 "integer".equalsIgnoreCase(schema.getType())) {
             return createNumericNode(value);
         }
-
         return Json.mapper().readTree(value);
     }
 

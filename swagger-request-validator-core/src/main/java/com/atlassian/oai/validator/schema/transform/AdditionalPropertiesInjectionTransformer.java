@@ -3,6 +3,11 @@ package com.atlassian.oai.validator.schema.transform;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+/**
+ * Transformer that injects `additionalProperties: false` into the nodes in the schema tree if additional properties validation is enabled.
+ * <p>
+ * Won't affect any node that already has `additionalProperties` set.
+ */
 public class AdditionalPropertiesInjectionTransformer extends SchemaTransformer {
 
     private static final AdditionalPropertiesInjectionTransformer INSTANCE = new AdditionalPropertiesInjectionTransformer();
