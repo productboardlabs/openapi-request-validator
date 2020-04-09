@@ -79,6 +79,26 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ReadOnly'
+  /readOnly/nested:
+    get:
+      summary: Read only with nested composition - response
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReadOnlyNested'
+    post:
+      summary: Read only with nested composition - request
+      requestBody:
+        description: Created
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReadOnlyNested'
 components:
   schemas:
     ReadOnly:
@@ -113,3 +133,26 @@ components:
             id:
               type: string
         - $ref: '#/components/schemas/ReadOnly'
+    ReadOnlyNested:
+      type: object
+      properties:
+        nestedRef:
+          $ref: '#/components/schemas/ReadOnly'
+        nestedInline:
+          type: object
+          properties:
+            readOnly:
+              type: string
+              readOnly: true
+              example: 'read'
+            notReadOnly:
+              type: string
+              example: 'xxx'
+            writeOnly:
+              type: string
+              writeOnly: true
+              example: 'write'
+          required:
+            - readOnly
+            - notReadOnly
+            - writeOnly

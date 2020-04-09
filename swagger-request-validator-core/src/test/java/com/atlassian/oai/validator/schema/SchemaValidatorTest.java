@@ -18,7 +18,6 @@ import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.media.UUIDSchema;
 import io.swagger.v3.parser.core.models.ParseOptions;
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.List;
@@ -33,6 +32,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.iterableWithSize;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -593,6 +593,27 @@ public class SchemaValidatorTest {
     }
 
     @Test
+    public void validate_readOnly_isRequired_withNesting_inResponse() {
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
+        final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnlyNested");
+
+        final String value = "{\"nestedRef\": {\"notReadOnly\":\"abc\", \"writeOnly\": \"123\"}, \"nestedInline\": {\"notReadOnly\":\"abc\", \"writeOnly\": \"123\"}}";
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "response.body"),
+                "validation.response.body.schema.required");
+    }
+
+    @Test
+    public void validate_readOnly_isNotRequired_withNesting_inRequest() {
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
+        final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnlyNested");
+
+        final String value = "{\"nestedRef\": {\"notReadOnly\":\"abc\", \"writeOnly\": \"123\"}, \"nestedInline\": {\"notReadOnly\":\"abc\", \"writeOnly\": \"123\"}}";
+
+        assertPass(classUnderTest.validate(value, schema, "request.body"));
+    }
+
+    @Test
     public void validate_readOnly_isRequired_withArray_inResponse() {
         final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
         final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnlyArray");
@@ -656,6 +677,27 @@ public class SchemaValidatorTest {
     }
 
     @Test
+    public void validate_writeOnly_isRequired_withNesting_inRequest() {
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
+        final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnlyNested");
+
+        final String value = "{\"nestedRef\": {\"notReadOnly\":\"abc\", \"readOnly\": \"123\"}, \"nestedInline\": {\"notReadOnly\":\"abc\", \"readOnly\": \"123\"}}";
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "request.body"),
+                "validation.request.body.schema.required");
+    }
+
+    @Test
+    public void validate_writeOnly_isNotRequired_withNesting_inResponse() {
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
+        final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnlyNested");
+
+        final String value = "{\"nestedRef\": {\"notReadOnly\":\"abc\", \"readOnly\": \"123\"}, \"nestedInline\": {\"notReadOnly\":\"abc\", \"readOnly\": \"123\"}}";
+
+        assertPass(classUnderTest.validate(value, schema, "response.body"));
+    }
+
+    @Test
     public void validate_writeOnly_isRequired_withArray_inRequest() {
         final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
         final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnlyArray");
@@ -714,12 +756,12 @@ public class SchemaValidatorTest {
         assertFailWithoutContext(reportDeep);
 
         final String expectedSimpleFormatError = "Instance value (\"Doggo\") not found in enum";
-        Assert.assertTrue(SimpleValidationReportFormat.getInstance().apply(reportShallow).contains(expectedSimpleFormatError));
-        Assert.assertTrue(SimpleValidationReportFormat.getInstance().apply(reportDeep).contains(expectedSimpleFormatError));
+        assertTrue(SimpleValidationReportFormat.getInstance().apply(reportShallow).contains(expectedSimpleFormatError));
+        assertTrue(SimpleValidationReportFormat.getInstance().apply(reportDeep).contains(expectedSimpleFormatError));
 
         final String expectedJsonFormatError = "Instance value (\\\"Doggo\\\") not found in enum";
-        Assert.assertTrue(JsonValidationReportFormat.getInstance().apply(reportShallow).contains(expectedJsonFormatError));
-        Assert.assertTrue(JsonValidationReportFormat.getInstance().apply(reportDeep).contains(expectedJsonFormatError));
+        assertTrue(JsonValidationReportFormat.getInstance().apply(reportShallow).contains(expectedJsonFormatError));
+        assertTrue(JsonValidationReportFormat.getInstance().apply(reportDeep).contains(expectedJsonFormatError));
     }
 
     private Map<String, Schema> getSchemasFrom(final String api) {
