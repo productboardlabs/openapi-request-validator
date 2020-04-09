@@ -75,7 +75,5 @@ public class SchemaTransformationContext {
         public SchemaTransformationContext build() {
             return new SchemaTransformationContext(isRequest, isResponse, additionalPropertiesValidationEnabled, definitions);
         }
-
-
     }
 }
