@@ -10,7 +10,7 @@ import org.junit.Test;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static io.restassured.RestAssured.get;
+import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -57,11 +57,12 @@ public class ValidatedWireMockListenerTestExample {
         wireMockRule.stubFor(
                 WireMock.get(urlEqualTo("/pet/1"))
                         .willReturn(aResponse()
-                            .withStatus(200)
-                            .withHeader("content-type", "application/json")
-                            .withBody("{\"name\":\"fido\", \"photoUrls\":[]}")));
+                                .withStatus(200)
+                                .withHeader("content-type", "application/json")
+                                .withBody("{\"name\":\"fido\", \"photoUrls\":[]}")));
 
-        final Response response = get(WIREMOCK_URL + "/pet/1");
+        final Response response = given().header("api_key", "foo").get(WIREMOCK_URL + "/pet/1");
+
         assertThat(response.getStatusCode(), is(200));
         validationListener.assertValidationPassed();
     }
@@ -81,7 +82,8 @@ public class ValidatedWireMockListenerTestExample {
                                 .withHeader("content-type", "application/json")
                                 .withBody("{\"name\":\"fido\"}"))); // Missing required 'photoUrls' field
 
-        final Response response = get(WIREMOCK_URL + "/pet/1");
+        final Response response = given().header("api_key", "foo").get(WIREMOCK_URL + "/pet/1");
+
         assertThat(response.getStatusCode(), is(200));
         validationListener.assertValidationPassed();
     }
