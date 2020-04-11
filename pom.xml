@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.atlassian.pom</groupId>
@@ -67,7 +68,7 @@
         <servlet.api.version>3.1.0</servlet.api.version>
         <slf4j.version>1.7.28</slf4j.version>
         <spring.version>4.3.25.RELEASE</spring.version>
-        <swagger-parser.version>2.0.17</swagger-parser.version>
+        <swagger-parser.version>2.0.19</swagger-parser.version>
         <wiremock.version>2.25.0</wiremock.version>
 
         <checkstyle.version>8.25</checkstyle.version>

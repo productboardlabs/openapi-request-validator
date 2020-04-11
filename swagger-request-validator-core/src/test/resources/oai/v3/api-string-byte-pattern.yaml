@@ -10,11 +10,13 @@ paths:
       parameters:
         - name: pathByte
           in: path
+          required: true
           schema:
             type: string
             format: byte
         - name: pathByteArray
           in: path
+          required: true
           schema:
             type: array
             items:
@@ -24,11 +26,13 @@ paths:
         - $ref: '#/components/parameters/RefPathByteArray'
         - name: pathPattern
           in: path
+          required: true
           schema:
             type: string
             pattern: a+
         - name: pathPatternArray
           in: path
+          required: true
           schema:
             type: array
             items:
@@ -102,12 +106,14 @@ components:
     RefPathByte:
       name: refPathByte
       in: path
+      required: true
       schema:
         type: string
         format: byte
     RefPathByteArray:
       name: refPathByteArray
       in: path
+      required: true
       schema:
         type: array
         items:
@@ -116,12 +122,14 @@ components:
     RefPathPattern:
       name: refPathPattern
       in: path
+      required: true
       schema:
         type: string
         pattern: a+
     RefPathPatternArray:
       name: refPathPatternArray
       in: path
+      required: true
       schema:
         type: array
         items:
