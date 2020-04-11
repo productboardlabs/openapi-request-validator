@@ -32,9 +32,8 @@ public class RequiredFieldTransformer extends SchemaTransformer {
             final List<String> adjustedRequired = getRequiredFieldNames(schemaObject)
                     .stream()
                     .filter(fieldName ->
-                            (context.isRequest() && !isReadOnly(property(schemaObject, fieldName))) ||
-                                    (context.isResponse() && !isWriteOnly(property(schemaObject, fieldName))) ||
-                                    (!context.isRequest() && !context.isResponse())
+                            isNotReadOnlyInRequest(context, schemaObject, fieldName) ||
+                                    isNotWriteOnlyInResponse(context, schemaObject, fieldName)
                     )
                     .collect(toList());
 
@@ -42,6 +41,18 @@ public class RequiredFieldTransformer extends SchemaTransformer {
         }
 
         applyToChildSchemas(schemaObject, child -> apply(child, context));
+    }
+
+    private boolean isNotWriteOnlyInResponse(final SchemaTransformationContext context,
+                                             final JsonNode schemaObject,
+                                             final String fieldName) {
+        return context.isResponse() && !isWriteOnly(property(schemaObject, fieldName));
+    }
+
+    private boolean isNotReadOnlyInRequest(final SchemaTransformationContext context,
+                                           final JsonNode schemaObject,
+                                           final String fieldName) {
+        return context.isRequest() && !isReadOnly(property(schemaObject, fieldName));
     }
 
 }
