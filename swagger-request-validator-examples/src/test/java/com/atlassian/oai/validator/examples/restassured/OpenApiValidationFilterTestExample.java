@@ -69,9 +69,10 @@ public class OpenApiValidationFilterTestExample {
         given()
                 .port(PORT)
                 .filter(validationFilter)
-        .when()
+                .header("api_key", "foo")
+                .when()
                 .get("/pet/1")
-        .then()
+                .then()
                 .assertThat()
                 .statusCode(200);
     }
@@ -92,9 +93,10 @@ public class OpenApiValidationFilterTestExample {
         given()
                 .port(PORT)
                 .filter(validationFilter)
-        .when()
+                .header("api_key", "foo")
+                .when()
                 .get("/pet/2")
-        .then()
+                .then()
                 .assertThat()
                 .statusCode(200);
     }
@@ -109,16 +111,17 @@ public class OpenApiValidationFilterTestExample {
      * This could be due to a bug in the implementation, or a problem in the API specification.
      * Regardless - something is wrong and should be addressed.
      * <p>
-     * This test is expected to PASS
+     * This test is expected to FAIL
      */
     @Test
     public void testGetWithInvalidId() {
         given()
                 .port(PORT)
                 .filter(validationFilter)
-        .when()
+                .header("api_key", "foo")
+                .when()
                 .get("/pet/fido")
-        .then()
+                .then()
                 .assertThat()
                 .statusCode(200);
     }
