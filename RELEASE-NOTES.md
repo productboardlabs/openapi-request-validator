@@ -1,3 +1,27 @@
+#v2.9.1
+* Fix behavior of `readOnly`/`writeOnly` with `required` for nested/composed schemas 
+[[#265]](https://bitbucket.org/atlassian/swagger-request-validator/issues/265)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/160)
+* Add a new factory method to construct validator instances from pre-parsed `OpenAPI` instances
+[[#226]](https://bitbucket.org/atlassian/swagger-request-validator/issues/226)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/162)
+* Fix the example tests so that they run as expected
+[[#261]](https://bitbucket.org/atlassian/swagger-request-validator/issues/261)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/161)
+* Bump some dependency versions 
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/163)
+  * `swagger-parser` -> 2.0.19
+  * `jackson` -> 2.10.3
+  * `slf4j` -> 1.7.30
+  * `mockito` -> 3.3.3
+  * `wiremock` -> 2.25.1
+  * `spring` -> 4.3.25-RELEASE and 5.1.14-RELEASE
+  * `hamcrest` -> 2.2
+
+*Note*: The `swagger-parser` is now strictly enforcing API spec adherence to schema.
+Most notably it now enforces that all path params must have `required: true`. Path params that
+are missing.
+
 #v2.9.0
 * Bump `swagger-parser` 2.0.14 -> 2.0.17 (including bump of `jackson` 2.9.10 -> 2.10.2 )
 [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/159)
