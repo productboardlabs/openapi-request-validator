@@ -1,6 +1,7 @@
 package com.atlassian.oai.validator.schema.format;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.NumericNode;
 import com.github.fge.jackson.NodeType;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
@@ -29,14 +30,22 @@ public final class DoubleAttribute extends AbstractFormatAttribute {
                          final FullData data) throws ProcessingException {
         final JsonNode instance = data.getInstance().getNode();
 
-        final BigDecimal dec = instance.decimalValue();
-        final BigDecimal converted = BigDecimal.valueOf(dec.doubleValue());
+        if ((instance instanceof NumericNode) &&
+                ((NumericNode) instance).isNaN()) {
 
-        if (dec.compareTo(converted) != 0) {
-            report.warn(newMsg(data, bundle, "warn.format.double.overflow")
-                    .put("key", "warn.format.double.overflow")
-                    .putArgument("value", instance)
-                    .putArgument("converted", converted));
+            report.error(newMsg(data, bundle, "err.format.double.overflow")
+                    .put("key", "err.format.double.overflow")
+                    .putArgument("value", instance));
+        } else {
+            final BigDecimal dec = instance.decimalValue();
+            final BigDecimal converted = BigDecimal.valueOf(dec.doubleValue());
+
+            if (dec.compareTo(converted) != 0) {
+                report.error(newMsg(data, bundle, "err.format.double.overflow")
+                        .put("key", "err.format.double.overflow")
+                        .putArgument("value", instance)
+                        .putArgument("converted", converted));
+            }
         }
     }
 }

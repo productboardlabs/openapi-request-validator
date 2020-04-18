@@ -55,25 +55,25 @@ public class SwaggerV20AttributeTest extends AbstractAttributeTest {
     @Test
     public void testInvalidInt32() throws Exception {
         test("format-invalid-int32-overflow",
-                new ExpectedMessage(LogLevel.WARNING, new Criteria("key", "warn.format.int32.overflow")));
+                new ExpectedMessage(LogLevel.ERROR, new Criteria("key", "err.format.int32.overflow")));
     }
 
     @Test
     public void testInvalidInt64() throws Exception {
         test("format-invalid-int64-overflow",
-                new ExpectedMessage(LogLevel.WARNING, new Criteria("key", "warn.format.int64.overflow")));
+                new ExpectedMessage(LogLevel.ERROR, new Criteria("key", "err.format.int64.overflow")));
     }
 
     @Test
     public void testInvalidFloat() throws Exception {
         test("format-invalid-float-overflow",
-                new ExpectedMessage(LogLevel.WARNING, new Criteria("key", "warn.format.float.overflow")));
+                new ExpectedMessage(LogLevel.ERROR, new Criteria("key", "err.format.float.overflow")));
     }
 
     @Test
     public void testInvalidDouble() throws Exception {
         test("format-invalid-double-overflow",
-                new ExpectedMessage(LogLevel.WARNING, new Criteria("key", "warn.format.double.overflow")));
+                new ExpectedMessage(LogLevel.ERROR, new Criteria("key", "err.format.double.overflow")));
     }
 
     @Test
@@ -87,8 +87,8 @@ public class SwaggerV20AttributeTest extends AbstractAttributeTest {
         test("format-invalid-multiple-messages",
                 new ExpectedMessage(LogLevel.ERROR,
                         new Criteria("instance", "/date", true)),
-                new ExpectedMessage(LogLevel.WARNING,
-                        new Criteria("key", "warn.format.int64.overflow"),
+                new ExpectedMessage(LogLevel.ERROR,
+                        new Criteria("key", "err.format.int64.overflow"),
                         new Criteria("instance", "/int64", true)),
                 new ExpectedMessage(LogLevel.ERROR,
                         new Criteria("key", "err.format.base64.invalid"),

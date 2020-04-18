@@ -28,8 +28,8 @@ public final class Int32Attribute extends AbstractFormatAttribute {
         final JsonNode instance = data.getInstance().getNode();
 
         if (!instance.canConvertToInt()) {
-            report.warn(newMsg(data, bundle, "warn.format.int32.overflow")
-                    .put("key", "warn.format.int32.overflow")
+            report.error(newMsg(data, bundle, "err.format.int32.overflow")
+                    .put("key", "err.format.int32.overflow")
                     .putArgument("value", instance));
         }
     }
