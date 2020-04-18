@@ -514,7 +514,7 @@ public class SchemaValidatorTest {
         final Schema schema = new DateTimeSchema();
 
         assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
-                "validation.prefix.schema.format");
+                "validation.prefix.schema.format.date-time");
     }
 
     @Test
@@ -568,7 +568,7 @@ public class SchemaValidatorTest {
         final Schema schema = new UUIDSchema();
 
         assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
-                "validation.prefix.schema.format");
+                "validation.prefix.schema.format.uuid");
     }
 
     @Test
