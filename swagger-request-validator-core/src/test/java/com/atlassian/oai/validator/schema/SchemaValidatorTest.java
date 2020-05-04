@@ -105,6 +105,42 @@ public class SchemaValidatorTest {
     }
 
     @Test
+    public void validate_withInvalidInt32Format_shouldFail() {
+        final String value = Integer.MAX_VALUE + "0";
+        final Schema schema = new IntegerSchema().format("int32");
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.format.int32");
+    }
+
+    @Test
+    public void validate_withInvalidInt64Format_shouldFail() {
+        final String value = Long.MAX_VALUE + "0";
+        final Schema schema = new IntegerSchema().format("int64");
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.format.int64");
+    }
+
+    @Test
+    public void validate_withInvalidFloatFormat_shouldFail() {
+        final String value = "1" + Float.MAX_VALUE;
+        final Schema schema = new NumberSchema().format("float");
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.format.float");
+    }
+
+    @Test
+    public void validate_withInvalidDoubleFormat_shouldFail() {
+        final String value = "1" + Double.MAX_VALUE;
+        final Schema schema = new NumberSchema().format("double");
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.format.double");
+    }
+
+    @Test
     public void validate_withValidModel_shouldPass_whenModelInline() {
         final String value = "{\"foo\":\"bar\"}";
         final Schema schema = new ObjectSchema()
@@ -514,7 +550,7 @@ public class SchemaValidatorTest {
         final Schema schema = new DateTimeSchema();
 
         assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
-                "validation.prefix.schema.format");
+                "validation.prefix.schema.format.date-time");
     }
 
     @Test
@@ -568,7 +604,7 @@ public class SchemaValidatorTest {
         final Schema schema = new UUIDSchema();
 
         assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
-                "validation.prefix.schema.format");
+                "validation.prefix.schema.format.uuid");
     }
 
     @Test

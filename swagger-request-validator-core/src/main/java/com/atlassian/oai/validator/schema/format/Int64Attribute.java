@@ -28,8 +28,8 @@ public final class Int64Attribute extends AbstractFormatAttribute {
         final JsonNode instance = data.getInstance().getNode();
 
         if (!instance.canConvertToLong()) {
-            report.warn(newMsg(data, bundle, "warn.format.int64.overflow")
-                    .put("key", "warn.format.int64.overflow")
+            report.error(newMsg(data, bundle, "err.format.int64.overflow")
+                    .put("key", "err.format.int64.overflow")
                     .putArgument("value", instance));
         }
     }

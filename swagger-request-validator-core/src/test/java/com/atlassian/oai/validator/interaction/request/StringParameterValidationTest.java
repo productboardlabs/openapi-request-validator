@@ -98,7 +98,7 @@ public class StringParameterValidationTest {
     @Test
     public void validate_withDateFormat_shouldFail_whenNotAValidISODate() {
         assertFail(classUnderTest.validate("2016--5dd", dateParam()),
-                "validation.request.parameter.schema.format");
+                "validation.request.parameter.schema.format.date");
     }
 
     @Test
@@ -109,7 +109,7 @@ public class StringParameterValidationTest {
     @Test
     public void validate_withDateTimeFormat_shouldFail_whenNotAValidISODate() {
         assertFail(classUnderTest.validate("2016--5dd-slkdjfl01938", dateTimeParam()),
-                "validation.request.parameter.schema.format");
+                "validation.request.parameter.schema.format.date-time");
     }
 
     @Test
@@ -125,7 +125,7 @@ public class StringParameterValidationTest {
     @Test
     public void validate_withUUIDFormat_shouldFail_whenInvalidUUID() {
         assertFail(classUnderTest.validate("notauuid", uuidParam()),
-                "validation.request.parameter.schema.format");
+                "validation.request.parameter.schema.format.uuid");
     }
 
     @Test
@@ -136,7 +136,7 @@ public class StringParameterValidationTest {
     @Test
     public void validate_withEmailFormat_shouldFail_whenInvalidEmail() {
         assertFail(classUnderTest.validate("notanemail", emailParam()),
-                "validation.request.parameter.schema.format");
+                "validation.request.parameter.schema.format.email");
     }
 
     @Test
@@ -147,7 +147,7 @@ public class StringParameterValidationTest {
     @Test
     public void validate_withIPv4Format_shouldFail_whenInvalidIPAddress() {
         assertFail(classUnderTest.validate("192.0.0", ipv4Param()),
-                "validation.request.parameter.schema.format");
+                "validation.request.parameter.schema.format.ipv4");
     }
 
     @Test
@@ -158,7 +158,7 @@ public class StringParameterValidationTest {
     @Test
     public void validate_withIPv6Format_shouldFail_whenInvalidIPAddress() {
         assertFail(classUnderTest.validate(":1", ipv6Param()),
-                "validation.request.parameter.schema.format");
+                "validation.request.parameter.schema.format.ipv6");
     }
 
     @Test
@@ -169,7 +169,7 @@ public class StringParameterValidationTest {
     @Test
     public void validate_withURIFormat_shouldFail_whenInvalidURI() {
         assertFail(classUnderTest.validate("http://<>.com", uriParam()),
-                "validation.request.parameter.schema.format");
+                "validation.request.parameter.schema.format.uri");
     }
 
     @Test

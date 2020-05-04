@@ -227,7 +227,11 @@ public class SchemaValidator {
                                                                final String keywordOverride,
                                                                final String keyPrefix) {
 
-        final String validationKeyword = keywordOverride != null ? keywordOverride : processingMessage.get("keyword").textValue();
+        final String validationKeyword = keywordOverride != null
+                ? keywordOverride
+                : processingMessage.get("keyword").textValue()
+                    + (processingMessage.has("attribute") ? "." + processingMessage.get("attribute").textValue() : "");
+
         final String pointer = processingMessage.has("instance") ? processingMessage.get("instance").get("pointer").textValue() : "";
 
         final List<String> subReports = new ArrayList<>();

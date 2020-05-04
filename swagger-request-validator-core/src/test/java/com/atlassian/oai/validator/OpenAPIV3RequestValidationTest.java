@@ -146,6 +146,17 @@ public class OpenAPIV3RequestValidationTest {
     }
 
     @Test
+    public void validate_withInvalidNotInt32QueryParams_shouldFail() {
+        final Request request = SimpleRequest.Builder
+                .get("/users")
+                .withQueryParam("maxCount", "2147483648")
+                .withAuthorization("Basic EncryptedUsernameAndPassword")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.schema.format.int32");
+    }
+
+    @Test
     public void validate_withArrayQueryParam_shouldPass_whenValid() {
         final Request request = SimpleRequest.Builder
                 .get("/users")
