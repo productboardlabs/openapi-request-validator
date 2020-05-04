@@ -1,3 +1,11 @@
+#v2.10.0
+* Enforce validation of number formats. 
+[[#264]](https://bitbucket.org/atlassian/swagger-request-validator/issues/264)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/164)
+
+*Note*: This change adds new error keys of the form `validation.prefix.schema.format.int32` etc.
+It also adds a format type suffix to existing format keys, allowing finer-grained control of validation behavior. 
+
 #v2.9.1
 * Fix behavior of `readOnly`/`writeOnly` with `required` for nested/composed schemas 
 [[#265]](https://bitbucket.org/atlassian/swagger-request-validator/issues/265)
