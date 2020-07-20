@@ -97,17 +97,13 @@ public class BasePathExtractionTest {
         // for a default value and instead returns a null
         final List<Server> servers = ImmutableList.of(
                 new Server()
-                        .url("https://{username}.server{region}:{port}/api/{scope}/{version}")
+                        .url("https://server{region}:200/api")
                         .variables(
                                 new ServerVariables()
-                                        .addServerVariable("username", new ServerVariable()._default("demo"))
-                                        .addServerVariable("region", new ServerVariable())
-                                        .addServerVariable("port", new ServerVariable()._default("8080"))
-                                        .addServerVariable("scope", new ServerVariable()._default("external"))
-                                        .addServerVariable("version", new ServerVariable()._default("")))
+                                        .addServerVariable("region", new ServerVariable()))
         );
 
-        assertEquals("/api/external/", getBasePathFrom(servers));
+        assertEquals("/api", getBasePathFrom(servers));
     }
 
     @Test
