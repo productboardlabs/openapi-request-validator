@@ -15,12 +15,15 @@ import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.allOf;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.anyOf;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.entityIs;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.headerContains;
+import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.headerContainsRegexp;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.isRequest;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.isResponse;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.messageContains;
+import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.messageContainsRegexp;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.messageHasKey;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.methodIs;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.pathContains;
+import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.pathContainsRegexp;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.responseStatusIs;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.responseStatusTypeIs;
 import static io.swagger.v3.oas.models.PathItem.HttpMethod.DELETE;
@@ -32,7 +35,7 @@ import static org.junit.Assert.assertThat;
 public class WhitelistRulesTest {
 
     @Test
-    public void testAllOf() throws Exception {
+    public void testAllOf() {
         final WhitelistRule andRule = allOf(entityIs("MyEntity"),
                 messageHasKey("my.key"),
                 messageContains("\"value\""));
@@ -55,7 +58,7 @@ public class WhitelistRulesTest {
     }
 
     @Test
-    public void testAnyOf() throws Exception {
+    public void testAnyOf() {
         final WhitelistRule orRule = anyOf(entityIs("MyEntity"), entityIs("AnotherEntity"));
         assertThat(orRule, matches(request().withDocumentedRequestBodyParameter("MyEntity")));
         assertThat(orRule, matches(request().withDocumentedRequestBodyParameter("AnotherEntity")));
@@ -63,7 +66,7 @@ public class WhitelistRulesTest {
     }
 
     @Test
-    public void testIsEntity() throws Exception {
+    public void testIsEntity() {
         final WhitelistRule rule = WhitelistRules.entityIs("MyEntity");
         assertThat(rule, matches(response().withStatus(200).withDocumentedResponse(200, "MyEntity")));
         assertThat(rule, not(matches(response()
@@ -80,7 +83,7 @@ public class WhitelistRulesTest {
     }
 
     @Test
-    public void testMessageHasKey() throws Exception {
+    public void testMessageHasKey() {
         final WhitelistRule rule = WhitelistRules.messageHasKey("my.key");
         assertThat(rule, matches(response().withMessage(Message.create("my.key", "key: my.key").build())));
         assertThat(rule, matches(response().withMessage(Message.create("MY.KEY", "key: MY.KEY").build())));
@@ -88,7 +91,7 @@ public class WhitelistRulesTest {
     }
 
     @Test
-    public void testMessageContains() throws Exception {
+    public void testMessageContains() {
         assertThat(messageContains("not allowed.*\"value\""), matches(
                 response().withMessage(Message.create("my.key", "Object instance has properties which are not allowed by the schema: [\"value\"]").build())));
         assertThat(messageContains("not allowed.*\"value\""), not(matches(
@@ -96,7 +99,15 @@ public class WhitelistRulesTest {
     }
 
     @Test
-    public void testPathContains() throws Exception {
+    public void testMessageContainsRegexp() {
+        assertThat(messageContainsRegexp("not allowed.*\"value\""), matches(
+                response().withMessage(Message.create("my.key", "Object instance has properties which are not allowed by the schema: [\"value\"]").build())));
+        assertThat(messageContainsRegexp("not allowed.*\"value\""), not(matches(
+                response().withMessage(Message.create("my.key", "not allowed").build()))));
+    }
+
+    @Test
+    public void testPathContains() {
         assertThat(pathContains("/path/to/my/api"), matches(request().withPath("jira/rest/api/2/path/to/my/api")));
         assertThat(pathContains("/path/to/my/api.*"), matches(request().withPath("jira/rest/api/2/path/to/my/api/subapi")));
         assertThat(pathContains("/path/to/my/api"), matches(response().withPath("jira/rest/api/2/path/to/my/api")));
@@ -107,41 +118,64 @@ public class WhitelistRulesTest {
     }
 
     @Test
-    public void testIsRequest() throws Exception {
+    public void testPathContainsRegexp() {
+        assertThat(pathContainsRegexp("/path/to/my/api"), matches(request().withPath("jira/rest/api/2/path/to/my/api")));
+        assertThat(pathContainsRegexp("/path/to/my/api.*"), matches(request().withPath("jira/rest/api/2/path/to/my/api/subapi")));
+        assertThat(pathContainsRegexp("/path/to/my/api"), matches(response().withPath("jira/rest/api/2/path/to/my/api")));
+        assertThat(pathContainsRegexp("/path/to/my/api$"), not(matches(request().withPath("jira/rest/api/2/path/to/my/api/subapi"))));
+        assertThat(pathContainsRegexp("/path/to/my/api/?$"), matches(request().withPath("jira/rest/api/2/path/to/my/api")));
+        assertThat(pathContainsRegexp("/path/to/my/api/?$"), matches(request().withPath("jira/rest/api/2/path/to/my/api/")));
+        assertThat(pathContainsRegexp("/path/to/my/api"), not(matches(request().withPath("jira/rest/api/2/path/to/another/api"))));
+    }
+
+    @Test
+    public void testIsRequest() {
         assertThat(isRequest(), matches(request()));
         assertThat(isRequest(), not(matches(response())));
     }
 
     @Test
-    public void testIsResponse() throws Exception {
+    public void testIsResponse() {
         assertThat(isResponse(), matches(response()));
         assertThat(isResponse(), not(matches(request())));
     }
 
     @Test
-    public void testResponseStatusIs() throws Exception {
+    public void testResponseStatusIs() {
         assertThat(responseStatusIs(201), matches(response().withStatus(201)));
         assertThat(responseStatusIs(201), not(matches(response().withStatus(200))));
         assertThat(responseStatusIs(200), not(matches(request())));
     }
 
     @Test
-    public void testResponseStatusTypeIs() throws Exception {
+    public void testResponseStatusTypeIs() {
         assertThat(responseStatusTypeIs(StatusType.SUCCESS), matches(response().withStatus(231)));
         assertThat(responseStatusTypeIs(StatusType.SUCCESS), not(matches(response().withStatus(300))));
         assertThat(responseStatusTypeIs(StatusType.SUCCESS), not(matches(request())));
     }
 
     @Test
-    public void testMethodIs() throws Exception {
+    public void testMethodIs() {
         assertThat(methodIs(PUT), matches(request().withMethod(PUT)));
         assertThat(methodIs(PUT), matches(response().withMethod(PUT)));
         assertThat(methodIs(PUT), not(matches(response().withMethod(DELETE))));
     }
 
     @Test
-    public void testHeaderContains() throws Exception {
+    public void testHeaderContains() {
         final WhitelistRule notJson = headerContains("Content-Type", "application/json").not();
+        assertThat(notJson, matches(request().withRequestHeaders(ImmutableMap.of())));
+        assertThat(notJson, matches(request().withRequestHeaders(ImmutableMap.of("content-type", singletonList("multipart/form-data")))));
+        assertThat(notJson, not(matches(request().withRequestHeaders(ImmutableMap.of("content-type", singletonList("application/json"))))));
+
+        assertThat(notJson, matches(response().withResponseHeaders(ImmutableMap.of())));
+        assertThat(notJson, matches(response().withResponseHeaders(ImmutableMap.of("content-type", singletonList("multipart/form-data")))));
+        assertThat(notJson, not(matches(response().withResponseHeaders(ImmutableMap.of("content-type", singletonList("application/json"))))));
+    }
+
+    @Test
+    public void testHeaderContainsRegexp() {
+        final WhitelistRule notJson = headerContainsRegexp("Content-Type", "application/json").not();
         assertThat(notJson, matches(request().withRequestHeaders(ImmutableMap.of())));
         assertThat(notJson, matches(request().withRequestHeaders(ImmutableMap.of("content-type", singletonList("multipart/form-data")))));
         assertThat(notJson, not(matches(request().withRequestHeaders(ImmutableMap.of("content-type", singletonList("application/json"))))));

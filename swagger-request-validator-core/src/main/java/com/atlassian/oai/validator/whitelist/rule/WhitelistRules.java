@@ -46,30 +46,57 @@ public final class WhitelistRules {
      */
     public static WhitelistRule messageHasKey(final String key) {
         return new PrintableWhitelistRule(
-            "Message with key: '" + key + "'",
-            (message, operation, request, response) -> key.equalsIgnoreCase(message.getKey()));
+                "Message with key: '" + key + "'",
+                (message, operation, request, response) -> key.equalsIgnoreCase(message.getKey()));
     }
 
     /**
      * Matches messages that contain the given regular expression in their text.
+     *
+     * @deprecated Use {@link #messageContainsRegexp} instead
      */
+    @Deprecated
     public static WhitelistRule messageContains(final String regexp) {
+        return messageContainsRegexp(regexp);
+    }
+
+    /**
+     * Matches validation messages that contain a substring that matches the given regular expression.
+     *
+     * @param regexp The regex to use to match within the validation message
+     */
+    public static WhitelistRule messageContainsRegexp(final String regexp) {
         return new PrintableWhitelistRule(
-            "Message contains: '" + regexp + "'",
-            (message, operation, request, response) -> regexpContain(message.getMessage(), regexp));
+                "Message contains match: '" + regexp + "'",
+                (message, operation, request, response) -> regexpContain(message.getMessage(), regexp));
     }
 
     /**
      * Matches operations that contain the given regular expression in their API path.
      * <p>
-     *     The tested path does not have parameters materialized, but is taken from the API
+     * The tested path does not have parameters materialized, but is taken from the API
      * definition, e.g. "/store/order/{orderId}".
+     *
+     * @deprecated Use {@link #pathContainsRegexp(String)} instead
      */
+    @Deprecated
     public static WhitelistRule pathContains(final String regexp) {
+        return pathContainsRegexp(regexp);
+    }
+
+    /**
+     * Matches operations whose API path contains a substring that matches the given regular expression.
+     * <p>
+     * The tested path does not have parameters materialized, but is taken from the API
+     * definition, e.g. "/store/order/{orderId}".
+     *
+     * @param regexp The regex to use to match within the API path
+     */
+    public static WhitelistRule pathContainsRegexp(final String regexp) {
         return new PrintableWhitelistRule(
-            "Api path contains: '" + regexp + "'",
-            (message, operation, request, response) -> operation != null &&
-                regexpContain(operation.getApiPath().normalised(), regexp));
+                "Api path contains match: '" + regexp + "'",
+                (message, operation, request, response) -> operation != null &&
+                        regexpContain(operation.getApiPath().normalised(), regexp));
     }
 
     /**
@@ -77,8 +104,8 @@ public final class WhitelistRules {
      */
     public static WhitelistRule isRequest() {
         return new PrintableWhitelistRule(
-            "Is request",
-            (message, operation, request, response) -> request != null);
+                "Is request",
+                (message, operation, request, response) -> request != null);
     }
 
     /**
@@ -86,8 +113,8 @@ public final class WhitelistRules {
      */
     public static WhitelistRule isResponse() {
         return new PrintableWhitelistRule(
-            "Is response",
-            (message, operation, request, response) -> response != null);
+                "Is response",
+                (message, operation, request, response) -> response != null);
     }
 
     /**
@@ -95,8 +122,8 @@ public final class WhitelistRules {
      */
     public static WhitelistRule responseStatusIs(final int status) {
         return new PrintableWhitelistRule(
-            "Response status is " + status,
-            (message, operation, request, response) -> response != null && response.getStatus() == status);
+                "Response status is " + status,
+                (message, operation, request, response) -> response != null && response.getStatus() == status);
     }
 
     /**
@@ -104,8 +131,8 @@ public final class WhitelistRules {
      */
     public static WhitelistRule responseStatusTypeIs(final StatusType statusType) {
         return new PrintableWhitelistRule(
-            "Response status is " + statusType,
-            (message, operation, request, response) -> response != null && statusType.matches(response.getStatus()));
+                "Response status is " + statusType,
+                (message, operation, request, response) -> response != null && statusType.matches(response.getStatus()));
     }
 
     /**
@@ -113,36 +140,55 @@ public final class WhitelistRules {
      */
     public static WhitelistRule methodIs(final PathItem.HttpMethod method) {
         return new PrintableWhitelistRule(
-            "Method is " + method,
-            (message, operation, request, response) -> operation != null && operation.getMethod() == method);
+                "Method is " + method,
+                (message, operation, request, response) -> operation != null && operation.getMethod() == method);
     }
 
     /**
      * Matches requests or responses whose at least one of the given header's values contain the given regular expression.
      * Each header value is inspected separately, and the rule will match if any value matches the expression.
+     *
+     * @deprecated Use {@link #headerContainsRegexp(String, String)} instead
      */
+    @Deprecated
     public static WhitelistRule headerContains(final String header, final String regexp) {
-        return new PrintableWhitelistRule(
-            "Header '" + header + "' contains '" + regexp + "'",
-            new RequestOrResponseWhitelistRule() {
-                @Override
-                public boolean matches(final ValidationReport.Message message, final ApiOperation operation, final Request request) {
-                    return request.getHeaders()
-                        .getOrDefault(header, Collections.emptyList())
-                        .stream()
-                        .anyMatch(value -> regexpContain(value, regexp));
-                }
+        return headerContainsRegexp(header, regexp);
+    }
 
-                @Override
-                public boolean matches(final ValidationReport.Message message, final ApiOperation operation, final Response response) {
-                    return response.getHeaderValues(header)
-                        .stream()
-                        .anyMatch(value -> regexpContain(value, regexp));
-                }
-            });
+    /**
+     * Matches requests or responses where the given regex matches a subsequence within <em>at least one</em> of the given header's values.
+     * <p>
+     * Each header value is inspected separately, and the rule will match if <em>any</em> value matches on the expression.
+     *
+     * @param header The name of the header to match on
+     * @param regexp The regex to use to search within the header value
+     */
+    public static WhitelistRule headerContainsRegexp(final String header, final String regexp) {
+        return new PrintableWhitelistRule(
+                "Header '" + header + "' contains match '" + regexp + "'",
+                new RequestOrResponseWhitelistRule() {
+                    @Override
+                    public boolean matches(final ValidationReport.Message message, final ApiOperation operation, final Request request) {
+                        return request.getHeaders()
+                                .getOrDefault(header, Collections.emptyList())
+                                .stream()
+                                .anyMatch(value -> regexpContain(value, regexp));
+                    }
+
+                    @Override
+                    public boolean matches(final ValidationReport.Message message, final ApiOperation operation, final Response response) {
+                        return response.getHeaderValues(header)
+                                .stream()
+                                .anyMatch(value -> regexpContain(value, regexp));
+                    }
+                });
     }
 
     private static boolean regexpContain(final String value, final String regexp) {
         return Pattern.compile(regexp, Pattern.CASE_INSENSITIVE).matcher(value).find();
+    }
+
+    private static boolean stringContains(final String value, final String substring) {
+        return value.contains(substring);
     }
 }
