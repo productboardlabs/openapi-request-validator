@@ -16,14 +16,17 @@ import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.anyOf;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.entityIs;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.headerContains;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.headerContainsRegexp;
+import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.headerContainsSubstring;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.isRequest;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.isResponse;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.messageContains;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.messageContainsRegexp;
+import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.messageContainsSubstring;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.messageHasKey;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.methodIs;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.pathContains;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.pathContainsRegexp;
+import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.pathContainsSubstring;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.responseStatusIs;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.responseStatusTypeIs;
 import static io.swagger.v3.oas.models.PathItem.HttpMethod.DELETE;
@@ -107,6 +110,14 @@ public class WhitelistRulesTest {
     }
 
     @Test
+    public void testMessageContainsSubstring() {
+        assertThat(messageContainsSubstring("\"value\""), matches(
+                response().withMessage(Message.create("my.key", "Object instance has properties which are not allowed by the schema: [\"value\"]").build())));
+        assertThat(messageContainsSubstring("\"value\""), not(matches(
+                response().withMessage(Message.create("my.key", "not allowed").build()))));
+    }
+
+    @Test
     public void testPathContains() {
         assertThat(pathContains("/path/to/my/api"), matches(request().withPath("jira/rest/api/2/path/to/my/api")));
         assertThat(pathContains("/path/to/my/api.*"), matches(request().withPath("jira/rest/api/2/path/to/my/api/subapi")));
@@ -126,6 +137,13 @@ public class WhitelistRulesTest {
         assertThat(pathContainsRegexp("/path/to/my/api/?$"), matches(request().withPath("jira/rest/api/2/path/to/my/api")));
         assertThat(pathContainsRegexp("/path/to/my/api/?$"), matches(request().withPath("jira/rest/api/2/path/to/my/api/")));
         assertThat(pathContainsRegexp("/path/to/my/api"), not(matches(request().withPath("jira/rest/api/2/path/to/another/api"))));
+    }
+
+    @Test
+    public void testPathContainsSubstring() {
+        assertThat(pathContainsSubstring("/path/to/my/api"), matches(request().withPath("jira/rest/api/2/path/to/my/api")));
+        assertThat(pathContainsSubstring("/path/to/my/api"), matches(request().withPath("jira/rest/api/2/path/to/my/api/subapi")));
+        assertThat(pathContainsSubstring("/path/to/my/apis"), not(matches(request().withPath("jira/rest/api/2/path/to/my/api/subapi"))));
     }
 
     @Test
@@ -175,14 +193,28 @@ public class WhitelistRulesTest {
 
     @Test
     public void testHeaderContainsRegexp() {
-        final WhitelistRule notJson = headerContainsRegexp("Content-Type", "application/json").not();
-        assertThat(notJson, matches(request().withRequestHeaders(ImmutableMap.of())));
-        assertThat(notJson, matches(request().withRequestHeaders(ImmutableMap.of("content-type", singletonList("multipart/form-data")))));
-        assertThat(notJson, not(matches(request().withRequestHeaders(ImmutableMap.of("content-type", singletonList("application/json"))))));
+        final WhitelistRule notJson = headerContainsRegexp("Content-Type", "/json").not();
+        assertThat(notJson, matches(request()));
+        assertThat(notJson, matches(request().withRequestHeader("content-type", singletonList("multipart/form-data"))));
+        assertThat(notJson, not(matches(request().withRequestHeader("content-type", singletonList("application/json")))));
+        assertThat(notJson, not(matches(request().withRequestHeader("content-type", singletonList("text/json")))));
 
-        assertThat(notJson, matches(response().withResponseHeaders(ImmutableMap.of())));
-        assertThat(notJson, matches(response().withResponseHeaders(ImmutableMap.of("content-type", singletonList("multipart/form-data")))));
-        assertThat(notJson, not(matches(response().withResponseHeaders(ImmutableMap.of("content-type", singletonList("application/json"))))));
+        assertThat(notJson, matches(response()));
+        assertThat(notJson, matches(response().withResponseHeader("content-type", singletonList("multipart/form-data"))));
+        assertThat(notJson, not(matches(response().withResponseHeader("content-type", singletonList("application/json")))));
+    }
+
+    @Test
+    public void testHeaderContainsSubstring() {
+        final WhitelistRule notJson = headerContainsSubstring("Content-Type", "/json").not();
+        assertThat(notJson, matches(request()));
+        assertThat(notJson, matches(request().withRequestHeader("content-type", singletonList("multipart/form-data"))));
+        assertThat(notJson, not(matches(request().withRequestHeader("content-type", singletonList("application/json")))));
+        assertThat(notJson, not(matches(request().withRequestHeader("content-type", singletonList("text/json")))));
+
+        assertThat(notJson, matches(response()));
+        assertThat(notJson, matches(response().withResponseHeader("content-type", singletonList("multipart/form-data"))));
+        assertThat(notJson, not(matches(response().withResponseHeader("content-type", singletonList("application/json")))));
     }
 
     private Matcher<WhitelistRule> matches(final OperationForWhitelisting operation) {

@@ -72,12 +72,23 @@ public final class WhitelistRules {
     }
 
     /**
+     * Matches validation messages that contain a substring that matches the given regular expression.
+     *
+     * @param substring The substring to search for
+     */
+    public static WhitelistRule messageContainsSubstring(final String substring) {
+        return new PrintableWhitelistRule(
+                "Message contains substring: '" + substring + "'",
+                (message, operation, request, response) -> stringContains(message.getMessage(), substring));
+    }
+
+    /**
      * Matches operations that contain the given regular expression in their API path.
      * <p>
      * The tested path does not have parameters materialized, but is taken from the API
      * definition, e.g. "/store/order/{orderId}".
      *
-     * @deprecated Use {@link #pathContainsRegexp(String)} instead
+     * @deprecated Use {@link #pathContainsRegexp(String)} or {@link #pathContainsSubstring(String)} instead
      */
     @Deprecated
     public static WhitelistRule pathContains(final String regexp) {
@@ -97,6 +108,21 @@ public final class WhitelistRules {
                 "Api path contains match: '" + regexp + "'",
                 (message, operation, request, response) -> operation != null &&
                         regexpContain(operation.getApiPath().normalised(), regexp));
+    }
+
+    /**
+     * Matches operations whose API path contains a the given substring.
+     * <p>
+     * The tested path does not have parameters materialized, but is taken from the API
+     * definition, e.g. "/store/order/{orderId}".
+     *
+     * @param substring The substring to search for
+     */
+    public static WhitelistRule pathContainsSubstring(final String substring) {
+        return new PrintableWhitelistRule(
+                "Api path contains substring: '" + substring + "'",
+                (message, operation, request, response) -> operation != null &&
+                        stringContains(operation.getApiPath().normalised(), substring));
     }
 
     /**
@@ -180,6 +206,35 @@ public final class WhitelistRules {
                         return response.getHeaderValues(header)
                                 .stream()
                                 .anyMatch(value -> regexpContain(value, regexp));
+                    }
+                });
+    }
+
+    /**
+     * Matches requests or responses where <em>at least one</em> of the given header's values contains the given substring.
+     * <p>
+     * Each header value is inspected separately, and the rule will match if <em>any</em> value matches on the expression.
+     *
+     * @param header    The name of the header to match on
+     * @param substring The substring to search for
+     */
+    public static WhitelistRule headerContainsSubstring(final String header, final String substring) {
+        return new PrintableWhitelistRule(
+                "Header '" + header + "' contains substring '" + substring + "'",
+                new RequestOrResponseWhitelistRule() {
+                    @Override
+                    public boolean matches(final ValidationReport.Message message, final ApiOperation operation, final Request request) {
+                        return request.getHeaders()
+                                .getOrDefault(header, Collections.emptyList())
+                                .stream()
+                                .anyMatch(value -> stringContains(value, substring));
+                    }
+
+                    @Override
+                    public boolean matches(final ValidationReport.Message message, final ApiOperation operation, final Response response) {
+                        return response.getHeaderValues(header)
+                                .stream()
+                                .anyMatch(value -> stringContains(value, substring));
                     }
                 });
     }
