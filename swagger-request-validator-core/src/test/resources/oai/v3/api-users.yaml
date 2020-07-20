@@ -1,6 +1,13 @@
 openapi: 3.0.0
 servers:
-  - url: /
+  - url: http://{account}.myserver{realm}.com:{port}/
+    variables:
+      account:
+        default: demo
+      realm:
+        default: ''
+      port:
+        default: 80
 info:
   title: Users
   version: 1.0.0
