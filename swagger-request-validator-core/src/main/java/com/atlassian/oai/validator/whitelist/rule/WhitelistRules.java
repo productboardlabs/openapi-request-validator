@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 /**
  * Static factory methods for creating {@link WhitelistRule} instances.
  */
+// CHECKSTYLE:OFF indentation
 public final class WhitelistRules {
 
     private WhitelistRules() {
@@ -215,7 +216,7 @@ public final class WhitelistRules {
      * <p>
      * Each header value is inspected separately, and the rule will match if <em>any</em> value matches on the expression.
      *
-     * @param header    The name of the header to match on
+     * @param header The name of the header to match on
      * @param substring The substring to search for
      */
     public static WhitelistRule headerContainsSubstring(final String header, final String substring) {
@@ -247,3 +248,4 @@ public final class WhitelistRules {
         return value.contains(substring);
     }
 }
+// CHECKSTYLE:ON indentation
