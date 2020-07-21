@@ -156,6 +156,23 @@ public class RestAssuredRequestTest {
     }
 
     @Test
+    public void mapsRequestBodyCorrectly_forByteArrays_whenNoContentTypeDefined() {
+        final CapturingFilter requestCaptor = new CapturingFilter();
+        given()
+                .port(wireMock.port())
+                .filter(requestCaptor)
+                .body("Something 123 !@#".getBytes())
+                .when()
+                .put("/path")
+                .then()
+                .assertThat()
+                .statusCode(200);
+
+        final Request classUnderTest = requestCaptor.getRequest();
+        assertThat(classUnderTest.getBody(), optionalWithValue(is("Something 123 !@#")));
+    }
+
+    @Test
     public void doesNotMapRequestBody_whenInputStream() {
         final CapturingFilter requestCaptor = new CapturingFilter();
         given()
