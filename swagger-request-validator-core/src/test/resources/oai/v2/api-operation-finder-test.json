@@ -23,6 +23,16 @@
         }
       }
     },
+    "/": {
+      "get": {
+        "description": "GET:/",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/delete": {
       "delete": {
         "description": "DELETE:/delete",
@@ -36,6 +46,30 @@
     "/{id}/{action}": {
       "put": {
         "description": "PUT:/{id}/{action}",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "action",
+            "in": "path",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/specific/path": {
+      "put": {
+        "description": "PUT:/specific/path",
         "parameters": [
           {
             "name": "id",
