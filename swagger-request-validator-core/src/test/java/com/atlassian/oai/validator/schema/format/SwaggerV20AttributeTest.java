@@ -79,7 +79,7 @@ public class SwaggerV20AttributeTest extends AbstractAttributeTest {
     @Test
     public void testInvalidBase64() throws Exception {
         test("format-invalid-base64",
-                new ExpectedMessage(LogLevel.ERROR, new Criteria("key", "err.format.base64.invalid")));
+                new ExpectedMessage(LogLevel.ERROR, new Criteria("key", "err.format.base64.invalidLength")));
     }
 
     @Test
@@ -91,7 +91,7 @@ public class SwaggerV20AttributeTest extends AbstractAttributeTest {
                         new Criteria("key", "err.format.int64.overflow"),
                         new Criteria("instance", "/int64", true)),
                 new ExpectedMessage(LogLevel.ERROR,
-                        new Criteria("key", "err.format.base64.invalid"),
+                        new Criteria("key", "err.format.base64.invalidLength"),
                         new Criteria("instance", "/byte", true)));
     }
 

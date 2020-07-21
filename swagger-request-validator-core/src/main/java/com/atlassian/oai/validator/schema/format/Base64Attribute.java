@@ -66,9 +66,33 @@ public class Base64Attribute extends AbstractFormatAttribute {
                          final MessageBundle bundle,
                          final FullData data) throws ProcessingException {
         final String value = data.getInstance().getNode().textValue();
-        if (!isBase64(value)) {
-            report.error(newMsg(data, bundle, "err.format.base64.invalid")
-                    .put("key", "err.format.base64.invalid"));
+
+        final int length = value.length();
+        if (length == 0) {
+            return;
+        }
+
+        // it is expected the Base64 string has padding - therefore its length is divisible by 4
+        if (length % 4 != 0) {
+            report.error(newMsg(data, bundle, "err.format.base64.invalidLength")
+                    .putArgument("length", length)
+                    .put("key", "err.format.base64.invalidLength"));
+            return;
+        }
+
+        // check for padding at the end - which could be '', '=' or '=='
+        final int end = (value.charAt(length - 1) != 61) ? length :
+                (value.charAt(length - 2) != 61 ? length - 1 : length - 2);
+
+        // the remaining characters may only be the Base64 characters
+        for (int i = 0; i < end; ++i) {
+            if (!BASE64_CHARACTERS[value.charAt(i)]) {
+                report.error(newMsg(data, bundle, "err.format.base64.invalid")
+                        .putArgument("character", Character.toString(value.charAt(i)))
+                        .putArgument("index", i)
+                        .put("key", "err.format.base64.invalid"));
+                return;
+            }
         }
     }
 }
