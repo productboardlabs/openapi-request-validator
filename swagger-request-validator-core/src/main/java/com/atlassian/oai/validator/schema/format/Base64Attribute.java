@@ -37,30 +37,6 @@ public class Base64Attribute extends AbstractFormatAttribute {
         super("byte", NodeType.STRING);
     }
 
-    private static boolean isBase64(final String string) {
-        final int length = string.length();
-        if (length == 0) {
-            return true;
-        }
-
-        // it is expected the Base64 string has padding - therefore its length is divisible by 4
-        if (length % 4 != 0) {
-            return false;
-        }
-
-        // check for padding at the end - which could be '', '=' or '=='
-        final int end = (string.charAt(length - 1) != 61) ? length :
-                (string.charAt(length - 2) != 61 ? length - 1 : length - 2);
-
-        // the remaining characters may only be the Base64 characters
-        for (int i = 0; i < end; ++i) {
-            if (!BASE64_CHARACTERS[string.charAt(i)]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     @Override
     public void validate(final ProcessingReport report,
                          final MessageBundle bundle,
