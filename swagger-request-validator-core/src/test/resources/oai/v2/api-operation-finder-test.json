@@ -70,20 +70,6 @@
     "/specific/path": {
       "put": {
         "description": "PUT:/specific/path",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "action",
-            "in": "path",
-            "type": "string",
-            "required": true
-          }
-        ],
         "responses": {
           "200": {
             "description": ""
