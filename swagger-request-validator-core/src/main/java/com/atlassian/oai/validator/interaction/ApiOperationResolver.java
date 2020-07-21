@@ -32,6 +32,7 @@ import static java.util.Comparator.comparingInt;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -127,7 +128,6 @@ public class ApiOperationResolver {
      * Returns the base path of the first server definition in the spec.
      *
      * @param servers The OpenAPI servers definition to get the base path from
-     *
      * @return the base path of the first server definition found in the spec.
      */
     @VisibleForTesting
@@ -163,7 +163,7 @@ public class ApiOperationResolver {
             return result;
         }
         for (final String varName : server.getVariables().keySet()) {
-            final String value = server.getVariables().get(varName).getDefault();
+            final String value = defaultIfBlank(server.getVariables().get(varName).getDefault(), "");
             result = result.replace(format("{%s}", varName), value);
         }
         return result;
