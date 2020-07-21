@@ -7,6 +7,7 @@ import com.google.common.net.MediaType;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.nio.charset.Charset;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.Set;
@@ -217,6 +218,20 @@ public class ContentTypeUtils {
             return empty();
         }
 
+    }
+
+    /**
+     * Extract and return the charset from the given content-type, if it is defined.
+     * <p>
+     * If no content-type is provided, or no charset is defined in the content-type, will return {@code empty}
+     *
+     * @param contentType The content-type value to extract the charset from
+     *
+     * @return The charset of the content-type, or {@code empty} if none is defined.
+     */
+    public static Optional<Charset> getCharsetFromContentType(@Nullable final String contentType) {
+        return parseContentType(contentType)
+                .flatMap(m -> m.charset().toJavaUtil());
     }
 
     private static Optional<MediaType> parseContentType(@Nullable final String contentType) {
