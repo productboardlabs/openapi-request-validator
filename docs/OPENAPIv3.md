@@ -91,8 +91,8 @@
 |                                   |                                                                          |                                                                                      |
 | nullable                          | Yes                                                                      |                                                                                      |
 | discriminator                     | Yes                                                                      |                                                                                      |
-| readOnly                          | No                                                                       |                                                                                      |
-| writeOnly                         | No                                                                       |                                                                                      |
+| readOnly                          | Yes                                                                      |                                                                                      |
+| writeOnly                         | Yes                                                                      |                                                                                      |
 | xml                               | No                                                                       |                                                                                      |
 | example                           | No                                                                       |                                                                                      |
 | deprecated                        | No                                                                       |                                                                                      |
@@ -120,7 +120,7 @@
 | **Security Scheme Object**        |                                                                          |                                                                                      |
 | type                              | `apiKey`, `http`                                                         |                                                                                      |
 | name                              | Yes                                                                      |                                                                                      |
-| in                                | `header`, `query`                                                        | Ignored when `type` is `http`                                                        |
+| in                                | `header`, `query`, `cookie`                                              | Ignored when `type` is `http`                                                        |
 | scheme                            | No                                                                       |                                                                                      |
 | bearerFormat                      | No                                                                       |                                                                                      |
 | flows                             | No                                                                       |                                                                                      |
@@ -132,7 +132,7 @@
 | float                             | Yes                                                                      |                                                                                      |
 | double                            | Yes                                                                      |                                                                                      |
 | string                            | Yes                                                                      |                                                                                      |
-| byte                              | No                                                                       |                                                                                      |
+| byte                              | Yes                                                                      |                                                                                      |
 | binary                            | No                                                                       |                                                                                      |
 | boolean                           | Yes                                                                      |                                                                                      |
 | date                              | Yes                                                                      |                                                                                      |

@@ -17,7 +17,10 @@ import java.util.Optional;
 import static com.atlassian.oai.validator.model.Headers.AUTHORIZATION;
 import static com.atlassian.oai.validator.report.ValidationReport.empty;
 import static com.atlassian.oai.validator.report.ValidationReport.singleton;
+import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -98,6 +101,8 @@ class SecurityValidator {
                         return validateApiKeyAuthByHeader(request, securityScheme);
                     case QUERY:
                         return validateApiKeyAuthByQueryParameter(request, securityScheme);
+                    case COOKIE:
+                        return validateApiKeyAuthByCookie(request, securityScheme);
                     default:
                         return empty();
                 }
@@ -152,6 +157,24 @@ class SecurityValidator {
                                                         final SecurityScheme securityScheme) {
         final Optional<String> headerValue = request.getHeaderValue(securityScheme.getName());
         if (!headerValue.isPresent() || headerValue.get().isEmpty()) {
+            return missingSecurityParameter(request);
+        }
+        return empty();
+    }
+
+    @Nonnull
+    private ValidationReport validateApiKeyAuthByCookie(final Request request,
+                                                        final SecurityScheme securityScheme) {
+        // See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cookie
+        final Optional<String> cookieHeader = request.getHeaderValue("Cookie");
+        final boolean cookieExists = cookieHeader
+                .map(c -> c.split("; "))
+                .map(cookies -> stream(cookies)
+                        .filter(cookie -> cookie.toLowerCase().startsWith(securityScheme.getName().toLowerCase()))
+                        .anyMatch(cookie -> !isBlank(substringAfter(cookie, "=")))
+                )
+                .orElse(false);
+        if (!cookieExists) {
             return missingSecurityParameter(request);
         }
         return empty();
