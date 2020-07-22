@@ -1,3 +1,21 @@
+#v2.10.1
+* Fix operation resolution to favor exact matches
+[[#252]](https://bitbucket.org/atlassian/swagger-request-validator/issues/252)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/169)
+* Improve naming of whitelist rules to make it clearer that a regex match is used; 
+Add support for plain substring matching.
+[[#267]](https://bitbucket.org/atlassian/swagger-request-validator/issues/267)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/168)
+* Add additional information to the Base64 validation messages
+[[#285]](https://bitbucket.org/atlassian/swagger-request-validator/issues/285)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/170)
+* Add support for requests with `byte[]` bodies in the RestAssured module 
+[[#270]](https://bitbucket.org/atlassian/swagger-request-validator/issues/270)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/171)
+* Fix handling of empty string defaults in sever variables
+[[#276]](https://bitbucket.org/atlassian/swagger-request-validator/issues/276)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/167)
+
 #v2.10.0
 * Enforce validation of number formats. 
 [[#264]](https://bitbucket.org/atlassian/swagger-request-validator/issues/264)
