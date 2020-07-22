@@ -23,6 +23,16 @@
         }
       }
     },
+    "/": {
+      "get": {
+        "description": "GET:/",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/delete": {
       "delete": {
         "description": "DELETE:/delete",
@@ -50,6 +60,16 @@
             "required": true
           }
         ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/specific/path": {
+      "put": {
+        "description": "PUT:/specific/path",
         "responses": {
           "200": {
             "description": ""

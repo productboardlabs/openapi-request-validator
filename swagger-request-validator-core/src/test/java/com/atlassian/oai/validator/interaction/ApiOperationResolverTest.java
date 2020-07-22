@@ -59,6 +59,8 @@ public class ApiOperationResolverTest {
                 {"matches_whenPathsCollide_butOperationsDiffer", GET, "/delete", matches("GET:/{id}")},
 
                 {"matches_mostSpecificPath_whenMultiplePotentialMatches", GET, "/pathparams/withmorespecific/id.json", matches("GET:/pathparams/withmorespecific/{id}.json")},
+                {"matches_nonParamPath_whenPotentialParameterisedMatch", GET, "/", matches("GET:/")},
+                {"matches_exactMath_inPreferenceToParameterizedMatch", PUT, "/specific/path", matches("PUT:/specific/path")},
 
                 {"matches_caseInsensitive_pathParts", POST, "/UPDaTE/id", matches("POST:/update/{id}")},
 
