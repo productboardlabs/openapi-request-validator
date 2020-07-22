@@ -1,0 +1,93 @@
+openapi: "3.0.2"
+info:
+  description: This is a sample for validating paths with multiple params per path segment.
+  title: Validating patterns
+  version: "1.0.0"
+paths:
+  '/hyphenseparator/{param1}-{param2}/foo':
+    get:
+      description: 'Path params with a "-" separator'
+      parameters:
+        - name: param1
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: param2
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: OK
+  '/doublehyphenseparator/{param1}--{param2}/foo':
+    get:
+      description: 'Path params with a "--" separator'
+      parameters:
+        - name: param1
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: param2
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: OK
+  '/periodseparator/{param1}.{param2}/foo':
+    get:
+      description: 'Path params with a "." separator'
+      parameters:
+        - name: param1
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: param2
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: OK
+  # See https://github.com/swagger-api/swagger-parser/issues/1169
+  # As of v2.0.20 the parser incorrectly handles separators other than '-' and '.'
+#  '/underscoreseparator/{param1}_{param2}/foo':
+#    get:
+#      description: 'Path params with a "_" separator'
+#      parameters:
+#        - name: param1
+#          in: path
+#          required: true
+#          schema:
+#            type: string
+#        - name: param2
+#          in: path
+#          required: true
+#          schema:
+#            type: string
+#      responses:
+#        '201':
+#          description: OK
+#    '/colonseparator/{param1}:{param2}/foo':
+#      get:
+#        description: 'Path params with a ":" separator'
+#        parameters:
+#          - name: param1
+#            in: path
+#            required: true
+#            schema:
+#              type: string
+#          - name: param2
+#            in: path
+#            required: true
+#            schema:
+#              type: string
+#        responses:
+#          '201':
+#            description: OK
