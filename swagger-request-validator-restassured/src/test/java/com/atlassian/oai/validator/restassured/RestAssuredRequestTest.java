@@ -6,9 +6,14 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+
 import static com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder.responseDefinition;
 import static com.github.tomakehurst.wiremock.client.WireMock.any;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
+import static com.spotify.hamcrest.optional.OptionalMatchers.emptyOptional;
+import static com.spotify.hamcrest.optional.OptionalMatchers.optionalWithValue;
 import static io.restassured.RestAssured.given;
 import static java.util.Arrays.stream;
 import static org.hamcrest.Matchers.contains;
@@ -91,6 +96,98 @@ public class RestAssuredRequestTest {
         assertThat(classUnderTest.getQueryParameters(), containsInAnyOrder("queryparam"));
         assertThat(classUnderTest.getQueryParameterValues("queryParam"), containsInAnyOrder("value0", "value1", "VALUE0"));
         assertThat(classUnderTest.getQueryParameterValues("requestParam"), empty());
+    }
+
+    @Test
+    public void mapsRequestBodyCorrectly_whenByteArray() {
+        final CapturingFilter requestCaptor = new CapturingFilter();
+        given()
+                .port(wireMock.port())
+                .contentType("multipart/form-data")
+                .filter(requestCaptor)
+                .multiPart("requestParam", "value2")
+                .body(new byte[0])
+                .when()
+                .put("/path")
+                .then()
+                .assertThat()
+                .statusCode(200);
+
+        final Request classUnderTest = requestCaptor.getRequest();
+        assertThat(classUnderTest.getMethod(), is(Request.Method.PUT));
+        assertThat(classUnderTest.getBody(), optionalWithValue(is("")));
+        assertThat(classUnderTest.getContentType(), optionalWithValue(is("multipart/form-data")));
+    }
+
+    @Test
+    public void mapsRequestBodyCorrectly_forByteArrays_whenCharsetDefinedInContentType() {
+        final CapturingFilter requestCaptor = new CapturingFilter();
+        given()
+                .port(wireMock.port())
+                .contentType("text/plain; charset=utf-16")
+                .filter(requestCaptor)
+                .body("Something 123 !@#".getBytes(StandardCharsets.UTF_16))
+                .when()
+                .put("/path")
+                .then()
+                .assertThat()
+                .statusCode(200);
+
+        final Request classUnderTest = requestCaptor.getRequest();
+        assertThat(classUnderTest.getBody(), optionalWithValue(is("Something 123 !@#")));
+    }
+
+    @Test
+    public void mapsRequestBodyCorrectly_forByteArrays_whenNoCharsetDefinedInContentType() {
+        final CapturingFilter requestCaptor = new CapturingFilter();
+        given()
+                .port(wireMock.port())
+                .contentType("text/plain")
+                .filter(requestCaptor)
+                .body("Something 123 !@#".getBytes())
+                .when()
+                .put("/path")
+                .then()
+                .assertThat()
+                .statusCode(200);
+
+        final Request classUnderTest = requestCaptor.getRequest();
+        assertThat(classUnderTest.getBody(), optionalWithValue(is("Something 123 !@#")));
+    }
+
+    @Test
+    public void mapsRequestBodyCorrectly_forByteArrays_whenNoContentTypeDefined() {
+        final CapturingFilter requestCaptor = new CapturingFilter();
+        given()
+                .port(wireMock.port())
+                .filter(requestCaptor)
+                .body("Something 123 !@#".getBytes())
+                .when()
+                .put("/path")
+                .then()
+                .assertThat()
+                .statusCode(200);
+
+        final Request classUnderTest = requestCaptor.getRequest();
+        assertThat(classUnderTest.getBody(), optionalWithValue(is("Something 123 !@#")));
+    }
+
+    @Test
+    public void doesNotMapRequestBody_whenInputStream() {
+        final CapturingFilter requestCaptor = new CapturingFilter();
+        given()
+                .port(wireMock.port())
+                .contentType("text/plain")
+                .filter(requestCaptor)
+                .body(new ByteArrayInputStream("foo".getBytes()))
+                .when()
+                .put("/path")
+                .then()
+                .assertThat()
+                .statusCode(200);
+
+        final Request classUnderTest = requestCaptor.getRequest();
+        assertThat(classUnderTest.getBody(), emptyOptional());
     }
 
     @Test
