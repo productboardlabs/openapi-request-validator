@@ -113,9 +113,23 @@ public class OperationForWhitelisting {
         return this;
     }
 
+    public OperationForWhitelisting withRequestHeader(final String header, final List<String> values) {
+        final SimpleRequest.Builder request = new SimpleRequest.Builder(this.request.getMethod(), this.request.getPath());
+        request.withHeader(header, values);
+        this.request = request.build();
+        return this;
+    }
+
     public OperationForWhitelisting withResponseHeaders(final ImmutableMap<String, List<String>> headers) {
         final SimpleResponse.Builder response = new SimpleResponse.Builder(this.response.getStatus());
         headers.forEach(response::withHeader);
+        this.response = response.build();
+        return this;
+    }
+
+    public OperationForWhitelisting withResponseHeader(final String header, final List<String> values) {
+        final SimpleResponse.Builder response = new SimpleResponse.Builder(this.response.getStatus());
+        response.withHeader(header, values);
         this.response = response.build();
         return this;
     }
