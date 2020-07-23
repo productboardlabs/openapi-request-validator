@@ -80,8 +80,24 @@ public class ContentTypeUtilsTest {
     @Test
     public void findMostSpecificMatch_returnsMostSpecificMatch_whenUppercaseParameter() {
         assertThat(
-            findMostSpecificMatch("application/json", of("application/json;charset=UTF-8")),
-            optionalWithValue(is("application/json;charset=UTF-8"))
+                findMostSpecificMatch("application/json", of("application/json;charset=UTF-8")),
+                optionalWithValue(is("application/json;charset=UTF-8"))
+        );
+    }
+
+    @Test
+    public void findMostSpecificMatch_ignoresWhitespaceInRequest() {
+        assertThat(
+                findMostSpecificMatch("application/json; charset=utf-8", of("application/json;charset=UTF-8", "application/json;charset=UTF-16")),
+                optionalWithValue(is("application/json;charset=UTF-8"))
+        );
+    }
+
+    @Test
+    public void findMostSpecificMatch_ignoresWhitespaceInApiCandidates() {
+        assertThat(
+                findMostSpecificMatch("application/json;charset=UTF-8", of("application/json;  charset=utf-8", "application/json;  charset=utf-16")),
+                optionalWithValue(is("application/json;  charset=utf-8"))
         );
     }
 
