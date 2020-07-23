@@ -1,0 +1,20 @@
+openapi: 3.0.0
+info:
+  title: Charsets and wildcards in response content types
+  version: 1.0.0
+servers:
+  - url: /
+paths:
+  /charset/withoutwhitespace:
+    get:
+      summary: Charset directive with no whitespace
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json;charset=utf-8:
+              schema:
+                type: integer
+            application/json;charset=utf-16:
+              schema:
+                type: string

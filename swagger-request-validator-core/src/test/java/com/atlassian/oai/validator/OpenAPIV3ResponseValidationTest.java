@@ -2,7 +2,6 @@ package com.atlassian.oai.validator;
 
 import com.atlassian.oai.validator.interaction.response.CustomResponseValidator;
 import com.atlassian.oai.validator.model.ApiOperation;
-import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.LevelResolverFactory;
@@ -78,7 +77,7 @@ public class OpenAPIV3ResponseValidationTest {
                 .withBody(loadJsonResponse("user-invalid-missingrequired"))
                 .build();
 
-        assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
+        assertFail(classUnderTest.validateResponse("/users/1", GET, response),
                 "validation.response.body.schema.required");
     }
 
@@ -90,7 +89,7 @@ public class OpenAPIV3ResponseValidationTest {
                 .withBody(loadJsonResponse("user-invalid-additionalproperties"))
                 .build();
 
-        assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
+        assertFail(classUnderTest.validateResponse("/users/1", GET, response),
                 "validation.response.body.schema.additionalProperties");
     }
 
@@ -102,15 +101,29 @@ public class OpenAPIV3ResponseValidationTest {
                 .withBody(loadJsonResponse("user-invalid-malformedjson"))
                 .build();
 
-        assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
+        assertFail(classUnderTest.validateResponse("/users/1", GET, response),
                 "validation.response.body.schema.invalidJson");
+    }
+
+    @Test
+    public void validate_withCharsetInContentType_shouldPass_whenValid() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator.createForSpecificationUrl("/oai/v3/api-with-complex-contenttypes.yaml").build();
+
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("application/json; charset=utf-8")
+                .withBody("1")
+                .build();
+
+        assertPass(classUnderTest.validateResponse("/charset/withoutwhitespace", GET, response));
     }
 
     @Test
     public void validate_withResponseContainingUnknownStatusCode_shouldFail_whenNoDefaultResponseDefined() {
         final Response response = SimpleResponse.Builder.status(666).build();
 
-        assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
+        assertFail(classUnderTest.validateResponse("/users/1", GET, response),
                 "validation.response.status.unknown");
     }
 
@@ -118,7 +131,7 @@ public class OpenAPIV3ResponseValidationTest {
     public void validate_withResponseContainingUnknownStatusCode_shouldPass_whenDefaultResponseDefined() {
         final Response response = SimpleResponse.Builder.status(666).withBody(loadJsonResponse("error-valid")).build();
 
-        assertPass(classUnderTest.validateResponse("/users", Request.Method.GET, response));
+        assertPass(classUnderTest.validateResponse("/users", GET, response));
     }
 
     @Test
@@ -128,7 +141,7 @@ public class OpenAPIV3ResponseValidationTest {
                 .withHeader("X-Failure-Code", "123456")
                 .build();
 
-        assertPass(classUnderTest.validateResponse("/healthcheck", Request.Method.GET, response));
+        assertPass(classUnderTest.validateResponse("/healthcheck", GET, response));
     }
 
     @Test
@@ -138,7 +151,7 @@ public class OpenAPIV3ResponseValidationTest {
                 .withHeader("X-Failure-Code", "1.0")
                 .build();
 
-        assertFail(classUnderTest.validateResponse("/healthcheck", Request.Method.GET, response),
+        assertFail(classUnderTest.validateResponse("/healthcheck", GET, response),
                 "validation.response.header.schema.type");
     }
 
@@ -217,7 +230,7 @@ public class OpenAPIV3ResponseValidationTest {
                 .withHeader("Extension", "true")
                 .build();
 
-        assertPass(classUnderTest.validateResponse("/extensions", Request.Method.GET, response));
+        assertPass(classUnderTest.validateResponse("/extensions", GET, response));
     }
 
     @Test
@@ -232,7 +245,7 @@ public class OpenAPIV3ResponseValidationTest {
                 .withHeader("Extension", "false")
                 .build();
 
-        assertFail(classUnderTest.validateResponse("/extensions", Request.Method.GET, response));
+        assertFail(classUnderTest.validateResponse("/extensions", GET, response));
     }
 
     private class TestValidator implements CustomResponseValidator {
