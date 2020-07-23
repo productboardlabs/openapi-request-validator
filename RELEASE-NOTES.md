@@ -1,3 +1,13 @@
+# v2.10.2
+
+* Bump `swagger-parser` to pickup change around treatment of multiple path params in a single
+path segment. Added tests to exercise this scenario.
+[[#275]](https://bitbucket.org/atlassian/swagger-request-validator/issues/275)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/172)
+* Add support for basic validation for [cookie authentication](https://swagger.io/docs/specification/authentication/cookie-authentication/)
+[[#278]](https://bitbucket.org/atlassian/swagger-request-validator/issues/278)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/173)
+
 # v2.10.1
 
 * Fix operation resolution to favor exact matches
