@@ -33,6 +33,15 @@ paths:
       security:
         - apiKeyQuery: []
       responses: {}
+  /secured/apikey/cookie:
+    get:
+      tags:
+        - secure
+      summary: Test operation with cookie-specified API keys
+      description: apikey auth - cookie
+      security:
+        - apiKeyCookie: []
+      responses: {}
   /secured/bearer:
     get:
       tags:
@@ -86,6 +95,11 @@ components:
     apiKeyQuery:
       type: apiKey
       in: query
+      name: apiKey
+
+    apiKeyCookie:
+      type: apiKey
+      in: cookie
       name: apiKey
 
     bearerAuth:

@@ -147,6 +147,50 @@ public class SecurityValidationTest {
     }
 
     @Test
+    public void apiKeyAuth_shouldPass_whenApiKeyProvided_inCookie() {
+        final Request request = SimpleRequest.Builder
+                .get("/secured/apikey/cookie")
+                .withHeader("Cookie", "SOME_COOKIE=foo; apiKey=some-key")
+                .withContentType("application/json")
+                .build();
+
+        assertPass(validator.validateRequest(request));
+    }
+
+    @Test
+    public void apiKeyAuth_shouldFail_whenApiKeyNotProvided_inCookie() {
+        final Request request = SimpleRequest.Builder
+                .get("/secured/apikey/cookie")
+                .withHeader("Cookie", "SOME_COOKIE=foo")
+                .withContentType("application/json")
+                .build();
+
+        assertFail(validator.validateRequest(request), "validation.request.security.missing");
+    }
+
+    @Test
+    public void apiKeyAuth_inCookie_shouldFail_whenNoCookie() {
+        final Request request = SimpleRequest.Builder
+                .get("/secured/apikey/cookie")
+                .withHeader("Cookies", "apiKey=foo")
+                .withContentType("application/json")
+                .build();
+
+        assertFail(validator.validateRequest(request), "validation.request.security.missing");
+    }
+
+    @Test
+    public void apiKeyAuth_shouldFail_whenEmpty_inCookie() {
+        final Request request = SimpleRequest.Builder
+                .get("/secured/apikey/cookie")
+                .withHeader("Cookie", "SOME_COOKIE=foo; apiKey=")
+                .withContentType("application/json")
+                .build();
+
+        assertFail(validator.validateRequest(request), "validation.request.security.missing");
+    }
+
+    @Test
     public void andCombinedAuth_shouldPass_whenAllProvided() {
         final Request request = SimpleRequest.Builder
                 .get("/secured/combined/and")
