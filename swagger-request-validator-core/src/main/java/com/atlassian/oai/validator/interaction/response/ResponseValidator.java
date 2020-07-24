@@ -22,9 +22,11 @@ import java.util.Optional;
 
 import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.RESPONSE;
 import static com.atlassian.oai.validator.report.ValidationReport.empty;
+import static com.atlassian.oai.validator.util.ContentTypeUtils.containsGlobalAccept;
 import static com.atlassian.oai.validator.util.ContentTypeUtils.findMostSpecificMatch;
 import static com.atlassian.oai.validator.util.ContentTypeUtils.isFormDataContentType;
 import static com.atlassian.oai.validator.util.ContentTypeUtils.isJsonContentType;
+import static com.atlassian.oai.validator.util.ContentTypeUtils.matchesAny;
 import static com.atlassian.oai.validator.util.HttpParsingUtils.parseUrlEncodedFormDataBodyAsJson;
 import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
@@ -160,38 +162,28 @@ public class ResponseValidator {
     private ValidationReport validateContentType(final Response response,
                                                  final ApiOperation apiOperation) {
 
-        final Optional<String> requestHeader = response.getContentType();
-        if (!requestHeader.isPresent()) {
+        final Optional<String> responseContentTypeHeader = response.getContentType();
+        if (!responseContentTypeHeader.isPresent()) {
             return ValidationReport.empty();
         }
 
-        final com.google.common.net.MediaType requestMediaType;
+        final com.google.common.net.MediaType responseMediaType;
         try {
-            requestMediaType = com.google.common.net.MediaType.parse(requestHeader.get());
+            responseMediaType = com.google.common.net.MediaType.parse(responseContentTypeHeader.get());
         } catch (final IllegalArgumentException e) {
             return ValidationReport.singleton(messages.get(
-                    "validation.response.contentType.invalid", requestHeader.get())
+                    "validation.response.contentType.invalid", responseContentTypeHeader.get())
             );
         }
 
-        final Collection<String> responseMediaTypes = getResponseMediaTypes(response, apiOperation);
-        if (responseMediaTypes.isEmpty()) {
-            return ValidationReport.empty();
-        }
-
-        if (responseMediaTypes
-                .stream()
-                .allMatch("*/*"::equals)) {
+        final Collection<String> apiMediaTypes = getApiMediaTypesForResponse(response, apiOperation);
+        if (apiMediaTypes.isEmpty() || containsGlobalAccept(apiMediaTypes)) {
             return empty();
         }
 
-        final boolean contentTypeMatchesProduces = responseMediaTypes.stream()
-                .map(com.google.common.net.MediaType::parse)
-                .anyMatch(m -> m.withoutParameters().is(requestMediaType.withoutParameters()));
-
-        if (!contentTypeMatchesProduces) {
+        if (!matchesAny(responseMediaType, apiMediaTypes)) {
             return ValidationReport.singleton(
-                    messages.get("validation.response.contentType.notAllowed", requestHeader.get(), responseMediaTypes)
+                    messages.get("validation.response.contentType.notAllowed", responseContentTypeHeader.get(), apiMediaTypes)
             );
         }
 
@@ -199,8 +191,8 @@ public class ResponseValidator {
     }
 
     @Nonnull
-    private Collection<String> getResponseMediaTypes(final Response response,
-                                                     final ApiOperation apiOperation) {
+    private Collection<String> getApiMediaTypesForResponse(final Response response,
+                                                           final ApiOperation apiOperation) {
         final ApiResponse apiResponse = getApiResponse(response, apiOperation);
         if (apiResponse == null) {
             return emptyList();

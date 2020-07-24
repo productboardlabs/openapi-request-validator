@@ -18,3 +18,17 @@ paths:
             application/json;charset=utf-16:
               schema:
                 type: string
+  /wildcard/subtype:
+    get:
+      summary: Mediatype with wildcards in the subtype
+      responses:
+        '200':
+          description: OK
+          content:
+            text/*:
+              schema:
+                type: integer
+            image/*:
+              schema:
+                type: string
+                format: binary
