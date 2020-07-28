@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.atlassian.oai.validator.schema.SwaggerV20Library.schemaFactory;
-import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.StreamSupport.stream;
@@ -72,7 +71,7 @@ public class SchemaValidator {
     /**
      * Build a new validator for the given API specification.
      *
-     * @param api      The API to build the validator for.
+     * @param api The API to build the validator for.
      * @param messages The message resolver to use.
      */
     public SchemaValidator(final OpenAPI api,
@@ -88,16 +87,17 @@ public class SchemaValidator {
     /**
      * Validate the given value against the given property schema. If the schema is null then any json is valid.
      *
-     * @param value     The value to validate
-     * @param schema    The schema to validate the value against
+     * @param value The value to validate
+     * @param schema The schema to validate the value against
      * @param keyPrefix A prefix to apply to validation messages emitted by the validator
+     *
      * @return A validation report containing accumulated validation errors
      */
     @Nonnull
     public ValidationReport validate(@Nonnull final String value,
                                      @Nullable final Schema schema,
                                      @Nullable final String keyPrefix) {
-        requireNonEmpty(value, "A value is required");
+        requireNonNull(value, "A value is required");
 
         if (schema == null) {
             return ValidationReport.empty();
@@ -230,7 +230,7 @@ public class SchemaValidator {
         final String validationKeyword = keywordOverride != null
                 ? keywordOverride
                 : processingMessage.get("keyword").textValue()
-                    + (processingMessage.has("attribute") ? "." + processingMessage.get("attribute").textValue() : "");
+                + (processingMessage.has("attribute") ? "." + processingMessage.get("attribute").textValue() : "");
 
         final String pointer = processingMessage.has("instance") ? processingMessage.get("instance").get("pointer").textValue() : "";
 

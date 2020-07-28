@@ -40,7 +40,7 @@ public class SchemaValidatorTest {
 
     private final SchemaValidator classUnderTest = validator("/oai/v2/api-users.json");
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void validate_withNullValue_shouldThrowException() {
         final String value = null;
         final Schema schema = new Schema();
@@ -48,8 +48,8 @@ public class SchemaValidatorTest {
         classUnderTest.validate(value, schema, "prefix");
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void validate_withEmptyValue_shouldThrowException() {
+    @Test
+    public void validate_withEmptyValue_shouldPass_whenMinLengthZero() {
         final String value = "";
         final Schema schema = new Schema();
 
@@ -111,6 +111,15 @@ public class SchemaValidatorTest {
 
         assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
                 "validation.prefix.schema.format.int32");
+    }
+
+    @Test
+    public void validate_withEmptyInt32Format_shouldFail() {
+        final String value = "";
+        final Schema schema = new IntegerSchema().format("int32");
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.type");
     }
 
     @Test
