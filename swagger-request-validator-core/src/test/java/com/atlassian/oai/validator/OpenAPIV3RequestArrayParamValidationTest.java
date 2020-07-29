@@ -12,6 +12,9 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
  */
 public class OpenAPIV3RequestArrayParamValidationTest {
 
+    // Note: Arrays used in this test deliberately have numeric items so that they will
+    // fail if parsing is done incorrectly (as they will become String valued)
+
     private final OpenApiInteractionValidator classUnderTest =
             OpenApiInteractionValidator.createForSpecificationUrl("/oai/v3/api-with-array-params.yaml").build();
 
@@ -25,6 +28,16 @@ public class OpenAPIV3RequestArrayParamValidationTest {
     }
 
     @Test
+    public void simpleParam_inPath_shouldFail_whenTooManyItems() {
+        final Request request = SimpleRequest.Builder
+                .get("/style/simple/1,2,3,4")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.parameter.collection.tooManyItems");
+    }
+
+    @Test
     public void simpleParam_inHeader_shouldPass_whenValid() {
         final Request request = SimpleRequest.Builder
                 .get("/style/simple")
@@ -35,9 +48,10 @@ public class OpenAPIV3RequestArrayParamValidationTest {
     }
 
     @Test
-    public void simpleParam_inPath_shouldFail_whenTooManyItems() {
+    public void simpleParam_inHeader_shouldFail_whenTooManyItems() {
         final Request request = SimpleRequest.Builder
-                .get("/style/simple/1,2,3,4")
+                .get("/style/simple")
+                .withHeader("param", "1,2,3,4")
                 .build();
 
         assertFail(classUnderTest.validateRequest(request),

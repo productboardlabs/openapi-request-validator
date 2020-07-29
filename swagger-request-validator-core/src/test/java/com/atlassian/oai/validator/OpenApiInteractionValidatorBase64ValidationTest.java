@@ -79,7 +79,7 @@ public class OpenApiInteractionValidatorBase64ValidationTest {
                 .withQueryParam("refQueryPattern", "b")
                 .withQueryParam("refQueryPatternArray", "c", "d")
                 .withHeader("headerByte", "b@@a")
-                .withHeader("headerByteArray", "c", "d")
+                .withHeader("headerByteArray", "c,d")
                 .withHeader("refHeaderByte", "bz!z")
                 .withHeader("refHeaderByteArray", "c,d")
                 .withHeader("headerPattern", "b")

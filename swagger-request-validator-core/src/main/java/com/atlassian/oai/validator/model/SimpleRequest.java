@@ -117,6 +117,7 @@ public class SimpleRequest implements Request {
          * HTTP method GET and the given path.
          *
          * @param path the requests path
+         *
          * @return a prepared {@link SimpleRequest.Builder}
          */
         public static Builder get(final String path) {
@@ -128,6 +129,7 @@ public class SimpleRequest implements Request {
          * HTTP method PUT and the given path.
          *
          * @param path the requests path
+         *
          * @return a prepared {@link SimpleRequest.Builder}
          */
         public static Builder put(final String path) {
@@ -139,6 +141,7 @@ public class SimpleRequest implements Request {
          * HTTP method POST and the given path.
          *
          * @param path the requests path
+         *
          * @return a prepared {@link SimpleRequest.Builder}
          */
         public static Builder post(final String path) {
@@ -150,6 +153,7 @@ public class SimpleRequest implements Request {
          * HTTP method DELETE and the given path.
          *
          * @param path the requests path
+         *
          * @return a prepared {@link SimpleRequest.Builder}
          */
         public static Builder delete(final String path) {
@@ -161,6 +165,7 @@ public class SimpleRequest implements Request {
          * HTTP method PATCH and the given path.
          *
          * @param path the requests path
+         *
          * @return a prepared {@link SimpleRequest.Builder}
          */
         public static Builder patch(final String path) {
@@ -172,6 +177,7 @@ public class SimpleRequest implements Request {
          * HTTP method HEAD and the given path.
          *
          * @param path the requests path
+         *
          * @return a prepared {@link SimpleRequest.Builder}
          */
         public static Builder head(final String path) {
@@ -183,6 +189,7 @@ public class SimpleRequest implements Request {
          * HTTP method OPTIONS and the given path.
          *
          * @param path the requests path
+         *
          * @return a prepared {@link SimpleRequest.Builder}
          */
         public static Builder options(final String path) {
@@ -194,6 +201,7 @@ public class SimpleRequest implements Request {
          * HTTP method TRACE and the given path.
          *
          * @param path the requests path
+         *
          * @return a prepared {@link SimpleRequest.Builder}
          */
         public static Builder trace(final String path) {
@@ -204,7 +212,7 @@ public class SimpleRequest implements Request {
          * Creates a {@link SimpleRequest.Builder} with the given HTTP method and path.
          *
          * @param method the HTTP method
-         * @param path   the requests path
+         * @param path the requests path
          */
         public Builder(final String method, final String path) {
             this(method, path, false);
@@ -214,7 +222,7 @@ public class SimpleRequest implements Request {
          * Creates a {@link SimpleRequest.Builder} with the given HTTP {@link Request.Method} and path.
          *
          * @param method the HTTP method
-         * @param path   the requests path
+         * @param path the requests path
          */
         public Builder(final Method method, final String path) {
             this(method, path, false);
@@ -224,8 +232,8 @@ public class SimpleRequest implements Request {
          * Creates a {@link SimpleRequest.Builder} with the given HTTP method and path including
          * the specification if the query parameters are handled case sensitive or not.
          *
-         * @param method                       the HTTP method
-         * @param path                         the requests path
+         * @param method the HTTP method
+         * @param path the requests path
          * @param queryParametersCaseSensitive flag if the query parameters are handled case sensitive or not
          */
         public Builder(final String method, final String path, final boolean queryParametersCaseSensitive) {
@@ -237,8 +245,8 @@ public class SimpleRequest implements Request {
          * Creates a {@link SimpleRequest.Builder} with the given HTTP {@link Request.Method} and path including
          * the specification if the query parameters are handled case sensitive or not.
          *
-         * @param method                       the HTTP method
-         * @param path                         the requests path
+         * @param method the HTTP method
+         * @param path the requests path
          * @param queryParametersCaseSensitive flag if the query parameters are handled case sensitive or not
          */
         public Builder(final Method method, final String path, final boolean queryParametersCaseSensitive) {
@@ -253,6 +261,7 @@ public class SimpleRequest implements Request {
          * Adds a request body to this builder.
          *
          * @param body the request body
+         *
          * @return this builder
          */
         public Builder withBody(final String body) {
@@ -266,8 +275,9 @@ public class SimpleRequest implements Request {
          * <p>
          * Headers are treated case insensitive.
          *
-         * @param name   the header name
+         * @param name the header name
          * @param values the values for this header
+         *
          * @return this builder
          */
         public Builder withHeader(final String name, final List<String> values) {
@@ -282,8 +292,9 @@ public class SimpleRequest implements Request {
          * <p>
          * Headers are treated case insensitive.
          *
-         * @param name   the header name
+         * @param name the header name
          * @param values the values for this header
+         *
          * @return this builder
          */
         public Builder withHeader(final String name, final String... values) {
@@ -336,8 +347,9 @@ public class SimpleRequest implements Request {
          * The case sensitivity can be set by this builder's
          * {@linkplain SimpleRequest.Builder#Builder(Method, String, boolean)} constructor.
          *
-         * @param name   the header name
+         * @param name the header name
          * @param values the values for this header
+         *
          * @return this builder
          */
         public Builder withQueryParam(final String name, final List<String> values) {
@@ -353,8 +365,9 @@ public class SimpleRequest implements Request {
          * The case sensitivity can be set by this builder's
          * {@linkplain SimpleRequest.Builder#Builder(String, String, boolean)} constructor.
          *
-         * @param name   the header name
+         * @param name the header name
          * @param values the values for this header
+         *
          * @return this builder
          */
         public Builder withQueryParam(final String name, final String... values) {
@@ -375,13 +388,15 @@ public class SimpleRequest implements Request {
                     MultimapBuilder.treeKeys(String.CASE_INSENSITIVE_ORDER).arrayListValues().build();
         }
 
-        static void putValuesToMapOrDefault(final Multimap<String, String> map, final String name,
-                                            final List<String> values, final String defaultIfNotSet,
+        static void putValuesToMapOrDefault(final Multimap<String, String> map,
+                                            final String name,
+                                            final List<String> values,
+                                            final String defaultIfNotSet,
                                             final boolean splitValues) {
             if (values == null || values.isEmpty()) {
-                map.putAll(name, splitValues ? splitHeaderValue(defaultIfNotSet) : Collections.singleton(null));
+                map.put(name, defaultIfNotSet);
             } else {
-                values.forEach(value -> map.putAll(name, splitValues ? splitHeaderValue(value) : Collections.singleton(value)));
+                map.putAll(name, values);
             }
         }
 
