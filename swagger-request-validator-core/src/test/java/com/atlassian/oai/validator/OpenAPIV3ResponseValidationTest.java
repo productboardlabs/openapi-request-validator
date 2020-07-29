@@ -120,6 +120,35 @@ public class OpenAPIV3ResponseValidationTest {
     }
 
     @Test
+    public void validate_withSubtypeWildcard_shouldPass_whenValid() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator.createForSpecificationUrl("/oai/v3/api-with-complex-contenttypes.yaml").build();
+
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("image/gif")
+                .withBody("123")
+                .build();
+
+        assertPass(classUnderTest.validateResponse("/wildcard/subtype", GET, response));
+    }
+
+    @Test
+    public void validate_withSubtypeWildcard_shouldFail_whenInvalidContentType() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator.createForSpecificationUrl("/oai/v3/api-with-complex-contenttypes.yaml").build();
+
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("application/json")
+                .withBody("123")
+                .build();
+
+        assertFail(classUnderTest.validateResponse("/wildcard/subtype", GET, response),
+                "validation.response.contentType.notAllowed");
+    }
+
+    @Test
     public void validate_withResponseContainingUnknownStatusCode_shouldFail_whenNoDefaultResponseDefined() {
         final Response response = SimpleResponse.Builder.status(666).build();
 
