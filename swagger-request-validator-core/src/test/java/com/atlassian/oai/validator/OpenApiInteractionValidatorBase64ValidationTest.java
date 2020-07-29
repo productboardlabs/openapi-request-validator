@@ -32,13 +32,13 @@ public class OpenApiInteractionValidatorBase64ValidationTest {
                 .withQueryParam("refQueryPattern", "a")
                 .withQueryParam("refQueryPatternArray", "aa", "aaa")
                 .withHeader("headerByte", "QmFzZTY0")
-                .withHeader("headerByteArray", "QXJyYXkx", "QXJyYXky")
+                .withHeader("headerByteArray", "QXJyYXkx,QXJyYXky")
                 .withHeader("refHeaderByte", "QmFzZTY0")
-                .withHeader("refHeaderByteArray", "QXJyYXkx", "QXJyYXky")
+                .withHeader("refHeaderByteArray", "QXJyYXkx,QXJyYXky")
                 .withHeader("headerPattern", "a")
-                .withHeader("headerPatternArray", "aa", "aaa")
+                .withHeader("headerPatternArray", "aa,aaa")
                 .withHeader("refHeaderPattern", "a")
-                .withHeader("refHeaderPatternArray", "aa", "aaa")
+                .withHeader("refHeaderPatternArray", "aa,aaa")
                 .withBody("{\n" +
                         "  \"byte\": \"QmFzZTY0\",\n" +
                         "  \"byteArray\": [\n" +
@@ -81,11 +81,11 @@ public class OpenApiInteractionValidatorBase64ValidationTest {
                 .withHeader("headerByte", "b@@a")
                 .withHeader("headerByteArray", "c", "d")
                 .withHeader("refHeaderByte", "bz!z")
-                .withHeader("refHeaderByteArray", "c", "d")
+                .withHeader("refHeaderByteArray", "c,d")
                 .withHeader("headerPattern", "b")
-                .withHeader("headerPatternArray", "c", "d")
+                .withHeader("headerPatternArray", "c,d")
                 .withHeader("refHeaderPattern", "b")
-                .withHeader("refHeaderPatternArray", "c", "d")
+                .withHeader("refHeaderPatternArray", "c,d")
                 .withBody("{\n" +
                         "  \"byte\": \"b\",\n" +
                         "  \"byteArray\": [\n" +

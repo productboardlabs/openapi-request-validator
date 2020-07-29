@@ -157,38 +157,6 @@ public class OpenAPIV3RequestValidationTest {
     }
 
     @Test
-    public void validate_withArrayQueryParam_shouldPass_whenValid() {
-        final Request request = SimpleRequest.Builder
-                .get("/users")
-                .withAuthorization("Basic EncryptedUsernameAndPassword")
-                .withQueryParam("filter", "1", "2", "3")
-                .build();
-
-        assertPass(classUnderTest.validateRequest(request));
-    }
-
-    @Test
-    public void validate_withArrayQueryParam_shouldFail_whenInvalidAccordingToDefinedStyle() {
-        final Request request = SimpleRequest.Builder
-                .get("/users")
-                .withAuthorization("Basic EncryptedUsernameAndPassword")
-                .withQueryParam("filter", "1,2,3")
-                .build();
-
-        assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.schema.type");
-    }
-
-    @Test
-    public void validate_withArrayQueryParam_shouldFail_whenInvalidFormat() {
-        final Request request = SimpleRequest.Builder
-                .get("/users")
-                .withQueryParam("filter", "1", "bob", "3")
-                .build();
-
-        assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.schema.type");
-    }
-
-    @Test
     public void validate_withExtraQueryParams_shouldPass() {
         final Request request = SimpleRequest.Builder
                 .get("/users")

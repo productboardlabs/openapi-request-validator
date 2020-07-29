@@ -60,9 +60,9 @@ public class RequestValidator {
     /**
      * Construct a new request validator with the given schema validator.
      *
-     * @param schemaValidator         The schema validator to use when validating request bodies
-     * @param messages                The message resolver to use
-     * @param api                     The OpenAPI spec to validate against
+     * @param schemaValidator The schema validator to use when validating request bodies
+     * @param messages The message resolver to use
+     * @param api The OpenAPI spec to validate against
      * @param customRequestValidators The list of custom validators to run
      */
     public RequestValidator(final SchemaValidator schemaValidator,
@@ -82,8 +82,9 @@ public class RequestValidator {
     /**
      * Validate the request against the given API operation
      *
-     * @param request      The request to validate
+     * @param request The request to validate
      * @param apiOperation The operation to validate the request against
+     *
      * @return A validation report containing validation errors
      */
     @Nonnull
@@ -410,6 +411,10 @@ public class RequestValidator {
             return ValidationReport.singleton(
                     messages.get(missingKey, parameter.getName(), apiOperation.getApiPath().original())
             ).withAdditionalContext(context);
+        }
+
+        if (parameterValues.size() > 1) {
+            return parameterValidator.validate(parameterValues, parameter);
         }
 
         return parameterValues
