@@ -9,6 +9,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
@@ -20,7 +21,8 @@ import static org.junit.Assert.assertTrue;
 
 public class ValidatorTestUtil {
 
-    private ValidatorTestUtil() { }
+    private ValidatorTestUtil() {
+    }
 
     private static final Logger log = LoggerFactory.getLogger(ValidatorTestUtil.class);
 
@@ -29,6 +31,10 @@ public class ValidatorTestUtil {
      */
     public static void assertFail(final ValidationReport report, final String... expectedKeys) {
         assertFail(report, true, expectedKeys);
+    }
+
+    public static Consumer<ValidationReport> assertFail(final String expectedKey) {
+        return r -> assertFail(r, expectedKey);
     }
 
     /**
@@ -67,13 +73,18 @@ public class ValidatorTestUtil {
     public static void assertPass(final ValidationReport report) {
         log.trace(JsonValidationReportFormat.getInstance().apply(report));
         assertTrue("Expected no validation errors but found some. Enable trace logging for more details.", report.getMessages().isEmpty() ||
-            report.getMessages().stream().allMatch(m -> m.getLevel() == ValidationReport.Level.IGNORE));
+                report.getMessages().stream().allMatch(m -> m.getLevel() == ValidationReport.Level.IGNORE));
+    }
+
+    public static Consumer<ValidationReport> assertPass() {
+        return ValidatorTestUtil::assertPass;
     }
 
     /**
      * Load a response JSON file with the given name.
      *
      * @param responseName The name of the response to load
+     *
      * @return The response JSON as a String, or <code>null</code> if it cannot be loaded
      */
     public static String loadJsonResponse(final String responseName) {
@@ -95,6 +106,7 @@ public class ValidatorTestUtil {
      * Load a request JSON file with the given name.
      *
      * @param requestName The name of the request to load
+     *
      * @return The response JSON as a String, or <code>null</code> if it cannot be loaded
      */
     public static String loadJsonRequest(final String requestName) {
@@ -105,6 +117,7 @@ public class ValidatorTestUtil {
      * Load a request raw file with the given name.
      *
      * @param requestName The name of the request to load
+     *
      * @return The response as a String, or <code>null</code> if it cannot be loaded
      */
     public static String loadRawRequest(final String requestName) {
