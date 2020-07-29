@@ -1,3 +1,12 @@
+# v2.10.3
+
+* Fix a bug in matching of responses with wildcards in the defined media type
+[[#177]](https://bitbucket.org/atlassian/swagger-request-validator/issues/177)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/175)
+* Added support for the `allowEmptyValues` param property and cleaned up handling of empty arrays
+[[#61]](https://bitbucket.org/atlassian/swagger-request-validator/issues/61)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/176)
+
 # v2.10.2
 
 * Bump `swagger-parser` to pickup change around treatment of multiple path params in a single
