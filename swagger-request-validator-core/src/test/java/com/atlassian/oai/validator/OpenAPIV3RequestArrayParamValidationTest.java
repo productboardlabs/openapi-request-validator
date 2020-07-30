@@ -59,7 +59,7 @@ public class OpenAPIV3RequestArrayParamValidationTest {
     }
 
     @Test
-    public void explodedFormParam_shouldPass_whenValid() {
+    public void explodedFormParam_inQuery_shouldPass_whenValid() {
         final Request request = SimpleRequest.Builder
                 .get("/style/form")
                 .withQueryParam("exploded", "1", "2", "3")
@@ -69,10 +69,31 @@ public class OpenAPIV3RequestArrayParamValidationTest {
     }
 
     @Test
-    public void explodedFormParam_shouldFail_whenTooManyItems() {
+    public void explodedFormParam_inQuery_shouldFail_whenTooManyItems() {
         final Request request = SimpleRequest.Builder
                 .get("/style/form")
                 .withQueryParam("exploded", "1", "2", "3", "4")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.parameter.collection.tooManyItems");
+    }
+
+    @Test
+    public void explodedFormParam_inHeader_shouldPass_whenValid() {
+        final Request request = SimpleRequest.Builder
+                .get("/style/form")
+                .withHeader("exploded", "1", "2", "3")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void explodedFormParam_inHeader_shouldFail_whenTooManyItems() {
+        final Request request = SimpleRequest.Builder
+                .get("/style/form")
+                .withHeader("exploded", "1", "2", "3", "4")
                 .build();
 
         assertFail(classUnderTest.validateRequest(request),
@@ -98,6 +119,17 @@ public class OpenAPIV3RequestArrayParamValidationTest {
 
         assertFail(classUnderTest.validateRequest(request),
                 "validation.request.parameter.collection.tooManyItems");
+    }
+
+    @Test
+    public void nonExplodedFormParam_shouldFail_whenIncorrectFormat() {
+        final Request request = SimpleRequest.Builder
+                .get("/style/form")
+                .withQueryParam("nonexploded", "1", "2", "3")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.parameter.collection.invalidFormat");
     }
 
     @Test

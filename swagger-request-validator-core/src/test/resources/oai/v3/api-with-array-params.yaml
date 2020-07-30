@@ -130,9 +130,21 @@ paths:
             maxItems: 3
         - name: explodednotdefined
           in: query
-          description: Form-style query param without "exploded" set
+          description: Form-style query param without "explode" set
           required: false
           style: form
+          schema:
+            type: array
+            items:
+              type: number
+              format: int32
+            maxItems: 3
+        - name: exploded
+          in: header
+          description: Exploded form-style header param
+          required: false
+          style: form
+          explode: true
           schema:
             type: array
             items:
