@@ -34,11 +34,13 @@ import java.util.stream.Stream;
 
 import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.REQUEST;
 import static com.atlassian.oai.validator.report.ValidationReport.empty;
+import static com.atlassian.oai.validator.util.HttpAcceptUtils.splitAcceptHeader;
 import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -141,7 +143,12 @@ public class RequestValidator {
                                                 final String invalidTypeKey,
                                                 final String notAllowedKey) {
 
-        final Collection<String> requestHeaderValues = request.getHeaderValues(headerName);
+        // Handle the case where multiple media types are supplied in a single Accept header
+        final Collection<String> requestHeaderValues = request.getHeaderValues(headerName)
+                .stream()
+                .flatMap(v -> splitAcceptHeader(v).stream())
+                .collect(toList());
+
         if (requestHeaderValues.isEmpty()) {
             return empty();
         }

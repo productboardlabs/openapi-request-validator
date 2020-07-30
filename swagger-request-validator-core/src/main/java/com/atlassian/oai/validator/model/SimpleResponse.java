@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static com.atlassian.oai.validator.model.Headers.CONTENT_TYPE;
+import static com.atlassian.oai.validator.model.SimpleRequest.Builder.putValuesToMapOrDefault;
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
 
@@ -60,6 +61,7 @@ public class SimpleResponse implements Response {
          * Creates a {@link SimpleResponse.Builder} with the given HTTP status code.
          *
          * @param status the responses HTTP status code
+         *
          * @return a prepared {@link SimpleResponse.Builder}
          */
         public static Builder status(final int status) {
@@ -130,6 +132,7 @@ public class SimpleResponse implements Response {
          * Adds a response body to this builder.
          *
          * @param body the response body
+         *
          * @return this builder
          */
         public Builder withBody(final String body) {
@@ -143,13 +146,14 @@ public class SimpleResponse implements Response {
          * <p>
          * Headers are treated case insensitive.
          *
-         * @param name   the header name
+         * @param name the header name
          * @param values the values for this header
+         *
          * @return this builder
          */
         public Builder withHeader(final String name, final List<String> values) {
             // available but not set headers are considered as empty
-            SimpleRequest.Builder.putValuesToMapOrDefault(headers, name, values, "", true);
+            putValuesToMapOrDefault(headers, name, values, "");
             return this;
         }
 
@@ -159,8 +163,9 @@ public class SimpleResponse implements Response {
          * <p>
          * Headers are treated case insensitive.
          *
-         * @param name   the header name
+         * @param name the header name
          * @param values the values for this header
+         *
          * @return this builder
          */
         public Builder withHeader(final String name, final String... values) {

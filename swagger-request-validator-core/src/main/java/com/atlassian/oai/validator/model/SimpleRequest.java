@@ -5,10 +5,6 @@ import com.google.common.collect.MultimapBuilder;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -282,7 +278,7 @@ public class SimpleRequest implements Request {
          */
         public Builder withHeader(final String name, final List<String> values) {
             // available but not set headers are considered as empty
-            putValuesToMapOrDefault(headers, name, values, "", true);
+            putValuesToMapOrDefault(headers, name, values, "");
             return this;
         }
 
@@ -354,7 +350,7 @@ public class SimpleRequest implements Request {
          */
         public Builder withQueryParam(final String name, final List<String> values) {
             // available but not set query parameters are considered as available but with no value
-            putValuesToMapOrDefault(queryParams, name, values, null, false);
+            putValuesToMapOrDefault(queryParams, name, values, null);
             return this;
         }
 
@@ -391,44 +387,12 @@ public class SimpleRequest implements Request {
         static void putValuesToMapOrDefault(final Multimap<String, String> map,
                                             final String name,
                                             final List<String> values,
-                                            final String defaultIfNotSet,
-                                            final boolean splitValues) {
+                                            final String defaultIfNotSet) {
             if (values == null || values.isEmpty()) {
                 map.put(name, defaultIfNotSet);
             } else {
                 map.putAll(name, values);
             }
-        }
-
-        static Collection<String> splitHeaderValue(final String value) {
-            if (value == null) {
-                return Collections.singleton(null);
-            }
-            final String[] split = value.split("\\s*,\\s*");
-
-            //check if dates in RFC_1123
-            final List<String> result = new ArrayList<>();
-            int i = 0;
-            while (i < split.length) {
-                // Last element in the split
-                if (i == split.length - 1) {
-                    result.add(split[i]);
-                    break;
-                }
-
-                try {
-                    // Check to see if we can make an RFC_1123 Date from the next two items
-                    final String possibleDate = split[i] + ", " + split[i + 1];
-                    LocalDateTime.parse(split[i] + ", " + split[i + 1], DateTimeFormatter.RFC_1123_DATE_TIME);
-                    result.add(possibleDate);
-                    i += 2;
-                } catch (final DateTimeParseException e) {
-                    // If not, add the item and continue
-                    result.add(split[i]);
-                    i += 1;
-                }
-            }
-            return result;
         }
     }
 }

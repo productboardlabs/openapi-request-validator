@@ -57,6 +57,7 @@ class ArraySeparator {
             case PIPEDELIMITED:
                 builder.withSeparator("\\|");
                 break;
+            default:
         }
 
         return builder.build();
@@ -93,7 +94,6 @@ class ArraySeparator {
     private final boolean isMultiValueParam;
     private final boolean expectEmbeddedParamName;
     private final boolean expectLeadingParamName;
-
 
     private ArraySeparator(final String paramName,
                            @Nullable final String separator,

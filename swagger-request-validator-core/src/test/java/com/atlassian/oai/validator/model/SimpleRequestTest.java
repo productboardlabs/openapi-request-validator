@@ -101,30 +101,14 @@ public class SimpleRequestTest {
     }
 
     @Test
-    public void header_multiDateValueSplitNicely() {
-        final Request request = SimpleRequest.Builder.get("/path")
-                .withHeader("fOO", "Sun, 06 Nov 1994 08:49:37 GMT, Tue, 17 Jul 2018 11:10:04 GMT")
-                .build();
-
-        assertThat(request.getHeaders().keySet(), containsInAnyOrder("fOO"));
-        assertThat(request.getHeaders().get("foo"),
-                containsInAnyOrder("Sun, 06 Nov 1994 08:49:37 GMT", "Tue, 17 Jul 2018 11:10:04 GMT"));
-        assertThat(request.getHeaderValues("foo"),
-                containsInAnyOrder("Sun, 06 Nov 1994 08:49:37 GMT", "Tue, 17 Jul 2018 11:10:04 GMT"));
-        assertThat(request.getHeaderValue("foo").get(), equalTo("Sun, 06 Nov 1994 08:49:37 GMT"));
-    }
-
-    @Test
-    public void header_multiMixedDateValueSplit() {
+    public void header_doesNotSplit() {
         final Request request = SimpleRequest.Builder.get("/path")
                 .withHeader("fOO", "Sun, 06 Nov 1994 08:49:37 GMT, trolls, Tue, 17 Jul 2018 11:10:04 GMT, goblins")
                 .build();
 
         assertThat(request.getHeaders().keySet(), containsInAnyOrder("fOO"));
         assertThat(request.getHeaders().get("foo"),
-                containsInAnyOrder("Sun, 06 Nov 1994 08:49:37 GMT", "trolls", "Tue, 17 Jul 2018 11:10:04 GMT", "goblins"));
-        assertThat(request.getHeaderValues("foo"),
-                containsInAnyOrder("Sun, 06 Nov 1994 08:49:37 GMT", "trolls", "Tue, 17 Jul 2018 11:10:04 GMT", "goblins"));
+                containsInAnyOrder("Sun, 06 Nov 1994 08:49:37 GMT, trolls, Tue, 17 Jul 2018 11:10:04 GMT, goblins"));
     }
 
     @Test
