@@ -20,6 +20,7 @@ import com.github.fge.jsonschema.library.Keyword;
 import com.github.fge.jsonschema.processors.data.FullData;
 import com.github.fge.msgsimple.bundle.MessageBundle;
 
+import javax.annotation.concurrent.NotThreadSafe;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -162,9 +163,10 @@ public class Discriminator {
      *
      * @see <a href="http://swagger.io/specification/#composition-and-inheritance--polymorphism--83">Swagger specification</a>
      */
+    @NotThreadSafe
     public static class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
 
-        private final ThreadLocal<Set<ObjectNode>> visitedNodes = ThreadLocal.withInitial(HashSet::new);
+        private final Set<JsonNode> visitedNodes = new HashSet<>();
 
         private final String fieldName;
         private final JsonNode mappingNode;
@@ -181,10 +183,10 @@ public class Discriminator {
                              final MessageBundle bundle,
                              final FullData data) throws ProcessingException {
 
-            if (visitedNodes.get().contains(data.getSchema().getNode())) {
+            if (visitedNodes.contains(data.getSchema().getNode())) {
                 // We have already validated the discriminator of this node.
                 // We need to bail out to avoid a validation loop.
-                visitedNodes.get().remove(data.getSchema().getNode());
+                visitedNodes.remove(data.getSchema().getNode());
                 return;
             }
 
@@ -268,7 +270,7 @@ public class Discriminator {
             }
 
             // Mark the node to ensure we don't get in a validation loop
-            visitedNodes.get().add((ObjectNode) schemaTree.getNode());
+            visitedNodes.add(schemaTree.getNode());
 
             // Validate against the sub-schema
             processor.process(subReport, newData);

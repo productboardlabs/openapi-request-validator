@@ -3,158 +3,112 @@ package com.atlassian.oai.validator.schema;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jackson.JsonLoader;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
+import com.github.fge.jsonschema.main.JsonSchema;
+import io.swagger.util.Json;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import static com.atlassian.oai.validator.schema.SwaggerV20Library.schemaFactory;
 import static java.lang.String.format;
+import static java.util.Arrays.stream;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.fail;
 
 @RunWith(Parameterized.class)
 public class SwaggerV20LibraryTest {
 
-    @Parameters(name = "{0}")
-    public static Collection<Object[]> params() {
-        // @formatter:off
-        return Arrays.asList(new Object[][] {
-            // Name, Schema, Example, Expected
-            {
-                "discriminator_shouldPass_whenValid",
-                "discriminator-valid",
-                "discriminator-valid",
-                null
-            },
-            {
-                "discriminator_shouldFail_whenInvalidDiscriminatorValue",
-                "discriminator-valid",
-                "discriminator-invalid-badDiscriminator",
-                new String[]{"err.swaggerv2.discriminator.invalid"}
-            },
-            {
-                "discriminator_shouldFail_whenMissingDiscriminator",
-                "discriminator-valid",
-                "discriminator-invalid-missingDiscriminator",
-                new String[]{"err.swaggerv2.discriminator.missing"}
-            },
-            {
-                "discriminator_shouldFail_whenEmptyDiscriminator",
-                "discriminator-valid",
-                "discriminator-invalid-emptyDiscriminator",
-                new String[]{"err.swaggerv2.discriminator.missing"}
-            },
-            {
-                "discriminator_shouldFail_whenNonStringDiscriminator",
-                "discriminator-valid",
-                "discriminator-invalid-nonStringDiscriminator",
-                new String[]{"err.swaggerv2.discriminator.nonText"}
-            },
-            {
-                "discriminator_shouldFail_whenDoesntMatchSubSchema",
-                "discriminator-valid",
-                "discriminator-invalid-doesntMatchSubSchema",
-                new String[]{"err.swaggerv2.discriminator.fail"}
-            },
-            {
-                "discriminator_shouldFail_whenEmptyValue",
-                "discriminator-invalid-empty",
-                "discriminator-valid",
-                new String[]{"err.swaggerv2.discriminator.empty"}
-            },
-            {
-                "discriminator_shouldFail_whenNotAProperty",
-                "discriminator-invalid-noProperty",
-                "discriminator-valid",
-                new String[]{"err.swaggerv2.discriminator.noProperty"}
-            },
-            {
-                "discriminator_shouldFail_whenNotAStringProperty",
-                "discriminator-invalid-wrongType",
-                "discriminator-valid",
-                new String[]{"err.swaggerv2.discriminator.wrongType"}
-            },
-            {
-                "discriminator_shouldFail_whenPropertyNotMarkedAsRequired",
-                "discriminator-invalid-notRequired",
-                "discriminator-valid",
-                new String[]{"err.swaggerv2.discriminator.notRequired"}
-            },
-            {
-                "discriminator_shouldPass_whenValidMappedType",
-                "discriminator-valid",
-                "discriminator-valid-mapped",
-                null
-            },
-            {
-                "discriminator_shouldFail_whenDoesntMatchMappedSubSchema",
-                "discriminator-valid",
-                "discriminator-invalid-doesntMatchMappedSubSchema",
-                new String[]{"err.swaggerv2.discriminator.fail"}
-            },
-            {
-                "nullable_shouldPass_whenNoNulls",
-                "nullable-valid",
-                "nullable-valid-noNulls",
-                null
-            },
-            {
-                "nullable_shouldPass_whenValidNulls",
-                "nullable-valid",
-                "nullable-valid-nulls",
-                null
-            },
-            {
-                "nullable_shouldFail_whenInvalidNulls",
-                "nullable-valid",
-                "nullable-invalid-nulls",
-                new String[]{"error.validation.type"}
-            }
 
-        });
-        // @formatter:on
+    private static final String[] TEST_CASE_FILES = {
+            "discriminator-valid-allOf",
+            "discriminator-invalid-allOf-notRequired",
+            "discriminator-invalid-allOf-emptyProperty",
+            "discriminator-invalid-allOf-nonExistentProperty",
+            "discriminator-invalid-allOf-nonStringType",
+            "nullable-valid"
+    };
+
+    @Parameters(name = "{1}: {2} WITH {3} SHOULD {4}")
+    public static Iterable<Object[]> params() {
+        return stream(TEST_CASE_FILES)
+                .flatMap(file -> loadTests(file).stream())
+                .collect(toList());
     }
 
-    private static JsonNode examples;
+    @Parameterized.Parameter(0)
+    public String testCaseFile;
 
-    static {
+    @Parameterized.Parameter(1)
+    public String keywordUnderTest;
+
+    @Parameterized.Parameter(2)
+    public String schemaDescription;
+
+    @Parameterized.Parameter(3)
+    public String testDescription;
+
+    @Parameterized.Parameter(4)
+    public String passFailMsg;
+
+    @Parameterized.Parameter(5)
+    public JsonNode schemaNode;
+
+    @Parameterized.Parameter(6)
+    public TestDetails testDetails;
+
+    private static List<Object[]> loadTests(final String testCaseFile) {
         try {
-            examples = JsonLoader.fromResource("/schema/examples.json");
-        } catch (final IOException e) {
+            final JsonNode testCase = loadTestCase(testCaseFile);
+            final List<Object[]> result = new ArrayList<>();
+            final Iterator<JsonNode> tests = testCase.get("tests").elements();
+            while (tests.hasNext()) {
+                final JsonNode t = tests.next();
+                final TestDetails testDetails = Json.mapper().treeToValue(t, TestDetails.class);
+                result.add(new Object[]{
+                        testCaseFile,
+                        testCase.get("keyword").textValue(),
+                        testCase.get("description").textValue(),
+                        testDetails.description,
+                        testDetails.shouldPass ? "pass" : "fail",
+                        testCase.get("schema"),
+                        testDetails
+                });
+            }
+            return result;
+        } catch (final Exception e) {
             e.printStackTrace();
+            return emptyList();
         }
-    }
-
-    private final String name;
-    private final String schema;
-    private final String example;
-    private final String[] expectedMsgs;
-
-    public SwaggerV20LibraryTest(final String name, final String schema, final String example, final String[] expectedMsgs) {
-        this.name = name;
-        this.schema = schema;
-        this.example = example;
-        this.expectedMsgs = expectedMsgs;
     }
 
     @Test
     public void test() throws Exception {
-
-        final ProcessingReport report = schemaFactory()
-                .getJsonSchema(loadSchema(schema))
-                .validateUnchecked(loadExample(example));
-
-        if (expectedMsgs == null) {
+        final JsonSchema schema = schemaFactory().getJsonSchema(schemaNode);
+        final ProcessingReport report = schema.validateUnchecked(testDetails.example);
+        if (testDetails.shouldPass) {
             assertPass(report);
         } else {
-            assertFail(report, expectedMsgs);
+            assertFail(report, testDetails.expectedKeys);
         }
+    }
+
+    public static class TestDetails {
+        public String description;
+        public boolean shouldPass;
+        public JsonNode example;
+        public String[] expectedKeys = {};
+    }
+
+    private static JsonNode loadTestCase(final String name) throws Exception {
+        return JsonLoader.fromResource("/schema/" + name + ".json");
     }
 
     private static void assertFail(final ProcessingReport report, final String... expectedMsgs) {
@@ -196,14 +150,6 @@ public class SwaggerV20LibraryTest {
         });
         builder.append("\n]");
         fail(builder.toString());
-    }
-
-    private JsonNode loadExample(final String name) throws Exception {
-        return examples.get(name);
-    }
-
-    private JsonNode loadSchema(final String name) throws Exception {
-        return JsonLoader.fromResource("/schema/" + name + ".json");
     }
 
 }
