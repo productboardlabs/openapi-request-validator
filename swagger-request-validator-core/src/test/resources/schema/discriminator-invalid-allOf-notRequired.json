@@ -1,19 +1,9 @@
 {
   "keyword": "discriminator",
   "description": "An invalid schema using the allOf keyword with discriminator not marked as required",
-  "tests": [
-    {
-      "description": "A valid example",
-      "shouldPass": false,
-      "example": {
-        "name": "Moggy",
-        "petType": "Cat",
-        "huntingSkill": "clueless"
-      },
-      "expectedKeys": [
-        "err.swaggerv2.discriminator.notRequired"
-      ]
-    }
+  "shouldPass": false,
+  "expectedKeys": [
+    "err.swaggerv2.discriminator.notRequired"
   ],
   "schema": {
     "$schema": "https://openapis.org/specification/versions/2.0#",

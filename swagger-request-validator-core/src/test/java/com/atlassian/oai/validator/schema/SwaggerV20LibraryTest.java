@@ -5,104 +5,181 @@ import com.github.fge.jackson.JsonLoader;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import io.swagger.util.Json;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static com.atlassian.oai.validator.schema.SwaggerV20Library.schemaFactory;
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.fail;
 
-@RunWith(Parameterized.class)
+/**
+ * These tests are data driven from files in `/schema/*.json`.
+ * <p>
+ * Each test file contains:
+ * <ul>
+ *     <li>The keyword being exercised</li>
+ *     <li>A description of the schema being tested</li>
+ *     <li>The schema itself</li>
+ *     <li>One of more tests to execute against the schema (for validation tests)</li>
+ * </ul>
+ */
+@RunWith(Enclosed.class)
 public class SwaggerV20LibraryTest {
 
-    private static final String[] TEST_CASE_FILES = {
-            "discriminator-valid-allOf",
-            "discriminator-invalid-allOf-notRequired",
-            "discriminator-invalid-allOf-emptyProperty",
-            "discriminator-invalid-allOf-nonExistentProperty",
-            "discriminator-invalid-allOf-nonStringType",
-            "nullable-valid"
-    };
+    /**
+     * Tests that exercise the validation of the schema itself
+     */
+    @RunWith(Parameterized.class)
+    public static class SyntaxTests {
+        private static final String[] TEST_CASE_FILES = {
+                "discriminator-invalid-allOf-notRequired",
+                "discriminator-invalid-allOf-emptyPropertyName",
+                "discriminator-invalid-allOf-nullPropertyName",
+                "discriminator-invalid-allOf-missingPropertyName",
+                "discriminator-invalid-allOf-nonExistentProperty",
+                "discriminator-invalid-allOf-nonStringType",
+                "discriminator-invalid-allOf-nonObjectMapping",
+        };
 
-    @Parameters(name = "{1}: {2} WITH {3} SHOULD {4}")
-    public static Iterable<Object[]> params() {
-        return stream(TEST_CASE_FILES)
-                .flatMap(file -> loadTests(file).stream())
-                .collect(toList());
-    }
+        @Parameters(name = "{0}: {1} SHOULD {2}")
+        public static Iterable<Object[]> params() {
+            return () -> stream(TEST_CASE_FILES)
+                    .map(SyntaxTests::loadTest)
+                    .iterator();
+        }
 
-    @Parameterized.Parameter(0)
-    public String testCaseFile;
+        @Parameterized.Parameter(0)
+        public String keywordUnderTest;
 
-    @Parameterized.Parameter(1)
-    public String keywordUnderTest;
+        @Parameterized.Parameter(1)
+        public String schemaDescription;
 
-    @Parameterized.Parameter(2)
-    public String schemaDescription;
+        @Parameterized.Parameter(2)
+        public String passFailMsg;
 
-    @Parameterized.Parameter(3)
-    public String testDescription;
+        @Parameterized.Parameter(3)
+        public TestCase testCase;
 
-    @Parameterized.Parameter(4)
-    public String passFailMsg;
-
-    @Parameterized.Parameter(5)
-    public JsonNode schemaNode;
-
-    @Parameterized.Parameter(6)
-    public TestDetails testDetails;
-
-    private static List<Object[]> loadTests(final String testCaseFile) {
-        try {
-            final JsonNode testCase = loadTestCase(testCaseFile);
-            final List<Object[]> result = new ArrayList<>();
-            final Iterator<JsonNode> tests = testCase.get("tests").elements();
-            while (tests.hasNext()) {
-                final JsonNode t = tests.next();
-                final TestDetails testDetails = Json.mapper().treeToValue(t, TestDetails.class);
-                result.add(new Object[]{
-                        testCaseFile,
-                        testCase.get("keyword").textValue(),
-                        testCase.get("description").textValue(),
-                        testDetails.description,
-                        testDetails.shouldPass ? "pass" : "fail",
-                        testCase.get("schema"),
-                        testDetails
-                });
+        private static Object[] loadTest(final String testCaseFile) {
+            try {
+                final TestCase testCase = Json.mapper().treeToValue(loadTestCase(testCaseFile), TestCase.class);
+                return new Object[]{
+                        testCase.keyword,
+                        testCase.description,
+                        testCase.shouldPass ? "pass" : "fail",
+                        testCase
+                };
+            } catch (final Exception e) {
+                fail(e.getMessage());
             }
-            return result;
-        } catch (final Exception e) {
-            e.printStackTrace();
-            return emptyList();
+            return new Object[]{};
+        }
+
+        @Test
+        public void test() throws Exception {
+            final JsonSchema schema = schemaFactory().getJsonSchema(testCase.schema);
+            final ProcessingReport report = schema.validateUnchecked(Json.mapper().createObjectNode());
+            if (testCase.shouldPass) {
+                assertPass(report);
+            } else {
+                assertFail(report, testCase.expectedKeys);
+            }
+        }
+
+    }
+
+    /**
+     * Tests that exercise validation of incoming objects against a <em>valid</em> schema
+     */
+    @RunWith(Parameterized.class)
+    public static class ValidationTests {
+        private static final String[] TEST_CASE_FILES = {
+                "discriminator-valid-allOf",
+                "nullable-valid"
+        };
+
+        @Parameters(name = "{0}: {1} WITH {2} SHOULD {3}")
+        public static Iterable<Object[]> params() {
+            return () -> stream(TEST_CASE_FILES)
+                    .flatMap(ValidationTests::loadTests)
+                    .iterator();
+        }
+
+        @Parameterized.Parameter(0)
+        public String keywordUnderTest;
+
+        @Parameterized.Parameter(1)
+        public String schemaDescription;
+
+        @Parameterized.Parameter(2)
+        public String testDescription;
+
+        @Parameterized.Parameter(3)
+        public String passFailMsg;
+
+        @Parameterized.Parameter(4)
+        public JsonNode schemaNode;
+
+        @Parameterized.Parameter(5)
+        public TestDetails testDetails;
+
+        private static Stream<Object[]> loadTests(final String testCaseFile) {
+            try {
+                final TestCase testCase = Json.mapper().treeToValue(loadTestCase(testCaseFile), TestCase.class);
+                return testCase.tests
+                        .stream()
+                        .map(t -> new Object[]{
+                                testCase.keyword,
+                                testCase.description,
+                                t.description,
+                                t.shouldPass ? "pass" : "fail",
+                                testCase.schema,
+                                t
+                        });
+            } catch (final Exception e) {
+                fail(e.getMessage());
+            }
+            return Stream.empty();
+        }
+
+        @Test
+        public void test() throws Exception {
+            final JsonSchema schema = schemaFactory().getJsonSchema(schemaNode);
+            final ProcessingReport report = schema.validateUnchecked(testDetails.example);
+            if (testDetails.shouldPass) {
+                assertPass(report);
+            } else {
+                assertFail(report, testDetails.expectedKeys);
+            }
         }
     }
 
-    @Test
-    public void test() throws Exception {
-        final JsonSchema schema = schemaFactory().getJsonSchema(schemaNode);
-        final ProcessingReport report = schema.validateUnchecked(testDetails.example);
-        if (testDetails.shouldPass) {
-            assertPass(report);
-        } else {
-            assertFail(report, testDetails.expectedKeys);
-        }
-    }
-
-    public static class TestDetails {
+    @Ignore("Not actually tests")
+    public static class TestCase {
+        public String keyword;
         public String description;
+        public boolean shouldPass = true;
+        public String[] expectedKeys = {};
+        public List<TestDetails> tests = emptyList();
+        public JsonNode schema;
+    }
+
+    @Ignore("Not actually tests")
+    public static class TestDetails {
+        public String description = "Any example";
         public boolean shouldPass;
-        public JsonNode example;
+        public JsonNode example = Json.mapper().createObjectNode();
         public String[] expectedKeys = {};
     }
 

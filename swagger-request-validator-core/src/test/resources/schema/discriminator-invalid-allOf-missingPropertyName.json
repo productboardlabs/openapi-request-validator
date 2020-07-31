@@ -1,9 +1,9 @@
 {
   "keyword": "discriminator",
-  "description": "An invalid schema using the allOf keyword with a non-string discriminator property",
+  "description": "An invalid schema using the allOf keyword with discriminator missing propertyName",
   "shouldPass": false,
   "expectedKeys": [
-    "err.swaggerv2.discriminator.wrongType"
+    "err.swaggerv2.discriminator.propertyName.required"
   ],
   "schema": {
     "$schema": "https://openapis.org/specification/versions/2.0#",
@@ -12,7 +12,6 @@
       "Pet": {
         "type": "object",
         "discriminator": {
-          "propertyName": "petType",
           "mapping": {
             "cachorro": "Dog"
           }
@@ -22,7 +21,7 @@
             "type": "string"
           },
           "petType": {
-            "type": "integer"
+            "type": "string"
           }
         },
         "required": [
