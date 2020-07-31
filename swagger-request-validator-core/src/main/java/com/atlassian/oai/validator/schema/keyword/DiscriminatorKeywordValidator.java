@@ -74,6 +74,12 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
             return;
         }
 
+        // TODO: `oneOf` and `anyOf` composition validation logic
+        final JsonNode currentSchemaNode = data.getSchema().getNode();
+        if (currentSchemaNode.has("oneOf") || currentSchemaNode.has("anyOf")) {
+            return;
+        }
+
         // Valid 'subclasses' should use allOf to reference the parent schema definition
         final SchemaTree schemaTree = data.getSchema();
         final String parentDefinitionRef = "#" + schemaTree.getPointer().toString();
@@ -96,8 +102,8 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
         final boolean useMappingNode = mappingNode != null && mappingNode.get(discriminatorNode.textValue()) != null;
         if (useMappingNode) {
             mappingNode.fields().forEachRemaining(e -> validDiscriminatorValues.put(e.getKey(), e.getValue()));
-        } else if (data.getSchema().getNode().has("oneOf")) {
-            data.getSchema().getNode().get("oneOf").forEach(jsonNode ->
+        } else if (currentSchemaNode.has("oneOf")) {
+            currentSchemaNode.get("oneOf").forEach(jsonNode ->
                     // the oneOf $refs are resolved already, so we have to look up theirs schema names
                     definitionsNode(data).fields().forEachRemaining(entry -> {
                         if (entry.getValue().equals(jsonNode)) {

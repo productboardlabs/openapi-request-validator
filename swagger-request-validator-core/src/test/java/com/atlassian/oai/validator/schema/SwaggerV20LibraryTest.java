@@ -50,6 +50,7 @@ public class SwaggerV20LibraryTest {
                 "discriminator-invalid-allOf-nonExistentProperty",
                 "discriminator-invalid-allOf-nonStringType",
                 "discriminator-invalid-allOf-nonObjectMapping",
+                "discriminator-invalid-oneOf-subSchemaMissingProperty",
         };
 
         @Parameters(name = "{0}: {1} SHOULD {2}")
@@ -107,6 +108,7 @@ public class SwaggerV20LibraryTest {
         private static final String[] TEST_CASE_FILES = {
                 "discriminator-valid-allOf",
                 "discriminator-valid-allOf-withAllOfComposition",
+                "discriminator-valid-oneOf",
                 "nullable-valid"
         };
 

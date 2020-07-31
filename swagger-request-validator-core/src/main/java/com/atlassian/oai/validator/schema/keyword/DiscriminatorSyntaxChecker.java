@@ -79,8 +79,13 @@ public class DiscriminatorSyntaxChecker extends AbstractSyntaxChecker {
         // TODO: The mapping node must reference valid schemas
 
         // For `anyOf` and `oneOf` composition, check each referenced schema for the discriminator property
-        if (tree.getNode().get("oneOf") != null || tree.getNode().get("anyOf") != null) {
-            // TODO: Check referenced schemas for the named property
+        if (tree.getNode().has("oneOf") || tree.getNode().has("anyOf")) {
+            final JsonNode compositionNode = tree.getNode().has("oneOf") ?
+                    tree.getNode().get("oneOf") : tree.getNode().get("anyOf");
+            final Iterator<JsonNode> children = compositionNode.elements();
+            while (children.hasNext()) {
+                validatePropertyName(bundle, report, tree, children.next(), discriminatorPropertyName);
+            }
             return;
         }
 
