@@ -26,7 +26,6 @@ import static org.junit.Assert.fail;
 @RunWith(Parameterized.class)
 public class SwaggerV20LibraryTest {
 
-
     private static final String[] TEST_CASE_FILES = {
             "discriminator-valid-allOf",
             "discriminator-invalid-allOf-notRequired",
