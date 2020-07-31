@@ -7,6 +7,7 @@ import java.util.Collection;
 
 import static java.lang.Boolean.TRUE;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 /**
@@ -63,6 +64,9 @@ class ArraySeparator {
     Collection<String> split(final String value) {
         if (separator == null) {
             return singletonList(value);
+        }
+        if (value.isEmpty()) {
+            return emptyList();
         }
         return asList(value.split(separator));
     }

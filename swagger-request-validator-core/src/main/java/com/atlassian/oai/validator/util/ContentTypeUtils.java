@@ -7,6 +7,8 @@ import com.google.common.net.MediaType;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.nio.charset.Charset;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.Set;
@@ -216,7 +218,66 @@ public class ContentTypeUtils {
         } catch (final IllegalArgumentException e) {
             return empty();
         }
+    }
 
+    /**
+     * Returns whether the candidate media type matches any of the applied API content type expressions.
+     * <p>
+     * Supports matching against media type ranges e.g. "text/*". Note that if the global match "&#42;/&#42;"
+     * is included will always return {@code true}.
+     *
+     * @param candidate The candidate type to match (e.g. from the request or response header)
+     * @param apiContentTypes The content types defined in the API to match against. Can be media type ranges e.g. "text/*".
+     *
+     * @return {@code true} if the candidate matches against any of the provided API-defined content types.
+     */
+    public static boolean matchesAny(final String candidate, final Collection<String> apiContentTypes) {
+        if (candidate == null || candidate.isEmpty()) {
+            return false;
+        }
+        return matchesAny(MediaType.parse(candidate), apiContentTypes);
+    }
+
+    /**
+     * Returns whether the candidate media type matches any of the applied API content type expressions.
+     * <p>
+     * Supports matching against media type ranges e.g. "text/*". Note that if the global match "&#42;/&#42;"
+     * is included will always return {@code true}.
+     *
+     * @param candidate The candidate type to match (e.g. from the request or response header)
+     * @param apiContentTypes The content types defined in the API to match against. Can be media type ranges e.g. "text/*".
+     *
+     * @return {@code true} if the candidate matches against any of the provided API-defined content types.
+     */
+    public static boolean matchesAny(final MediaType candidate, final Collection<String> apiContentTypes) {
+        return apiContentTypes.stream()
+                .map(com.google.common.net.MediaType::parse)
+                .anyMatch(apiMediaType -> candidate.withoutParameters().is(apiMediaType.withoutParameters()));
+    }
+
+    /**
+     * Extract and return the charset from the given content-type, if it is defined.
+     * <p>
+     * If no content-type is provided, or no charset is defined in the content-type, will return {@code empty}
+     *
+     * @param contentType The content-type value to extract the charset from
+     *
+     * @return The charset of the content-type, or {@code empty} if none is defined.
+     */
+    public static Optional<Charset> getCharsetFromContentType(@Nullable final String contentType) {
+        return parseContentType(contentType)
+                .flatMap(m -> m.charset().toJavaUtil());
+    }
+
+    /**
+     * Return whether the given content types includes a "global match" wildcard
+     *
+     * @param apiContentTypes The content types to check
+     *
+     * @return {@code true} if at least one entry in the given content types is the global match
+     */
+    public static boolean containsGlobalAccept(final Collection<String> apiContentTypes) {
+        return apiContentTypes.stream().anyMatch(c -> c.equals("*/*"));
     }
 
     private static Optional<MediaType> parseContentType(@Nullable final String contentType) {

@@ -12,9 +12,20 @@
           {
             "name": "id",
             "in": "path",
-            "type": "string"
+            "type": "string",
+            "required": true
           }
         ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "description": "GET:/",
         "responses": {
           "200": {
             "description": ""
@@ -39,14 +50,26 @@
           {
             "name": "id",
             "in": "path",
-            "type": "string"
+            "type": "string",
+            "required": true
           },
           {
             "name": "action",
             "in": "path",
-            "type": "string"
+            "type": "string",
+            "required": true
           }
         ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/specific/path": {
+      "put": {
+        "description": "PUT:/specific/path",
         "responses": {
           "200": {
             "description": ""
@@ -61,7 +84,8 @@
           {
             "name": "id",
             "in": "path",
-            "type": "string"
+            "type": "string",
+            "required": true
           }
         ],
         "responses": {
@@ -76,7 +100,8 @@
           {
             "name": "id",
             "in": "path",
-            "type": "string"
+            "type": "string",
+            "required": true
           }
         ],
         "responses": {
@@ -93,13 +118,14 @@
           {
             "name": "id",
             "in": "path",
-            "type": "string"
+            "type": "string",
+            "required": true
           },
           {
             "name": "action",
             "in": "path",
             "type": "string",
-            "required": false
+            "required": true
           }
         ],
         "responses": {
@@ -116,7 +142,8 @@
           {
             "name": "id",
             "in": "path",
-            "type": "string"
+            "type": "string",
+            "required": true
           }
         ],
         "responses": {
@@ -139,7 +166,8 @@
           {
             "name": "name",
             "in": "path",
-            "type": "string"
+            "type": "string",
+            "required": true
           }
         ],
         "responses": {
@@ -156,12 +184,14 @@
           {
             "name": "id",
             "in": "path",
-            "type": "string"
+            "type": "string",
+            "required": true
           },
           {
             "name": "withmorespecific",
             "in": "path",
-            "type": "string"
+            "type": "string",
+            "required": true
           }
         ],
         "responses": {
@@ -178,7 +208,8 @@
           {
             "name": "id",
             "in": "path",
-            "type": "string"
+            "type": "string",
+            "required": true
           }
         ],
         "responses": {
@@ -195,7 +226,8 @@
           {
             "name": "id",
             "in": "path",
-            "type": "string"
+            "type": "string",
+            "required": true
           }
         ],
         "responses": {
@@ -212,7 +244,8 @@
           {
             "name": "id",
             "in": "path",
-            "type": "string"
+            "type": "string",
+            "required": true
           }
         ],
         "responses": {

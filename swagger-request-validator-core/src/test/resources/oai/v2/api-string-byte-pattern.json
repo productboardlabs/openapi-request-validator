@@ -15,12 +15,14 @@
             "name": "pathByte",
             "in": "path",
             "type": "string",
-            "format": "byte"
+            "format": "byte",
+            "required": true
           },
           {
             "name": "pathByteArray",
             "in": "path",
             "type": "array",
+            "required": true,
             "items": {
               "type": "string",
               "format": "byte"
@@ -36,12 +38,14 @@
             "name": "pathPattern",
             "in": "path",
             "type": "string",
-            "pattern": "a+"
+            "pattern": "a+",
+            "required": true
           },
           {
             "name": "pathPatternArray",
             "in": "path",
             "type": "array",
+            "required": true,
             "items": {
               "type": "string",
               "pattern": "a+"
@@ -161,12 +165,14 @@
       "name": "refPathByte",
       "in": "path",
       "type": "string",
-      "format": "byte"
+      "format": "byte",
+      "required": true
     },
     "RefPathByteArray": {
       "name": "refPathByteArray",
       "in": "path",
       "type": "array",
+      "required": true,
       "items": {
         "type": "string",
         "format": "byte"
@@ -176,12 +182,14 @@
       "name": "refPathPattern",
       "in": "path",
       "type": "string",
+      "required": true,
       "pattern": "a+"
     },
     "RefPathPatternArray": {
       "name": "refPathPatternArray",
       "in": "path",
       "type": "array",
+      "required": true,
       "items": {
         "type": "string",
         "pattern": "a+"

@@ -32,6 +32,7 @@ import static java.util.Comparator.comparingInt;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -49,7 +50,7 @@ public class ApiOperationResolver {
     /**
      * A utility for finding the best fitting API path.
      *
-     * @param api              the OpenAPI definition
+     * @param api the OpenAPI definition
      * @param basePathOverride (Optional) override for the base path defined in the OpenAPI specification.
      */
     public ApiOperationResolver(final OpenAPI api, @Nullable final String basePathOverride) {
@@ -73,15 +74,16 @@ public class ApiOperationResolver {
     /**
      * Tries to find the best fitting API path matching the given path and request method.
      *
-     * @param path   the requests path to find in API definition
+     * @param path the requests path to find in API definition
      * @param method the {@link Request.Method} for the request
+     *
      * @return a {@link ApiOperationMatch} containing the information if the path is defined, the operation
      * is allowed and having the necessary {@link ApiOperation} if applicable
      */
     @Nonnull
     public ApiOperationMatch findApiOperation(final String path, final Request.Method method) {
 
-        // try to find possible matching paths regardless of HTTP method
+        // Try to find possible matching paths regardless of HTTP method
         final NormalisedPath requestPath = new NormalisedPathImpl(path, apiPrefix);
         final List<ApiPath> matchingPaths = apiPathsGroupedByNumberOfParts
                 .getOrDefault(requestPath.numberOfParts(), emptyList()).stream()
@@ -92,16 +94,31 @@ public class ApiOperationResolver {
             return ApiOperationMatch.MISSING_PATH;
         }
 
-        // try to find the operation which fits the HTTP method,
-        // choosing the most 'specific' path match from the candidates
+        // Try to find the operation which fits the HTTP method,
         final PathItem.HttpMethod httpMethod = PathItem.HttpMethod.valueOf(method.name());
-        final Optional<ApiPath> matchingPathAndOperation = matchingPaths.stream()
+        final List<ApiPath> matchingPathAndMethod = matchingPaths.stream()
                 .filter(apiPath -> operations.contains(apiPath.original(), httpMethod))
+                .collect(toList());
+
+        if (matchingPathAndMethod.isEmpty()) {
+            return ApiOperationMatch.NOT_ALLOWED_OPERATION;
+        }
+
+        // Now look for exact matches first
+        final Optional<ApiPath> exactMatch = matchingPathAndMethod.stream()
+                .filter(apiPath -> apiPath.normalised().equalsIgnoreCase(requestPath.normalised()))
+                .findFirst();
+
+        if (exactMatch.isPresent()) {
+            return new ApiOperationMatch(new ApiOperation(exactMatch.get(), requestPath, httpMethod, operations.get(exactMatch.get().original(), httpMethod)));
+        }
+
+        // Finally, use the specificity score to find the most likely match
+        final Optional<ApiPath> scoredMatch = matchingPathAndMethod.stream()
                 .max(comparingInt(ApiOperationResolver::specificityScore));
 
-        return matchingPathAndOperation
-                .map(match ->
-                        new ApiOperationMatch(new ApiOperation(match, requestPath, httpMethod, operations.get(match.original(), httpMethod))))
+        return scoredMatch
+                .map(match -> new ApiOperationMatch(new ApiOperation(match, requestPath, httpMethod, operations.get(match.original(), httpMethod))))
                 .orElse(ApiOperationMatch.NOT_ALLOWED_OPERATION);
     }
 
@@ -163,7 +180,7 @@ public class ApiOperationResolver {
             return result;
         }
         for (final String varName : server.getVariables().keySet()) {
-            final String value = server.getVariables().get(varName).getDefault();
+            final String value = defaultIfBlank(server.getVariables().get(varName).getDefault(), "");
             result = result.replace(format("{%s}", varName), value);
         }
         return result;

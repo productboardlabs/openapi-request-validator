@@ -32,8 +32,8 @@ public final class FloatAttribute extends AbstractFormatAttribute {
         final String parsed = String.valueOf(f);
 
         if (!original.equals(parsed)) {
-            report.warn(newMsg(data, bundle, "warn.format.float.overflow")
-                    .put("key", "warn.format.float.overflow")
+            report.error(newMsg(data, bundle, "err.format.float.overflow")
+                    .put("key", "err.format.float.overflow")
                     .putArgument("value", original)
                     .putArgument("converted", parsed));
         }

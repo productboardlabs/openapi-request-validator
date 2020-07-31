@@ -18,10 +18,10 @@ import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.media.UUIDSchema;
 import io.swagger.v3.parser.core.models.ParseOptions;
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static com.atlassian.oai.validator.schema.SchemaValidator.ADDITIONAL_PROPERTIES_KEY;
@@ -32,6 +32,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.iterableWithSize;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -39,7 +40,7 @@ public class SchemaValidatorTest {
 
     private final SchemaValidator classUnderTest = validator("/oai/v2/api-users.json");
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void validate_withNullValue_shouldThrowException() {
         final String value = null;
         final Schema schema = new Schema();
@@ -47,8 +48,8 @@ public class SchemaValidatorTest {
         classUnderTest.validate(value, schema, "prefix");
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void validate_withEmptyValue_shouldThrowException() {
+    @Test
+    public void validate_withEmptyValue_shouldPass_whenMinLengthZero() {
         final String value = "";
         final Schema schema = new Schema();
 
@@ -101,6 +102,51 @@ public class SchemaValidatorTest {
         final Schema schema = new StringSchema();
 
         assertPass(classUnderTest.validate(value, schema, "prefix"));
+    }
+
+    @Test
+    public void validate_withInvalidInt32Format_shouldFail() {
+        final String value = Integer.MAX_VALUE + "0";
+        final Schema schema = new IntegerSchema().format("int32");
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.format.int32");
+    }
+
+    @Test
+    public void validate_withEmptyInt32Format_shouldFail() {
+        final String value = "";
+        final Schema schema = new IntegerSchema().format("int32");
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.type");
+    }
+
+    @Test
+    public void validate_withInvalidInt64Format_shouldFail() {
+        final String value = Long.MAX_VALUE + "0";
+        final Schema schema = new IntegerSchema().format("int64");
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.format.int64");
+    }
+
+    @Test
+    public void validate_withInvalidFloatFormat_shouldFail() {
+        final String value = "1" + Float.MAX_VALUE;
+        final Schema schema = new NumberSchema().format("float");
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.format.float");
+    }
+
+    @Test
+    public void validate_withInvalidDoubleFormat_shouldFail() {
+        final String value = "1" + Double.MAX_VALUE;
+        final Schema schema = new NumberSchema().format("double");
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.format.double");
     }
 
     @Test
@@ -308,7 +354,7 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withValidModel_shouldPass_whenContainsNullValues_inNullableArrayItem() {
         final String value =
-            "[ null ]";
+                "[ null ]";
 
         final Schema schema = new ArraySchema().items(new IntegerSchema().nullable(true));
 
@@ -318,7 +364,7 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withValidModel_shouldPass_whenContainsNonNullValues_inNullableArrayItem() {
         final String value =
-            "[ 1 ]";
+                "[ 1 ]";
 
         final Schema schema = new ArraySchema().items(new IntegerSchema().nullable(true));
 
@@ -328,7 +374,7 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withValidModel_shouldPass_whenContainsNonNullValues_inNonNullableArrayItem() {
         final String value =
-            "[ 1 ]";
+                "[ 1 ]";
 
         final Schema schema = new ArraySchema().items(new IntegerSchema().nullable(false));
 
@@ -338,7 +384,7 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withValidModel_shouldFail_whenContainsNullValues_inUnnullableArrayItem() {
         final String value =
-            "[ null ]";
+                "[ null ]";
 
         final Schema schema = new ArraySchema().items(new IntegerSchema().nullable(false));
 
@@ -348,10 +394,10 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withValidModel_shouldPass_whenContainsNullValues_inNullableObjectProperty() {
         final String value =
-            "{\"int\": null }";
+                "{\"int\": null }";
 
         final Schema schema = new Schema()
-            .addProperties("int", new IntegerSchema().nullable(true));
+                .addProperties("int", new IntegerSchema().nullable(true));
 
         assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
@@ -359,10 +405,10 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withValidModel_shouldPass_whenContainsNonNullValues_inNullableObjectProperty() {
         final String value =
-            "{\"int\": 1 }";
+                "{\"int\": 1 }";
 
         final Schema schema = new Schema()
-            .addProperties("int", new IntegerSchema().nullable(true));
+                .addProperties("int", new IntegerSchema().nullable(true));
 
         assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
@@ -370,11 +416,11 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withValidModel_shouldPass_whenContainsNullValues_inNullableRequiredObjectProperty() {
         final String value =
-            "{\"int\": null }";
+                "{\"int\": null }";
 
         final Schema schema = new Schema()
-            .addProperties("int", new IntegerSchema().nullable(true))
-            .addRequiredItem("int");
+                .addProperties("int", new IntegerSchema().nullable(true))
+                .addRequiredItem("int");
 
         assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
@@ -382,11 +428,11 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withValidModel_shouldPass_whenContainsNonNullValues_inNullableRequiredObjectProperty() {
         final String value =
-            "{\"int\": 1 }";
+                "{\"int\": 1 }";
 
         final Schema schema = new Schema()
-            .addProperties("int", new IntegerSchema().nullable(true))
-            .addRequiredItem("int");
+                .addProperties("int", new IntegerSchema().nullable(true))
+                .addRequiredItem("int");
 
         assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
@@ -394,10 +440,10 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withValidModel_shouldFail_whenContainsNullValues_inUnnullableObjectProperty() {
         final String value =
-            "{\"int\": null }";
+                "{\"int\": null }";
 
         final Schema schema = new Schema()
-            .addProperties("int", new IntegerSchema().nullable(false));
+                .addProperties("int", new IntegerSchema().nullable(false));
 
         assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"));
     }
@@ -405,11 +451,11 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withValidModel_shouldFail_whenContainsNullValues_inUnnullableRequiredObjectProperty() {
         final String value =
-            "{\"int\": null }";
+                "{\"int\": null }";
 
         final Schema schema = new Schema()
-            .addProperties("int", new IntegerSchema().nullable(false))
-            .addRequiredItem("int");
+                .addProperties("int", new IntegerSchema().nullable(false))
+                .addRequiredItem("int");
 
         assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"));
     }
@@ -513,7 +559,7 @@ public class SchemaValidatorTest {
         final Schema schema = new DateTimeSchema();
 
         assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
-                "validation.prefix.schema.format");
+                "validation.prefix.schema.format.date-time");
     }
 
     @Test
@@ -567,71 +613,197 @@ public class SchemaValidatorTest {
         final Schema schema = new UUIDSchema();
 
         assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
-                "validation.prefix.schema.format");
+                "validation.prefix.schema.format.uuid");
     }
 
     @Test
-    public void validate_readOnly() {
-
+    public void validate_readOnly_isRequired_inResponse() {
         final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
-
-        final Schema schema = new OpenAPIParser().readLocation("/oai/v3/api-required-readonly-writeonly.yaml", null, new ParseOptions())
-                .getOpenAPI().getComponents().getSchemas().get("ReadOnly");
+        final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnly");
 
         final String value = "{\"notReadOnly\":\"abc\", \"writeOnly\": \"123\"}";
 
-        final ValidationReport report = classUnderTest.validate(value, schema, "request.body");
-        assertPass(report);
-
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "response.body"),
+                "validation.response.body.schema.required");
     }
 
     @Test
-    public void validate_readOnly_withArray_asRoot_schema() {
-
+    public void validate_readOnly_isNotRequired_inRequest() {
         final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
-        final ParseOptions parseOptions = new ParseOptions();
-        parseOptions.setResolveFully(true);
+        final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnly");
 
-        final Schema schema = new OpenAPIParser().readLocation("/oai/v3/api-required-readonly-writeonly.yaml", null, parseOptions)
-                .getOpenAPI().getComponents().getSchemas().get("ReadOnlyArray");
+        final String value = "{\"notReadOnly\":\"abc\", \"writeOnly\": \"123\"}";
+
+        assertPass(classUnderTest.validate(value, schema, "request.body"));
+    }
+
+    @Test
+    public void validate_readOnly_isRequired_inOtherLocation() {
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
+        final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnly");
+
+        final String value = "{\"notReadOnly\":\"abc\", \"writeOnly\": \"123\"}";
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "query"),
+                "validation.query.schema.required");
+    }
+
+    @Test
+    public void validate_readOnly_isRequired_withNesting_inResponse() {
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
+        final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnlyNested");
+
+        final String value = "{\"nestedRef\": {\"notReadOnly\":\"abc\", \"writeOnly\": \"123\"}, \"nestedInline\": {\"notReadOnly\":\"abc\", \"writeOnly\": \"123\"}}";
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "response.body"),
+                "validation.response.body.schema.required");
+    }
+
+    @Test
+    public void validate_readOnly_isNotRequired_withNesting_inRequest() {
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
+        final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnlyNested");
+
+        final String value = "{\"nestedRef\": {\"notReadOnly\":\"abc\", \"writeOnly\": \"123\"}, \"nestedInline\": {\"notReadOnly\":\"abc\", \"writeOnly\": \"123\"}}";
+
+        assertPass(classUnderTest.validate(value, schema, "request.body"));
+    }
+
+    @Test
+    public void validate_readOnly_isRequired_withArray_inResponse() {
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
+        final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnlyArray");
 
         final String value = "[{\"notReadOnly\":\"abc\", \"writeOnly\": \"123\"}]";
 
-        final ValidationReport report = classUnderTest.validate(value, schema, "request.body");
-        assertPass(report);
-
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "response.body"),
+                "validation.response.body.schema.required");
     }
 
     @Test
-    public void validate_writeOnly() {
-
+    public void validate_readOnly_isNotRequired_withArray_inRequest() {
         final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
+        final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnlyArray");
 
-        final Schema schema = new OpenAPIParser().readLocation("/oai/v3/api-required-readonly-writeonly.yaml", null, new ParseOptions())
-                .getOpenAPI().getComponents().getSchemas().get("ReadOnly");
+        final String value = "[{\"notReadOnly\":\"abc\", \"writeOnly\": \"123\"}]";
+
+        assertPass(classUnderTest.validate(value, schema, "request.body"));
+    }
+
+    @Test
+    public void validate_readOnly_isRequired_withAllOfComposition_inResponse() {
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
+        final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnlyAllOf");
+
+        final String value = "{\"id\": \"test\", \"notReadOnly\":\"abc\", \"writeOnly\":\"123\"}";
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "response.body"),
+                "validation.response.body.schema.allOf");
+    }
+
+    @Test
+    public void validate_readOnly_isNotRequired_withAllOfComposition_inRequest() {
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
+        final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnlyAllOf");
+
+        final String value = "{\"id\": \"test\", \"notReadOnly\":\"abc\", \"writeOnly\":\"123\"}";
+
+        assertPass(classUnderTest.validate(value, schema, "request.body"));
+    }
+
+    @Test
+    public void validate_writeOnly_isRequired_inRequest() {
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
+        final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnly");
 
         final String value = "{\"notReadOnly\":\"abc\", \"readOnly\": \"123\"}";
 
-        final ValidationReport report = classUnderTest.validate(value, schema, "response.body");
-        assertPass(report);
-
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "request.body"),
+                "validation.request.body.schema.required");
     }
 
     @Test
-    public void validate_writeOnly_withArray_asRoot_schema() {
-
+    public void validate_writeOnly_isNotRequired_inResponse() {
         final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
-        final ParseOptions parseOptions = new ParseOptions();
-        parseOptions.setResolveFully(true);
+        final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnly");
 
-        final Schema schema = new OpenAPIParser().readLocation("/oai/v3/api-required-readonly-writeonly.yaml", null, parseOptions)
-                .getOpenAPI().getComponents().getSchemas().get("ReadOnlyArray");
+        final String value = "{\"notReadOnly\":\"abc\", \"readOnly\": \"123\"}";
+
+        assertPass(classUnderTest.validate(value, schema, "response.body"));
+    }
+
+    @Test
+    public void validate_writeOnly_isRequired_inOtherLocation() {
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
+        final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnly");
+
+        final String value = "{\"notReadOnly\":\"abc\", \"readOnly\": \"123\"}";
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "query"),
+                "validation.query.schema.required");
+    }
+
+    @Test
+    public void validate_writeOnly_isRequired_withNesting_inRequest() {
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
+        final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnlyNested");
+
+        final String value = "{\"nestedRef\": {\"notReadOnly\":\"abc\", \"readOnly\": \"123\"}, \"nestedInline\": {\"notReadOnly\":\"abc\", \"readOnly\": \"123\"}}";
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "request.body"),
+                "validation.request.body.schema.required");
+    }
+
+    @Test
+    public void validate_writeOnly_isNotRequired_withNesting_inResponse() {
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
+        final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnlyNested");
+
+        final String value = "{\"nestedRef\": {\"notReadOnly\":\"abc\", \"readOnly\": \"123\"}, \"nestedInline\": {\"notReadOnly\":\"abc\", \"readOnly\": \"123\"}}";
+
+        assertPass(classUnderTest.validate(value, schema, "response.body"));
+    }
+
+    @Test
+    public void validate_writeOnly_isRequired_withArray_inRequest() {
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
+        final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnlyArray");
 
         final String value = "[{\"notReadOnly\":\"abc\", \"readOnly\": \"123\"}]";
 
-        final ValidationReport report = classUnderTest.validate(value, schema, "response.body");
-        assertPass(report);
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "request.body"),
+                "validation.request.body.schema.required");
+    }
 
+    @Test
+    public void validate_writeOnly_isNotRequired_withArray_inResponse() {
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
+        final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnlyArray");
+
+        final String value = "[{\"notReadOnly\":\"abc\", \"readOnly\": \"123\"}]";
+
+        assertPass(classUnderTest.validate(value, schema, "response.body"));
+    }
+
+    @Test
+    public void validate_writeOnly_isRequired_withAllOfComposition_inRequest() {
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
+        final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnlyAllOf");
+
+        final String value = "{\"id\": \"test\", \"notReadOnly\":\"abc\", \"readOnly\":\"123\"}";
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "request.body"),
+                "validation.request.body.schema.allOf");
+    }
+
+    @Test
+    public void validate_writeOnly_isNotRequired_withAllOfComposition_inResponse() {
+        final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-required-readonly-writeonly.yaml");
+        final Schema schema = getSchemasFrom("/oai/v3/api-required-readonly-writeonly.yaml").get("ReadOnlyAllOf");
+
+        final String value = "{\"id\": \"test\", \"notReadOnly\":\"abc\", \"readOnly\":\"123\"}";
+
+        assertPass(classUnderTest.validate(value, schema, "response.body"));
     }
 
     @Test
@@ -639,8 +811,7 @@ public class SchemaValidatorTest {
 
         final SchemaValidator classUnderTest = validatorWithAdditionalPropertiesIgnored("/oai/v3/api-with-deeply-nested-elements.yaml");
 
-        final Schema schema = new OpenAPIParser().readLocation("/oai/v3/api-with-deeply-nested-elements.yaml", null, new ParseOptions())
-                .getOpenAPI().getComponents().getSchemas().get("Pet");
+        final Schema schema = getSchemasFrom("/oai/v3/api-with-deeply-nested-elements.yaml").get("Pet");
 
         final String deeplyNested = "{\"details\": { \"type\": \"Doggo\", \"breed\": \"lappie\", \"colour\": \"tan\" } }";
         final String shallowNested = "{\"sibling\": { \"type\": \"Doggo\", \"breed\": \"lappie\" } }";
@@ -652,12 +823,18 @@ public class SchemaValidatorTest {
         assertFailWithoutContext(reportDeep);
 
         final String expectedSimpleFormatError = "Instance value (\"Doggo\") not found in enum";
-        Assert.assertTrue(SimpleValidationReportFormat.getInstance().apply(reportShallow).contains(expectedSimpleFormatError));
-        Assert.assertTrue(SimpleValidationReportFormat.getInstance().apply(reportDeep).contains(expectedSimpleFormatError));
+        assertTrue(SimpleValidationReportFormat.getInstance().apply(reportShallow).contains(expectedSimpleFormatError));
+        assertTrue(SimpleValidationReportFormat.getInstance().apply(reportDeep).contains(expectedSimpleFormatError));
 
         final String expectedJsonFormatError = "Instance value (\\\"Doggo\\\") not found in enum";
-        Assert.assertTrue(JsonValidationReportFormat.getInstance().apply(reportShallow).contains(expectedJsonFormatError));
-        Assert.assertTrue(JsonValidationReportFormat.getInstance().apply(reportDeep).contains(expectedJsonFormatError));
+        assertTrue(JsonValidationReportFormat.getInstance().apply(reportShallow).contains(expectedJsonFormatError));
+        assertTrue(JsonValidationReportFormat.getInstance().apply(reportDeep).contains(expectedJsonFormatError));
+    }
+
+    private Map<String, Schema> getSchemasFrom(final String api) {
+        final ParseOptions parseOptions = new ParseOptions();
+        parseOptions.setResolveFully(true);
+        return new OpenAPIParser().readLocation(api, null, parseOptions).getOpenAPI().getComponents().getSchemas();
     }
 
     private SchemaValidator validatorWithAdditionalPropertiesIgnored(final String api) {

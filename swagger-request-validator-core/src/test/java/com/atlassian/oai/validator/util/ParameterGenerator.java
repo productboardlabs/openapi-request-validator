@@ -1,6 +1,7 @@
 package com.atlassian.oai.validator.util;
 
 import io.swagger.v3.oas.models.media.ArraySchema;
+import io.swagger.v3.oas.models.media.BooleanSchema;
 import io.swagger.v3.oas.models.media.DateSchema;
 import io.swagger.v3.oas.models.media.DateTimeSchema;
 import io.swagger.v3.oas.models.media.EmailSchema;
@@ -32,6 +33,20 @@ public class ParameterGenerator {
 
     public static Parameter requiredParam() {
         return stringParam(true);
+    }
+
+    public static Parameter emptyAllowedQueryParam() {
+        final Parameter parameter = stringParam(true);
+        parameter.setAllowEmptyValue(true);
+        parameter.setIn("query");
+        return parameter;
+    }
+
+    public static Parameter emptyAllowedHeaderParam() {
+        final Parameter parameter = stringParam(true);
+        parameter.setAllowEmptyValue(true);
+        parameter.setIn("head");
+        return parameter;
     }
 
     // Int parameters
@@ -212,6 +227,16 @@ public class ParameterGenerator {
         schema.format("float");
         schema.setEnum(stream(allowed).map(BigDecimal::valueOf).collect(Collectors.toList()));
         return param(schema, true);
+    }
+
+    // Boolean parameters
+    public static Parameter boolParam() {
+        return boolParam(true);
+    }
+
+    public static Parameter boolParam(final boolean required) {
+        final Schema schema = new BooleanSchema();
+        return param(schema, required);
     }
 
     // Array parameters

@@ -79,7 +79,7 @@ public class OpenApiInteractionValidator {
      *
      * @param specUrlOrPayload The location of the OpenAPI / Swagger specification to use in the validator,
      *                         or the inline specification to use.
-     * @return A new builder instance to use for creating configuring {@link OpenApiInteractionValidator} instances.
+     * @return A new builder instance to use for creating and configuring {@link OpenApiInteractionValidator} instances.
      * @see #createForInlineApiSpecification(String)
      * @see #createForSpecificationUrl(String)
      */
@@ -93,7 +93,7 @@ public class OpenApiInteractionValidator {
      * Supports both Swagger v2 and OpenAPI v3 specifications, in both JSON and YAML formats.
      *
      * @param specAsString The OpenAPI / Swagger specification to use in the validator
-     * @return A new builder instance to use for creating configuring {@link OpenApiInteractionValidator} instances.
+     * @return A new builder instance to use for creating and configuring {@link OpenApiInteractionValidator} instances.
      */
     public static Builder createForInlineApiSpecification(@Nonnull final String specAsString) {
         return new Builder().withInlineApiSpecification(specAsString);
@@ -122,10 +122,20 @@ public class OpenApiInteractionValidator {
      * </pre>
      *
      * @param specUrl The location of the OpenAPI / Swagger specification to use in the validator
-     * @return A new builder instance to use for creating configuring {@link OpenApiInteractionValidator} instances.
+     * @return A new builder instance to use for creating and configuring {@link OpenApiInteractionValidator} instances.
      */
     public static Builder createForSpecificationUrl(@Nonnull final String specUrl) {
         return new Builder().withApiSpecificationUrl(specUrl);
+    }
+
+    /**
+     * Create a new instance using a parsed API specification.
+     *
+     * @param api The API specification to use for validation
+     * @return A new builder instance to use for creating and configuring {@link OpenApiInteractionValidator} instances.
+     */
+    public static Builder createFor(@Nonnull final OpenAPI api) {
+        return new Builder().withApi(api);
     }
 
     private OpenApiInteractionValidator(@Nonnull final OpenAPI api,
@@ -538,7 +548,6 @@ public class OpenApiInteractionValidator {
                     customRequestValidators,
                     customResponseValidators);
         }
-
     }
 
     /**

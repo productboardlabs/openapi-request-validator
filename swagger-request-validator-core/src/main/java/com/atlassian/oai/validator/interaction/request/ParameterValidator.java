@@ -4,6 +4,7 @@ import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.SchemaValidator;
 import io.swagger.v3.oas.models.media.ArraySchema;
+import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.parameters.Parameter;
 
 import javax.annotation.Nullable;
@@ -50,14 +51,18 @@ class ParameterValidator {
         final ValidationReport.MessageContext context =
                 ValidationReport.MessageContext.create().withParameter(parameter).build();
 
-        if (TRUE.equals(parameter.getRequired()) && (value == null || value.trim().isEmpty())) {
-            return ValidationReport.singleton(
-                    messages.get("validation.request.parameter.missing", parameter.getName())
-            ).withAdditionalContext(context);
-        }
-
-        if (value == null || value.trim().isEmpty()) {
-            return ValidationReport.empty();
+        if (TRUE.equals(parameter.getRequired())) {
+            // For required params, reject if null or empty and empty is disallowed
+            if (value == null || (value.trim().isEmpty() && !emptyAllowed(parameter))) {
+                return ValidationReport.singleton(
+                        messages.get("validation.request.parameter.missing", parameter.getName())
+                ).withAdditionalContext(context);
+            }
+        } else {
+            // For optional params, pass if null or empty
+            if (value == null || value.trim().isEmpty()) {
+                return ValidationReport.empty();
+            }
         }
 
         if (parameter.getSchema() instanceof ArraySchema) {
@@ -84,13 +89,12 @@ class ParameterValidator {
         final ValidationReport.MessageContext context =
                 ValidationReport.MessageContext.create().withParameter(parameter).build();
 
-        if (parameter.getRequired() && (values == null || values.isEmpty())) {
-            return ValidationReport.singleton(
-                    messages.get("validation.request.parameter.missing", parameter.getName())
-            ).withAdditionalContext(context);
-        }
-
-        if (values == null || values.isEmpty()) {
+        if (values == null) {
+            if (TRUE.equals(parameter.getRequired())) {
+                return ValidationReport.singleton(
+                        messages.get("validation.request.parameter.missing", parameter.getName())
+                ).withAdditionalContext(context);
+            }
             return ValidationReport.empty();
         }
 
@@ -168,6 +172,16 @@ class ParameterValidator {
             );
         }
         return ValidationReport.empty();
+    }
+
+    private boolean emptyAllowed(final Parameter parameter) {
+        // See https://swagger.io/specification/#parameter-object
+        return (TRUE.equals(parameter.getAllowEmptyValue())
+                && "query".equalsIgnoreCase(parameter.getIn())
+                // It's unclear from the spec whether this should be restricted to String schemas,
+                // but it doesn't make sense not to IMHO
+                && parameter.getSchema() instanceof StringSchema)
+                || parameter.getSchema() instanceof ArraySchema;
     }
 
 }

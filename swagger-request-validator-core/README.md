@@ -180,7 +180,7 @@ for these beans errors, which we would very much like to ignore.
             allOf( // logical AND: all conditions must be satisfied to whitelist a message
                 messageHasKey("validation.schema.additionalProperties"), // whitelist only this message type
                 entityIs("EntityPropertyBean"), // for the entity with problematic property
-                messageContains("[\"value\"]")) // and only if it's this particular property that is additional
+                messageContainsRegexp("\[\"value\"\]")) // and only if it's this particular property that is additional
         )
         .withRule(
             "2. Ignore 401 and 403 status codes",
@@ -191,7 +191,7 @@ for these beans errors, which we would very much like to ignore.
                 messageHasKey("3. Validation.response.status.unknown"))
         )
         .withRule("3. Ignore validation altogether if Content-type is not JSON, no questions asked",
-            headerContains("Content-Type", "application/json").not()); // notice "not()" at the end
+            headerContainsRegexp("Content-Type", "application/json").not()); // notice "not()" at the end
 ```
 
 All rules (`allOf`, `messageHasKey`, `entityIs` etc.) available for creating whitelists are defined 
