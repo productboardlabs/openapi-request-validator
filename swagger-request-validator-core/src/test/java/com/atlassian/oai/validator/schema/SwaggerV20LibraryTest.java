@@ -106,6 +106,7 @@ public class SwaggerV20LibraryTest {
     public static class ValidationTests {
         private static final String[] TEST_CASE_FILES = {
                 "discriminator-valid-allOf",
+                "discriminator-valid-allOf-withAllOfComposition",
                 "nullable-valid"
         };
 

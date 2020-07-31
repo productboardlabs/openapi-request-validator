@@ -13,13 +13,16 @@ import com.github.fge.jsonschema.core.tree.SchemaTree;
 import com.github.fge.msgsimple.bundle.MessageBundle;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static java.util.stream.Collectors.toList;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 
 /**
  * Syntax checker for the <code>discriminator</code> keyword introduced by the OpenAPI / Swagger specification.
@@ -90,20 +93,19 @@ public class DiscriminatorSyntaxChecker extends AbstractSyntaxChecker {
                                       final SchemaTree tree,
                                       final JsonNode node,
                                       final String discriminatorPropertyName) throws ProcessingException {
-        // The discriminator property must be a property on this schema
-        final JsonNode properties = node.get("properties");
-        final List<String> propertyNames = stream(properties.fieldNames()).collect(toList());
-        if (!properties.has(discriminatorPropertyName)) {
-            report.error(msg(tree, bundle, "err.swaggerv2.discriminator.noProperty")
+
+        // The discriminator property must be defined here or in a referenced schema
+        final Optional<PropertyLookupResult> maybePropertyLookupResult = findProperty(tree, node, discriminatorPropertyName, new HashSet<>());
+        if (!maybePropertyLookupResult.isPresent()) {
+            report.error(msg(tree, bundle, "err.swaggerv2.discriminator.propertyName.noProperty")
                     .putArgument("fieldName", discriminatorPropertyName)
-                    .putArgument("properties", propertyNames)
             );
             return;
         }
 
         // The discriminator property must be defined as a string
-        final JsonNode property = properties.get(discriminatorPropertyName);
-        final String type = getTypeOfProperty(tree, property);
+        final JsonNode propertyNode = maybePropertyLookupResult.get().getPropertyNode();
+        final String type = getTypeOfProperty(tree, propertyNode);
         if (!"string".equalsIgnoreCase(type)) {
             report.error(msg(tree, bundle, "err.swaggerv2.discriminator.wrongType")
                     .putArgument("fieldName", discriminatorPropertyName)
@@ -112,7 +114,7 @@ public class DiscriminatorSyntaxChecker extends AbstractSyntaxChecker {
         }
 
         // The discriminator property must be marked as required
-        final JsonNode requiredProperties = tree.getNode().get("required");
+        final JsonNode requiredProperties = maybePropertyLookupResult.get().getParentNode().get("required");
         if (requiredProperties == null ||
                 !requiredProperties.isArray() ||
                 requiredProperties.size() == 0 ||
@@ -121,6 +123,75 @@ public class DiscriminatorSyntaxChecker extends AbstractSyntaxChecker {
                     .putArgument("fieldName", discriminatorPropertyName)
             );
         }
+    }
+
+    private static class PropertyLookupResult {
+        private final String propertyName;
+        private final JsonNode propertyNode;
+        private final JsonNode parentNode;
+
+        public PropertyLookupResult(final String propertyName,
+                                    final JsonNode propertyNode,
+                                    final JsonNode parentNode) {
+            this.propertyName = propertyName;
+            this.propertyNode = propertyNode;
+            this.parentNode = parentNode;
+        }
+
+        public JsonNode getParentNode() {
+            return parentNode;
+        }
+
+        public JsonNode getPropertyNode() {
+            return propertyNode;
+        }
+
+        public String getPropertyName() {
+            return propertyName;
+        }
+    }
+
+    /**
+     * Find a property on the given node (in the `properties` block) OR by following $refs OR by resolving `allOf` refs.
+     *
+     * @return The node defining the property, or {@code empty} if none is found.
+     */
+    private Optional<PropertyLookupResult> findProperty(final SchemaTree tree,
+                                                        final JsonNode node,
+                                                        final String propertyName,
+                                                        final Set<JsonNode> visitedNodes) throws JsonReferenceException {
+        if (visitedNodes.contains(node)) {
+            // We have already inspected this node; Bail out.
+            return empty();
+        }
+        visitedNodes.add(node);
+
+        if (node.has("properties")) {
+            final JsonNode propertiesNode = node.get("properties");
+            if (!propertiesNode.has(propertyName)) {
+                return empty();
+            }
+            return of(new PropertyLookupResult(propertyName, propertiesNode.get(propertyName), node));
+        }
+
+        if (node.has("$ref")) {
+            final JsonRef ref = JsonRef.fromString(node.get("$ref").textValue());
+            final JsonNode referencedNode = tree.matchingPointer(ref).get(tree.getBaseNode());
+            return findProperty(tree, referencedNode, propertyName, visitedNodes);
+        }
+
+        if (node.has("allOf")) {
+            final JsonNode allOfNode = node.get("allOf");
+            final Iterator<JsonNode> children = allOfNode.elements();
+            while (children.hasNext()) {
+                final Optional<PropertyLookupResult> maybeProperty = findProperty(tree, children.next(), propertyName, visitedNodes);
+                if (maybeProperty.isPresent()) {
+                    return maybeProperty;
+                }
+            }
+        }
+
+        return empty();
     }
 
     private ProcessingMessage msg(final SchemaTree tree, final MessageBundle bundle, final String key) {
@@ -143,8 +214,8 @@ public class DiscriminatorSyntaxChecker extends AbstractSyntaxChecker {
         }
     }
 
-    private static boolean arrayNodeContains(final JsonNode requiredProperties, final String element) {
-        return stream(requiredProperties.elements()).anyMatch(e -> e.textValue().equals(element));
+    private static boolean arrayNodeContains(final JsonNode arrayNode, final String element) {
+        return stream(arrayNode.elements()).anyMatch(e -> e.textValue().equals(element));
     }
 
     private static <T> Stream<T> stream(final Iterator<T> iterator) {

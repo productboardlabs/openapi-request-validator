@@ -1,22 +1,71 @@
 {
   "keyword": "discriminator",
-  "description": "An invalid schema using the allOf keyword with a non-existent discriminator property",
-  "shouldPass": false,
-  "expectedKeys": [
-    "err.swaggerv2.discriminator.propertyName.noProperty"
+  "description": "A valid schema using the allOf keyword with referenced properties via allOf",
+  "tests": [
+    {
+      "description": "A valid example",
+      "shouldPass": true,
+      "example": {
+        "name": "Moggy",
+        "petType": "Cat",
+        "huntingSkill": "clueless"
+      }
+    },
+    {
+      "description": "A valid example with an unrequired property",
+      "shouldPass": true,
+      "example": {
+        "name": "Moggy",
+        "petType": "Cat",
+        "huntingSkill": "clueless",
+        "age": 10
+      }
+    },
+    {
+      "description": "An invalid example with an invalid referenced schema",
+      "shouldPass": false,
+      "example": {
+        "name": 1.0,
+        "petType": "Cat",
+        "huntingSkill": "clueless",
+        "age": 10
+      },
+      "expectedKeys": [
+        "err.swaggerv2.discriminator.fail"
+      ]
+    }
   ],
   "schema": {
     "$schema": "https://openapis.org/specification/versions/2.0#",
     "$ref": "#/definitions/Pet",
     "definitions": {
       "Pet": {
-        "type": "object",
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "age": {
+                "type": "number"
+              },
+              "sibling": {
+                "description": "Introduces some circular references",
+                "$ref": "#/definitions/Pet"
+              }
+            }
+          },
+          {
+            "$ref": "#/definitions/PetProperties"
+          }
+        ],
         "discriminator": {
-          "propertyName": "notAProperty",
+          "propertyName": "petType",
           "mapping": {
             "cachorro": "Dog"
           }
-        },
+        }
+      },
+      "PetProperties": {
+        "type": "object",
         "properties": {
           "name": {
             "type": "string"
@@ -79,6 +128,15 @@
             ]
           }
         ]
+      },
+      "Owner": {
+        "description": "A Pet owner. Not a pet.",
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
       }
     }
   }
