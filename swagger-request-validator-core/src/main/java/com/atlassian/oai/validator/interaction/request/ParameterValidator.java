@@ -109,7 +109,7 @@ class ParameterValidator {
 
         if (!ArraySeparator.from(parameter).isMultiValueParam()) {
             return ValidationReport.singleton(
-                    messages.get("validation.request.parameter.collection.invalidFormat", parameter.getName(), parameter.getStyle(), "multi")
+                    messages.get("validation.request.parameter.collection.invalidFormat", parameter.getName(), parameter.getStyle(), false)
             ).withAdditionalContext(context);
         }
 
