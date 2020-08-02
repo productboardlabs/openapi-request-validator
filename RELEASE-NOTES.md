@@ -1,3 +1,19 @@
+# v2.11.0
+
+* Fixed handling of headers so that we no longer split on `,` unless the header is marked as 
+an array param with an appropriate style. 
+[[#256]](https://bitbucket.org/atlassian/swagger-request-validator/issues/256)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/177)
+* Improved handling of array params, with better support for `matrix` and `label` style params
+[[#290]](https://bitbucket.org/atlassian/swagger-request-validator/issues/290)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/177)
+
+*Note:* This version is stricter in the handling of array parameters, particularly headers, and 
+now follows the default `style` for each parameter type as described in the OAI v3 spec. One result
+of this is that e.g. header array params that previously would have accepted multiple header values
+will now likely fail validation unless the `style` has been set correctly (the default `style` for 
+header params is `simple` which expects comma-separated values in a single header).
+  
 # v2.10.3
 
 * Fix a bug in matching of responses with wildcards in the defined media type
@@ -68,7 +84,7 @@ It also adds a format type suffix to existing format keys, allowing finer-graine
 
 *Note*: The `swagger-parser` is now strictly enforcing API spec adherence to schema.
 Most notably it now enforces that all path params must have `required: true`. Path params that
-are missing.
+are missing the `required: true` will fail to load.
 
 # v2.9.0
 
