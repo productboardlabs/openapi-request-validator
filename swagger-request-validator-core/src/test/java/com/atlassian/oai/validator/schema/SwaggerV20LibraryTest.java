@@ -109,6 +109,7 @@ public class SwaggerV20LibraryTest {
                 "discriminator-valid-allOf",
                 "discriminator-valid-allOf-withAllOfComposition",
                 "discriminator-valid-oneOf",
+                "discriminator-valid-anyOf",
                 "nullable-valid"
         };
 
