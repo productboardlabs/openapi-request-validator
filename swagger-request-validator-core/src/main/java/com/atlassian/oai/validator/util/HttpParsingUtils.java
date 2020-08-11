@@ -169,11 +169,23 @@ public class HttpParsingUtils {
      * @return A JSON representation of the formdata
      */
     @Nonnull
-    public static String parseUrlEncodedFormDataBodyAsJson(@Nonnull final String httpBody) {
+    public static JsonNode parseUrlEncodedFormDataBodyAsJsonNode(@Nonnull final String httpBody) {
         final Multimap<String, String> data = parseUrlEncodedFormDataBody(httpBody);
         final ObjectNode root = new ObjectNode(JsonNodeFactory.instance);
         data.asMap().forEach((key, values) -> root.set(key, toJsonObject(values)));
-        return root.toString();
+        return root;
+    }
+
+    /**
+     * Parses the body of an HTTP request that was submitted as a form (application/x-www-form-urlencoded)
+     * and transform it into a JSON representation.
+     *
+     * @deprecated Use {@link #parseUrlEncodedFormDataBodyAsJsonNode(String)} instead.
+     */
+    @Deprecated
+    @Nonnull
+    public static String parseUrlEncodedFormDataBodyAsJson(@Nonnull final String httpBody) {
+        return parseUrlEncodedFormDataBodyAsJsonNode(httpBody).toString();
     }
 
     private static JsonNode toJsonObject(final Collection<String> values) {
