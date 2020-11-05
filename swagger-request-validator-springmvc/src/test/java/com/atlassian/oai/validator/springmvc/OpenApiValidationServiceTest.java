@@ -34,6 +34,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 import org.springframework.web.util.UrlPathHelper;
 
@@ -43,6 +44,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -205,6 +207,30 @@ public class OpenApiValidationServiceTest {
                 equalTo(asList("QUERY_1")));
         assertThat(result.getQueryParameterValues("query2"),
                 equalTo(asList("query_2", "QUERY_2")));
+    }
+
+    @Test
+    public void buildRequest_withContentCachingRequestWrapper() throws IOException {
+        // given:
+        final ContentCachingRequestWrapper servletRequest = mock(ContentCachingRequestWrapper.class);
+
+        // and:
+        when(servletRequest.getMethod()).thenReturn("POST");
+        when(urlPathHelper.getPathWithinApplication(servletRequest)).thenReturn("/swagger-request-validator");
+        when(servletRequest.getParameterNames()).thenReturn(asEnumeration());
+        when(servletRequest.getHeaderNames()).thenReturn(asEnumeration());
+        when(servletRequest.getContentAsByteArray()).thenReturn("Content".getBytes(StandardCharsets.ISO_8859_1));
+        when(servletRequest.getCharacterEncoding()).thenReturn(StandardCharsets.ISO_8859_1.name());
+
+        // when:
+        final Request result = classUnderTest.buildRequest(servletRequest);
+
+        // then:
+        assertThat(result.getPath(), equalTo("/swagger-request-validator"));
+        assertThat(result.getMethod(), equalTo(Request.Method.POST));
+        assertThat(result.getBody().get(), equalTo("Content"));
+        assertThat(result.getHeaders().size(), equalTo(0));
+        assertThat(result.getQueryParameters().size(), equalTo(0));
     }
 
     @Test(expected = NullPointerException.class)

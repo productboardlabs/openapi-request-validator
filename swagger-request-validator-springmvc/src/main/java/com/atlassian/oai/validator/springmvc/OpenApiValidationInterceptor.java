@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 import org.springframework.web.util.UrlPathHelper;
 
@@ -17,6 +18,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import static com.atlassian.oai.validator.springmvc.OpenApiValidationFilter.ATTRIBUTE_REQUEST_VALIDATION;
+import static com.atlassian.oai.validator.springmvc.OpenApiValidationFilter.ATTRIBUTE_RESPONSE_VALIDATION;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -58,11 +61,25 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
         this.validationReportHandler = validationReportHandler;
     }
 
+    private static boolean doValidationStep(final HttpServletRequest servletRequest, final String attributeName) {
+        return Boolean.TRUE.equals(servletRequest.getAttribute(attributeName));
+    }
+
+    private static boolean doRequestValidationStep(final HttpServletRequest servletRequest) {
+        return (servletRequest instanceof ContentCachingRequestWrapper || servletRequest instanceof ResettableRequestServletWrapper) &&
+                doValidationStep(servletRequest, ATTRIBUTE_REQUEST_VALIDATION);
+    }
+
+    private static boolean doResponseValidationStep(final HttpServletRequest servletRequest, final HttpServletResponse servletResponse) {
+        return (servletResponse instanceof ContentCachingResponseWrapper) &&
+                doValidationStep(servletRequest, ATTRIBUTE_RESPONSE_VALIDATION);
+    }
+
     /**
      * Validates the given requests. If a request is defined but invalid against the OpenAPI / Swagger specification
      * an {@link InvalidRequestException} will be thrown leading to an error response.
      * <p>
-     * Only {@link ResettableRequestServletWrapper} can be validated. Wrapping is done within the
+     * Only wrapped {@link HttpServletRequest} can be validated. Wrapping is done within the
      * {@link OpenApiValidationFilter}.
      *
      * @param servletRequest the {@link HttpServletRequest} to validate
@@ -79,24 +96,24 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
     public boolean preHandle(final HttpServletRequest servletRequest,
                              final HttpServletResponse servletResponse,
                              final Object handler) throws Exception {
-        // only wrapped servlet requests can be validated - see: OpenApiValidationFilter
-        if (!(servletRequest instanceof ResettableRequestServletWrapper)) {
-            LOG.debug("OpenAPI request validation disabled");
+        if (!doRequestValidationStep(servletRequest)) {
+            LOG.debug("OpenAPI request validation skipped");
             return true;
         }
 
         // validate the request
-        final ResettableRequestServletWrapper resettableRequest = (ResettableRequestServletWrapper) servletRequest;
         final String requestLoggingKey = servletRequest.getMethod() + "#" + servletRequest.getRequestURI();
         LOG.debug("OpenAPI request validation: {}", requestLoggingKey);
 
-        final Request request = openApiValidationService.buildRequest(resettableRequest);
+        final Request request = openApiValidationService.buildRequest(servletRequest);
         final ValidationReport validationReport = openApiValidationService.validateRequest(request);
 
         validationReportHandler.handleRequestReport(requestLoggingKey, validationReport);
 
         // reset the requests servlet input stream after reading it on former step
-        resettableRequest.resetInputStream();
+        if (servletRequest instanceof ResettableRequestServletWrapper) {
+            ((ResettableRequestServletWrapper) servletRequest).resetInputStream();
+        }
         return true;
     }
 
@@ -105,7 +122,7 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
      * the OpenAPI / Swagger specification an {@link InvalidResponseException} will be thrown leading
      * to an error response.
      * <p>
-     * Only {@link ContentCachingResponseWrapper} can be validated. Wrapping is done within the
+     * Only wrapped {@link HttpServletResponse} can be validated. Wrapping is done within the
      * {@link OpenApiValidationFilter}.
      *
      * @param servletRequest the servlet request
@@ -120,9 +137,8 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
                            final HttpServletResponse servletResponse,
                            final Object handler,
                            final ModelAndView modelAndView) throws Exception {
-        // only cached servlet responses can be validated - see: OpenApiValidationFilter
-        if (!(servletResponse instanceof ContentCachingResponseWrapper)) {
-            LOG.debug("OpenAPI response validation disabled");
+        if (!doResponseValidationStep(servletRequest, servletResponse)) {
+            LOG.debug("OpenAPI response validation skipped");
             return;
         }
 

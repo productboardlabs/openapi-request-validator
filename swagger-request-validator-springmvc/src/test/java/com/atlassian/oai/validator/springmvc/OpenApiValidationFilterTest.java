@@ -1,7 +1,7 @@
 package com.atlassian.oai.validator.springmvc;
 
 import org.junit.Test;
-import org.mockito.Mockito;
+import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import javax.servlet.FilterChain;
@@ -12,7 +12,9 @@ import java.io.IOException;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.same;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class OpenApiValidationFilterTest {
 
@@ -22,17 +24,18 @@ public class OpenApiValidationFilterTest {
         final OpenApiValidationFilter classUnderTest = new OpenApiValidationFilter(true, true);
 
         // and:
-        final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
-        final HttpServletResponse servletResponse = Mockito.mock(HttpServletResponse.class);
-        final FilterChain filterChain = Mockito.mock(FilterChain.class);
-        Mockito.when(servletRequest.getMethod()).thenReturn("OPTIONS");
+        final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
+        final HttpServletResponse servletResponse = mock(HttpServletResponse.class);
+        final FilterChain filterChain = mock(FilterChain.class);
+        when(servletRequest.getMethod()).thenReturn("OPTIONS");
 
         // when:
         classUnderTest.doFilterInternal(servletRequest, servletResponse, filterChain);
 
         // then: the request shall be wrapped and added to the filter chain
-        Mockito.verify(filterChain, times(1))
-                .doFilter(any(ResettableRequestServletWrapper.class), any(ContentCachingResponseWrapper.class));
+        verify(filterChain).doFilter(any(ResettableRequestServletWrapper.class), any(ContentCachingResponseWrapper.class));
+        verify(servletRequest).setAttribute("com.atlassian.oai.validator.springmvc.requestValidation", true);
+        verify(servletRequest).setAttribute("com.atlassian.oai.validator.springmvc.responseValidation", true);
     }
 
     @Test
@@ -41,71 +44,57 @@ public class OpenApiValidationFilterTest {
         final OpenApiValidationFilter classUnderTest = new OpenApiValidationFilter(false, false);
 
         // and:
-        final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
-        final HttpServletResponse servletResponse = Mockito.mock(HttpServletResponse.class);
-        final FilterChain filterChain = Mockito.mock(FilterChain.class);
+        final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
+        final HttpServletResponse servletResponse = mock(HttpServletResponse.class);
+        final FilterChain filterChain = mock(FilterChain.class);
 
         // when:
         classUnderTest.doFilterInternal(servletRequest, servletResponse, filterChain);
 
         // then: the request wasn't wrapped
-        Mockito.verify(filterChain, times(1)).doFilter(servletRequest, servletResponse);
+        verify(filterChain).doFilter(servletRequest, servletResponse);
+        verify(servletRequest).setAttribute("com.atlassian.oai.validator.springmvc.requestValidation", false);
+        verify(servletRequest).setAttribute("com.atlassian.oai.validator.springmvc.responseValidation", false);
     }
 
     @Test
-    public void doFilterInternal_wrapsTheServletRequestIfContentLengthNotToLong() throws ServletException, IOException {
+    public void doFilterInternal_wrapsIntoContentCachingRequestWrapperIfFormData() throws ServletException, IOException {
         // given:
         final OpenApiValidationFilter classUnderTest = new OpenApiValidationFilter();
 
         // and:
-        final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
-        final HttpServletResponse servletResponse = Mockito.mock(HttpServletResponse.class);
-        final FilterChain filterChain = Mockito.mock(FilterChain.class);
-        Mockito.when(servletRequest.getHeader("content-length")).thenReturn(String.valueOf(Integer.MAX_VALUE));
+        final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
+        final HttpServletResponse servletResponse = mock(HttpServletResponse.class);
+        final FilterChain filterChain = mock(FilterChain.class);
+        when(servletRequest.getContentType()).thenReturn("application/x-www-form-urlencoded");
 
         // when:
         classUnderTest.doFilterInternal(servletRequest, servletResponse, filterChain);
 
         // then: the request shall be wrapped and added to the filter chain
-        Mockito.verify(filterChain, times(1))
-                .doFilter(any(ResettableRequestServletWrapper.class), same(servletResponse));
+        verify(filterChain).doFilter(any(ContentCachingRequestWrapper.class), same(servletResponse));
+        verify(servletRequest).setAttribute("com.atlassian.oai.validator.springmvc.requestValidation", true);
+        verify(servletRequest).setAttribute("com.atlassian.oai.validator.springmvc.responseValidation", false);
     }
 
     @Test
-    public void doFilterInternal_wrapsTheServletRequestIfContentLengthIsInvalid() throws ServletException, IOException {
+    public void doFilterInternal_noWrappingIfAlreadyWrapped() throws ServletException, IOException {
         // given:
-        final OpenApiValidationFilter classUnderTest = new OpenApiValidationFilter();
+        final OpenApiValidationFilter classUnderTest = new OpenApiValidationFilter(true, true);
 
         // and:
-        final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
-        final HttpServletResponse servletResponse = Mockito.mock(HttpServletResponse.class);
-        final FilterChain filterChain = Mockito.mock(FilterChain.class);
-        Mockito.when(servletRequest.getHeader("content-length")).thenReturn("invalid-content-length");
-
-        // when:
-        classUnderTest.doFilterInternal(servletRequest, servletResponse, filterChain);
-
-        // then: the request shall be wrapped and added to the filter chain
-        Mockito.verify(filterChain, times(1))
-                .doFilter(any(ResettableRequestServletWrapper.class), same(servletResponse));
-    }
-
-    @Test
-    public void doFilterInternal_noRequestWrappingIfContentIsToLong() throws ServletException, IOException {
-        // given:
-        final OpenApiValidationFilter classUnderTest = new OpenApiValidationFilter();
-
-        // and:
-        final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
-        final HttpServletResponse servletResponse = Mockito.mock(HttpServletResponse.class);
-        final FilterChain filterChain = Mockito.mock(FilterChain.class);
-        Mockito.when(servletRequest.getHeader("content-length")).thenReturn(String.valueOf(1L + Integer.MAX_VALUE));
+        final ContentCachingRequestWrapper servletRequest = mock(ContentCachingRequestWrapper.class);
+        final ContentCachingResponseWrapper servletResponse = mock(ContentCachingResponseWrapper.class);
+        final FilterChain filterChain = mock(FilterChain.class);
+        when(servletRequest.getContentType()).thenReturn("application/x-www-form-urlencoded");
 
         // when:
         classUnderTest.doFilterInternal(servletRequest, servletResponse, filterChain);
 
         // then: the request wasn't wrapped
-        Mockito.verify(filterChain, times(1)).doFilter(servletRequest, servletResponse);
+        verify(filterChain).doFilter(same(servletRequest), same(servletResponse));
+        verify(servletRequest).setAttribute("com.atlassian.oai.validator.springmvc.requestValidation", true);
+        verify(servletRequest).setAttribute("com.atlassian.oai.validator.springmvc.responseValidation", true);
     }
 
     @Test
@@ -114,17 +103,19 @@ public class OpenApiValidationFilterTest {
         final OpenApiValidationFilter classUnderTest = new OpenApiValidationFilter(true, true);
 
         // and:
-        final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
-        final HttpServletResponse servletResponse = Mockito.mock(HttpServletResponse.class);
-        final FilterChain filterChain = Mockito.mock(FilterChain.class);
-        Mockito.when(servletRequest.getHeader("Origin")).thenReturn("https://bitbucket.org");
-        Mockito.when(servletRequest.getHeader("Access-Control-Request-Method")).thenReturn("POST");
-        Mockito.when(servletRequest.getMethod()).thenReturn("OPTIONS");
+        final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
+        final HttpServletResponse servletResponse = mock(HttpServletResponse.class);
+        final FilterChain filterChain = mock(FilterChain.class);
+        when(servletRequest.getHeader("Origin")).thenReturn("https://bitbucket.org");
+        when(servletRequest.getHeader("Access-Control-Request-Method")).thenReturn("POST");
+        when(servletRequest.getMethod()).thenReturn("OPTIONS");
 
         // when:
         classUnderTest.doFilterInternal(servletRequest, servletResponse, filterChain);
 
         // then: the request wasn't wrapped
-        Mockito.verify(filterChain, times(1)).doFilter(servletRequest, servletResponse);
+        verify(filterChain).doFilter(servletRequest, servletResponse);
+        verify(servletRequest).setAttribute("com.atlassian.oai.validator.springmvc.requestValidation", false);
+        verify(servletRequest).setAttribute("com.atlassian.oai.validator.springmvc.responseValidation", false);
     }
 }
