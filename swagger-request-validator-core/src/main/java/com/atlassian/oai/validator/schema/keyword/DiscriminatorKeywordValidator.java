@@ -21,6 +21,13 @@ import java.util.Set;
 
 /**
  * Keyword validator for the <code>discriminator</code> keyword introduced by the OpenAPI / Swagger specification.
+ * <p>
+ * Implements the following validations:
+ * <ol>
+ *     <li>The defined discriminator {@code propertyName} must exist and must be a non-empty String value</li>
+ *     <li>The defined discriminator {@code propertyName} value must be the shorthand name of the "child" schema,
+ *     or a valid value from the mapping node</li>
+ * </ol>
  *
  * @see <a href="http://swagger.io/specification/#composition-and-inheritance--polymorphism--83">Swagger specification</a>
  */
@@ -29,12 +36,12 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
 
     private final Set<JsonNode> visitedNodes = new HashSet<>();
 
-    private final String fieldName;
+    private final String propertyName;
     private final JsonNode mappingNode;
 
     public DiscriminatorKeywordValidator(final JsonNode digest) {
         super(Discriminator.KEYWORD);
-        fieldName = digest.get(keyword).get(Discriminator.PROPERTYNAME_KEYWORD).textValue();
+        propertyName = digest.get(keyword).get(Discriminator.PROPERTYNAME_KEYWORD).textValue();
         mappingNode = digest.get(keyword).get(Discriminator.MAPPING_KEYWORD);
     }
 
@@ -51,25 +58,31 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
             return;
         }
 
-        JsonNode discriminatorNode = data.getInstance().getNode().get(fieldName);
+        // The defined discriminator property must exist
+        final JsonNode discriminatorNode = data.getInstance().getNode().get(propertyName);
         if (discriminatorNode == null) {
             report.error(
                     msg(data, bundle, "err.swaggerv2.discriminator.missing")
-                            .putArgument("discriminatorField", fieldName)
+                            .putArgument("discriminatorField", propertyName)
             );
             return;
         }
+
+        // And it must be a String value
         if (!discriminatorNode.isTextual()) {
             report.error(
                     msg(data, bundle, "err.swaggerv2.discriminator.nonText")
-                            .putArgument("discriminatorField", fieldName)
+                            .putArgument("discriminatorField", propertyName)
             );
             return;
         }
-        if (discriminatorNode.textValue().isEmpty()) {
+
+        // And it must not be empty
+        final String discriminatorPropertyValue = discriminatorNode.textValue();
+        if (discriminatorPropertyValue.isEmpty()) {
             report.error(
                     msg(data, bundle, "err.swaggerv2.discriminator.missing")
-                            .putArgument("discriminatorField", fieldName)
+                            .putArgument("discriminatorField", propertyName)
             );
             return;
         }
@@ -80,49 +93,34 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
             return;
         }
 
-        // Valid 'subclasses' should use allOf to reference the parent schema definition
+        validateAllOfComposition(processor, report, bundle, data, discriminatorNode, currentSchemaNode);
+    }
+
+    private void validateAllOfComposition(final Processor<FullData, FullData> processor,
+                                          final ProcessingReport report,
+                                          final MessageBundle bundle,
+                                          final FullData data,
+                                          JsonNode discriminatorNode,
+                                          final JsonNode currentSchemaNode) throws ProcessingException {
         final SchemaTree schemaTree = data.getSchema();
         final String parentDefinitionRef = "#" + schemaTree.getPointer().toString();
-        final Map<String, JsonNode> validDiscriminatorValues = new HashMap<>();
 
-        definitionsNode(data).fields().forEachRemaining(e -> {
-            final JsonNode def = e.getValue();
-            if (!def.has("allOf")) {
-                return;
-            }
+        final String discriminatorPropertyValue = discriminatorNode.textValue();
+        final boolean useMappingNode = mappingNode != null && mappingNode.get(discriminatorPropertyValue) != null;
 
-            def.get("allOf").forEach(n -> {
-                if (n.has("$ref") && n.get("$ref").textValue().equals(parentDefinitionRef)) {
-                    validDiscriminatorValues.put(e.getKey(), def);
-                }
-            });
+        final Map<String, JsonNode> validDiscriminatorValues = findValidDiscriminatorValues(data, parentDefinitionRef, useMappingNode);
 
-        });
-
-        final boolean useMappingNode = mappingNode != null && mappingNode.get(discriminatorNode.textValue()) != null;
-        if (useMappingNode) {
-            mappingNode.fields().forEachRemaining(e -> validDiscriminatorValues.put(e.getKey(), e.getValue()));
-        } else if (currentSchemaNode.has("oneOf")) {
-            currentSchemaNode.get("oneOf").forEach(jsonNode ->
-                    // the oneOf $refs are resolved already, so we have to look up theirs schema names
-                    definitionsNode(data).fields().forEachRemaining(entry -> {
-                        if (entry.getValue().equals(jsonNode)) {
-                            validDiscriminatorValues.put(entry.getKey(), entry.getValue());
-                        }
-                    }));
-        }
-
-        if (!validDiscriminatorValues.containsKey(discriminatorNode.textValue())) {
+        if (!validDiscriminatorValues.containsKey(discriminatorPropertyValue)) {
             report.error(
                     msg(data, bundle, "err.swaggerv2.discriminator.invalid")
-                            .putArgument("discriminatorField", fieldName)
-                            .putArgument("value", discriminatorNode.textValue())
+                            .putArgument("discriminatorField", propertyName)
+                            .putArgument("value", discriminatorPropertyValue)
                             .putArgument("allowedValues", validDiscriminatorValues.keySet())
             );
         }
 
         if (useMappingNode) {
-            discriminatorNode = mappingNode.get(discriminatorNode.textValue());
+            discriminatorNode = mappingNode.get(discriminatorPropertyValue);
         }
 
         final ListProcessingReport subReport = new ListProcessingReport(report.getLogLevel(), LogLevel.FATAL);
@@ -147,6 +145,46 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
                     .putArgument("schema", ptr.toString())
                     .put("report", subReport.asJson()));
         }
+    }
+
+    /**
+     * Find the valid values for the discriminator property.
+     * <p>
+     * These will be:
+     * <ol>
+     *     <li>The contents of the mapping node (if it exists)</li>
+     *     <li>Any schema using `allOf` composition referencing the "parent" schema</li>
+     * </ol>
+     * The returned map will be keyed by the short name of the schema (e.g. un-qualified name).
+     *
+     * @return A mapping between schema name and schema object for candidate schemas
+     */
+    private Map<String, JsonNode> findValidDiscriminatorValues(final FullData data,
+                                                               final String parentDefinitionRef,
+                                                               final boolean useMappingNode) {
+        final Map<String, JsonNode> validDiscriminatorValues = new HashMap<>();
+
+        // Find definitions that reference the "parent" via allOf
+        definitionsNode(data).fields().forEachRemaining(e -> {
+            final JsonNode def = e.getValue();
+            if (!def.has("allOf")) {
+                return;
+            }
+
+            def.get("allOf").forEach(n -> {
+                if (n.has("$ref") && n.get("$ref").textValue().equals(parentDefinitionRef)) {
+                    validDiscriminatorValues.put(e.getKey(), def);
+                }
+            });
+
+        });
+
+        if (useMappingNode) {
+            // TODO: These may be fully-qualified refs here
+            mappingNode.fields().forEachRemaining(e -> validDiscriminatorValues.put(e.getKey(), e.getValue()));
+        }
+
+        return validDiscriminatorValues;
     }
 
     private JsonPointer pointerToDiscriminator(final FullData data, final JsonNode discriminatorNode) {
