@@ -15,6 +15,7 @@ import com.github.fge.msgsimple.bundle.MessageBundle;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Spliterators;
@@ -35,7 +36,7 @@ import static java.util.Optional.of;
  * In the case of composition via {@code allOf}, the property name must exist in the object in which the discriminator is defined.
  * For {@code oneOf} and {@code anyOf} composition, the property name must exist in <em>all</em> of the referenced schemas.
  * <p>
- * If a {@code mapping} is used, the listed schemas <em>must</em> match a schema definition.
+ * If a {@code mapping} is used, the listed schemas <em>must</em> match a schema definition, or be an external ref.
  *
  * @see <a href="https://swagger.io/specification/#discriminator-object">Swagger specification</a>
  */
@@ -69,19 +70,11 @@ public class DiscriminatorSyntaxChecker extends AbstractSyntaxChecker {
             return;
         }
 
-        // if "mapping" is defined it must be an object
-        final JsonNode mappingNode = getNode(tree).get(Discriminator.MAPPING_KEYWORD);
-        if (mappingNode != null && !mappingNode.isObject()) {
-            report.error(msg(tree, bundle, "err.swaggerv2.discriminator.mapping.wrongType"));
-            return;
-        }
-
-        // TODO: The mapping node must reference valid schemas
+        validateMapping(bundle, report, tree);
 
         // For `anyOf` and `oneOf` composition, check each referenced schema for the discriminator property
-        if (tree.getNode().has("oneOf") || tree.getNode().has("anyOf")) {
-            final JsonNode compositionNode = tree.getNode().has("oneOf") ?
-                    tree.getNode().get("oneOf") : tree.getNode().get("anyOf");
+        if (isOneOrAnyOfComposition(tree.getNode())) {
+            final JsonNode compositionNode = getCompositionNode(tree.getNode());
             final Iterator<JsonNode> children = compositionNode.elements();
             while (children.hasNext()) {
                 validatePropertyName(bundle, report, tree, children.next(), discriminatorPropertyName);
@@ -91,6 +84,17 @@ public class DiscriminatorSyntaxChecker extends AbstractSyntaxChecker {
 
         // For `allOf` composition check the current schema for the discriminator property
         validatePropertyName(bundle, report, tree, tree.getNode(), discriminatorPropertyName);
+    }
+
+    private JsonNode getCompositionNode(final JsonNode node) {
+        if (isOneOrAnyOfComposition(node)) {
+            return node.has("oneOf") ? node.get("oneOf") : node.get("anyOf");
+        }
+        return node;
+    }
+
+    private boolean isOneOrAnyOfComposition(final JsonNode node) {
+        return node.has("oneOf") || node.has("anyOf");
     }
 
     private void validatePropertyName(final MessageBundle bundle,
@@ -127,6 +131,45 @@ public class DiscriminatorSyntaxChecker extends AbstractSyntaxChecker {
             report.error(msg(tree, bundle, "err.swaggerv2.discriminator.notRequired")
                     .putArgument("fieldName", discriminatorPropertyName)
             );
+        }
+    }
+
+    private void validateMapping(final MessageBundle bundle,
+                                 final ProcessingReport report,
+                                 final SchemaTree tree) throws ProcessingException {
+        final JsonNode mappingNode = getNode(tree).get(Discriminator.MAPPING_KEYWORD);
+        // Mapping is optional
+        if (mappingNode == null) {
+            return;
+        }
+
+        // If defined, it must be an object
+        if (!mappingNode.isObject()) {
+            report.error(msg(tree, bundle, "err.swaggerv2.discriminator.mapping.wrongType"));
+            return;
+        }
+
+        // The values must be references to schemas
+        final Iterator<Map.Entry<String, JsonNode>> mappings = mappingNode.fields();
+        while (mappings.hasNext()) {
+            final Map.Entry<String, JsonNode> mapping = mappings.next();
+
+            // Mappings must be textual values
+            if (!mapping.getValue().isTextual()) {
+                report.error(msg(tree, bundle, "err.swaggerv2.discriminator.mapping.value.invalidType")
+                        .putArgument("mappingName", mapping.getKey()));
+            }
+
+            // Must be a valid "shortname" OR a valid ref
+            final String mappingValue = mapping.getValue().textValue();
+            if (tree.matchingPointer(JsonRef.fromString(mappingValue)) != null ||
+                    tree.matchingPointer(shortnameRef(tree, mappingValue)) != null) {
+                continue;
+            }
+
+            report.error(msg(tree, bundle, "err.swaggerv2.discriminator.mapping.value.invalidRef")
+                    .putArgument("mappingName", mapping.getKey())
+                    .putArgument("mappingValue", mappingValue));
         }
     }
 
@@ -181,7 +224,11 @@ public class DiscriminatorSyntaxChecker extends AbstractSyntaxChecker {
 
         if (node.has("$ref")) {
             final JsonRef ref = JsonRef.fromString(node.get("$ref").textValue());
-            final JsonNode referencedNode = tree.matchingPointer(ref).get(tree.getBaseNode());
+            final JsonPointer jsonPointer = tree.matchingPointer(ref);
+            if (jsonPointer == null) {
+                return empty();
+            }
+            final JsonNode referencedNode = jsonPointer.get(tree.getBaseNode());
             return findProperty(tree, referencedNode, propertyName, visitedNodes);
         }
 
@@ -225,5 +272,16 @@ public class DiscriminatorSyntaxChecker extends AbstractSyntaxChecker {
 
     private static <T> Stream<T> stream(final Iterator<T> iterator) {
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, 0), false);
+    }
+
+    private JsonRef shortnameRef(final SchemaTree tree, final String shortname) throws JsonReferenceException {
+        // Swagger 2.0 used 'definitions' while OpenAPI uses 'components/schemas'
+        if (shortname.startsWith("#/components") || shortname.startsWith("#/definitions")) {
+            return JsonRef.fromString(shortname);
+        }
+        if (tree.getBaseNode().has("components")) {
+            return JsonRef.fromString("#/components/schemas/" + shortname);
+        }
+        return JsonRef.fromString("#/definitions/" + shortname);
     }
 }

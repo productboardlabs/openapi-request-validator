@@ -50,7 +50,9 @@ public class SwaggerV20LibraryTest {
                 "discriminator-invalid-allOf-nonExistentProperty",
                 "discriminator-invalid-allOf-nonStringType",
                 "discriminator-invalid-allOf-nonObjectMapping",
+                "discriminator-invalid-allOf-invalidMappingRefs",
                 "discriminator-invalid-oneOf-subSchemaMissingProperty",
+                "discriminator-invalid-oneOf-notRequired",
         };
 
         @Parameters(name = "{0}: {1} SHOULD {2}")

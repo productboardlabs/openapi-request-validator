@@ -21,6 +21,15 @@
       }
     },
     {
+      "description": "A valid example with relative ref mapping",
+      "shouldPass": true,
+      "example": {
+        "name": "Doggy",
+        "petType": "puppy",
+        "packSize": 5
+      }
+    },
+    {
       "description": "An invalid example with a bad discriminator value",
       "shouldPass": false,
       "example": {
@@ -88,7 +97,8 @@
         "discriminator": {
           "propertyName": "petType",
           "mapping": {
-            "cachorro": "Dog"
+            "cachorro": "Dog",
+            "puppy": "#/definitions/Dog"
           }
         },
         "properties": {
