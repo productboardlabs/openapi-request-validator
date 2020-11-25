@@ -17,6 +17,7 @@ import javax.annotation.concurrent.NotThreadSafe;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -34,7 +35,7 @@ import java.util.Set;
 @NotThreadSafe
 public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
 
-    private final Set<JsonNode> visitedNodes = new HashSet<>();
+    private final Set<VisitedInfo> visitedNodes = new HashSet<>();
 
     private final String propertyName;
     private final JsonNode mappingNode;
@@ -50,14 +51,26 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
                          final ProcessingReport report,
                          final MessageBundle bundle,
                          final FullData data) throws ProcessingException {
-
-        if (visitedNodes.contains(data.getSchema().getNode())) {
+        final VisitedInfo visitInfo = new VisitedInfo(data.getInstance().getPointer(), data.getSchema().getPointer());
+        if (visitedNodes.contains(visitInfo)) {
             // We have already validated the discriminator of this node.
             // We need to bail out to avoid a validation loop.
-            visitedNodes.remove(data.getSchema().getNode());
+            visitedNodes.remove(visitInfo);
             return;
         }
+        visitedNodes.add(visitInfo);
 
+        try {
+            doValidate(processor, report, bundle, data);
+        } finally {
+            visitedNodes.remove(visitInfo);
+        }
+    }
+
+    public void doValidate(final Processor<FullData, FullData> processor,
+                           final ProcessingReport report,
+                           final MessageBundle bundle,
+                           final FullData data) throws ProcessingException {
         // The defined discriminator property must exist
         final JsonNode discriminatorNode = data.getInstance().getNode().get(propertyName);
         if (discriminatorNode == null) {
@@ -96,6 +109,25 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
         validateAllOfComposition(processor, report, bundle, data, discriminatorNode, currentSchemaNode);
     }
 
+    /**
+     * In <code>allOf</code> composition we are starting at the "parent" schema and using the discriminator
+     * to select a "child" schema to validate the data against.
+     * <p>
+     * The complication is that, by necessity, the "child" schema references the "parent" schema and thus creates
+     * a validation loop that needs to be handled.
+     * <p>
+     * Selection of a "child" schema is as follows:
+     * <ol>
+     *     <li>
+     *         If no <code>mapping</code> is defined, the discriminator value is used as a "shortname" to match with
+     *         e.g. "Dog" -> "#/components/schemas/Dog"
+     *     </li>
+     *     <li>
+     *         If a <code>mapping</code> is defined, the discriminator value is used to lookup the appropriate schema.
+     *         This could be a "shortname", a relative ref, or an external ref.
+     *     </li>
+     * </ol>
+     */
     private void validateAllOfComposition(final Processor<FullData, FullData> processor,
                                           final ProcessingReport report,
                                           final MessageBundle bundle,
@@ -106,10 +138,9 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
         final String parentDefinitionRef = "#" + schemaTree.getPointer().toString();
 
         final String discriminatorPropertyValue = discriminatorNode.textValue();
-        final boolean useMappingNode = mappingNode != null && mappingNode.get(discriminatorPropertyValue) != null;
 
-        final Map<String, JsonNode> validDiscriminatorValues = findValidDiscriminatorValues(data, parentDefinitionRef, useMappingNode);
-
+        // The given discriminator value must either match a mapping OR a valid child schema
+        final Map<String, JsonNode> validDiscriminatorValues = findValidDiscriminatorValues(data, parentDefinitionRef);
         if (!validDiscriminatorValues.containsKey(discriminatorPropertyValue)) {
             report.error(
                     msg(data, bundle, "err.swaggerv2.discriminator.invalid")
@@ -119,30 +150,30 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
             );
         }
 
-        if (useMappingNode) {
+        // Apply the mapping, if applicable
+        if (mappingNode != null && mappingNode.get(discriminatorPropertyValue) != null) {
             discriminatorNode = mappingNode.get(discriminatorPropertyValue);
         }
 
-        final ListProcessingReport subReport = new ListProcessingReport(report.getLogLevel(), LogLevel.FATAL);
-        final JsonPointer ptr = pointerToDiscriminator(data, discriminatorNode);
-        final FullData newData = data.withSchema(schemaTree.setPointer(ptr));
+        // Select the child schema based on the discriminator
+        final JsonPointer ptrToChildSchema = pointerToDiscriminatedSchema(data, discriminatorNode);
 
-        if (newData.getSchema().getNode() == null) {
+        final SchemaTree childSchemaTree = schemaTree.setPointer(ptrToChildSchema);
+        final ListProcessingReport subReport = new ListProcessingReport(report.getLogLevel(), LogLevel.FATAL);
+        if (childSchemaTree.getNode() == null) {
             report.error(msg(data, bundle, "err.swaggerv2.discriminator.reference.invalid")
-                    .putArgument("schema", ptr.toString())
+                    .putArgument("schema", ptrToChildSchema.toString())
                     .put("report", subReport.asJson()));
             return;
         }
 
-        // Mark the node to ensure we don't get in a validation loop
-        visitedNodes.add(schemaTree.getNode());
-
-        // Validate against the sub-schema
+        // Validate against the selected child schema
+        final FullData newData = data.withSchema(childSchemaTree);
         processor.process(subReport, newData);
 
         if (!subReport.isSuccess()) {
             report.error(msg(data, bundle, "err.swaggerv2.discriminator.fail")
-                    .putArgument("schema", ptr.toString())
+                    .putArgument("schema", ptrToChildSchema.toString())
                     .put("report", subReport.asJson()));
         }
     }
@@ -160,8 +191,7 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
      * @return A mapping between schema name and schema object for candidate schemas
      */
     private Map<String, JsonNode> findValidDiscriminatorValues(final FullData data,
-                                                               final String parentDefinitionRef,
-                                                               final boolean useMappingNode) {
+                                                               final String parentDefinitionRef) {
         final Map<String, JsonNode> validDiscriminatorValues = new HashMap<>();
 
         // Find definitions that reference the "parent" via allOf
@@ -179,7 +209,7 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
 
         });
 
-        if (useMappingNode) {
+        if (mappingNode != null) {
             // TODO: These may be fully-qualified refs here
             mappingNode.fields().forEachRemaining(e -> validDiscriminatorValues.put(e.getKey(), e.getValue()));
         }
@@ -187,7 +217,8 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
         return validDiscriminatorValues;
     }
 
-    private JsonPointer pointerToDiscriminator(final FullData data, final JsonNode discriminatorNode) {
+    private JsonPointer pointerToDiscriminatedSchema(final FullData data, final JsonNode discriminatorNode) {
+        // TODO: Handle absolute/external refs
         final String discriminatorNodeText = normalizeDiscriminatorNode(discriminatorNode.textValue());
         // Swagger 2.0 used 'definitions' while OpenAPI uses 'components/schemas'
         if (data.getSchema().getBaseNode().has("components")) {
@@ -211,6 +242,40 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
             return discriminatorNodeText.substring(n + 1);
         }
         return discriminatorNodeText;
+    }
+
+    /**
+     * Container used to track which nodes in the instance have been validated against which nodes in the schema.
+     * <p>
+     * Used to avoid validation cycles caused by the fact that in the <code>allOf</code> scenario we end up with a cycle
+     * <code>parent -> child -> parent</code>
+     */
+    private static class VisitedInfo {
+        private final JsonPointer instancePointer;
+        private final JsonPointer schemaPointer;
+
+        public VisitedInfo(final JsonPointer instancePointer, final JsonPointer schemaPointer) {
+            this.instancePointer = instancePointer;
+            this.schemaPointer = schemaPointer;
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            final VisitedInfo that = (VisitedInfo) o;
+            return Objects.equals(instancePointer, that.instancePointer) &&
+                    Objects.equals(schemaPointer, that.schemaPointer);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(instancePointer, schemaPointer);
+        }
     }
 
     @Override

@@ -12,7 +12,7 @@
       }
     },
     {
-      "description": "A valid example with an unrequired property",
+      "description": "A valid example with an non-required property",
       "shouldPass": true,
       "example": {
         "name": "Moggy",
@@ -29,6 +29,58 @@
         "petType": "Cat",
         "huntingSkill": "clueless",
         "age": 10
+      },
+      "expectedKeys": [
+        "err.swaggerv2.discriminator.fail"
+      ]
+    },
+    {
+      "description": "A valid example with a property that causes a validation loop",
+      "shouldPass": true,
+      "example": {
+        "name": "Moggy",
+        "petType": "Cat",
+        "huntingSkill": "clueless",
+        "age": 10,
+        "sibling": {
+          "name": "Felix",
+          "petType": "Cat",
+          "age": 9,
+          "huntingSkill": "lazy"
+        }
+      }
+    },
+    {
+      "description": "An invalid example with a nested schema being invalid",
+      "shouldPass": false,
+      "example": {
+        "name": "Moggy",
+        "petType": "Cat",
+        "huntingSkill": "clueless",
+        "age": 10,
+        "sibling": {
+          "name": "Felix",
+          "petType": "Cat",
+          "age": 9,
+          "huntingSkill": "slow"
+        }
+      },
+      "expectedKeys": [
+        "err.swaggerv2.discriminator.fail"
+      ]
+    },
+    {
+      "description": "An invalid example with a nested schema with invalid discriminator",
+      "shouldPass": false,
+      "example": {
+        "name": "Moggy",
+        "petType": "Cat",
+        "huntingSkill": "clueless",
+        "age": 10,
+        "sibling": {
+          "name": "Felix",
+          "petType": "Lizard"
+        }
       },
       "expectedKeys": [
         "err.swaggerv2.discriminator.fail"
