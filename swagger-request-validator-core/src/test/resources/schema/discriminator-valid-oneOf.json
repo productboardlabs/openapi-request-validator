@@ -19,6 +19,27 @@
         "petType": "puppy",
         "packSize": 1
       }
+    },
+    {
+      "description": "A valid example with a relative ref mapping",
+      "shouldPass": true,
+      "example": {
+        "name": "Fido",
+        "petType": "cachorro",
+        "packSize": 1
+      }
+    },
+    {
+      "description": "An invalid example with a relative ref mapping",
+      "shouldPass": false,
+      "example": {
+        "name": "Fido",
+        "petType": "cachorro",
+        "packSize": -1
+      },
+      "expectedKeys": [
+        "error.validation.oneOf"
+      ]
     }
   ],
   "schema": {
@@ -38,7 +59,8 @@
         "discriminator": {
           "propertyName": "petType",
           "mapping": {
-            "puppy": "Dog"
+            "puppy": "Dog",
+            "cachorro": "#/definitions/Dog"
           }
         }
       },

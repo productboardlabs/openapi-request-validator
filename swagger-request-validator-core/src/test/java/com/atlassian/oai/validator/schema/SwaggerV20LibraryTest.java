@@ -112,6 +112,8 @@ public class SwaggerV20LibraryTest {
                 "discriminator-valid-allOf",
                 "discriminator-valid-allOf-withAllOfComposition",
                 "discriminator-valid-oneOf",
+                // TODO: #289 - Use the discriminator to select between overlapping options
+                // "discriminator-valid-oneOf-withOverlappingSchema",
                 "discriminator-valid-anyOf",
                 "nullable-valid"
         };
@@ -201,7 +203,7 @@ public class SwaggerV20LibraryTest {
             fail("Expected validation failure.");
         }
 
-        final StringBuilder builder = new StringBuilder("Report missing expected errors. Found errors: [");
+        final StringBuilder builder = new StringBuilder("Report missing expected errors. \nFound errors: [");
         final Set<String> keys = new HashSet<>();
         report.forEach(pm -> {
             builder.append('\n').append(pm.toString().replace("\n", "\n\t"));
@@ -217,6 +219,8 @@ public class SwaggerV20LibraryTest {
             }
         });
         builder.append("\n]");
+        builder.append("\nKeys:\n");
+        keys.forEach(k -> builder.append("- ").append(k).append("\n"));
 
         for (final String key : expectedMsgs) {
             if (!keys.contains(key)) {
