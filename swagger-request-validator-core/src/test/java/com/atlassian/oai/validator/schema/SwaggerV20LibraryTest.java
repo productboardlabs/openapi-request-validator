@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jackson.JsonLoader;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
+import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import io.swagger.util.Json;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -135,14 +136,17 @@ public class SwaggerV20LibraryTest {
         public String passFailMsg;
 
         @Parameterized.Parameter(4)
-        public JsonNode schemaNode;
+        public JsonSchema schema;
 
         @Parameterized.Parameter(5)
         public TestDetails testDetails;
 
+        private static final JsonSchemaFactory factory = schemaFactory();
+
         private static Stream<Object[]> loadTests(final String testCaseFile) {
             try {
                 final TestCase testCase = Json.mapper().treeToValue(loadTestCase(testCaseFile), TestCase.class);
+                final JsonSchema schema = factory.getJsonSchema(testCase.schema);
                 return testCase.tests
                         .stream()
                         .map(t -> new Object[]{
@@ -150,7 +154,7 @@ public class SwaggerV20LibraryTest {
                                 testCase.description,
                                 t.description,
                                 t.shouldPass ? "pass" : "fail",
-                                testCase.schema,
+                                schema,
                                 t
                         });
             } catch (final Exception e) {
@@ -160,8 +164,7 @@ public class SwaggerV20LibraryTest {
         }
 
         @Test
-        public void test() throws Exception {
-            final JsonSchema schema = schemaFactory().getJsonSchema(schemaNode);
+        public void test() {
             final ProcessingReport report = schema.validateUnchecked(testDetails.example);
             if (testDetails.shouldPass) {
                 assertPass(report);
