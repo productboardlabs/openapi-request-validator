@@ -35,7 +35,7 @@ import java.util.Set;
 @NotThreadSafe
 public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
 
-    private final Set<VisitedInfo> visitedNodes = new HashSet<>();
+    private final ThreadLocal<Set<VisitedInfo>> visitedNodes = ThreadLocal.withInitial(HashSet::new);
 
     private final String propertyName;
     private final JsonNode mappingNode;
@@ -52,18 +52,18 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
                          final MessageBundle bundle,
                          final FullData data) throws ProcessingException {
         final VisitedInfo visitInfo = new VisitedInfo(data.getInstance().getPointer(), data.getSchema().getPointer());
-        if (visitedNodes.contains(visitInfo)) {
+        if (visitedNodes.get().contains(visitInfo)) {
             // We have already validated the discriminator of this node.
             // We need to bail out to avoid a validation loop.
-            visitedNodes.remove(visitInfo);
+            visitedNodes.get().remove(visitInfo);
             return;
         }
-        visitedNodes.add(visitInfo);
+        visitedNodes.get().add(visitInfo);
 
         try {
             doValidate(processor, report, bundle, data);
         } finally {
-            visitedNodes.remove(visitInfo);
+            visitedNodes.get().remove(visitInfo);
         }
     }
 
