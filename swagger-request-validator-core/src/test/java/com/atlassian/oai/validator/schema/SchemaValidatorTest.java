@@ -5,6 +5,8 @@ import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.SimpleValidationReportFormat;
 import com.atlassian.oai.validator.report.ValidationReport;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import io.swagger.parser.OpenAPIParser;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -46,6 +48,14 @@ public class SchemaValidatorTest {
         final Schema schema = new Schema();
 
         classUnderTest.validate(value, schema, "prefix");
+    }
+
+    @Test
+    public void validate_withStringNull_shouldPass() {
+        final String value = "null";
+        final Schema schema = new Schema();
+
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
 
     @Test
@@ -147,6 +157,15 @@ public class SchemaValidatorTest {
 
         assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
                 "validation.prefix.schema.format.double");
+    }
+
+    @Test
+    public void validate_shouldFail_whenInvalidJson() {
+        final String value = "#";
+        final Schema schema = new Schema();
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.invalidJson");
     }
 
     @Test
@@ -829,6 +848,14 @@ public class SchemaValidatorTest {
         final String expectedJsonFormatError = "Instance value (\\\"Doggo\\\") not found in enum";
         assertTrue(JsonValidationReportFormat.getInstance().apply(reportShallow).contains(expectedJsonFormatError));
         assertTrue(JsonValidationReportFormat.getInstance().apply(reportDeep).contains(expectedJsonFormatError));
+    }
+
+    @Test
+    public void validateJsonNode_withEmptyJsonNodeAndEmptySchema_shouldPass() {
+        final JsonNode value = new ObjectMapper().createObjectNode();
+        final Schema schema = new Schema();
+
+        assertPass(classUnderTest.validateJsonNode(value, schema, "prefix"));
     }
 
     private Map<String, Schema> getSchemasFrom(final String api) {

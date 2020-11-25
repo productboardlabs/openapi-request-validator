@@ -98,7 +98,28 @@ public class SchemaValidator {
                                      @Nullable final Schema schema,
                                      @Nullable final String keyPrefix) {
         requireNonNull(value, "A value is required");
+        return validate(schema, () -> readContent(value, schema), keyPrefix);
+    }
 
+    /**
+     * Validate the given value against the given property schema. If the schema is null then any json is valid.
+     *
+     * @param value The value to validate
+     * @param schema The schema to validate the value against
+     * @param keyPrefix A prefix to apply to validation messages emitted by the validator
+     *
+     * @return A validation report containing accumulated validation errors
+     */
+    @Nonnull
+    public ValidationReport validateJsonNode(@Nonnull final JsonNode value,
+                                             @Nullable final Schema schema,
+                                             @Nullable final String keyPrefix) {
+        return validate(schema, () -> value, keyPrefix);
+    }
+
+    private ValidationReport validate(final Schema schema,
+                                      final JsonNodeSupplier supplier,
+                                      final String keyPrefix) {
         if (schema == null) {
             return ValidationReport.empty();
         }
@@ -107,7 +128,7 @@ public class SchemaValidator {
             final JsonNode content;
             final ListProcessingReport processingReport;
             try {
-                content = readContent(value, schema);
+                content = supplier.get();
 
                 final JsonNode schemaObject = readAndTransformSchemaObject(schema, keyPrefix);
 
@@ -273,5 +294,9 @@ public class SchemaValidator {
         });
 
         return validationReportMessage.withNestedMessages(nestedMessages);
+    }
+
+    private interface JsonNodeSupplier {
+        JsonNode get() throws IOException;
     }
 }
