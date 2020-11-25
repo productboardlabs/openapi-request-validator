@@ -10,6 +10,7 @@ import com.google.common.collect.Lists;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.support.EncodedResource;
+import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 import org.springframework.web.util.UrlPathHelper;
 
@@ -78,14 +79,26 @@ class OpenApiValidationService {
         final String path = resolveServletPath(servletRequest);
         final SimpleRequest.Builder builder = new SimpleRequest.Builder(method, path);
         final int contentLength = servletRequest.getContentLength();
-        final String body = readReader(servletRequest.getReader(), contentLength);
+        final Set<String> queryParameterNames;
+        final String body;
+        if (servletRequest instanceof ContentCachingRequestWrapper) {
+            // In case of form data - wrapped in a ContentCachingRequestWrapper - the parameters have to be
+            // read before (!!) the body. The RequestFacade parses the parameters from the bodies input stream.
+            final ContentCachingRequestWrapper wrappedRequest = (ContentCachingRequestWrapper) servletRequest;
+            queryParameterNames = getQueryParameterNames(servletRequest);
+            body = new String(wrappedRequest.getContentAsByteArray(), wrappedRequest.getCharacterEncoding());
+        } else {
+            // In all other cases the parameters have to be read after (!!) the body.
+            body = readReader(servletRequest.getReader(), contentLength);
+            queryParameterNames = getQueryParameterNames(servletRequest);
+        }
         // The content length of a request does not need to be set. It might by "-1" and
         // there is still a body. Only in conjunction with an empty / unset body it was
         // really empty.
         if (contentLength >= 0 || StringUtils.isNotEmpty(body)) {
             builder.withBody(body);
         }
-        for (final String queryParameterName : getQueryParameterNames(servletRequest)) {
+        for (final String queryParameterName : queryParameterNames) {
             builder.withQueryParam(queryParameterName, servletRequest.getParameterValues(queryParameterName));
         }
         for (final String headerName : Collections.list(servletRequest.getHeaderNames())) {
