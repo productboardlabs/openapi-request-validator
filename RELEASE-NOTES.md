@@ -1,3 +1,12 @@
+# v2.11.1
+
+* Improved performance of form-data validation by not deserializing the data multiple times
+[[#274]](https://bitbucket.org/atlassian/swagger-request-validator/issues/274)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/178)
+* Fixed a problem with form params not available for validation in the SpringMVC module
+[[#303]](https://bitbucket.org/atlassian/swagger-request-validator/issues/303)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/179)
+
 # v2.11.0
 
 * Fixed handling of headers so that we no longer split on `,` unless the header is marked as 
