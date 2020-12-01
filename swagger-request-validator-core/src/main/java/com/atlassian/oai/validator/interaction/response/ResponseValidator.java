@@ -6,6 +6,7 @@ import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
 import com.atlassian.oai.validator.schema.SchemaValidator;
+import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.headers.Header;
 import io.swagger.v3.oas.models.media.Content;
@@ -27,7 +28,7 @@ import static com.atlassian.oai.validator.util.ContentTypeUtils.findMostSpecific
 import static com.atlassian.oai.validator.util.ContentTypeUtils.isFormDataContentType;
 import static com.atlassian.oai.validator.util.ContentTypeUtils.isJsonContentType;
 import static com.atlassian.oai.validator.util.ContentTypeUtils.matchesAny;
-import static com.atlassian.oai.validator.util.HttpParsingUtils.parseUrlEncodedFormDataBodyAsJson;
+import static com.atlassian.oai.validator.util.HttpParsingUtils.parseUrlEncodedFormDataBodyAsJsonNode;
 import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
@@ -147,8 +148,8 @@ public class ResponseValidator {
         }
 
         if (isFormDataContentType(response)) {
-            final String bodyAsJson = parseUrlEncodedFormDataBodyAsJson(responseBody.get());
-            return schemaValidator.validate(bodyAsJson, apiMediaType.getSchema(), "response.body");
+            final JsonNode bodyAsJson = parseUrlEncodedFormDataBodyAsJsonNode(responseBody.get());
+            return schemaValidator.validateJsonNode(bodyAsJson, apiMediaType.getSchema(), "response.body");
         }
 
         if (response.getContentType().isPresent()) {

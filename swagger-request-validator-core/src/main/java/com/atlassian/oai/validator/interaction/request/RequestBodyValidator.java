@@ -4,6 +4,7 @@ import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.SchemaValidator;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.annotations.VisibleForTesting;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.parameters.RequestBody;
@@ -18,7 +19,7 @@ import static com.atlassian.oai.validator.report.ValidationReport.empty;
 import static com.atlassian.oai.validator.util.ContentTypeUtils.findMostSpecificMatch;
 import static com.atlassian.oai.validator.util.ContentTypeUtils.isFormDataContentType;
 import static com.atlassian.oai.validator.util.ContentTypeUtils.isJsonContentType;
-import static com.atlassian.oai.validator.util.HttpParsingUtils.parseUrlEncodedFormDataBodyAsJson;
+import static com.atlassian.oai.validator.util.HttpParsingUtils.parseUrlEncodedFormDataBodyAsJsonNode;
 import static java.lang.Boolean.TRUE;
 import static java.util.Objects.requireNonNull;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -102,10 +103,10 @@ class RequestBodyValidator {
         }
 
         if (isFormDataContentType(request)) {
-            final String bodyAsJson = parseUrlEncodedFormDataBodyAsJson(requestBody.get());
+            final JsonNode bodyAsJsonNode = parseUrlEncodedFormDataBodyAsJsonNode(requestBody.get());
             return schemaValidator
-                    .validate(
-                            bodyAsJson,
+                    .validateJsonNode(
+                            bodyAsJsonNode,
                             maybeApiMediaTypeForRequest.get().getRight().getSchema(),
                             "request.body")
                     .withAdditionalContext(context);
