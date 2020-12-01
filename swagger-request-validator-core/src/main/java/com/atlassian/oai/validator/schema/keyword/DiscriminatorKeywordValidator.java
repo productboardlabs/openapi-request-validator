@@ -12,6 +12,7 @@ import com.github.fge.jsonschema.core.tree.SchemaTree;
 import com.github.fge.jsonschema.keyword.validator.AbstractKeywordValidator;
 import com.github.fge.jsonschema.processors.data.FullData;
 import com.github.fge.msgsimple.bundle.MessageBundle;
+import org.slf4j.Logger;
 
 import javax.annotation.concurrent.NotThreadSafe;
 import java.util.HashMap;
@@ -19,6 +20,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+
+import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  * Keyword validator for the <code>discriminator</code> keyword introduced by the OpenAPI / Swagger specification.
@@ -34,6 +37,8 @@ import java.util.Set;
  */
 @NotThreadSafe
 public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
+
+    private static final Logger log = getLogger(DiscriminatorKeywordValidator.class);
 
     private final ThreadLocal<Set<VisitedInfo>> visitedNodes = ThreadLocal.withInitial(HashSet::new);
 
@@ -103,10 +108,11 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
         // TODO: `oneOf` and `anyOf` composition validation logic
         final JsonNode currentSchemaNode = data.getSchema().getNode();
         if (currentSchemaNode.has("oneOf") || currentSchemaNode.has("anyOf")) {
+            log.debug("Support for discriminators with oneOf/anyOf not implemented yet. Validation may be inaccurate.");
             return;
         }
 
-        validateAllOfComposition(processor, report, bundle, data, discriminatorNode, currentSchemaNode);
+        validateAllOfComposition(processor, report, bundle, data, discriminatorNode);
     }
 
     /**
@@ -132,8 +138,7 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
                                           final ProcessingReport report,
                                           final MessageBundle bundle,
                                           final FullData data,
-                                          JsonNode discriminatorNode,
-                                          final JsonNode currentSchemaNode) throws ProcessingException {
+                                          final JsonNode discriminatorNode) throws ProcessingException {
         final SchemaTree schemaTree = data.getSchema();
         final String parentDefinitionRef = "#" + schemaTree.getPointer().toString();
 
@@ -150,13 +155,10 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
             );
         }
 
-        // Apply the mapping, if applicable
-        if (mappingNode != null && mappingNode.get(discriminatorPropertyValue) != null) {
-            discriminatorNode = mappingNode.get(discriminatorPropertyValue);
-        }
-
         // Select the child schema based on the discriminator
-        final JsonPointer ptrToChildSchema = pointerToDiscriminatedSchema(data, discriminatorNode);
+        final JsonPointer ptrToChildSchema = pointerToDiscriminatedSchema(
+                data, mappedDiscriminatorNode(discriminatorNode, discriminatorPropertyValue)
+        );
 
         final SchemaTree childSchemaTree = schemaTree.setPointer(ptrToChildSchema);
         final ListProcessingReport subReport = new ListProcessingReport(report.getLogLevel(), LogLevel.FATAL);
@@ -176,6 +178,14 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
                     .putArgument("schema", ptrToChildSchema.toString())
                     .put("report", subReport.asJson()));
         }
+    }
+
+    private JsonNode mappedDiscriminatorNode(final JsonNode originalDiscriminatorNode,
+                                             final String discriminatorPropertyValue) {
+        if (mappingNode != null && mappingNode.get(discriminatorPropertyValue) != null) {
+            return mappingNode.get(discriminatorPropertyValue);
+        }
+        return originalDiscriminatorNode;
     }
 
     /**
