@@ -118,6 +118,8 @@ public class SwaggerV20LibraryTest {
                 "nullable-valid"
         };
 
+        private static final JsonSchemaFactory FACTORY = schemaFactory();
+
         @Parameters(name = "{0}: {1} WITH {2} SHOULD {3}")
         public static Iterable<Object[]> params() {
             return () -> stream(TEST_CASE_FILES)
@@ -143,12 +145,10 @@ public class SwaggerV20LibraryTest {
         @Parameterized.Parameter(5)
         public TestDetails testDetails;
 
-        private static final JsonSchemaFactory factory = schemaFactory();
-
         private static Stream<Object[]> loadTests(final String testCaseFile) {
             try {
                 final TestCase testCase = Json.mapper().treeToValue(loadTestCase(testCaseFile), TestCase.class);
-                final JsonSchema schema = factory.getJsonSchema(testCase.schema);
+                final JsonSchema schema = FACTORY.getJsonSchema(testCase.schema);
                 return testCase.tests
                         .stream()
                         .map(t -> new Object[]{
