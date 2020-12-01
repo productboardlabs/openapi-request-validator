@@ -57,10 +57,9 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
                          final MessageBundle bundle,
                          final FullData data) throws ProcessingException {
         final VisitedInfo visitInfo = new VisitedInfo(data.getInstance().getPointer(), data.getSchema().getPointer());
-        if (visitedNodes.get().contains(visitInfo)) {
+        if (visitedNodes.get().remove(visitInfo)) {
             // We have already validated the discriminator of this node.
             // We need to bail out to avoid a validation loop.
-            visitedNodes.get().remove(visitInfo);
             return;
         }
         visitedNodes.get().add(visitInfo);
