@@ -73,8 +73,9 @@ public class DiscriminatorSyntaxChecker extends AbstractSyntaxChecker {
         validateMapping(bundle, report, tree);
 
         // For `anyOf` and `oneOf` composition, check each referenced schema for the discriminator property
-        if (isOneOrAnyOfComposition(tree.getNode())) {
-            final JsonNode compositionNode = getCompositionNode(tree.getNode());
+        final Optional<JsonNode> maybeCompositionNode = getOneOrAnyOfCompositionNodeIfPresent(tree.getNode());
+        if (maybeCompositionNode.isPresent()) {
+            final JsonNode compositionNode = maybeCompositionNode.get();
             final Iterator<JsonNode> children = compositionNode.elements();
             while (children.hasNext()) {
                 validatePropertyName(bundle, report, tree, children.next(), discriminatorPropertyName);
@@ -86,15 +87,8 @@ public class DiscriminatorSyntaxChecker extends AbstractSyntaxChecker {
         validatePropertyName(bundle, report, tree, tree.getNode(), discriminatorPropertyName);
     }
 
-    private JsonNode getCompositionNode(final JsonNode node) {
-        if (isOneOrAnyOfComposition(node)) {
-            return node.has("oneOf") ? node.get("oneOf") : node.get("anyOf");
-        }
-        return node;
-    }
-
-    private boolean isOneOrAnyOfComposition(final JsonNode node) {
-        return node.has("oneOf") || node.has("anyOf");
+    private Optional<JsonNode> getOneOrAnyOfCompositionNodeIfPresent(final JsonNode node) {
+        return Optional.ofNullable(node.has("oneOf") ? node.get("oneOf") : node.get("anyOf"));
     }
 
     private void validatePropertyName(final MessageBundle bundle,
