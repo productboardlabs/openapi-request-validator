@@ -1,11 +1,10 @@
 package com.atlassian.oai.validator.interaction.request;
 
+import com.atlassian.oai.validator.model.Body;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.SchemaValidator;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.annotations.VisibleForTesting;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.parameters.RequestBody;
 import org.apache.commons.lang3.tuple.Pair;
@@ -13,6 +12,7 @@ import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import static com.atlassian.oai.validator.report.ValidationReport.empty;
@@ -37,11 +37,6 @@ class RequestBodyValidator {
 
     private final SchemaValidator schemaValidator;
 
-    @VisibleForTesting
-    RequestBodyValidator(final SchemaValidator schemaValidator) {
-        this(new MessageResolver(), schemaValidator);
-    }
-
     RequestBodyValidator(@Nullable final MessageResolver messages, final SchemaValidator schemaValidator) {
         this.schemaValidator = requireNonNull(schemaValidator, "A schema validator is required");
         this.messages = messages == null ? new MessageResolver() : messages;
@@ -51,11 +46,12 @@ class RequestBodyValidator {
     ValidationReport validateRequestBody(final Request request,
                                          @Nullable final RequestBody apiRequestBodyDefinition) {
 
-        final Optional<String> requestBody = request.getBody();
+        final Optional<Body> requestBody = request.getRequestBody();
+        final boolean hasBody = requestBody.map(Body::hasBody).orElse(false);
 
         if (apiRequestBodyDefinition == null) {
             // A request body exists, but no request body is defined in the spec
-            if (requestBody.isPresent() && !requestBody.get().isEmpty()) {
+            if (hasBody) {
                 return ValidationReport.singleton(
                         messages.get("validation.request.body.unexpected")
                 );
@@ -69,7 +65,7 @@ class RequestBodyValidator {
                 .withApiRequestBodyDefinition(apiRequestBodyDefinition)
                 .build();
 
-        if (!requestBody.isPresent() || requestBody.get().isEmpty()) {
+        if (!hasBody) {
             // No request body, but is required in the spec
             if (TRUE.equals(apiRequestBodyDefinition.getRequired())) {
                 return ValidationReport.singleton(
@@ -95,18 +91,15 @@ class RequestBodyValidator {
 
         if (isJsonContentType(request)) {
             return schemaValidator
-                    .validate(
-                            requestBody.get(),
+                    .validate(() -> requestBody.get().toJsonNode(),
                             maybeApiMediaTypeForRequest.get().getRight().getSchema(),
                             "request.body")
                     .withAdditionalContext(context);
         }
 
         if (isFormDataContentType(request)) {
-            final JsonNode bodyAsJsonNode = parseUrlEncodedFormDataBodyAsJsonNode(requestBody.get());
             return schemaValidator
-                    .validateJsonNode(
-                            bodyAsJsonNode,
+                    .validate(() -> parseUrlEncodedFormDataBodyAsJsonNode(requestBody.get().toString(StandardCharsets.UTF_8)),
                             maybeApiMediaTypeForRequest.get().getRight().getSchema(),
                             "request.body")
                     .withAdditionalContext(context);
@@ -120,17 +113,11 @@ class RequestBodyValidator {
 
     private Optional<Pair<String, MediaType>> findApiMediaTypeForRequest(final Request request,
                                                                          @Nullable final RequestBody apiRequestBodyDefinition) {
-        if (apiRequestBodyDefinition == null || apiRequestBodyDefinition.getContent() == null) {
-            return Optional.empty();
-        }
-
-        final Optional<String> mostSpecificMatch = findMostSpecificMatch(request, apiRequestBodyDefinition.getContent().keySet());
-        if (!mostSpecificMatch.isPresent()) {
-            return Optional.empty();
-        }
-
-        final MediaType mediaType = apiRequestBodyDefinition.getContent().get(mostSpecificMatch.get());
-        return Optional.of(Pair.of(mostSpecificMatch.get(), mediaType));
+        return Optional.ofNullable(apiRequestBodyDefinition)
+                .map(RequestBody::getContent)
+                .flatMap(content ->
+                        findMostSpecificMatch(request, content.keySet())
+                                .map(mostSpecificMatch -> Pair.of(mostSpecificMatch, content.get(mostSpecificMatch)))
+                );
     }
-
 }

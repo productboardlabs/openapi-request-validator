@@ -3,12 +3,17 @@ package com.atlassian.oai.validator.model;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.text.IsEmptyString.isEmptyString;
 import static org.junit.Assert.assertThat;
 
@@ -195,34 +200,110 @@ public class SimpleRequestTest {
         final Request request = SimpleRequest.Builder.get("/path")
                 .build();
 
-        assertThat(request.getBody().isPresent(), is(false));
+        assertThat(request.getRequestBody().isPresent(), is(false));
     }
 
     @Test
-    public void body_isNotMandatory_andCanBeSetAsNull() {
+    public void bodyString_isNotMandatory_andCanBeSetAsNull() {
         final Request request = SimpleRequest.Builder.get("/path")
-                .withBody(null)
+                .withBody((String) null)
                 .build();
 
-        assertThat(request.getBody().isPresent(), is(false));
+        assertThat(request.getRequestBody().isPresent(), is(false));
     }
 
     @Test
-    public void body_canBeEmpty() {
+    public void bodyStringWithCharset_isNotMandatory_andCanBeSetAsNull() {
+        final Request request = SimpleRequest.Builder.get("/path")
+                .withBody(null, null)
+                .build();
+
+        assertThat(request.getRequestBody().isPresent(), is(false));
+    }
+
+    @Test
+    public void bodyStringWithCharset_isNotMandatory_evenWithASetCharset() {
+        final Request request = SimpleRequest.Builder.get("/path")
+                .withBody(null, StandardCharsets.UTF_8)
+                .build();
+
+        assertThat(request.getRequestBody().isPresent(), is(false));
+    }
+
+    @Test
+    public void bodyByteArray_isNotMandatory_andCanBeSetAsNull() {
+        final Request request = SimpleRequest.Builder.get("/path")
+                .withBody((byte[]) null)
+                .build();
+
+        assertThat(request.getRequestBody().isPresent(), is(false));
+    }
+
+    @Test
+    public void bodyInputStream_isNotMandatory_andCanBeSetAsNull() {
+        final Request request = SimpleRequest.Builder.get("/path")
+                .withBody((InputStream) null)
+                .build();
+
+        assertThat(request.getRequestBody().isPresent(), is(false));
+    }
+
+    @Test
+    public void body_canBeSetAsString() {
         final Request request = SimpleRequest.Builder.get("/path")
                 .withBody("")
                 .build();
 
-        assertThat(request.getBody().get(), isEmptyString());
+        assertThat(request.getRequestBody().get(), instanceOf(StringBody.class));
     }
 
     @Test
-    public void body_canBeSet() {
+    public void body_canBeSetAsStringAndCharset() {
         final Request request = SimpleRequest.Builder.get("/path")
-                .withBody("Body")
+                .withBody("", StandardCharsets.UTF_16BE)
                 .build();
 
-        assertThat(request.getBody().get(), equalTo("Body"));
+        assertThat(request.getRequestBody().get(), instanceOf(StringBody.class));
+    }
+
+    @Test
+    public void body_canBeSetAsString_andTheCharsetIsDeterminedByTheContentTypeHeader() throws IOException {
+        final Request request = SimpleRequest.Builder.get("/path")
+                .withBody("\u003c")
+                .withContentType("text/plain;charset=utf-16")
+                .build();
+
+        assertThat(request.getRequestBody().get().toString(StandardCharsets.UTF_16), is("\u003c"));
+        assertThat(request.getRequestBody().get().toString(StandardCharsets.UTF_8),
+                is(new String("\u003c".getBytes(StandardCharsets.UTF_16), StandardCharsets.UTF_8)));
+    }
+
+    @Test
+    public void body_canBeSetAsString_andTheCharsetIsUTF8DefinedIfContentTypeHeaderNotDefined() throws IOException {
+        final Request request = SimpleRequest.Builder.get("/path")
+                .withBody("\u003c")
+                .build();
+
+        assertThat(request.getRequestBody().get().toString(StandardCharsets.UTF_8),
+                is(new String("\u003c".getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8)));
+    }
+
+    @Test
+    public void body_canBeSetAsByteArray() {
+        final Request request = SimpleRequest.Builder.get("/path")
+                .withBody(new byte[0])
+                .build();
+
+        assertThat(request.getRequestBody().get(), instanceOf(ByteArrayBody.class));
+    }
+
+    @Test
+    public void body_canBeSetAsInputStream() {
+        final Request request = SimpleRequest.Builder.get("/path")
+                .withBody(new ByteArrayInputStream(new byte[0]))
+                .build();
+
+        assertThat(request.getRequestBody().get(), instanceOf(InputStreamBody.class));
     }
 
     @Test(expected = NullPointerException.class)

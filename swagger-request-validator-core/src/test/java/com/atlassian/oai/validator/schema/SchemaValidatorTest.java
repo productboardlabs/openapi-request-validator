@@ -855,7 +855,7 @@ public class SchemaValidatorTest {
         final JsonNode value = new ObjectMapper().createObjectNode();
         final Schema schema = new Schema();
 
-        assertPass(classUnderTest.validateJsonNode(value, schema, "prefix"));
+        assertPass(classUnderTest.validate(() -> value, schema, "prefix"));
     }
 
     private Map<String, Schema> getSchemasFrom(final String api) {

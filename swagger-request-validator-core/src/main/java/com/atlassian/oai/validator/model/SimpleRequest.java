@@ -1,10 +1,14 @@
 package com.atlassian.oai.validator.model;
 
+import com.atlassian.oai.validator.util.ContentTypeUtils;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -32,18 +36,18 @@ public class SimpleRequest implements Request {
     private final String path;
     private final Map<String, Collection<String>> headers;
     private final Map<String, Collection<String>> queryParams;
-    private final Optional<String> requestBody;
+    private final Optional<Body> requestBody;
 
     private SimpleRequest(@Nonnull final Method method,
                           @Nonnull final String path,
                           @Nonnull final Map<String, Collection<String>> headers,
                           @Nonnull final Map<String, Collection<String>> queryParams,
-                          @Nullable final String body) {
+                          @Nullable final Body body) {
         this.method = requireNonNull(method, "A method is required");
         this.path = requireNonNull(path, "A request path is required");
         this.queryParams = requireNonNull(queryParams);
         this.headers = requireNonNull(headers);
-        requestBody = Optional.ofNullable(body);
+        this.requestBody = Optional.ofNullable(body);
     }
 
     @Nonnull
@@ -61,6 +65,12 @@ public class SimpleRequest implements Request {
     @Nonnull
     @Override
     public Optional<String> getBody() {
+        return Optional.empty(); // not used anymore
+    }
+
+    @Nonnull
+    @Override
+    public Optional<Body> getRequestBody() {
         return requestBody;
     }
 
@@ -106,7 +116,8 @@ public class SimpleRequest implements Request {
         private final String path;
         private final Multimap<String, String> headers;
         private final Multimap<String, String> queryParams;
-        private String body;
+        private Body body;
+        private String bodyAsStringFallback;
 
         /**
          * A convenience method for creating a {@link SimpleRequest.Builder} with
@@ -254,14 +265,62 @@ public class SimpleRequest implements Request {
         }
 
         /**
-         * Adds a request body to this builder.
+         * Adds a request body as {@link String} to this builder.
+         * <p>
+         * The charset of the request body will be extracted from the content-type header during
+         * {@link #build()}. If no such header is specified UTF-8 is used.
+         * <p>
+         * For better performance use {@link #withBody(byte[])} or {@link #withBody(InputStream)} if possible.
          *
-         * @param body the request body
+         * @param content the request body
+         *
+         * @return this builder
+         * @see #withBody(String, Charset)
+         */
+        public Builder withBody(final String content) {
+            this.bodyAsStringFallback = content;
+            return this;
+        }
+
+        /**
+         * Adds a request body as {@link String} and its {@link Charset} to this builder.
+         * <p>
+         * For better performance use {@link #withBody(byte[])} or {@link #withBody(InputStream)} if possible.
+         *
+         * @param content the request body
+         * @param charset the {@link Charset} of the request body
          *
          * @return this builder
          */
-        public Builder withBody(final String body) {
-            this.body = body;
+        public Builder withBody(final String content, final Charset charset) {
+            if (content != null && charset != null) {
+                this.body = new StringBody(content, charset);
+                return this;
+            }
+            return withBody(content);
+        }
+
+        /**
+         * Adds a request body as byte array to this builder.
+         *
+         * @param content the request body
+         *
+         * @return this builder
+         */
+        public Builder withBody(final byte[] content) {
+            this.body = content != null ? new ByteArrayBody(content) : null;
+            return this;
+        }
+
+        /**
+         * Adds a request body as {@link InputStream} to this builder.
+         *
+         * @param content the request body stream
+         *
+         * @return this builder
+         */
+        public Builder withBody(final InputStream content) {
+            this.body = content != null ? new InputStreamBody(content) : null;
             return this;
         }
 
@@ -376,6 +435,11 @@ public class SimpleRequest implements Request {
          * @return the build {@link SimpleRequest}
          */
         public SimpleRequest build() {
+            if (body == null && bodyAsStringFallback != null) {
+                final Charset charset = ContentTypeUtils.getCharsetFromContentType(headers)
+                        .orElse(StandardCharsets.UTF_8);
+                this.body = new StringBody(bodyAsStringFallback, charset);
+            }
             return new SimpleRequest(method, path, headers.asMap(), queryParams.asMap(), body);
         }
 

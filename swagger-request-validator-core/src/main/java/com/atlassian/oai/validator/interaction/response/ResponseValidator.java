@@ -6,7 +6,6 @@ import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
 import com.atlassian.oai.validator.schema.SchemaValidator;
-import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.headers.Header;
 import io.swagger.v3.oas.models.media.Content;
@@ -148,8 +147,8 @@ public class ResponseValidator {
         }
 
         if (isFormDataContentType(response)) {
-            final JsonNode bodyAsJson = parseUrlEncodedFormDataBodyAsJsonNode(responseBody.get());
-            return schemaValidator.validateJsonNode(bodyAsJson, apiMediaType.getSchema(), "response.body");
+            return schemaValidator.validate(() -> parseUrlEncodedFormDataBodyAsJsonNode(responseBody.get()),
+                    apiMediaType.getSchema(), "response.body");
         }
 
         if (response.getContentType().isPresent()) {

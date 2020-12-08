@@ -7,12 +7,12 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import static com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder.responseDefinition;
 import static com.github.tomakehurst.wiremock.client.WireMock.any;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
-import static com.spotify.hamcrest.optional.OptionalMatchers.emptyOptional;
 import static com.spotify.hamcrest.optional.OptionalMatchers.optionalWithValue;
 import static io.restassured.RestAssured.given;
 import static java.util.Arrays.stream;
@@ -49,7 +49,7 @@ public class RestAssuredRequestTest {
         final Request classUnderTest = requestCaptor.getRequest();
         assertThat(classUnderTest.getPath(), is("/path"));
         assertThat(classUnderTest.getMethod(), is(Request.Method.GET));
-        assertThat(classUnderTest.getBody().isPresent(), is(false));
+        assertThat(classUnderTest.getRequestBody().isPresent(), is(false));
         assertThat(classUnderTest.getHeaderValues("x-my-header"), contains("foo", "bar"));
         assertThat(classUnderTest.getHeaderValue("x-my-HEADER").isPresent(), is(true));
         assertThat(classUnderTest.getHeaderValue("not-a-header").isPresent(), is(false));
@@ -99,7 +99,7 @@ public class RestAssuredRequestTest {
     }
 
     @Test
-    public void mapsRequestBodyCorrectly_whenByteArray() {
+    public void mapsRequestBodyCorrectly_whenByteArray() throws IOException {
         final CapturingFilter requestCaptor = new CapturingFilter();
         given()
                 .port(wireMock.port())
@@ -115,18 +115,17 @@ public class RestAssuredRequestTest {
 
         final Request classUnderTest = requestCaptor.getRequest();
         assertThat(classUnderTest.getMethod(), is(Request.Method.PUT));
-        assertThat(classUnderTest.getBody(), optionalWithValue(is("")));
+        assertThat(classUnderTest.getRequestBody().get().toString(StandardCharsets.UTF_8), is(""));
         assertThat(classUnderTest.getContentType(), optionalWithValue(is("multipart/form-data")));
     }
 
     @Test
-    public void mapsRequestBodyCorrectly_forByteArrays_whenCharsetDefinedInContentType() {
+    public void mapsRequestBodyCorrectly_forByteArrays_whenNoContentTypeDefined() throws IOException {
         final CapturingFilter requestCaptor = new CapturingFilter();
         given()
                 .port(wireMock.port())
-                .contentType("text/plain; charset=utf-16")
                 .filter(requestCaptor)
-                .body("Something 123 !@#".getBytes(StandardCharsets.UTF_16))
+                .body("Something 123 !@#")
                 .when()
                 .put("/path")
                 .then()
@@ -134,46 +133,11 @@ public class RestAssuredRequestTest {
                 .statusCode(200);
 
         final Request classUnderTest = requestCaptor.getRequest();
-        assertThat(classUnderTest.getBody(), optionalWithValue(is("Something 123 !@#")));
+        assertThat(classUnderTest.getRequestBody().get().toString(StandardCharsets.UTF_8), is("Something 123 !@#"));
     }
 
     @Test
-    public void mapsRequestBodyCorrectly_forByteArrays_whenNoCharsetDefinedInContentType() {
-        final CapturingFilter requestCaptor = new CapturingFilter();
-        given()
-                .port(wireMock.port())
-                .contentType("text/plain")
-                .filter(requestCaptor)
-                .body("Something 123 !@#".getBytes())
-                .when()
-                .put("/path")
-                .then()
-                .assertThat()
-                .statusCode(200);
-
-        final Request classUnderTest = requestCaptor.getRequest();
-        assertThat(classUnderTest.getBody(), optionalWithValue(is("Something 123 !@#")));
-    }
-
-    @Test
-    public void mapsRequestBodyCorrectly_forByteArrays_whenNoContentTypeDefined() {
-        final CapturingFilter requestCaptor = new CapturingFilter();
-        given()
-                .port(wireMock.port())
-                .filter(requestCaptor)
-                .body("Something 123 !@#".getBytes())
-                .when()
-                .put("/path")
-                .then()
-                .assertThat()
-                .statusCode(200);
-
-        final Request classUnderTest = requestCaptor.getRequest();
-        assertThat(classUnderTest.getBody(), optionalWithValue(is("Something 123 !@#")));
-    }
-
-    @Test
-    public void doesNotMapRequestBody_whenInputStream() {
+    public void mapsRequestBodyCorrectly_forInputStream() throws IOException {
         final CapturingFilter requestCaptor = new CapturingFilter();
         given()
                 .port(wireMock.port())
@@ -187,7 +151,7 @@ public class RestAssuredRequestTest {
                 .statusCode(200);
 
         final Request classUnderTest = requestCaptor.getRequest();
-        assertThat(classUnderTest.getBody(), emptyOptional());
+        assertThat(classUnderTest.getRequestBody().get().toString(StandardCharsets.UTF_8), is("foo"));
     }
 
     @Test
