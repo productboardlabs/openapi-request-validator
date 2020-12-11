@@ -241,7 +241,7 @@ public class OpenApiValidationServiceTest {
         final Response result = classUnderTest.buildResponse(servletResponse);
 
         // then:
-        assertThat(result.getBody().isPresent(), equalTo(true));
+        assertThat(result.getResponseBody().isPresent(), equalTo(true));
         assertThat(result.getStatus(), is(202));
         assertThat(getHeadersFromResponse(result).size(), is(1)); // Content type header will be set
     }
@@ -264,7 +264,7 @@ public class OpenApiValidationServiceTest {
         final Response result = classUnderTest.buildResponse(servletResponse);
 
         // then:
-        assertThat(result.getBody().isPresent(), equalTo(true));
+        assertThat(result.getResponseBody().isPresent(), equalTo(true));
         assertThat(result.getStatus(), is(404));
         assertThat(getHeadersFromResponse(result), equalTo(ImmutableMap.of(
                 "header 1", asList("header value 1", "header value 2"),

@@ -104,11 +104,11 @@ class OpenApiValidationService {
      *
      * @throws IOException if the cached response body can't be read
      */
-    Response buildResponse(final ContentCachingResponseWrapper servletResponse) throws IOException {
+    Response buildResponse(final ContentCachingResponseWrapper servletResponse) {
         final int statusCode = servletResponse.getStatusCode();
         final SimpleResponse.Builder builder =
                 new SimpleResponse.Builder(statusCode)
-                        .withBody(new String(servletResponse.getContentAsByteArray(), servletResponse.getCharacterEncoding()))
+                        .withBody(servletResponse.getContentAsByteArray())
                         .withContentType(servletResponse.getContentType());
         for (final String headerName : servletResponse.getHeaderNames()) {
             builder.withHeader(headerName, Lists.newArrayList(servletResponse.getHeaders(headerName)));

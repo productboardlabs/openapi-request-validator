@@ -1,6 +1,7 @@
 package com.atlassian.oai.validator.interaction.response;
 
 import com.atlassian.oai.validator.model.ApiOperation;
+import com.atlassian.oai.validator.model.Body;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
@@ -15,6 +16,7 @@ import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -133,9 +135,10 @@ public class ResponseValidator {
             return ValidationReport.empty();
         }
 
-        final Optional<String> responseBody = response.getBody();
+        final Optional<Body> responseBody = response.getResponseBody();
+        final boolean hasBody = responseBody.map(Body::hasBody).orElse(false);
 
-        if (!responseBody.isPresent() || responseBody.get().isEmpty()) {
+        if (!hasBody) {
             return ValidationReport.singleton(
                     messages.get("validation.response.body.missing",
                             apiOperation.getMethod(), apiOperation.getApiPath().original())
@@ -143,12 +146,15 @@ public class ResponseValidator {
         }
 
         if (isJsonContentType(response)) {
-            return schemaValidator.validate(responseBody.get(), apiMediaType.getSchema(), "response.body");
+            return schemaValidator
+                    .validate(() -> responseBody.get().toJsonNode(),
+                            apiMediaType.getSchema(), "response.body");
         }
 
         if (isFormDataContentType(response)) {
-            return schemaValidator.validate(() -> parseUrlEncodedFormDataBodyAsJsonNode(responseBody.get()),
-                    apiMediaType.getSchema(), "response.body");
+            return schemaValidator
+                    .validate(() -> parseUrlEncodedFormDataBodyAsJsonNode(responseBody.get().toString(StandardCharsets.UTF_8)),
+                            apiMediaType.getSchema(), "response.body");
         }
 
         if (response.getContentType().isPresent()) {

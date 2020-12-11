@@ -1,9 +1,13 @@
 package com.atlassian.oai.validator.model;
 
+import com.atlassian.oai.validator.util.ContentTypeUtils;
 import com.google.common.collect.Multimap;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -21,14 +25,14 @@ public class SimpleResponse implements Response {
 
     private final int status;
     private final Map<String, Collection<String>> headers;
-    private final Optional<String> body;
+    private final Optional<Body> responseBody;
 
     private SimpleResponse(final int status,
                            @Nonnull final Map<String, Collection<String>> headers,
-                           @Nullable final String body) {
+                           @Nullable final Body body) {
         this.status = status;
         this.headers = requireNonNull(headers);
-        this.body = Optional.ofNullable(body);
+        this.responseBody = Optional.ofNullable(body);
     }
 
     @Override
@@ -39,7 +43,13 @@ public class SimpleResponse implements Response {
     @Nonnull
     @Override
     public Optional<String> getBody() {
-        return body;
+        return Optional.empty(); // not used anymore
+    }
+
+    @Nonnull
+    @Override
+    public Optional<Body> getResponseBody() {
+        return responseBody;
     }
 
     @Nonnull
@@ -55,7 +65,8 @@ public class SimpleResponse implements Response {
 
         private final int status;
         private final Multimap<String, String> headers;
-        private String body;
+        private Body body;
+        private String bodyAsStringFallback;
 
         /**
          * Creates a {@link SimpleResponse.Builder} with the given HTTP status code.
@@ -130,13 +141,61 @@ public class SimpleResponse implements Response {
 
         /**
          * Adds a response body to this builder.
+         * <p>
+         * The charset of the response body will be extracted from the content-type header during
+         * {@link #build()}. If no such header is specified UTF-8 is used.
+         * <p>
+         * For better performance use {@link #withBody(byte[])} or {@link #withBody(InputStream)} if possible.
          *
-         * @param body the response body
+         * @param content the response body
+         *
+         * @return this builder
+         * @see #withBody(String, Charset)
+         */
+        public Builder withBody(final String content) {
+            this.bodyAsStringFallback = content;
+            return this;
+        }
+
+        /**
+         * Adds a response body as {@link String} and its {@link Charset} to this builder.
+         * <p>
+         * For better performance use {@link #withBody(byte[])} or {@link #withBody(InputStream)} if possible.
+         *
+         * @param content the request body
+         * @param charset the {@link Charset} of the request body
          *
          * @return this builder
          */
-        public Builder withBody(final String body) {
-            this.body = body;
+        public Builder withBody(final String content, final Charset charset) {
+            if (content != null && charset != null) {
+                this.body = new StringBody(content, charset);
+                return this;
+            }
+            return withBody(content);
+        }
+
+        /**
+         * Adds a response body as byte array to this builder.
+         *
+         * @param content the response body
+         *
+         * @return this builder
+         */
+        public Builder withBody(final byte[] content) {
+            this.body = content != null ? new ByteArrayBody(content) : null;
+            return this;
+        }
+
+        /**
+         * Adds a response body as {@link InputStream} to this builder.
+         *
+         * @param content the response body stream
+         *
+         * @return this builder
+         */
+        public Builder withBody(final InputStream content) {
+            this.body = content != null ? new InputStreamBody(content) : null;
             return this;
         }
 
@@ -191,6 +250,11 @@ public class SimpleResponse implements Response {
          * @return the build {@link SimpleResponse}
          */
         public SimpleResponse build() {
+            if (body == null && bodyAsStringFallback != null) {
+                final Charset charset = ContentTypeUtils.getCharsetFromContentType(headers)
+                        .orElse(StandardCharsets.UTF_8);
+                this.body = new StringBody(bodyAsStringFallback, charset);
+            }
             return new SimpleResponse(status, headers.asMap(), body);
         }
     }

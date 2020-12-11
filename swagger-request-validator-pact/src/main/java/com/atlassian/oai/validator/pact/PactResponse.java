@@ -49,7 +49,7 @@ public class PactResponse implements Response {
         requireNonNull(originalResponse, "An original response is required");
         final SimpleResponse.Builder builder = new SimpleResponse.Builder(originalResponse.getStatus());
         if (originalResponse.getBody() != null && originalResponse.getBody().isPresent()) {
-            builder.withBody(originalResponse.getBody().valueAsString());
+            builder.withBody(originalResponse.getBody().getValue());
         }
         if (originalResponse.getHeaders() != null) {
             originalResponse.getHeaders().forEach(builder::withHeader);
