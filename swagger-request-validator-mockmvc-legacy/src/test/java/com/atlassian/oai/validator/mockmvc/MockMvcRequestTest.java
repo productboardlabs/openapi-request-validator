@@ -8,6 +8,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.io.BufferedReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -39,7 +40,7 @@ public class MockMvcRequestTest {
 
         assertThat(classUnderTest.getPath(), is("/path"));
         assertThat(classUnderTest.getMethod(), is(Request.Method.GET));
-        assertThat(classUnderTest.getBody().isPresent(), is(false));
+        assertThat(classUnderTest.getRequestBody().get().hasBody(), is(false));
         assertThat(classUnderTest.getHeaderValues("x-my-header"), contains("foo", "bar"));
         assertThat(classUnderTest.getHeaderValue("x-my-HEADER").isPresent(), is(true));
         assertThat(classUnderTest.getHeaderValue("not-a-header").isPresent(), is(false));
@@ -59,18 +60,18 @@ public class MockMvcRequestTest {
     }
 
     @Test
-    public void getBody_returnsEmpty_whenNoBodyInRequest() throws Exception {
+    public void getRequestBody_returnsEmpty_whenNoBodyInRequest() {
         final MockHttpServletRequest mockHttpServletRequest = MockMvcRequestBuilders
                 .get("/path")
                 .buildRequest(new MockServletConfig().getServletContext());
 
         final Request classUnderTest = MockMvcRequest.of(mockHttpServletRequest);
 
-        assertThat(classUnderTest.getBody(), is(Optional.empty()));
+        assertThat(classUnderTest.getRequestBody().get().hasBody(), is(false));
     }
 
     @Test
-    public void getBody_returnsEmpty_whenNoBodyInRequest_usingSpringPre437() throws Exception {
+    public void getRequestBody_returnsEmpty_whenNoBodyInRequest_usingSpringPre437() throws Exception {
         // In Spring pre 4.3.7 mockHttpServletRequest.getReader() returns null if there is no content.
         // This was changed in 4.3.7 by SPR-15215 to return an empty reader.
         final MockHttpServletRequest mockHttpServletRequest = mock(MockHttpServletRequest.class);
@@ -81,11 +82,11 @@ public class MockMvcRequestTest {
 
         final Request classUnderTest = MockMvcRequest.of(mockHttpServletRequest);
 
-        assertThat(classUnderTest.getBody(), is(Optional.empty()));
+        assertThat(classUnderTest.getRequestBody(), is(Optional.empty()));
     }
 
     @Test
-    public void getBody_returnsBody_whenBodyInRequest() throws Exception {
+    public void getRequestBody_returnsBody_whenBodyInRequest() throws Exception {
         final MockHttpServletRequest mockHttpServletRequest = MockMvcRequestBuilders
                 .get("/path")
                 .content("The body")
@@ -93,7 +94,7 @@ public class MockMvcRequestTest {
 
         final Request classUnderTest = MockMvcRequest.of(mockHttpServletRequest);
 
-        assertThat(classUnderTest.getBody().get(), is("The body"));
+        assertThat(classUnderTest.getRequestBody().get().toString(StandardCharsets.UTF_8), is("The body"));
     }
 
     @Test

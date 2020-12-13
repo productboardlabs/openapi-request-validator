@@ -66,9 +66,8 @@ public class OpenApiValidationClientHttpRequestInterceptor implements ClientHttp
     @Override
     public ClientHttpResponse intercept(final HttpRequest request, final byte[] body, final ClientHttpRequestExecution execution) throws IOException {
         final ClientHttpResponse response = new BufferingClientHttpResponse(execution.execute(request, body));
-        final String bodyAsString = body.length == 0 ? null : new String(body, getCharset(request.getHeaders().getContentType()));
         final ValidationReport validationReport =
-                validator.validate(fromHttpRequest(request, bodyAsString), fromClientHttpResponse(response));
+                validator.validate(fromHttpRequest(request, body), fromClientHttpResponse(response));
 
         if (validationReport.hasErrors()) {
             throw new OpenApiValidationException(validationReport);
@@ -77,7 +76,7 @@ public class OpenApiValidationClientHttpRequestInterceptor implements ClientHttp
     }
 
     @Nonnull
-    private static Request fromHttpRequest(@Nonnull final HttpRequest originalRequest, @Nullable final String body) {
+    private static Request fromHttpRequest(@Nonnull final HttpRequest originalRequest, @Nullable final byte[] body) {
         requireNonNull(originalRequest, "An original request is required");
         final UriComponents uriComponents = UriComponentsBuilder.fromUri(originalRequest.getURI()).build();
 

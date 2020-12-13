@@ -76,7 +76,7 @@ public class PactRequest implements Request {
         final SimpleRequest.Builder builder =
                 new SimpleRequest.Builder(originalRequest.getMethod(), originalRequest.getPath());
         if (originalRequest.getBody() != null && originalRequest.getBody().isPresent()) {
-            builder.withBody(originalRequest.getBody().valueAsString());
+            builder.withBody(originalRequest.getBody().getValue());
         }
         if (originalRequest.getHeaders() != null) {
             originalRequest.getHeaders().forEach(builder::withHeader);

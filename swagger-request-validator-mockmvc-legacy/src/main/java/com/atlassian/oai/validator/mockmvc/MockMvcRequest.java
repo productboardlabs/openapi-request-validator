@@ -2,30 +2,19 @@ package com.atlassian.oai.validator.mockmvc;
 
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.SimpleRequest;
-import org.slf4j.Logger;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import javax.annotation.Nonnull;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 
 import static java.util.Collections.list;
 import static java.util.Objects.requireNonNull;
-import static org.slf4j.LoggerFactory.getLogger;
 
 public class MockMvcRequest implements Request {
 
-    private static final Logger LOGGER = getLogger(MockMvcRequest.class);
-
     private final Request delegate;
-
-    private static final BufferedReader EMPTY_BUFFERED_READER =
-            new BufferedReader(new StringReader(""));
 
     /**
      * @deprecated Use: {@link MockMvcRequest#of(MockHttpServletRequest)}
@@ -88,35 +77,10 @@ public class MockMvcRequest implements Request {
         requireNonNull(originalRequest, "An original request is required");
         final SimpleRequest.Builder builder =
                 new SimpleRequest.Builder(originalRequest.getMethod(), originalRequest.getPathInfo())
-                        .withBody(getBody(originalRequest));
+                        .withBody(originalRequest.getInputStream());
         list(originalRequest.getHeaderNames())
                 .forEach(header -> builder.withHeader(header, list(originalRequest.getHeaders(header))));
         originalRequest.getParameterMap().forEach((key, value) -> builder.withQueryParam(key, value));
         return builder.build();
-    }
-
-    private static String getBody(@Nonnull final MockHttpServletRequest mockHttpServletRequest) {
-        try {
-            final BufferedReader reader = getReader(mockHttpServletRequest);
-            final StringBuilder builder = new StringBuilder();
-            String aux;
-            int lineCount = 0;
-            while ((aux = reader.readLine()) != null) {
-                builder.append(aux);
-                lineCount++;
-            }
-            if (lineCount > 0) {
-                return builder.toString();
-            }
-        } catch (final IOException e) {
-            LOGGER.warn("Can't read request body.", e);
-        }
-        return null;
-    }
-
-    private static BufferedReader getReader(@Nonnull final MockHttpServletRequest mockHttpServletRequest)
-            throws UnsupportedEncodingException {
-        final BufferedReader reader = mockHttpServletRequest.getReader();
-        return reader != null ? reader : EMPTY_BUFFERED_READER;
     }
 }
