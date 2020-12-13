@@ -10,12 +10,10 @@ import com.atlassian.oai.validator.report.ValidationReport;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpRequest;
-import org.springframework.http.MediaType;
 import org.springframework.http.client.AbstractClientHttpResponse;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.util.MimeType;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.util.UriComponents;
@@ -26,9 +24,6 @@ import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.Optional;
 
 import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
 import static java.util.Objects.requireNonNull;
@@ -93,10 +88,8 @@ public class OpenApiValidationClientHttpRequestInterceptor implements ClientHttp
     private static Response fromClientHttpResponse(@Nonnull final ClientHttpResponse originalResponse) throws IOException {
         requireNonNull(originalResponse, "An original response is required");
 
-        final SimpleResponse.Builder builder = new SimpleResponse.Builder(originalResponse.getStatusCode().value());
-        try (InputStream in = originalResponse.getBody()) {
-            builder.withBody(StreamUtils.copyToString(in, getCharset(originalResponse.getHeaders().getContentType())));
-        }
+        final SimpleResponse.Builder builder = new SimpleResponse.Builder(originalResponse.getStatusCode().value())
+                .withBody(originalResponse.getBody());
         originalResponse.getHeaders().forEach(builder::withHeader);
 
         return builder.build();
@@ -104,10 +97,6 @@ public class OpenApiValidationClientHttpRequestInterceptor implements ClientHttp
 
     private static Request.Method fromHttpMethod(final HttpMethod method) {
         return Request.Method.valueOf(method.name());
-    }
-
-    private static Charset getCharset(@Nullable final MediaType mediaType) {
-        return Optional.ofNullable(mediaType).map(MimeType::getCharset).orElse(StandardCharsets.ISO_8859_1);
     }
 
     /**

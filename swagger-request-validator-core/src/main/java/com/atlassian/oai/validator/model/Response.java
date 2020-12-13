@@ -1,6 +1,10 @@
 package com.atlassian.oai.validator.model;
 
+import com.atlassian.oai.validator.util.ContentTypeUtils;
+
 import javax.annotation.Nonnull;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -18,9 +22,25 @@ public interface Response {
 
     /**
      * @return The response body, if there is one.
+     * @deprecated use {@link #getResponseBody()}. This method will be removed in a future release.
      */
     @Nonnull
+    @Deprecated
     Optional<String> getBody();
+
+    /**
+     * @return the response body
+     */
+    @Nonnull
+    default Optional<Body> getResponseBody() {
+        return getBody()
+                .map(content -> {
+                    final String contentType = getContentType().orElse(null);
+                    final Charset charset = ContentTypeUtils.getCharsetFromContentType(contentType)
+                            .orElse(StandardCharsets.UTF_8);
+                    return new StringBody(content, charset);
+                });
+    }
 
     /**
      * Get the collection of header values for the header param with the given name.

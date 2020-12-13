@@ -2,12 +2,17 @@ package com.atlassian.oai.validator.model;
 
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.isEmptyString;
 import static org.junit.Assert.assertThat;
 
@@ -80,34 +85,100 @@ public class SimpleResponseTest {
         final Response response = SimpleResponse.Builder.ok()
                 .build();
 
-        assertThat(response.getBody().isPresent(), is(false));
+        assertThat(response.getResponseBody().isPresent(), is(false));
     }
 
     @Test
-    public void body_isNotMandatory_andCanBeSetAsNull() {
+    public void bodyString_isNotMandatory_andCanBeSetAsNull() {
         final Response response = SimpleResponse.Builder.ok()
-                .withBody(null)
+                .withBody((String) null)
                 .build();
 
-        assertThat(response.getBody().isPresent(), is(false));
+        assertThat(response.getResponseBody().isPresent(), is(false));
     }
 
     @Test
-    public void body_canBeEmpty() {
+    public void bodyStringWithCharset_isNotMandatory_andCanBeSetAsNull() {
+        final Response response = SimpleResponse.Builder.ok()
+                .withBody(null, null)
+                .build();
+
+        assertThat(response.getResponseBody().isPresent(), is(false));
+    }
+
+    @Test
+    public void bodyStringWithCharset_isNotMandatory_evenWithASetCharset() {
+        final Response response = SimpleResponse.Builder.ok()
+                .withBody(null, StandardCharsets.UTF_8)
+                .build();
+
+        assertThat(response.getResponseBody().isPresent(), is(false));
+    }
+
+    @Test
+    public void bodyByteArray_isNotMandatory_andCanBeSetAsNull() {
+        final Response response = SimpleResponse.Builder.ok()
+                .withBody((byte[]) null)
+                .build();
+
+        assertThat(response.getResponseBody().isPresent(), is(false));
+    }
+
+    @Test
+    public void bodyInputStream_isNotMandatory_andCanBeSetAsNull() {
+        final Response response = SimpleResponse.Builder.ok()
+                .withBody((InputStream) null)
+                .build();
+
+        assertThat(response.getResponseBody().isPresent(), is(false));
+    }
+
+    @Test
+    public void body_canBeSetAsString() {
         final Response response = SimpleResponse.Builder.ok()
                 .withBody("")
                 .build();
 
-        assertThat(response.getBody().get(), isEmptyString());
+        assertThat(response.getResponseBody().get(), instanceOf(StringBody.class));
     }
 
     @Test
-    public void body_canBeSet() {
+    public void body_canBeSetAsStringAndCharset() {
         final Response response = SimpleResponse.Builder.ok()
-                .withBody("Body")
+                .withBody("", StandardCharsets.UTF_16BE)
                 .build();
 
-        assertThat(response.getBody().get(), equalTo("Body"));
+        assertThat(response.getResponseBody().get(), instanceOf(StringBody.class));
+    }
+
+    @Test
+    public void body_canBeSetAsString_andTheCharsetIsDeterminedByTheContentTypeHeader() throws IOException {
+        final Response response = SimpleResponse.Builder.ok()
+                .withBody("\u003c")
+                .withContentType("text/plain;charset=utf-16")
+                .build();
+
+        assertThat(response.getResponseBody().get().toString(StandardCharsets.UTF_16), is("\u003c"));
+        assertThat(response.getResponseBody().get().toString(StandardCharsets.UTF_8),
+                is(new String("\u003c".getBytes(StandardCharsets.UTF_16), StandardCharsets.UTF_8)));
+    }
+
+    @Test
+    public void body_canBeSetAsByteArray() {
+        final Response response = SimpleResponse.Builder.ok()
+                .withBody(new byte[0])
+                .build();
+
+        assertThat(response.getResponseBody().get(), instanceOf(ByteArrayBody.class));
+    }
+
+    @Test
+    public void body_canBeSetAsInputStream() {
+        final Response response = SimpleResponse.Builder.ok()
+                .withBody(new ByteArrayInputStream(new byte[0]))
+                .build();
+
+        assertThat(response.getResponseBody().get(), instanceOf(InputStreamBody.class));
     }
 
     @Test
