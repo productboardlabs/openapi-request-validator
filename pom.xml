@@ -69,6 +69,7 @@
         <spring.version>4.3.26.RELEASE</spring.version>
         <swagger-parser.version>2.0.20</swagger-parser.version>
         <wiremock.version>2.25.1</wiremock.version>
+        <jmh-core.version>1.26</jmh-core.version>
 
         <checkstyle.version>8.25</checkstyle.version>
         <license-maven-plugin.version>1.20</license-maven-plugin.version>
@@ -244,6 +245,16 @@
                 <groupId>com.spotify</groupId>
                 <artifactId>hamcrest-optional</artifactId>
                 <version>${hamcrest-optional.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openjdk.jmh</groupId>
+                <artifactId>jmh-core</artifactId>
+                <version>${jmh-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openjdk.jmh</groupId>
+                <artifactId>jmh-generator-annprocess</artifactId>
+                <version>${jmh-core.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
