@@ -1,4 +1,4 @@
-package com.atlassian.oai.validator.springmvc.example.async;
+package com.atlassian.oai.validator.example.async;
 
 import com.atlassian.oai.validator.springmvc.OpenApiValidationFilter;
 import com.atlassian.oai.validator.springmvc.OpenApiValidationInterceptor;

@@ -1,14 +1,11 @@
-package com.atlassian.oai.validator.springmvc.example.requestlogging;
+package com.atlassian.oai.validator.example.simple;
 
-import com.atlassian.oai.validator.OpenApiInteractionValidator;
-import com.atlassian.oai.validator.springmvc.example.simple.RestServiceApplication;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -23,19 +20,12 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.Collections.singletonList;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
-/**
- * Testing with non-default context-path and a custom created
- * {@link OpenApiInteractionValidator} with base path override.
- *
- * @see RestRequestLoggingValidationConfig#RestRequestLoggingValidationConfig(Resource)
- */
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {"server.contextPath=/v1"},
-        classes = {RestServiceApplication.class, RestRequestLoggingValidationConfig.class})
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class RestRequestValidationTest {
 
     @Autowired

@@ -3,6 +3,6 @@
  * exception handler mapping the {@link com.atlassian.oai.validator.springmvc.InvalidRequestException} to a
  * custom error response.
  *
- * @see com.atlassian.oai.validator.springmvc.example.exceptionhandler.RestServiceExceptionHandler
+ * @see com.atlassian.oai.validator.example.exceptionhandler.RestServiceExceptionHandler
  */
-package com.atlassian.oai.validator.springmvc.example.exceptionhandler;
+package com.atlassian.oai.validator.example.exceptionhandler;

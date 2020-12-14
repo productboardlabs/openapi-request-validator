@@ -1,5 +1,5 @@
 //CHECKSTYLE:OFF // HideUtilityClassConstructor: this is no utility class
-package com.atlassian.oai.validator.springmvc.example.async;
+package com.atlassian.oai.validator.example.async;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

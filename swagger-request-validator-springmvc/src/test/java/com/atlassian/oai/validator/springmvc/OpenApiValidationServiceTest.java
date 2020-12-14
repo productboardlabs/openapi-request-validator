@@ -7,7 +7,7 @@ import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.ValidationReport;
-import com.atlassian.oai.validator.springmvc.example.simple.RestServiceApplication;
+import com.atlassian.oai.validator.example.simple.RestServiceApplication;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
 import org.junit.Assert;

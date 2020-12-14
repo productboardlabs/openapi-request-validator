@@ -1,4 +1,4 @@
-package com.atlassian.oai.validator.springmvc.example.requestlogging;
+package com.atlassian.oai.validator.example.requestlogging;
 
 import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.springmvc.OpenApiValidationFilter;
