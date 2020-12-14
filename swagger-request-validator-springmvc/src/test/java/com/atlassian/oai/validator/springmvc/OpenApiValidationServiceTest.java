@@ -1,6 +1,7 @@
 package com.atlassian.oai.validator.springmvc;
 
 import com.atlassian.oai.validator.OpenApiInteractionValidator;
+import com.atlassian.oai.validator.model.Body;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleRequest;
@@ -9,7 +10,6 @@ import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.springmvc.example.simple.RestServiceApplication;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,6 +38,7 @@ import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 import org.springframework.web.util.UrlPathHelper;
 
+import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -50,16 +51,19 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Map;
+import java.util.Optional;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.util.ReflectionTestUtils.getField;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {"server.contextPath=/v1"})
@@ -81,6 +85,10 @@ public class OpenApiValidationServiceTest {
 
     private static Enumeration<String> asEnumeration(final String... values) {
         return Iterators.asEnumeration(Arrays.asList(values).iterator());
+    }
+
+    private static Object getInputStreamField(final Optional<Body> requestBody) {
+        return getField(getField(requestBody.get(), "content"), "in");
     }
 
     @Before
@@ -135,9 +143,8 @@ public class OpenApiValidationServiceTest {
         when(servletRequest.getMethod()).thenReturn("GET");
         when(servletRequest.getQueryString()).thenReturn("");
         when(urlPathHelper.getPathWithinApplication(servletRequest)).thenReturn("/swagger-request-validator");
-        when(servletRequest.getContentLength()).thenReturn(-1);
-        final BufferedReader reader = new BufferedReader(new StringReader(""));
-        when(servletRequest.getReader()).thenReturn(reader);
+        final ServletInputStream inputStream = mock(ServletInputStream.class);
+        when(servletRequest.getInputStream()).thenReturn(inputStream);
         when(servletRequest.getParameterNames()).thenReturn(asEnumeration("not-a-query-parameter"));
         when(servletRequest.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
 
@@ -145,28 +152,9 @@ public class OpenApiValidationServiceTest {
 
         assertThat(result.getPath(), equalTo("/swagger-request-validator"));
         assertThat(result.getMethod(), equalTo(Request.Method.GET));
-        assertThat(result.getBody().isPresent(), equalTo(false));
+        assertThat(getInputStreamField(result.getRequestBody()), sameInstance(inputStream));
         assertThat(result.getHeaders().size(), equalTo(0));
         assertThat(result.getQueryParameters().size(), equalTo(0));
-    }
-
-    @Test
-    public void buildRequest_withEmptyBody() throws IOException {
-        final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
-        when(servletRequest.getMethod()).thenReturn("PUT");
-        when(servletRequest.getQueryString()).thenReturn("");
-        when(urlPathHelper.getPathWithinApplication(servletRequest)).thenReturn("/swagger-request-validator");
-        when(servletRequest.getContentLength()).thenReturn(0);
-        final BufferedReader reader = new BufferedReader(new StringReader(""));
-        when(servletRequest.getReader()).thenReturn(reader);
-        when(servletRequest.getParameterNames()).thenReturn(Collections.emptyEnumeration());
-        when(servletRequest.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
-
-        final Request result = classUnderTest.buildRequest(servletRequest);
-
-        assertThat(result.getPath(), equalTo("/swagger-request-validator"));
-        assertThat(result.getMethod(), equalTo(Request.Method.PUT));
-        assertThat(result.getBody().isPresent(), equalTo(true));
     }
 
     @Test
@@ -176,9 +164,8 @@ public class OpenApiValidationServiceTest {
         when(servletRequest.getQueryString())
                 .thenReturn("query1=QUERY_ONE&&query2=query_two&query2=QUERY_TWO&");
         when(urlPathHelper.getPathWithinApplication(servletRequest)).thenReturn("/swagger-request-validator");
-        when(servletRequest.getContentLength()).thenReturn(-1);
-        final BufferedReader reader = new BufferedReader(new StringReader("Body"));
-        when(servletRequest.getReader()).thenReturn(reader);
+        final ServletInputStream inputStream = mock(ServletInputStream.class);
+        when(servletRequest.getInputStream()).thenReturn(inputStream);
         when(servletRequest.getParameterNames())
                 .thenReturn(asEnumeration("query1", "query2", "query3"));
         when(servletRequest.getParameterValues("query1"))
@@ -196,7 +183,7 @@ public class OpenApiValidationServiceTest {
 
         assertThat(result.getPath(), equalTo("/swagger-request-validator"));
         assertThat(result.getMethod(), equalTo(Request.Method.POST));
-        assertThat(result.getBody().get(), equalTo("Body"));
+        assertThat(getInputStreamField(result.getRequestBody()), sameInstance(inputStream));
         assertThat(result.getHeaders().size(), equalTo(2));
         assertThat(result.getHeaderValues("header1"),
                 equalTo(asList("HEADER_ONE")));
@@ -228,7 +215,7 @@ public class OpenApiValidationServiceTest {
         // then:
         assertThat(result.getPath(), equalTo("/swagger-request-validator"));
         assertThat(result.getMethod(), equalTo(Request.Method.POST));
-        assertThat(result.getBody().get(), equalTo("Content"));
+        assertThat(result.getRequestBody().get().toString(StandardCharsets.UTF_8), equalTo("Content"));
         assertThat(result.getHeaders().size(), equalTo(0));
         assertThat(result.getQueryParameters().size(), equalTo(0));
     }
@@ -254,7 +241,7 @@ public class OpenApiValidationServiceTest {
         final Response result = classUnderTest.buildResponse(servletResponse);
 
         // then:
-        assertThat(result.getBody().isPresent(), equalTo(true));
+        assertThat(result.getResponseBody().isPresent(), equalTo(true));
         assertThat(result.getStatus(), is(202));
         assertThat(getHeadersFromResponse(result).size(), is(1)); // Content type header will be set
     }
@@ -277,7 +264,7 @@ public class OpenApiValidationServiceTest {
         final Response result = classUnderTest.buildResponse(servletResponse);
 
         // then:
-        assertThat(result.getBody().isPresent(), equalTo(true));
+        assertThat(result.getResponseBody().isPresent(), equalTo(true));
         assertThat(result.getStatus(), is(404));
         assertThat(getHeadersFromResponse(result), equalTo(ImmutableMap.of(
                 "header 1", asList("header value 1", "header value 2"),
@@ -357,7 +344,6 @@ public class OpenApiValidationServiceTest {
         when(servletRequest.getParameterValues("name=a")).thenReturn(new String[]{"value=a"});
         when(servletRequest.getParameterValues("q[name]")).thenReturn(new String[]{"q{value}", "q[value]"});
         when(urlPathHelper.getPathWithinApplication(servletRequest)).thenReturn("/swagger-request-validator");
-        when(servletRequest.getContentLength()).thenReturn(-1);
         final BufferedReader reader = new BufferedReader(new StringReader(""));
         when(servletRequest.getReader()).thenReturn(reader);
         when(servletRequest.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
@@ -366,7 +352,7 @@ public class OpenApiValidationServiceTest {
 
         assertThat(result.getPath(), equalTo("/swagger-request-validator"));
         assertThat(result.getMethod(), equalTo(Request.Method.GET));
-        assertThat(result.getBody().isPresent(), equalTo(false));
+        assertThat(result.getRequestBody().isPresent(), equalTo(false));
         assertThat(result.getHeaders().size(), equalTo(0));
         assertThat(result.getQueryParameters().size(), equalTo(2));
         assertThat(result.getQueryParameterValues("name=a"), equalTo(Arrays.asList("value=a")));
@@ -384,7 +370,6 @@ public class OpenApiValidationServiceTest {
         when(servletRequest.getParameterValues("name=a")).thenReturn(new String[]{"value=a"});
         when(servletRequest.getParameterValues("q[name]")).thenReturn(new String[]{"q{value}", "q[value]"});
         when(urlPathHelper.getPathWithinApplication(servletRequest)).thenReturn("/swagger-request-validator");
-        when(servletRequest.getContentLength()).thenReturn(-1);
         final BufferedReader reader = new BufferedReader(new StringReader(""));
         when(servletRequest.getReader()).thenReturn(reader);
         when(servletRequest.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
@@ -393,7 +378,7 @@ public class OpenApiValidationServiceTest {
 
         assertThat(result.getPath(), equalTo("/swagger-request-validator"));
         assertThat(result.getMethod(), equalTo(Request.Method.GET));
-        assertThat(result.getBody().isPresent(), equalTo(false));
+        assertThat(result.getRequestBody().isPresent(), equalTo(false));
         assertThat(result.getHeaders().size(), equalTo(0));
         assertThat(result.getQueryParameters().size(), equalTo(2));
         assertThat(result.getQueryParameterValues("name=a"), equalTo(Arrays.asList("value=a")));

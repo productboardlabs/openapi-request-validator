@@ -1,6 +1,10 @@
 package com.atlassian.oai.validator.model;
 
+import com.atlassian.oai.validator.util.ContentTypeUtils;
+
 import javax.annotation.Nonnull;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -39,10 +43,26 @@ public interface Request {
     Method getMethod();
 
     /**
+     * @return the request body as {@link String}
+     * @deprecated use {@link #getRequestBody()}. This method will be removed in a future release.
+     */
+    @Nonnull
+    @Deprecated
+    Optional<String> getBody();
+
+    /**
      * @return the request body
      */
     @Nonnull
-    Optional<String> getBody();
+    default Optional<Body> getRequestBody() {
+        return getBody()
+                .map(content -> {
+                    final String contentType = getContentType().orElse(null);
+                    final Charset charset = ContentTypeUtils.getCharsetFromContentType(contentType)
+                            .orElse(StandardCharsets.UTF_8);
+                    return new StringBody(content, charset);
+                });
+    }
 
     /**
      * @return the collection of query parameter names present on this request

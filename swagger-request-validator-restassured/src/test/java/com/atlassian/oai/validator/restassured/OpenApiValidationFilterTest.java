@@ -9,6 +9,8 @@ import io.restassured.response.ResponseBody;
 import io.restassured.specification.FilterableRequestSpecification;
 import org.junit.Test;
 
+import java.nio.charset.StandardCharsets;
+
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -92,7 +94,7 @@ public class OpenApiValidationFilterTest {
 
     private FilterContext response(final int status, final String body) {
         final ResponseBody responseBody = mock(ResponseBody.class);
-        when(responseBody.asString()).thenReturn(body);
+        when(responseBody.asByteArray()).thenReturn(body.getBytes(StandardCharsets.UTF_8));
 
         final Response response = mock(Response.class);
         when(response.getStatusCode()).thenReturn(status);
@@ -107,7 +109,7 @@ public class OpenApiValidationFilterTest {
 
     private FilterContext emptyResponse() {
         final ResponseBody responseBody = mock(ResponseBody.class);
-        when(responseBody.asString()).thenReturn(""); // This is what RestAssured will return by default
+        when(responseBody.asByteArray()).thenReturn(new byte[0]); // This is what RestAssured will return by default
 
         final Response response = mock(Response.class);
         when(response.getStatusCode()).thenReturn(204);

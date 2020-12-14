@@ -129,14 +129,12 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
      * @param servletResponse the {@link HttpServletResponse} to validate
      * @param handler a handler
      * @param modelAndView a model and view
-     *
-     * @throws Exception if the response is invalid against the API specification or the response body can't be read
      */
     @Override
     public void postHandle(final HttpServletRequest servletRequest,
                            final HttpServletResponse servletResponse,
                            final Object handler,
-                           final ModelAndView modelAndView) throws Exception {
+                           final ModelAndView modelAndView) {
         if (!doResponseValidationStep(servletRequest, servletResponse)) {
             LOG.debug("OpenAPI response validation skipped");
             return;

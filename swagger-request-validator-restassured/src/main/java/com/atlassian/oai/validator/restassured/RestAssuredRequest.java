@@ -6,14 +6,13 @@ import io.restassured.specification.FilterableRequestSpecification;
 import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
-import java.nio.charset.Charset;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.atlassian.oai.validator.util.ContentTypeUtils.getCharsetFromContentType;
 import static java.util.Objects.requireNonNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -83,7 +82,7 @@ public class RestAssuredRequest implements Request {
     public static Request of(@Nonnull final FilterableRequestSpecification originalRequest) {
         requireNonNull(originalRequest, "An original request is required");
         final SimpleRequest.Builder builder = new SimpleRequest.Builder(originalRequest.getMethod(), originalRequest.getDerivedPath());
-        builder.withBody(serializeBody(originalRequest));
+        setBody(builder, originalRequest);
         if (originalRequest.getHeaders() != null) {
             originalRequest.getHeaders().forEach(header -> builder.withHeader(header.getName(), header.getValue()));
         }
@@ -105,17 +104,19 @@ public class RestAssuredRequest implements Request {
         return builder.build();
     }
 
-    private static String serializeBody(final FilterableRequestSpecification originalRequest) {
+    private static void setBody(final SimpleRequest.Builder builder, final FilterableRequestSpecification originalRequest) {
         final Object body = originalRequest.getBody();
-        if (body instanceof String) {
-            return (String) body;
+        if (body == null) {
+            return;
+        } else if (body instanceof String) {
+            builder.withBody((String) body); // the charset of this body-string will be determined by the content-type
+        } else if (body instanceof byte[]) {
+            builder.withBody((byte[]) body);
+        } else if (body instanceof InputStream) {
+            builder.withBody((InputStream) body);
+        } else {
+            // TODO: Add support for other body types
+            log.warn("Only String, byte[] and InputStream bodies supported. No request body of type '{}' will be used in validation.", body.getClass());
         }
-        if (body instanceof byte[]) {
-            final Charset charset = getCharsetFromContentType(originalRequest.getContentType()).orElse(Charset.defaultCharset());
-            return new String((byte[]) body, charset);
-        }
-        // TODO: Add support for other body types (e.g. InputStream)
-        log.warn("Only String and byte[] bodies supported. No request body will be used in validation.");
-        return null;
     }
 }

@@ -3,6 +3,8 @@ package com.atlassian.oai.validator.util;
 import com.atlassian.oai.validator.model.Headers;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimap;
 import com.google.common.net.MediaType;
 
 import javax.annotation.Nonnull;
@@ -267,6 +269,25 @@ public class ContentTypeUtils {
     public static Optional<Charset> getCharsetFromContentType(@Nullable final String contentType) {
         return parseContentType(contentType)
                 .flatMap(m -> m.charset().toJavaUtil());
+    }
+
+    /**
+     * Resolves the content-type of the given headers, if it is defined. And then extracts and returns the charset
+     * from the found content-type header.
+     * <p>
+     * If no content-type is provided, or no charset is defined in the content-type, will return {@code empty}
+     *
+     * @param headers the headers that contain the content-type header
+     *
+     * @return The charset of the content-type, or {@code empty} if none is defined.
+     */
+    public static Optional<Charset> getCharsetFromContentType(@Nullable final Multimap<String, String> headers) {
+        if (headers != null) {
+            // Multimap#get(String) always returns at least an empty collection even if the key is not available
+            final String contentType = Iterables.getFirst(headers.get(Headers.CONTENT_TYPE), null);
+            return getCharsetFromContentType(contentType);
+        }
+        return Optional.empty();
     }
 
     /**

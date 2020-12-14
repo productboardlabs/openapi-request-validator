@@ -82,7 +82,7 @@ public class WireMockRequest implements Request {
 
         final SimpleRequest.Builder builder =
                 new SimpleRequest.Builder(originalRequest.getMethod().getName(), uri.getPath())
-                        .withBody(originalRequest.getBodyAsString());
+                        .withBody(originalRequest.getBody());
         originalRequest.getHeaders().all().forEach(header -> builder.withHeader(header.key(), header.values()));
         queryParameterMap.forEach((key, value) -> builder.withQueryParam(key, value.values()));
         return builder.build();

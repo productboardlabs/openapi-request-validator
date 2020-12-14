@@ -48,7 +48,7 @@ public class WireMockResponse implements Response {
     public static Response of(@Nonnull final com.github.tomakehurst.wiremock.http.Response originalResponse) {
         requireNonNull(originalResponse, "An original response is required");
         final SimpleResponse.Builder builder = new SimpleResponse.Builder(originalResponse.getStatus())
-                .withBody(originalResponse.getBodyAsString());
+                .withBody(originalResponse.getBody());
         originalResponse.getHeaders().all().forEach(header -> builder.withHeader(header.key(), header.values()));
         return builder.build();
     }

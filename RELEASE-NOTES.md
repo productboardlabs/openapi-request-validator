@@ -1,3 +1,14 @@
+# v2.11.2
+
+* Added ability to set the request/response bodies as `byte[]` or `InputStream` to avoid
+unnecessary deserialization
+[[#273]](https://bitbucket.org/atlassian/swagger-request-validator/issues/273)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/181)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/183)
+* Added some benchmarks to allow future performance improvements to be better tested
+[[#294]](https://bitbucket.org/atlassian/swagger-request-validator/issues/294)
+[[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/182)
+
 # v2.11.1
 
 * Improved performance of form-data validation by not deserializing the data multiple times
