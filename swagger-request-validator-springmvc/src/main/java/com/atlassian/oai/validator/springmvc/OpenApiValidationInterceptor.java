@@ -21,6 +21,7 @@ import java.io.IOException;
 import static com.atlassian.oai.validator.springmvc.OpenApiValidationFilter.ATTRIBUTE_REQUEST_VALIDATION;
 import static com.atlassian.oai.validator.springmvc.OpenApiValidationFilter.ATTRIBUTE_RESPONSE_VALIDATION;
 import static java.util.Objects.requireNonNull;
+import static javax.servlet.DispatcherType.ASYNC;
 
 /**
  * An Interceptor which validates incoming requests against the defined OpenAPI / Swagger specification.
@@ -67,12 +68,12 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
 
     private static boolean doRequestValidationStep(final HttpServletRequest servletRequest) {
         return (servletRequest instanceof ContentCachingRequestWrapper || servletRequest instanceof ResettableRequestServletWrapper) &&
-                doValidationStep(servletRequest, ATTRIBUTE_REQUEST_VALIDATION);
+                doValidationStep(servletRequest, ATTRIBUTE_REQUEST_VALIDATION) && servletRequest.getDispatcherType() != ASYNC;
     }
 
     private static boolean doResponseValidationStep(final HttpServletRequest servletRequest, final HttpServletResponse servletResponse) {
         return (servletResponse instanceof ContentCachingResponseWrapper) &&
-                doValidationStep(servletRequest, ATTRIBUTE_RESPONSE_VALIDATION);
+                doValidationStep(servletRequest, ATTRIBUTE_RESPONSE_VALIDATION) && !servletRequest.isAsyncStarted();
     }
 
     /**

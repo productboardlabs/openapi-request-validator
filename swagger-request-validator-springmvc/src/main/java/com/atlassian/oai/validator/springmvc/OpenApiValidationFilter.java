@@ -60,9 +60,14 @@ public class OpenApiValidationFilter extends OncePerRequestFilter {
         filterChain.doFilter(requestToUse, responseToUse);
 
         // in case the response was cached it has to be written to the original response
-        if (responseToUse instanceof ContentCachingResponseWrapper) {
+        if (!isAsyncStarted(requestToUse) && responseToUse instanceof ContentCachingResponseWrapper) {
             ((ContentCachingResponseWrapper) responseToUse).copyBodyToResponse();
         }
+    }
+
+    @Override
+    protected boolean shouldNotFilterAsyncDispatch() {
+        return false;
     }
 
     private HttpServletRequest wrapValidatableServletRequest(final HttpServletRequest servletRequest) {
