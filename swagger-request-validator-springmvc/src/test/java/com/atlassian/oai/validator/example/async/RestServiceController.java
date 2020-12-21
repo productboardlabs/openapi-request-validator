@@ -37,6 +37,10 @@ public class RestServiceController {
         if (sendInvalidResponse()) {
             return defer(Collections.emptyMap());
         }
+
+        if (pathVariable.equals("timeout")) {
+            return new DeferredResult<>(1L);
+        }
         return defer(ImmutableMap.of("headerValue", headerValue, "pathVariable", pathVariable, "requestParam", requestParam));
     }
 

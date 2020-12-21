@@ -20,8 +20,8 @@ import java.io.IOException;
 
 import static com.atlassian.oai.validator.springmvc.OpenApiValidationFilter.ATTRIBUTE_REQUEST_VALIDATION;
 import static com.atlassian.oai.validator.springmvc.OpenApiValidationFilter.ATTRIBUTE_RESPONSE_VALIDATION;
+import static com.atlassian.oai.validator.springmvc.ResponseUtils.getCachingResponse;
 import static java.util.Objects.requireNonNull;
-import static javax.servlet.DispatcherType.ASYNC;
 
 /**
  * An Interceptor which validates incoming requests against the defined OpenAPI / Swagger specification.
@@ -68,12 +68,12 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
 
     private static boolean doRequestValidationStep(final HttpServletRequest servletRequest) {
         return (servletRequest instanceof ContentCachingRequestWrapper || servletRequest instanceof ResettableRequestServletWrapper) &&
-                doValidationStep(servletRequest, ATTRIBUTE_REQUEST_VALIDATION) && servletRequest.getDispatcherType() != ASYNC;
+                doValidationStep(servletRequest, ATTRIBUTE_REQUEST_VALIDATION);
     }
 
     private static boolean doResponseValidationStep(final HttpServletRequest servletRequest, final HttpServletResponse servletResponse) {
-        return (servletResponse instanceof ContentCachingResponseWrapper) &&
-                doValidationStep(servletRequest, ATTRIBUTE_RESPONSE_VALIDATION) && !servletRequest.isAsyncStarted();
+        return  doValidationStep(servletRequest, ATTRIBUTE_RESPONSE_VALIDATION) &&
+                getCachingResponse(servletResponse) != null;
     }
 
     /**
@@ -140,9 +140,8 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
             LOG.debug("OpenAPI response validation skipped");
             return;
         }
-
         // validate the response
-        final ContentCachingResponseWrapper cachedResponse = (ContentCachingResponseWrapper) servletResponse;
+        final ContentCachingResponseWrapper cachedResponse = getCachingResponse(servletResponse);
         final String requestLoggingKey = servletRequest.getMethod() + "#" + servletRequest.getRequestURI();
         LOG.debug("OpenAPI response validation: {}", requestLoggingKey);
 
