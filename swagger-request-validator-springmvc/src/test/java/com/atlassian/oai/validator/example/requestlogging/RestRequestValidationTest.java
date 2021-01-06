@@ -17,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -113,6 +114,16 @@ public class RestRequestValidationTest {
     }
 
     @Test
+    public void testPostBlob_success() {
+        final ResponseEntity<HashMap> response = octetStreamRequest(
+                "/spring/post/blob", HttpMethod.POST, "bytes".getBytes(StandardCharsets.UTF_8));
+
+        // then: 'the response contains the size of the send blob'
+        final Map<String, Object> expectedBody = ImmutableMap.of("size", 5);
+        assertOkRequest(response, expectedBody);
+    }
+
+    @Test
     public void testPut_success() {
         final Map<String, Object> sendBody = ImmutableMap.of("putValue", "valuePut");
         final ResponseEntity<HashMap> response = restRequest("/spring/variablePath",
@@ -193,6 +204,13 @@ public class RestRequestValidationTest {
         headers.setAccept(singletonList(MediaType.APPLICATION_JSON));
         headers.putAll(additionalHeader);
         headers.put("invalidResponse", singletonList("true"));
+        final HttpEntity<Object> entity = new HttpEntity<>(body, headers);
+        return restTemplate.exchange(uri, method, entity, HashMap.class);
+    }
+
+    private ResponseEntity<HashMap> octetStreamRequest(final String uri, final HttpMethod method, final Object body) {
+        final HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(singletonList(MediaType.APPLICATION_JSON));
         final HttpEntity<Object> entity = new HttpEntity<>(body, headers);
         return restTemplate.exchange(uri, method, entity, HashMap.class);
     }
