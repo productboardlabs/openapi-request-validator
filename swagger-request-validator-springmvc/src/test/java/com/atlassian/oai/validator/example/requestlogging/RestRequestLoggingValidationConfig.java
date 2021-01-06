@@ -1,4 +1,4 @@
-package com.atlassian.oai.validator.springmvc.example.requestlogging;
+package com.atlassian.oai.validator.example.requestlogging;
 
 import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.springmvc.OpenApiValidationFilter;
@@ -69,10 +69,11 @@ public class RestRequestLoggingValidationConfig extends WebMvcConfigurerAdapter 
         private String getPayload(final HttpServletRequest request) throws IOException {
             if (request instanceof ResettableRequestServletWrapper) {
                 final ResettableRequestServletWrapper resettableRequest = (ResettableRequestServletWrapper) request;
-                final String requestBody = IOUtils.toString(resettableRequest.getReader());
+                final char[] chunk = new char[1024]; // only log the first 1kB
+                IOUtils.read(request.getReader(), chunk);
                 // reset the input stream - so it can be read again by the next interceptor / filter
                 resettableRequest.resetInputStream();
-                return requestBody.substring(0, Math.min(1024, requestBody.length())); // only log the first 1kB
+                return new String(chunk);
             } else {
                 return "[unknown]";
             }

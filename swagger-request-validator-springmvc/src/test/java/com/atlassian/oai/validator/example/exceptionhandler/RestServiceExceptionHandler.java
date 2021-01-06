@@ -1,4 +1,4 @@
-package com.atlassian.oai.validator.springmvc.example.exceptionhandler;
+package com.atlassian.oai.validator.example.exceptionhandler;
 
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.springmvc.InvalidRequestException;

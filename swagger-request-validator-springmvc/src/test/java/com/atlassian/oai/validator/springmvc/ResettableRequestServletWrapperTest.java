@@ -1,86 +1,123 @@
 package com.atlassian.oai.validator.springmvc;
 
-import com.google.common.io.ByteStreams;
-import org.apache.commons.io.IOUtils;
+import com.google.common.primitives.Bytes;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import static com.google.common.io.ByteStreams.exhaust;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.copyOfRange;
+import static org.apache.commons.io.IOUtils.toByteArray;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 public class ResettableRequestServletWrapperTest {
 
     @Test
-    public void getInputStream_resetInputStream_emptyBody_initialReadWithInputStream() throws IOException {
-        testingReadingAndResettingInputStream(0, requestServletWrapper -> IOUtils.toByteArray(requestServletWrapper.getInputStream()));
+    public void resetInputStream_emptyBody() throws IOException {
+        // read with input stream
+        testingFullReadingAndResettingInputStream(0, requestServletWrapper -> toByteArray(requestServletWrapper.getInputStream()));
+        // read with reader
+        testingFullReadingAndResettingInputStream(0, requestServletWrapper -> toByteArray(requestServletWrapper.getReader(), UTF_8));
+        // read with custom reading stream
+        testingFullReadingAndResettingInputStream(0, requestServletWrapper -> customReadingStream(requestServletWrapper.getInputStream()));
     }
 
     @Test
-    public void getInputStream_resetInputStream_emptyBody_initialReadWithReader() throws IOException {
-        testingReadingAndResettingInputStream(0, requestServletWrapper -> IOUtils.toByteArray(requestServletWrapper.getReader()));
+    public void resetInputStream_shortBody() throws IOException {
+        // read with input stream
+        testingFullReadingAndResettingInputStream(12, requestServletWrapper -> toByteArray(requestServletWrapper.getInputStream()));
+        // read with reader
+        testingFullReadingAndResettingInputStream(24, requestServletWrapper -> toByteArray(requestServletWrapper.getReader(), UTF_8));
+        // read with custom reading stream
+        testingFullReadingAndResettingInputStream(48, requestServletWrapper -> customReadingStream(requestServletWrapper.getInputStream()));
+        // partial read stream
+        testingPartialReadingAndResettingInputStream(96, 4);
     }
 
     @Test
-    public void getInputStream_resetInputStream_shortBody_initialReadWithInputStream() throws IOException {
-        testingReadingAndResettingInputStream(12, requestServletWrapper -> IOUtils.toByteArray(requestServletWrapper.getInputStream()));
+    public void resetInputStream_longBody() throws IOException {
+        // read with input stream
+        testingFullReadingAndResettingInputStream(10001, requestServletWrapper -> toByteArray(requestServletWrapper.getInputStream()));
+        // read with reader
+        testingFullReadingAndResettingInputStream(13004, requestServletWrapper -> toByteArray(requestServletWrapper.getReader(), UTF_8));
+        // read with custom reading stream
+        testingFullReadingAndResettingInputStream(17008, requestServletWrapper -> customReadingStream(requestServletWrapper.getInputStream()));
+        // partial read stream - small peek into the original stream
+        testingPartialReadingAndResettingInputStream(22013, 2);
+        // partial read stream - big peek into the original stream
+        testingPartialReadingAndResettingInputStream(28019, 25897);
     }
 
     @Test
-    public void getInputStream_resetInputStream_shortBody_initialReadWithReader() throws IOException {
-        testingReadingAndResettingInputStream(12, requestServletWrapper -> IOUtils.toByteArray(requestServletWrapper.getReader()));
-    }
-
-    @Test
-    public void getInputStream_resetInputStream_longBody_initialReadWithInputStream() throws IOException {
-        testingReadingAndResettingInputStream(10001, requestServletWrapper -> IOUtils.toByteArray(requestServletWrapper.getInputStream()));
-    }
-
-    @Test
-    public void getInputStream_resetInputStream_longBody_initialReadWithReader() throws IOException {
-        testingReadingAndResettingInputStream(10001, requestServletWrapper -> IOUtils.toByteArray(requestServletWrapper.getReader()));
-    }
-
-    @Test
-    public void getInputStream_resetInputStream_initialReadWithPlainReading() throws IOException {
-        testingReadingAndResettingInputStream(124, requestServletWrapper -> plainReadingStream(requestServletWrapper.getInputStream()));
-    }
-
-    @Test
-    public void getInputStream_resetInputStream_noBody() throws IOException {
+    public void resetInputStream_before_getInputStream_hasNoEffect() throws IOException {
         final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
         final ResettableRequestServletWrapper classUnderTest = new ResettableRequestServletWrapper(servletRequest);
 
-        // Test: reset the input stream before even reading it
+        final ServletInputStream servletInputStream = new ServletInputStreamMock("test".getBytes(UTF_8));
+        when(servletRequest.getInputStream()).thenReturn(servletInputStream);
+
+        // when:
         classUnderTest.resetInputStream();
 
-        final byte[] readAfterResetWithStream = IOUtils.toByteArray(classUnderTest.getInputStream());
-        assertThat(readAfterResetWithStream.length, is(0));
-
-        // Test: reset the input stream again
-        classUnderTest.resetInputStream();
-
-        final byte[] readAfterResetWithReader = IOUtils.toByteArray(classUnderTest.getReader());
-        assertThat(readAfterResetWithReader.length, is(0));
+        // then:
+        assertThat(classUnderTest.getInputStream(), notNullValue());
+        verify(servletRequest).getInputStream();
     }
 
     @Test
-    public void isFinished_isReady_setReadListener_onOriginalServletInputStream() throws IOException {
+    public void isFinished_variousStates() throws IOException {
+        final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
+        final ResettableRequestServletWrapper wrappedRequest = new ResettableRequestServletWrapper(servletRequest);
+
+        final ServletInputStream servletInputStream = new ServletInputStreamMock("bytes".getBytes(UTF_8));
+        when(servletRequest.getInputStream()).thenReturn(servletInputStream);
+
+        final ServletInputStream classUnderTest = wrappedRequest.getInputStream();
+
+        // Test: no bytes have been read
+        assertThat(classUnderTest.isFinished(), is(false));
+
+        // Test: read some bytes
+        classUnderTest.read(new byte[3]);
+
+        assertThat(classUnderTest.isFinished(), is(false));
+
+        // Test: exhaust the stream
+        exhaust(classUnderTest);
+
+        assertThat(classUnderTest.isFinished(), is(true));
+
+        // Test: after resetting the stream is unfinished again
+        classUnderTest.reset();
+
+        assertThat(classUnderTest.isFinished(), is(false));
+
+        // Test: after exhausting the stream again, is is back in finished state
+        exhaust(classUnderTest);
+
+        assertThat(classUnderTest.isFinished(), is(true));
+    }
+
+    @Test
+    public void isReady_variousStates() throws IOException {
         final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
         final ResettableRequestServletWrapper wrappedRequest = new ResettableRequestServletWrapper(servletRequest);
 
@@ -89,143 +126,208 @@ public class ResettableRequestServletWrapperTest {
 
         final ServletInputStream classUnderTest = wrappedRequest.getInputStream();
 
-        // Test:
-        when(servletInputStream.isFinished()).thenReturn(true);
-        assertThat(classUnderTest.isFinished(), is(true));
-        verify(servletInputStream).isFinished();
-
-        // Test:
-        when(servletInputStream.isReady()).thenReturn(false);
+        // Test: delegates to the original stream if no bytes have been read
         assertThat(classUnderTest.isReady(), is(false));
+
         verify(servletInputStream).isReady();
 
-        // Test:
-        final ReadListener readListener = mock(ReadListener.class);
-        classUnderTest.setReadListener(readListener);
-        verify(servletInputStream).setReadListener(readListener);
+        // Test: delegates to the original stream if there is no cached data
+        Mockito.reset(servletInputStream);
+        when(servletInputStream.read()).thenReturn(1);
+        when(servletInputStream.isReady()).thenReturn(true);
+
+        classUnderTest.read();
+
+        assertThat(classUnderTest.isReady(), is(true));
+        verify(servletInputStream).isReady();
+
+        // Test: after a reset there is cached data and the stream is ready
+        Mockito.reset(servletInputStream);
+        classUnderTest.reset();
+
+        assertThat(classUnderTest.isReady(), is(true));
+        verifyNoInteractions(servletInputStream);
     }
 
     @Test
-    public void isFinished_isReady_setReadListener_onCachedServletInputStream() throws IOException {
+    public void setReadListener_isDelegatedToTheOriginalServletInputStream() throws IOException {
         final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
         final ResettableRequestServletWrapper wrappedRequest = new ResettableRequestServletWrapper(servletRequest);
 
-        final ServletInputStream servletInputStream = new TestServletInputStream(new byte[]{0x00});
+        final ServletInputStream servletInputStream = mock(ServletInputStream.class);
         when(servletRequest.getInputStream()).thenReturn(servletInputStream);
 
-        IOUtils.toString(wrappedRequest.getInputStream());
-        wrappedRequest.resetInputStream();
         final ServletInputStream classUnderTest = wrappedRequest.getInputStream();
+        final ReadListener readListener = mock(ReadListener.class);
 
-        // Test:
-        assertThat(classUnderTest.isFinished(), is(false));
-        assertThat(classUnderTest.isReady(), is(true)); // always true
+        // when:
+        classUnderTest.setReadListener(readListener);
 
-        classUnderTest.read();
-        assertThat(classUnderTest.isFinished(), is(true));
-        assertThat(classUnderTest.isReady(), is(true));
-
-        try {
-            classUnderTest.setReadListener(mock(ReadListener.class));
-            fail("Read listeners can't be set on the cached servlet input stream.");
-        } catch (final IllegalStateException expected) {
-            // this exception was expected
-            assertThat(expected, notNullValue());
-        }
+        // then:
+        verify(servletInputStream).setReadListener(readListener);
     }
 
     @Test
     public void getContentLength_notSetOnOriginalServletInputStream() throws IOException {
         final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
 
-        final ServletInputStream servletInputStream = new TestServletInputStream(new byte[]{0x00, 0x01, 0x02});
+        final ServletInputStream servletInputStream = new ServletInputStreamMock(new byte[]{0x00, 0x01, 0x02});
         when(servletRequest.getInputStream()).thenReturn(servletInputStream);
 
         final ResettableRequestServletWrapper classUnderTest = new ResettableRequestServletWrapper(servletRequest);
 
         // Test: 'not set before reading stream'
         when(servletRequest.getContentLength()).thenReturn(-1);
+        when(servletRequest.getContentLengthLong()).thenReturn(-1L);
         assertThat(classUnderTest.getContentLength(), is(-1));
+        assertThat(classUnderTest.getContentLengthLong(), is(-1L));
         verify(servletRequest).getContentLength();
+        verify(servletRequest).getContentLengthLong();
 
         // Test: 'set after exhausting and resetting stream'
-        ByteStreams.exhaust(classUnderTest.getInputStream());
+        exhaust(classUnderTest.getInputStream());
         classUnderTest.resetInputStream();
         assertThat(classUnderTest.getContentLength(), is(3));
+        assertThat(classUnderTest.getContentLengthLong(), is(3L));
     }
 
     @Test
     public void getContentLength_setOnOriginalServletInputStream() throws IOException {
         final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
 
-        final ServletInputStream servletInputStream = new TestServletInputStream(new byte[]{0x00, 0x01, 0x02});
+        final ServletInputStream servletInputStream = new ServletInputStreamMock(new byte[]{0x00, 0x01, 0x02});
         when(servletRequest.getInputStream()).thenReturn(servletInputStream);
 
         final ResettableRequestServletWrapper classUnderTest = new ResettableRequestServletWrapper(servletRequest);
 
         // Test: 'wrongly set on original request'
         when(servletRequest.getContentLength()).thenReturn(2);
+        when(servletRequest.getContentLengthLong()).thenReturn(2L);
         assertThat(classUnderTest.getContentLength(), is(2));
+        assertThat(classUnderTest.getContentLengthLong(), is(2L));
         verify(servletRequest).getContentLength();
+        verify(servletRequest).getContentLengthLong();
 
         // Test: 'corrected after exhausting and resetting stream'
-        ByteStreams.exhaust(classUnderTest.getInputStream());
+        exhaust(classUnderTest.getInputStream());
         classUnderTest.resetInputStream();
         assertThat(classUnderTest.getContentLength(), is(3));
+        assertThat(classUnderTest.getContentLengthLong(), is(3L));
     }
 
     @Test
-    public void getContentLength_withoutReadingBody() throws IOException {
+    public void getContentLength_after_resetInputStream_withoutReadingBody() {
         final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
         final ResettableRequestServletWrapper classUnderTest = new ResettableRequestServletWrapper(servletRequest);
 
-        // Test:
+        // Test: 'still calls the original request'
         classUnderTest.resetInputStream();
+        when(servletRequest.getContentLength()).thenReturn(-1);
+        when(servletRequest.getContentLengthLong()).thenReturn(-1L);
         assertThat(classUnderTest.getContentLength(), is(-1));
-        verifyZeroInteractions(servletRequest);
+        assertThat(classUnderTest.getContentLengthLong(), is(-1L));
+        verify(servletRequest).getContentLength();
+        verify(servletRequest).getContentLengthLong();
     }
 
-    private void testingReadingAndResettingInputStream(final int contentLength, final ContentReader initialContentReader) throws IOException {
+    private void testingFullReadingAndResettingInputStream(final int contentLength, final ContentReader initialContentReader) throws IOException {
         final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
         final ResettableRequestServletWrapper classUnderTest = new ResettableRequestServletWrapper(servletRequest);
 
         final String content = RandomStringUtils.random(contentLength);
         final byte[] bytes = content.getBytes();
 
-        final ServletInputStream servletInputStream = new TestServletInputStream(bytes);
+        final ServletInputStream servletInputStream = new ServletInputStreamMock(bytes);
         when(servletRequest.getInputStream()).thenReturn(servletInputStream);
 
         // Test: initial reading the stream - this will fill the cache
         final byte[] initialRead = initialContentReader.read(classUnderTest);
         assertArrayEquals(bytes, initialRead);
 
+        // Test: reading more content from the exhausted stream does no harm
+        assertThat(servletInputStream.read(), is(-1));
+        assertThat(servletInputStream.read(new byte[10]), is(-1));
+        assertThat(servletInputStream.read(new byte[10], 2, 4), is(-1));
+
         // Test: reset the input stream and reread it again
         classUnderTest.resetInputStream();
 
-        final byte[] readAfterResetWithStream = IOUtils.toByteArray(classUnderTest.getInputStream());
+        final byte[] readAfterResetWithStream = toByteArray(classUnderTest.getInputStream());
         assertArrayEquals(bytes, readAfterResetWithStream);
 
         // Test: reset the input stream and reread it again from the buffered reader
         classUnderTest.resetInputStream();
 
-        final byte[] readAfterResetWithReader = IOUtils.toByteArray(classUnderTest.getReader());
+        final byte[] readAfterResetWithReader = toByteArray(classUnderTest.getReader(), UTF_8);
         assertArrayEquals(bytes, readAfterResetWithReader);
 
         // Test: reset the input stream and reread it again from the buffered reader with set charset
         classUnderTest.resetInputStream();
 
         when(servletRequest.getCharacterEncoding()).thenReturn("UTF-8");
-        final byte[] readAfterResetWithReaderWithCharset = IOUtils.toByteArray(classUnderTest.getReader());
+        final byte[] readAfterResetWithReaderWithCharset = toByteArray(classUnderTest.getReader(), UTF_8);
         assertArrayEquals(bytes, readAfterResetWithReaderWithCharset);
 
         // Test: reset the input stream and reread it again with plain reading the stream
         classUnderTest.resetInputStream();
 
-        final byte[] readAfterResetWithPlainReading = plainReadingStream(classUnderTest.getInputStream());
+        final byte[] readAfterResetWithPlainReading = customReadingStream(classUnderTest.getInputStream());
         assertArrayEquals(bytes, readAfterResetWithPlainReading);
     }
 
-    private byte[] plainReadingStream(final InputStream inputStream) throws IOException {
+    private void testingPartialReadingAndResettingInputStream(final int contentLength, final int partialReadLength) throws IOException {
+        final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
+        final ResettableRequestServletWrapper classUnderTest = new ResettableRequestServletWrapper(servletRequest);
+
+        final String content = RandomStringUtils.random(contentLength);
+        final byte[] bytes = content.getBytes();
+
+        final ServletInputStream servletInputStream = new ServletInputStreamMock(bytes);
+        when(servletRequest.getInputStream()).thenReturn(servletInputStream);
+
+        // Test: initial reading the stream - this will partially fill the cache
+        final byte[] initialRead = toByteArray(classUnderTest.getInputStream(), partialReadLength);
+        assertArrayEquals(Arrays.copyOf(bytes, partialReadLength), initialRead);
+
+        // Test: reset the input stream and reread the first byte
+        classUnderTest.resetInputStream();
+
+        final byte firstByte = (byte) classUnderTest.getInputStream().read();
+        assertThat(firstByte, equalTo(bytes[0]));
+
+        // Test: further reading stream - only the available cached data is returned, the original stream is not read further to prevent blocking
+        final byte[] moreBytes = new byte[partialReadLength];
+        final int readBytes1 = classUnderTest.getInputStream().read(moreBytes);
+        assertThat(readBytes1, equalTo(partialReadLength - 1));
+        assertThat(moreBytes[partialReadLength - 1], equalTo((byte) 0));
+        assertArrayEquals(copyOfRange(bytes, 1, partialReadLength), copyOfRange(moreBytes, 0, partialReadLength - 1));
+
+        // Test: further reading stream - now the original stream is read further
+        final byte[] evenMoreBytes = new byte[10];
+        final int readBytes2 = classUnderTest.getInputStream().read(evenMoreBytes);
+        assertThat(readBytes2, equalTo(10));
+        assertArrayEquals(copyOfRange(bytes, partialReadLength, partialReadLength + 10), evenMoreBytes);
+
+        // Test: reset the input stream and reread it fully
+        classUnderTest.resetInputStream();
+
+        final byte[] readAfterResetWithStream = toByteArray(classUnderTest.getInputStream());
+        assertArrayEquals(bytes, readAfterResetWithStream);
+
+        // Test: reset the input stream and reread it again from the buffered reader with set charset
+        classUnderTest.resetInputStream();
+
+        final byte[] readAfterResetWithReaderWithCharset = toByteArray(classUnderTest.getReader(), UTF_8);
+        assertArrayEquals(bytes, readAfterResetWithReaderWithCharset);
+
+        // Test: reset the input stream and reread it again with plain reading the stream
+        classUnderTest.resetInputStream();
+
+        final byte[] readAfterResetWithPlainReading = customReadingStream(classUnderTest.getInputStream());
+        assertArrayEquals(bytes, readAfterResetWithPlainReading);
+    }
+
+    private byte[] customReadingStream(final InputStream inputStream) throws IOException {
         final List<Byte> list = new ArrayList<>();
         while (true) {
             final int value = inputStream.read();
@@ -234,43 +336,11 @@ public class ResettableRequestServletWrapperTest {
             }
             list.add((byte) value);
         }
-        final byte[] result = new byte[list.size()];
-        for (int i = list.size() - 1; i >= 0; --i) {
-            result[i] = list.get(i);
-        }
-        return result;
+        return Bytes.toArray(list);
     }
 
     @FunctionalInterface
     private interface ContentReader {
         byte[] read(final ResettableRequestServletWrapper requestServletWrapper) throws IOException;
-    }
-
-    private static class TestServletInputStream extends ServletInputStream {
-
-        private final ByteArrayInputStream inputStream;
-
-        public TestServletInputStream(final byte[] bytes) {
-            this.inputStream = new ByteArrayInputStream(bytes);
-        }
-
-        @Override
-        public boolean isFinished() {
-            return false;
-        }
-
-        @Override
-        public boolean isReady() {
-            return false;
-        }
-
-        @Override
-        public void setReadListener(final ReadListener readListener) {
-        }
-
-        @Override
-        public int read() throws IOException {
-            return this.inputStream.read();
-        }
     }
 }

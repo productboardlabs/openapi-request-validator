@@ -84,7 +84,7 @@ public class OpenApiValidationFilterTest {
 
         // and:
         final ContentCachingRequestWrapper servletRequest = mock(ContentCachingRequestWrapper.class);
-        final ContentCachingResponseWrapper servletResponse = mock(ContentCachingResponseWrapper.class);
+        final ContentCachingResponseWrapper servletResponse = mock(OpenApiValidationContentCachingResponseWrapper.class);
         final FilterChain filterChain = mock(FilterChain.class);
         when(servletRequest.getContentType()).thenReturn("application/x-www-form-urlencoded");
 

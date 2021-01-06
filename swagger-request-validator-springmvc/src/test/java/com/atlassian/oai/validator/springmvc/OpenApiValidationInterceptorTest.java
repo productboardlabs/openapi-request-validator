@@ -12,6 +12,7 @@ import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
@@ -20,6 +21,7 @@ import static com.atlassian.oai.validator.springmvc.OpenApiValidationFilter.ATTR
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -218,14 +220,14 @@ public class OpenApiValidationInterceptorTest {
         classUnderTest.postHandle(servletRequest, servletResponse, null, null);
 
         // then:
-        verify(servletRequest, never()).getAttribute(ATTRIBUTE_RESPONSE_VALIDATION);
+        verify(openApiValidationService, never()).validateResponse(any(), any());
     }
 
     @Test
     public void postHandle_noResponseValidationIfValidationAttributeMissing() throws Exception {
         // given:
         final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
-        final ContentCachingResponseWrapper servletResponse = mock(ContentCachingResponseWrapper.class);
+        final ContentCachingResponseWrapper servletResponse = mockResponseWrapper();
 
         // and:
         when(servletRequest.getAttribute(ATTRIBUTE_RESPONSE_VALIDATION)).thenReturn(null);
@@ -241,7 +243,7 @@ public class OpenApiValidationInterceptorTest {
     public void postHandle_noResponseValidationIfValidationAttributeInvalid() throws Exception {
         // given:
         final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
-        final ContentCachingResponseWrapper servletResponse = mock(ContentCachingResponseWrapper.class);
+        final ContentCachingResponseWrapper servletResponse = mockResponseWrapper();
 
         // and:
         when(servletRequest.getAttribute(ATTRIBUTE_RESPONSE_VALIDATION)).thenReturn("");
@@ -257,7 +259,7 @@ public class OpenApiValidationInterceptorTest {
     public void postHandle_noResponseValidationIfValidationAttributeFalse() throws Exception {
         // given:
         final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
-        final ContentCachingResponseWrapper servletResponse = mock(ContentCachingResponseWrapper.class);
+        final ContentCachingResponseWrapper servletResponse = mockResponseWrapper();
 
         // and:
         when(servletRequest.getAttribute(ATTRIBUTE_RESPONSE_VALIDATION)).thenReturn(Boolean.FALSE);
@@ -273,7 +275,7 @@ public class OpenApiValidationInterceptorTest {
     public void postHandle_theResponseIsValid() throws Exception {
         // given:
         final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
-        final ContentCachingResponseWrapper servletResponse = mock(ContentCachingResponseWrapper.class);
+        final ContentCachingResponseWrapper servletResponse = mockResponseWrapper();
         final Response response = mock(Response.class);
         final ValidationReport validationReport = mock(ValidationReport.class);
 
@@ -292,11 +294,34 @@ public class OpenApiValidationInterceptorTest {
         verify(validationReportHandler).handleResponseReport("METHOD#/request/uri", validationReport);
     }
 
+    @Test
+    public void postHandle_theResponseIsValidWrapperWrapped() throws Exception {
+        // given:
+        final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
+        final HttpServletResponse servletResponse = new HttpServletResponseWrapper(mockResponseWrapper());
+        final Response response = mock(Response.class);
+        final ValidationReport validationReport = mock(ValidationReport.class);
+
+        // and:
+        when(servletRequest.getAttribute(ATTRIBUTE_RESPONSE_VALIDATION)).thenReturn(Boolean.TRUE);
+        when(servletRequest.getMethod()).thenReturn("METHOD");
+        when(servletRequest.getRequestURI()).thenReturn("/request/uri");
+
+        when(openApiValidationService.buildResponse(any())).thenReturn(response);
+        when(openApiValidationService.validateResponse(servletRequest, response)).thenReturn(validationReport);
+
+        // when:
+        classUnderTest.postHandle(servletRequest, servletResponse, null, null);
+
+        // then:
+        verify(validationReportHandler).handleResponseReport("METHOD#/request/uri", validationReport);
+    }
+
     @Test(expected = InvalidResponseException.class)
     public void postHandle_theResponseIsInvalid() throws Exception {
         // setup:
         final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
-        final ContentCachingResponseWrapper servletResponse = mock(ContentCachingResponseWrapper.class);
+        final ContentCachingResponseWrapper servletResponse = mockResponseWrapper();
         final Response response = mock(Response.class);
         final ValidationReport validationReport = mock(ValidationReport.class);
 
@@ -311,5 +336,9 @@ public class OpenApiValidationInterceptorTest {
 
         // expect:
         classUnderTest.postHandle(servletRequest, servletResponse, null, null);
+    }
+
+    private OpenApiValidationContentCachingResponseWrapper mockResponseWrapper() {
+        return mock(OpenApiValidationContentCachingResponseWrapper.class);
     }
 }
