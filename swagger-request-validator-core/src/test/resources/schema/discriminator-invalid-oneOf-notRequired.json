@@ -1,0 +1,73 @@
+{
+  "keyword": "discriminator",
+  "description": "An invalid schema using oneOf composition with a subschema that has the discriminator property not marked as required",
+  "shouldPass": false,
+  "expectedKeys": [
+    "err.swaggerv2.discriminator.notRequired"
+  ],
+  "schema": {
+    "$schema": "https://openapis.org/specification/versions/2.0#",
+    "$ref": "#/definitions/Pet",
+    "definitions": {
+      "Pet": {
+        "type": "object",
+        "oneOf": [
+          {
+            "$ref": "#/definitions/Cat"
+          },
+          {
+            "$ref": "#/definitions/Dog"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "petType",
+          "mapping": {
+            "puppy": "Dog"
+          }
+        }
+      },
+      "Cat": {
+        "description": "A representation of a cat",
+        "type": "object",
+        "properties": {
+          "huntingSkill": {
+            "type": "string",
+            "description": "The measured skill for hunting",
+            "default": "lazy",
+            "enum": [
+              "clueless",
+              "lazy",
+              "adventurous",
+              "aggressive"
+            ]
+          },
+          "petType": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "huntingSkill"
+        ]
+      },
+      "Dog": {
+        "description": "A representation of a dog",
+        "properties": {
+          "packSize": {
+            "type": "integer",
+            "format": "int32",
+            "description": "the size of the pack the dog is from",
+            "default": 0,
+            "minimum": 0
+          },
+          "petType": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "packSize",
+          "petType"
+        ]
+      }
+    }
+  }
+}

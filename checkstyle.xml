@@ -69,7 +69,9 @@
         <module name="FinalLocalVariable">
             <property name="tokens" value="VARIABLE_DEF,PARAMETER_DEF"/>
         </module>
-        <module name="Indentation"/>
+        <module name="Indentation">
+            <property name="arrayInitIndent" value="8"/>
+        </module>
         <module name="CommentsIndentation"/>
         <module name="EmptyCatchBlock">
             <property name="commentFormat" value="Expected"/>

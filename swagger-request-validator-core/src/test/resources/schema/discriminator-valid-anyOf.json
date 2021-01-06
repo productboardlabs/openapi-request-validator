@@ -1,0 +1,90 @@
+{
+  "keyword": "discriminator",
+  "description": "A valid schema using anyOf composition and a discriminator",
+  "tests": [
+    {
+      "description": "A valid example without mapping",
+      "shouldPass": true,
+      "example": {
+        "name": "Moggy",
+        "petType": "Cat",
+        "huntingSkill": "clueless"
+      }
+    },
+    {
+      "description": "A valid example with mapping",
+      "shouldPass": true,
+      "example": {
+        "name": "Fido",
+        "petType": "puppy",
+        "packSize": 1
+      }
+    }
+  ],
+  "schema": {
+    "$schema": "https://openapis.org/specification/versions/2.0#",
+    "$ref": "#/definitions/Pet",
+    "definitions": {
+      "Pet": {
+        "type": "object",
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Cat"
+          },
+          {
+            "$ref": "#/definitions/Dog"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "petType",
+          "mapping": {
+            "puppy": "Dog"
+          }
+        }
+      },
+      "Cat": {
+        "description": "A representation of a cat",
+        "type": "object",
+        "properties": {
+          "huntingSkill": {
+            "type": "string",
+            "description": "The measured skill for hunting",
+            "default": "lazy",
+            "enum": [
+              "clueless",
+              "lazy",
+              "adventurous",
+              "aggressive"
+            ]
+          },
+          "petType": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "huntingSkill",
+          "petType"
+        ]
+      },
+      "Dog": {
+        "description": "A representation of a dog",
+        "properties": {
+          "packSize": {
+            "type": "integer",
+            "format": "int32",
+            "description": "the size of the pack the dog is from",
+            "default": 0,
+            "minimum": 0
+          },
+          "petType": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "packSize",
+          "petType"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "keyword": "discriminator",
+  "description": "A valid schema using oneOf composition and a discriminator, where the only difference between the child schemas is the discriminator value",
+  "tests": [
+    {
+      "description": "A valid example",
+      "shouldPass": true,
+      "example": {
+        "name": "Thing1"
+      }
+    }
+  ],
+  "schema": {
+    "$schema": "https://openapis.org/specification/versions/2.0#",
+    "$ref": "#/definitions/Thing",
+    "definitions": {
+      "Thing": {
+        "type": "object",
+        "oneOf": [
+          {
+            "$ref": "#/definitions/Thing1"
+          },
+          {
+            "$ref": "#/definitions/Thing2"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "name"
+        }
+      },
+      "Thing1": {
+        "description": "Thing1",
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "Thing2": {
+        "description": "Thing2",
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      }
+    }
+  }
+}
