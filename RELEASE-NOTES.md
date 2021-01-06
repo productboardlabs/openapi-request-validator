@@ -1,3 +1,19 @@
+# v2.12.0
+
+* A number of improvements to the validation behavior around use of `discriminator` with schema composition (`allOf`
+  , `oneOf`, `anyOf`).
+  [[#286]](https://bitbucket.org/atlassian/swagger-request-validator/issues/286)
+  [[#241]](https://bitbucket.org/atlassian/swagger-request-validator/issues/241)
+  [[#269]](https://bitbucket.org/atlassian/swagger-request-validator/issues/269)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/180)
+  * Better adherence to the OpenAPI v3 spec
+  * Fixed a number of scenarios where a validation loop is reported when validating the `discriminator`
+  * Better handling of `discriminator` for `anyOf` and `oneOf`
+  * Fixes a problem with dirty state left over between validations
+
+*Note*: This change makes the validator more strict in it's handling of `discriminator`. Some schemas that were
+previously passing may now be reported as invalid.
+
 # v2.11.5
 
 * Performance improvement: Memoized the processed schema to avoid de-serializing the schema multiple times for the same
@@ -71,8 +87,7 @@ header).
   to exercise this scenario.
   [[#275]](https://bitbucket.org/atlassian/swagger-request-validator/issues/275)
   [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/172)
-* Add support for basic validation
-  for [cookie authentication](https://swagger.io/docs/specification/authentication/cookie-authentication/)
+* Add support for basic validation for [cookie authentication](https://swagger.io/docs/specification/authentication/cookie-authentication/)
   [[#278]](https://bitbucket.org/atlassian/swagger-request-validator/issues/278)
   [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/173)
 
@@ -298,8 +313,7 @@ See `OpenApiValidatorPactConsumerTestExample` for examples.
 
 * Fixed NPE when `security` defined but no `securitySchemes` defined
   [[#188]](https://bitbucket.org/atlassian/swagger-request-validator/issues/188)
-* Added better support
-  for [using multiple authentication types](https://swagger.io/docs/specification/authentication/#multiple)
+* Added better support for [using multiple authentication types](https://swagger.io/docs/specification/authentication/#multiple)
   [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/123)
 
 # v2.2.0
@@ -368,8 +382,7 @@ Provides support for both Swagger v2 and OpenAPI v3 specifications.
 
 ### Upgrade notes
 
-* `SwaggerRequestResponseValidator` has been deprecated in favor of `OpenApiInteractionValidator`. The
-  original `SwaggerRequestResponseValidator` will be removed in a future release.
+* `SwaggerRequestResponseValidator` has been deprecated in favor of `OpenApiInteractionValidator`. The original `SwaggerRequestResponseValidator` will be removed in a future release.
 * Various filters and interceptors etc. in the adapter modules have been deprecated and replaced with versions named
   with `OpenApi*`. The original `Swagger*` named versions will be removed in a future release.
 * Schema validation errors now have the form `validation.{request|response}.{body|parameter}.schema.{keyword}`
@@ -384,8 +397,7 @@ See [OpenAPI v3 feature coverage](./docs/OPENAPIv3.md) for details on supported 
   [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/100)
 
   *Important:* This changes the required Scala version from 2.11 to 2.12. There are also breaking changes in the Pact
-  API. Importantly, usages of the `ValidatedPactProviderRule` should now use `provider.getUrl()` instead
-  of `provider.config().url()`.
+  API. Importantly, usages of the `ValidatedPactProviderRule` should now use `provider.getUrl()` instead of `provider.config().url()`.
 
 # v1.4.7
 
