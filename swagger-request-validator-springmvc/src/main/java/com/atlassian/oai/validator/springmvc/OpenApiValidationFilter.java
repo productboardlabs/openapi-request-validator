@@ -4,7 +4,6 @@ import com.atlassian.oai.validator.util.ContentTypeUtils;
 import org.springframework.web.cors.CorsUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.ContentCachingRequestWrapper;
-import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -12,6 +11,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import static com.atlassian.oai.validator.springmvc.ResponseUtils.getCachingResponse;
+import static javax.servlet.DispatcherType.ASYNC;
 import static org.apache.commons.lang3.ClassUtils.getPackageName;
 
 /**
@@ -60,15 +61,25 @@ public class OpenApiValidationFilter extends OncePerRequestFilter {
         filterChain.doFilter(requestToUse, responseToUse);
 
         // in case the response was cached it has to be written to the original response
-        if (responseToUse instanceof ContentCachingResponseWrapper) {
-            ((ContentCachingResponseWrapper) responseToUse).copyBodyToResponse();
+        if (!isAsyncStarted(requestToUse)) {
+            final OpenApiValidationContentCachingResponseWrapper cachingResponse = getCachingResponse(responseToUse);
+            if (cachingResponse != null) {
+                cachingResponse.copyBodyToResponse();
+            }
         }
+    }
+
+    @Override
+    protected boolean shouldNotFilterAsyncDispatch() {
+        return false;
     }
 
     private HttpServletRequest wrapValidatableServletRequest(final HttpServletRequest servletRequest) {
         // set validation information used by the interceptor
         final boolean doValidationStep = validateRequests &&
-                !CorsUtils.isPreFlightRequest(servletRequest);
+                !CorsUtils.isPreFlightRequest(servletRequest) &&
+                servletRequest.getDispatcherType() != ASYNC;
+
         servletRequest.setAttribute(ATTRIBUTE_REQUEST_VALIDATION, doValidationStep);
 
         // do not wrap requests that aren't validated
@@ -100,7 +111,8 @@ public class OpenApiValidationFilter extends OncePerRequestFilter {
         }
 
         // do not re-wrap already wrapped responses
-        return (servletResponse instanceof ContentCachingResponseWrapper) ? servletResponse
-                : new ContentCachingResponseWrapper(servletResponse);
+        return getCachingResponse(servletResponse) != null ? servletResponse
+                : new OpenApiValidationContentCachingResponseWrapper(servletResponse);
     }
+
 }

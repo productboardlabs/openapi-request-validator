@@ -1,4 +1,4 @@
-package com.atlassian.oai.validator.springmvc.example.simple;
+package com.atlassian.oai.validator.example.simple;
 
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;

@@ -1,7 +1,7 @@
-package com.atlassian.oai.validator.springmvc.example.requestlogging;
+package com.atlassian.oai.validator.example.requestlogging;
 
 import com.atlassian.oai.validator.OpenApiInteractionValidator;
-import com.atlassian.oai.validator.springmvc.example.simple.RestServiceApplication;
+import com.atlassian.oai.validator.example.simple.RestServiceApplication;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 import org.junit.runner.RunWith;
