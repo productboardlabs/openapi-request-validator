@@ -14,6 +14,13 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.report.ListProcessingReport;
 import com.github.fge.jsonschema.core.report.ProcessingMessage;
+import com.github.fge.jsonschema.main.JsonSchema;
+import com.github.fge.jsonschema.main.JsonSchemaFactory;
+import com.google.common.base.Throwables;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Iterables;
 import io.swagger.util.Json;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -30,7 +37,9 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 import static com.atlassian.oai.validator.schema.SwaggerV20Library.schemaFactory;
 import static java.util.Arrays.asList;
@@ -55,6 +64,7 @@ public class SchemaValidator {
 
     private final JsonNode definitions;
     private final MessageResolver messages;
+    private final LoadingCache<JsonSchemaKey, JsonSchema> jsonSchemaCache;
 
     /**
      * Transformations applied to the schema before validation.
@@ -82,6 +92,16 @@ public class SchemaValidator {
                 .map(Components::getSchemas)
                 .map(schemas -> Json.mapper().convertValue(schemas, JsonNode.class))
                 .orElseGet(() -> Json.mapper().createObjectNode());
+        final JsonSchemaFactory schemaFactory = schemaFactory();
+        this.jsonSchemaCache = CacheBuilder.newBuilder()
+                .maximumSize(100)
+                .build(new CacheLoader<JsonSchemaKey, JsonSchema>() {
+                    @Override
+                    public JsonSchema load(final JsonSchemaKey key) throws ProcessingException {
+                        final JsonNode schemaObject = readAndTransformSchemaObject(key.schema, key.forRequest, key.forResponse);
+                        return schemaFactory.getJsonSchema(schemaObject);
+                    }
+                });
     }
 
     /**
@@ -119,15 +139,12 @@ public class SchemaValidator {
         }
 
         try {
-            final JsonNode content;
             final ListProcessingReport processingReport;
             try {
-                content = supplier.get();
+                final JsonNode content = supplier.get();
 
-                final JsonNode schemaObject = readAndTransformSchemaObject(schema, keyPrefix);
-
-                processingReport = (ListProcessingReport) schemaFactory()
-                        .getJsonSchema(schemaObject)
+                final JsonSchema jsonSchema = resolveJsonSchema(schema, keyPrefix);
+                processingReport = (ListProcessingReport) jsonSchema
                         .validate(content, true);
 
             } catch (final ProcessingException e) {
@@ -158,11 +175,27 @@ public class SchemaValidator {
         }
     }
 
-    private JsonNode readAndTransformSchemaObject(final Schema schema, @Nullable final String keyPrefix) {
+    private JsonSchema resolveJsonSchema(final Schema schema, @Nullable final String keyPrefix)
+            throws ProcessingException {
+        final boolean forRequest = "request.body".equalsIgnoreCase(keyPrefix);
+        final boolean forResponse = "response.body".equalsIgnoreCase(keyPrefix);
+        final JsonSchemaKey jsonSchemaKey = new JsonSchemaKey(schema, forRequest, forResponse);
+        try {
+            return jsonSchemaCache.get(jsonSchemaKey);
+        } catch (final ExecutionException e) {
+            final List<Throwable> causalChain = Throwables.getCausalChain(e);
+            throw (ProcessingException) causalChain.stream()
+                    .filter(exception -> exception instanceof ProcessingException)
+                    .findFirst()
+                    .orElseGet(() -> new ProcessingException("JsonSchema creation failed.", Iterables.getLast(causalChain)));
+        }
+    }
+
+    private JsonNode readAndTransformSchemaObject(final Schema schema, final boolean forRequest, final boolean forResponse) {
         final ObjectNode schemaObject = Json.mapper().convertValue(schema, ObjectNode.class);
         final SchemaTransformationContext transformationContext = SchemaTransformationContext.create()
-                .forRequest("request.body".equalsIgnoreCase(keyPrefix))
-                .forResponse("response.body".equalsIgnoreCase(keyPrefix))
+                .forRequest(forRequest)
+                .forResponse(forResponse)
                 .withAdditionalPropertiesValidation(additionalPropertiesValidationEnabled())
                 .withDefinitions(definitions)
                 .build();
@@ -293,5 +326,35 @@ public class SchemaValidator {
     @FunctionalInterface
     public interface JsonNodeSupplier {
         JsonNode get() throws IOException;
+    }
+
+    private static class JsonSchemaKey {
+        private final Schema schema;
+        private final boolean forRequest;
+        private final boolean forResponse;
+
+        private JsonSchemaKey(final Schema schema, final boolean forRequest, final boolean forResponse) {
+            this.schema = schema;
+            this.forRequest = forRequest;
+            this.forResponse = forResponse;
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            final JsonSchemaKey that = (JsonSchemaKey) o;
+            return forRequest == that.forRequest && forResponse == that.forResponse
+                    && Objects.equals(schema, that.schema);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(forRequest, forResponse, schema);
+        }
     }
 }
