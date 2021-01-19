@@ -62,7 +62,6 @@ public class SchemaValidator {
 
     private static final String ALLOF_FIELD = "allOf";
 
-    private final JsonNode definitions;
     private final MessageResolver messages;
     private final LoadingCache<JsonSchemaKey, JsonSchema> jsonSchemaCache;
 
@@ -88,7 +87,7 @@ public class SchemaValidator {
                            @Nonnull final MessageResolver messages) {
         this.messages = requireNonNull(messages, "A message resolver is required");
 
-        this.definitions = Optional.ofNullable(api.getComponents())
+        final JsonNode definitions = Optional.ofNullable(api.getComponents())
                 .map(Components::getSchemas)
                 .map(schemas -> Json.mapper().convertValue(schemas, JsonNode.class))
                 .orElseGet(() -> Json.mapper().createObjectNode());
@@ -98,7 +97,8 @@ public class SchemaValidator {
                 .build(new CacheLoader<JsonSchemaKey, JsonSchema>() {
                     @Override
                     public JsonSchema load(final JsonSchemaKey key) throws ProcessingException {
-                        final JsonNode schemaObject = readAndTransformSchemaObject(key.schema, key.forRequest, key.forResponse);
+                        final JsonNode schemaObject = readAndTransformSchemaObject(key.schema,
+                                key.forRequest, key.forResponse, definitions);
                         return schemaFactory.getJsonSchema(schemaObject);
                     }
                 });
@@ -191,13 +191,17 @@ public class SchemaValidator {
         }
     }
 
-    private JsonNode readAndTransformSchemaObject(final Schema schema, final boolean forRequest, final boolean forResponse) {
+    private JsonNode readAndTransformSchemaObject(final Schema schema, final boolean forRequest,
+                                                  final boolean forResponse, final JsonNode definitions) {
         final ObjectNode schemaObject = Json.mapper().convertValue(schema, ObjectNode.class);
         final SchemaTransformationContext transformationContext = SchemaTransformationContext.create()
                 .forRequest(forRequest)
                 .forResponse(forResponse)
                 .withAdditionalPropertiesValidation(additionalPropertiesValidationEnabled())
-                .withDefinitions(definitions)
+                // Use a copy of the definitions. The JsonSchema validation process might change them
+                // in its validation process. On concurrent validations it might even lead to
+                // ConcurrentModificationException.
+                .withDefinitions(definitions.deepCopy())
                 .build();
 
         transformers.forEach(t -> t.apply(schemaObject, transformationContext));
