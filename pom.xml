@@ -63,7 +63,7 @@
         <junit.version>4.12</junit.version>
         <logback.version>1.2.3</logback.version>
         <mockito.version>3.3.3</mockito.version>
-        <pact-jvm.version>3.6.14</pact-jvm.version>
+        <pact-jvm.version>3.6.15</pact-jvm.version>
         <rest-assured.version>3.3.0</rest-assured.version>
         <servlet.api.version>3.1.0</servlet.api.version>
         <slf4j.version>1.7.30</slf4j.version>
@@ -75,6 +75,7 @@
         <!-- Overrides for transitive dependencies to address vulnerabilities -->
         <commons-codec.version>1.15</commons-codec.version>
         <httpclient.version>4.5.13</httpclient.version>
+        <netty.version>4.1.58.Final</netty.version>
 
         <!-- Plugin versions -->
         <checkstyle.version>8.25</checkstyle.version>
@@ -142,11 +143,28 @@
                 <artifactId>json-schema-validator</artifactId>
                 <version>${json-schema-validator.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>au.com.dius</groupId>
                 <artifactId>pact-jvm-model</artifactId>
                 <version>${pact-jvm.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec-http</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-handler</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
