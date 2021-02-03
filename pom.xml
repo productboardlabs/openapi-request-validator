@@ -73,6 +73,7 @@
         <jmh-core.version>1.26</jmh-core.version>
 
         <!-- Overrides for transitive dependencies to address vulnerabilities -->
+        <jetty.version>9.4.36.v20210114</jetty.version>
         <commons-codec.version>1.15</commons-codec.version>
         <httpclient.version>4.5.13</httpclient.version>
         <netty.version>4.1.58.Final</netty.version>
@@ -220,6 +221,36 @@
                 <groupId>com.github.tomakehurst</groupId>
                 <artifactId>wiremock</artifactId>
                 <version>${wiremock.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-client</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlets</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-proxy</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-webapp</artifactId>
+                <version>${jetty.version}</version>
             </dependency>
             <dependency>
                 <groupId>commons-codec</groupId>
