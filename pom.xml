@@ -58,7 +58,7 @@
         <hamcrest.version>2.2</hamcrest.version>
         <hamcrest-optional.version>1.1.5</hamcrest-optional.version>
         <jackson.version>2.12.1</jackson.version>
-        <json-schema-validator.version>2.2.11</json-schema-validator.version>
+        <json-schema-validator.version>v2.2.14</json-schema-validator.version>
         <jsr305.version>3.0.2</jsr305.version>
         <junit.version>4.12</junit.version>
         <logback.version>1.2.3</logback.version>
