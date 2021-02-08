@@ -2,5 +2,14 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:base"
+  ],
+  "reviewers": [
+    "jnavin"
+  ],
+  "automerge": false,
+  "timezone": "Australia/Sydney",
+  "dependencyDashboard": true,
+  "prBodyNotes": [
+    "Have a look at your [dependency dashboard](https://statlas.prod.atl-paas.net/renovate-dashboards/{{repository}}.html)"
   ]
 }
