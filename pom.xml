@@ -79,7 +79,7 @@
         <netty.version>4.1.58.Final</netty.version>
 
         <!-- Plugin versions -->
-        <checkstyle.version>8.25</checkstyle.version>
+        <checkstyle.version>8.40</checkstyle.version>
         <license-maven-plugin.version>1.20</license-maven-plugin.version>
         <maven-checkstyle-plugin.version>3.1.0</maven-checkstyle-plugin.version>
     </properties>
