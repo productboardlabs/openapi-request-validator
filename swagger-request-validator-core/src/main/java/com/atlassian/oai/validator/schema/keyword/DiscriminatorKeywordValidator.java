@@ -161,7 +161,7 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
 
         final SchemaTree childSchemaTree = schemaTree.setPointer(ptrToChildSchema);
         final ListProcessingReport subReport = new ListProcessingReport(report.getLogLevel(), LogLevel.FATAL);
-        if (childSchemaTree.getNode() == null) {
+        if (childSchemaTree.getNode() == null || childSchemaTree.getNode().isMissingNode()) {
             report.error(msg(data, bundle, "err.swaggerv2.discriminator.reference.invalid")
                     .putArgument("schema", ptrToChildSchema.toString())
                     .put("report", subReport.asJson()));
