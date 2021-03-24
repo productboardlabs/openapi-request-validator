@@ -71,7 +71,7 @@
         <spring.version>4.3.30.RELEASE</spring.version>
         <swagger-parser.version>2.0.24</swagger-parser.version>
         <wiremock.version>2.27.2</wiremock.version>
-        <jmh-core.version>1.27</jmh-core.version>
+        <jmh-core.version>1.29</jmh-core.version>
 
         <!-- Overrides for transitive dependencies to address vulnerabilities -->
         <jetty.version>9.4.36.v20210114</jetty.version>
