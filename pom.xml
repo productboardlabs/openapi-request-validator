@@ -74,7 +74,7 @@
         <jmh-core.version>1.27</jmh-core.version>
 
         <!-- Overrides for transitive dependencies to address vulnerabilities -->
-        <jetty.version>9.4.36.v20210114</jetty.version>
+        <jetty.version>9.4.39.v20210325</jetty.version>
         <commons-codec.version>1.15</commons-codec.version>
         <httpclient.version>4.5.13</httpclient.version>
         <netty.version>4.1.59.Final</netty.version>
