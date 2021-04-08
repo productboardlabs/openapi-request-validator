@@ -1,5 +1,6 @@
-package com.atlassian.oai.validator.example.simple;
+package com.atlassian.oai.validator.example.exceptionhandler;
 
+import com.atlassian.oai.validator.example.simple.RestServiceController;
 import com.atlassian.oai.validator.springmvc.OpenApiValidationFilter;
 import com.atlassian.oai.validator.springmvc.OpenApiValidationInterceptor;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,5 +37,10 @@ public class RestServiceApplication {
                 registry.addInterceptor(openApiValidationInterceptor);
             }
         };
+    }
+
+    @Bean // reuse the controller of the simple example
+    public RestServiceController restServiceController() {
+        return new RestServiceController();
     }
 }
