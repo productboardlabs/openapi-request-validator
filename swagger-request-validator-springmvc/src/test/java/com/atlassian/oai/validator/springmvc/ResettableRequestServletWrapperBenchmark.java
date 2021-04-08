@@ -22,7 +22,7 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 import static com.google.common.io.ByteStreams.exhaust;
 import static org.apache.commons.io.IOUtils.toByteArray;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
