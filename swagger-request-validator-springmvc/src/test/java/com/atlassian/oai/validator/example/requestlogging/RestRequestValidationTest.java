@@ -1,21 +1,17 @@
 package com.atlassian.oai.validator.example.requestlogging;
 
 import com.atlassian.oai.validator.OpenApiInteractionValidator;
-import com.atlassian.oai.validator.example.simple.RestServiceApplication;
 import com.google.common.collect.ImmutableMap;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -25,18 +21,17 @@ import java.util.Map;
 
 import static java.util.Collections.singletonList;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
 
 /**
  * Testing with non-default context-path and a custom created
  * {@link OpenApiInteractionValidator} with base path override.
  *
- * @see RestRequestLoggingValidationConfig#RestRequestLoggingValidationConfig(Resource)
+ * @see RestRequestLoggingValidationConfig
  */
-@RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {"server.contextPath=/v1"},
-        classes = {RestServiceApplication.class, RestRequestLoggingValidationConfig.class})
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = {"server.contextPath=/v1", "server.error.include-message=always"})
 public class RestRequestValidationTest {
 
     @Autowired

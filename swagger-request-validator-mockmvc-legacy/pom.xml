@@ -6,15 +6,19 @@
     <parent>
         <groupId>com.atlassian.oai</groupId>
         <artifactId>swagger-request-validator</artifactId>
-        <version>2.15.2-SNAPSHOT</version>
+        <version>2.16.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>swagger-request-validator-mockmvc-legacy</artifactId>
 
     <description>
-        OpenAPI / Swagger validation for Spring MVC REST tests.
+        OpenAPI / Swagger validation for Spring MVC REST tests (legacy).
     </description>
+
+    <properties>
+        <spring.version>4.3.30.RELEASE</spring.version>
+    </properties>
 
     <dependencies>
         <dependency>
