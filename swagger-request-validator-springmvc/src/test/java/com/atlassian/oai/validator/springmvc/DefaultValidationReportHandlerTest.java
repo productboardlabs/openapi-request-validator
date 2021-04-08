@@ -5,9 +5,9 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import com.atlassian.oai.validator.report.ValidationReport;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
@@ -20,7 +20,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -29,7 +29,7 @@ public class DefaultValidationReportHandlerTest {
     private ListAppender<ILoggingEvent> listAppender;
     private DefaultValidationReportHandler validationHandler;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         listAppender = new ListAppender<>();
         listAppender.start();
@@ -40,7 +40,7 @@ public class DefaultValidationReportHandlerTest {
         validationHandler = new DefaultValidationReportHandler();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         logger.detachAppender(listAppender);
     }

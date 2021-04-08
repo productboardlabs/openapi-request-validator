@@ -14,6 +14,8 @@ In case of invalid responses coming from the REST web service an `InvalidRespons
 
 ## Usage ##
 
+### Adding the dependency ###
+
 Add this dependency to your project.
 
 e.g. for Maven in your pom.xml:
@@ -26,37 +28,36 @@ e.g. for Maven in your pom.xml:
 </dependency>
 ```
 
+### Configuration ###
+
+As of Spring Boot v2.3.0 setting an additional property is necessary to receive the error message in case of validation errors:
+
+```properties
+server.error.include-message=always
+```
+
+If this property is not set the client will receive an `InvalidRequestException` or `InvalidResponseException` without knowing what is wrong with request / response as the `message` field will be missing.
+
+### Adding filter and interceptor ###
+
 Add this configuration to your application.
 
 ```java
 import com.atlassian.oai.validator.springmvc.OpenApiValidationFilter;
 import com.atlassian.oai.validator.springmvc.OpenApiValidationInterceptor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.servlet.Filter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 @Configuration
-public class OpenApiValidationConfig extends WebMvcConfigurerAdapter {
-
-    private final OpenApiValidationInterceptor validationInterceptor;
-
-    /**
-     * @param apiSpecification the {@link Resource} to your OpenAPI / Swagger schema
-     */
-    @Autowired
-    public OpenApiValidationConfig(@Value("classpath:api.json") final Resource apiSpecification) throws IOException {
-        final EncodedResource specResource = new EncodedResource(apiSpecification, "UTF-8");
-        this.validationInterceptor = new OpenApiValidationInterceptor(specResource);
-    }
-
+public class OpenApiValidationConfig {
     @Bean
     public Filter validationFilter() {
         return new OpenApiValidationFilter(
@@ -65,9 +66,16 @@ public class OpenApiValidationConfig extends WebMvcConfigurerAdapter {
         );
     }
 
-    @Override
-    public void addInterceptors(final InterceptorRegistry registry) {
-        registry.addInterceptor(validationInterceptor);
+    @Bean
+    public WebMvcConfigurer addOpenApiValidationInterceptor(@Value("classpath:api-spring-test.json") final Resource apiSpecification) throws IOException {
+        final EncodedResource specResource = new EncodedResource(openApiSpecification, StandardCharsets.UTF_8);
+        final OpenApiValidationInterceptor openApiValidationInterceptor = new OpenApiValidationInterceptor(encodedResource);
+        return new WebMvcConfigurer() {
+            @Override
+            public void addInterceptors(final InterceptorRegistry registry) {
+                registry.addInterceptor(openApiValidationInterceptor);
+            }
+        };
     }
 }
 ```
@@ -75,14 +83,20 @@ public class OpenApiValidationConfig extends WebMvcConfigurerAdapter {
 To get better control over the validation a custom `OpenApiInteractionValidator` can be used.  
 
 ```java
-    @Autowired
-    public OpenApiValidationConfig(@Value("${open.api.spec.url}") final String specificationUrl) throws IOException {
+    @Bean
+    public WebMvcConfigurer addOpenApiValidationInterceptor(@Value("${open.api.spec.url}") final Resource specificationUrl) throws IOException {
         final OpenApiInteractionValidator validator = OpenApiInteractionValidator
                 .createForSpecificationUrl(specificationUrl)
                 .withLevelResolver(SpringMVCLevelResolverFactory.create())
                 .withBasePathOverride("/v1")
                 .build();
-        this.validationInterceptor = new OpenApiValidationInterceptor(validator);
+        final OpenApiValidationInterceptor openApiValidationInterceptor = new OpenApiValidationInterceptor(validator);
+        return new WebMvcConfigurer() {
+            @Override
+            public void addInterceptors(final InterceptorRegistry registry) {
+                registry.addInterceptor(openApiValidationInterceptor);
+            }
+        };
     }
 ```
 
@@ -92,11 +106,12 @@ You might want to add logging for the package: ```com.atlassian.oai.validator.sp
 
 ## Example ##
 
-Please see [the tests](https://bitbucket.org/atlassian/swagger-request-validator/src/master/swagger-request-validator-springmvc/src/test/java/com/atlassian/oai/validator/springmvc/example/?at=master) for working examples.
+Please see [the tests](https://bitbucket.org/atlassian/swagger-request-validator/src/master/swagger-request-validator-springmvc/src/test/java/com/atlassian/oai/validator/example/?at=master) for working examples.
 
 * There is a simple example that shows how to add the Swagger Request Validation adapter.
 * An advanced example shows how to additionally add an ExceptionHandler to map the `InvalidRequestException` and `InvalidResponseException` to a custom response.
 * Another example shows how to add custom request logging before each validation. A custom `OpenApiInteractionValidator` is used in this example.
+* Not much different is the example for async processing.
 
 ## Limitations ##
 
