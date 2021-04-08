@@ -8,14 +8,13 @@ import com.atlassian.oai.validator.springmvc.SpringMVCLevelResolverFactory;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
+import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.servlet.Filter;
 import javax.servlet.http.HttpServletRequest;
@@ -23,34 +22,31 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 @Configuration
-public class RestRequestLoggingValidationConfig extends WebMvcConfigurerAdapter {
+public class RestRequestLoggingValidationConfig {
+    @Bean
+    public Filter openApiValidationFilter() {
+        return new OpenApiValidationFilter(true, true);
+    }
 
-    private final OpenApiValidationInterceptor openApiValidationInterceptor;
-
-    @Autowired
-    public RestRequestLoggingValidationConfig(@Value("classpath:api-spring-test.json") final Resource specificationResource) throws IOException {
+    @Bean
+    public WebMvcConfigurer addOpenApiValidationInterceptor(@Value("classpath:api-spring-test.json") final Resource apiSpecification) throws IOException {
         final OpenApiInteractionValidator openApiInteractionValidator = OpenApiInteractionValidator
-                .createForSpecificationUrl(specificationResource.getURL().toExternalForm())
+                .createForSpecificationUrl(apiSpecification.getURL().toExternalForm())
                 .withLevelResolver(SpringMVCLevelResolverFactory.create())
                 // the context path of the Spring application differs from the base path in the OpenAPI schema
                 .withBasePathOverride("/v1")
                 .build();
-        openApiValidationInterceptor = new OpenApiValidationInterceptor(openApiInteractionValidator);
+        final OpenApiValidationInterceptor openApiValidationInterceptor = new OpenApiValidationInterceptor(openApiInteractionValidator);
+        return new WebMvcConfigurer() {
+            @Override
+            public void addInterceptors(final InterceptorRegistry registry) {
+                registry.addInterceptor(new RequestLoggingInterceptor());
+                registry.addInterceptor(openApiValidationInterceptor);
+            }
+        };
     }
 
-    @Bean
-    public Filter swaggerValidationFilter() {
-        return new OpenApiValidationFilter(true, true);
-    }
-
-    @Override
-    public void addInterceptors(final InterceptorRegistry registry) {
-        // add the logging interceptor before the Swagger validation
-        registry.addInterceptor(new RequestLoggingInterceptor());
-        registry.addInterceptor(openApiValidationInterceptor);
-    }
-
-    private static class RequestLoggingInterceptor extends HandlerInterceptorAdapter {
+    static class RequestLoggingInterceptor implements HandlerInterceptor {
 
         private static final Logger LOG = LoggerFactory.getLogger(RequestLoggingInterceptor.class);
 
