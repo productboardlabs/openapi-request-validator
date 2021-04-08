@@ -10,10 +10,8 @@ import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.example.simple.RestServiceApplication;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -26,7 +24,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -59,14 +56,15 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.util.ReflectionTestUtils.getField;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {"server.contextPath=/v1"})
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = {"server.contextPath=/v1", "server.error.include-message=always"})
 public class OpenApiValidationServiceTest {
 
     @Autowired
@@ -91,16 +89,17 @@ public class OpenApiValidationServiceTest {
         return getField(getField(requestBody.get(), "content"), "in");
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         requestValidator = mock(OpenApiInteractionValidator.class);
         urlPathHelper = mock(UrlPathHelper.class);
         classUnderTest = new OpenApiValidationService(requestValidator, urlPathHelper);
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void constructor_failsWithoutRequiredValidator() {
-        new OpenApiValidationService((OpenApiInteractionValidator) null, urlPathHelper);
+        assertThrows(NullPointerException.class,
+                () -> new OpenApiValidationService((OpenApiInteractionValidator) null, urlPathHelper));
     }
 
     @Test
@@ -132,9 +131,10 @@ public class OpenApiValidationServiceTest {
         assertThat(validationReport.hasErrors(), is(false));
     }
 
-    @Test(expected = NullPointerException.class)
-    public void buildRequest_failsWithoutRequiredRequest() throws IOException {
-        classUnderTest.buildRequest(null);
+    @Test
+    public void buildRequest_failsWithoutRequiredRequest() {
+        assertThrows(NullPointerException.class,
+                () -> classUnderTest.buildRequest(null));
     }
 
     @Test
@@ -220,10 +220,11 @@ public class OpenApiValidationServiceTest {
         assertThat(result.getQueryParameters().size(), equalTo(0));
     }
 
-    @Test(expected = NullPointerException.class)
-    public void buildResponse_failsWithoutRequiredResponse() throws IOException {
+    @Test
+    public void buildResponse_failsWithoutRequiredResponse() {
         // expect:
-        classUnderTest.buildResponse(null);
+        assertThrows(NullPointerException.class,
+                () -> classUnderTest.buildResponse(null));
     }
 
     @Test
@@ -322,15 +323,15 @@ public class OpenApiValidationServiceTest {
 
         // then: assert the values that spring has been set in the controller method
         final Map springRequest = (Map) responseEntity.getBody().get("springRequest");
-        Assert.assertThat(springRequest.get("pathVariable"), is("path variable"));
-        Assert.assertThat(springRequest.get("queryParam"), is("query param"));
-        Assert.assertThat(springRequest.get("headerValue"), is("header value"));
+        assertThat(springRequest.get("pathVariable"), is("path variable"));
+        assertThat(springRequest.get("queryParam"), is("query param"));
+        assertThat(springRequest.get("headerValue"), is("header value"));
 
         // and: assert the values that the validation service has been set from the servlet request
         final Map validationRequest = (Map) responseEntity.getBody().get("validationRequest");
-        Assert.assertThat(validationRequest.get("path"), is("/test controller/path variable"));
-        Assert.assertThat(validationRequest.get("queryParam"), is("query param"));
-        Assert.assertThat(validationRequest.get("headerValue"), is("header value"));
+        assertThat(validationRequest.get("path"), is("/test controller/path variable"));
+        assertThat(validationRequest.get("queryParam"), is("query param"));
+        assertThat(validationRequest.get("headerValue"), is("header value"));
     }
 
     @Test
