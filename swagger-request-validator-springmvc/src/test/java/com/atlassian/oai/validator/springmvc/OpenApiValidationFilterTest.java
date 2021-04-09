@@ -1,6 +1,6 @@
 package com.atlassian.oai.validator.springmvc;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
