@@ -4,8 +4,8 @@ import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.report.ValidationReport;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
@@ -20,7 +20,8 @@ import static com.atlassian.oai.validator.springmvc.OpenApiValidationFilter.ATTR
 import static com.atlassian.oai.validator.springmvc.OpenApiValidationFilter.ATTRIBUTE_RESPONSE_VALIDATION;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -35,7 +36,7 @@ public class OpenApiValidationInterceptorTest {
     private OpenApiValidationService openApiValidationService;
     private ValidationReportHandler validationReportHandler;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         openApiValidationService = mock(OpenApiValidationService.class);
         validationReportHandler = mock(ValidationReportHandler.class);
@@ -186,7 +187,7 @@ public class OpenApiValidationInterceptorTest {
         verify(servletRequest).resetInputStream();
     }
 
-    @Test(expected = InvalidRequestException.class)
+    @Test
     public void preHandle_theRequestIsInvalid() throws Exception {
         // given:
         final HttpServletRequest servletRequest = mock(ResettableRequestServletWrapper.class);
@@ -204,7 +205,8 @@ public class OpenApiValidationInterceptorTest {
                 .handleRequestReport("METHOD#/request/uri", validationReport);
 
         // expect:
-        classUnderTest.preHandle(servletRequest, null, null);
+        assertThrows(InvalidRequestException.class,
+                () -> classUnderTest.preHandle(servletRequest, null, null));
     }
 
     @Test
@@ -317,7 +319,7 @@ public class OpenApiValidationInterceptorTest {
         verify(validationReportHandler).handleResponseReport("METHOD#/request/uri", validationReport);
     }
 
-    @Test(expected = InvalidResponseException.class)
+    @Test
     public void postHandle_theResponseIsInvalid() throws Exception {
         // setup:
         final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
@@ -335,7 +337,8 @@ public class OpenApiValidationInterceptorTest {
                 .handleResponseReport("METHOD#/request/uri", validationReport);
 
         // expect:
-        classUnderTest.postHandle(servletRequest, servletResponse, null, null);
+        assertThrows(InvalidResponseException.class,
+                () -> classUnderTest.postHandle(servletRequest, servletResponse, null, null));
     }
 
     private OpenApiValidationContentCachingResponseWrapper mockResponseWrapper() {
