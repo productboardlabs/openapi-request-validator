@@ -61,9 +61,18 @@ public class SchemaValidatorTest {
     @Test
     public void validate_withEmptyValue_shouldPass_whenMinLengthZero() {
         final String value = "";
-        final Schema schema = new Schema();
+        final Schema schema = new StringSchema().minLength(0);
 
-        classUnderTest.validate(value, schema, "prefix");
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
+    }
+
+    @Test
+    public void validate_withEmptyValue_shouldFail_whenMinLengthNonZero() {
+        final String value = "";
+        final Schema schema = new StringSchema().minLength(1);
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.minLength");
     }
 
     @Test
@@ -856,6 +865,17 @@ public class SchemaValidatorTest {
         final Schema schema = new Schema();
 
         assertPass(classUnderTest.validate(() -> value, schema, "prefix"));
+    }
+
+    @Test
+    public void validate_nonRequired_minLength_stringProperty_shouldPass() {
+        final String value = "{\"requiredField\":\"foo\"}";
+        final Schema schema = new ObjectSchema()
+                .addProperties("requiredField", new StringSchema().minLength(1))
+                .addProperties("nonRequiredField", new StringSchema().minLength(3))
+                .addRequiredItem("requiredField");
+
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
 
     private Map<String, Schema> getSchemasFrom(final String api) {
