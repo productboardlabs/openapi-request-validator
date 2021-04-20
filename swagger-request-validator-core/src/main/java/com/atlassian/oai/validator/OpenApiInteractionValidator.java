@@ -553,7 +553,7 @@ public class OpenApiInteractionValidator {
         }
 
         /**
-         * Sets the {@code resolveCombinators} flag on the {@link ParseOptions} supplied to the underlying {@Link OpenAPIParser}.
+         * Sets the {@code resolveCombinators} flag on the {@link ParseOptions} supplied to the underlying {@link io.swagger.parser.OpenAPIParser}.
          * Useful when using {@code allOf} composition to avoid the problems with {@code additionalProperties}.
          * <p>
          * If additional parse options are needed use {@link #withParseOptions(ParseOptions)} to supply a fully-constructed
@@ -569,7 +569,7 @@ public class OpenApiInteractionValidator {
         }
 
         /**
-         * Optionally supply parse options to control the behavior of the underlying {@Link OpenAPIParser} parser.
+         * Optionally supply parse options to control the behavior of the underlying {@link io.swagger.parser.OpenAPIParser} parser.
          * <p>
          * Sensible defaults are provided, but this can be useful if you need more fine-grained control over the behavior.
          * One example use case is to resolve schema combinators ({@code allOf} etc) to flatten the schema prior to validation
