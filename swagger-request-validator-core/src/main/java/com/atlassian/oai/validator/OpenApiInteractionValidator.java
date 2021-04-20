@@ -18,6 +18,7 @@ import com.atlassian.oai.validator.util.OpenApiLoader;
 import com.atlassian.oai.validator.whitelist.ValidationErrorsWhitelist;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.parser.core.models.AuthorizationValue;
+import io.swagger.v3.parser.core.models.ParseOptions;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
 
 import javax.annotation.Nonnull;
@@ -78,8 +79,10 @@ public class OpenApiInteractionValidator {
      * This method may be deprecated in the future.
      *
      * @param specUrlOrPayload The location of the OpenAPI / Swagger specification to use in the validator,
-     *                         or the inline specification to use.
+     * or the inline specification to use.
+     *
      * @return A new builder instance to use for creating and configuring {@link OpenApiInteractionValidator} instances.
+     *
      * @see #createForInlineApiSpecification(String)
      * @see #createForSpecificationUrl(String)
      */
@@ -93,6 +96,7 @@ public class OpenApiInteractionValidator {
      * Supports both Swagger v2 and OpenAPI v3 specifications, in both JSON and YAML formats.
      *
      * @param specAsString The OpenAPI / Swagger specification to use in the validator
+     *
      * @return A new builder instance to use for creating and configuring {@link OpenApiInteractionValidator} instances.
      */
     public static Builder createForInlineApiSpecification(@Nonnull final String specAsString) {
@@ -122,6 +126,7 @@ public class OpenApiInteractionValidator {
      * </pre>
      *
      * @param specUrl The location of the OpenAPI / Swagger specification to use in the validator
+     *
      * @return A new builder instance to use for creating and configuring {@link OpenApiInteractionValidator} instances.
      */
     public static Builder createForSpecificationUrl(@Nonnull final String specUrl) {
@@ -132,6 +137,7 @@ public class OpenApiInteractionValidator {
      * Create a new instance using a parsed API specification.
      *
      * @param api The API specification to use for validation
+     *
      * @return A new builder instance to use for creating and configuring {@link OpenApiInteractionValidator} instances.
      */
     public static Builder createFor(@Nonnull final OpenAPI api) {
@@ -157,8 +163,9 @@ public class OpenApiInteractionValidator {
      * <p>
      * See class docs for more information on the validation performed.
      *
-     * @param request  The request to validate (required)
+     * @param request The request to validate (required)
      * @param response The response to validate (required)
+     *
      * @return The outcome of the validation
      */
     @Nonnull
@@ -183,6 +190,7 @@ public class OpenApiInteractionValidator {
      * See class docs for more information on the validation performed.
      *
      * @param request The request to validate (required)
+     *
      * @return The outcome of the request validation
      */
     @Nonnull
@@ -203,9 +211,10 @@ public class OpenApiInteractionValidator {
      * <p>
      * See class docs for more information on the validation performed.
      *
-     * @param path     The request path (required)
-     * @param method   The request method (required)
+     * @param path The request path (required)
+     * @param method The request method (required)
      * @param response The response to validate (required)
+     *
      * @return The outcome of the response validation
      */
     @Nonnull
@@ -333,6 +342,7 @@ public class OpenApiInteractionValidator {
         private String basePathOverride;
         private LevelResolver levelResolver = LevelResolver.defaultResolver();
         private List<AuthorizationValue> authData;
+        private ParseOptions parseOptions = defaultParseOptions();
         private ValidationErrorsWhitelist whitelist = ValidationErrorsWhitelist.create();
         private final List<CustomRequestValidator> customRequestValidators = new ArrayList<>();
         private final List<CustomResponseValidator> customResponseValidators = new ArrayList<>();
@@ -358,7 +368,9 @@ public class OpenApiInteractionValidator {
          * </pre>
          *
          * @param specUrlOrPayload The OpenAPI / Swagger specification to use in the validator.
+         *
          * @return this builder instance.
+         *
          * @deprecated use {@link #withApiSpecification(String)}. This method will be removed in a future release.
          */
         @Deprecated
@@ -386,7 +398,9 @@ public class OpenApiInteractionValidator {
          * </pre>
          *
          * @param specUrlOrPayload The OpenAPI / Swagger specification to use in the validator.
+         *
          * @return this builder instance.
+         *
          * @deprecated Use {@link #withInlineApiSpecification(String)} or {@link #withApiSpecificationUrl(String)}
          */
         @Deprecated
@@ -402,6 +416,7 @@ public class OpenApiInteractionValidator {
          * Supports both Swagger v2 and OpenAPI v3 specifications, in both JSON and YAML formats.
          *
          * @param inlineSpecPayload The OpenAPI / Swagger specification to use in the validator.
+         *
          * @return this builder instance.
          */
         public Builder withInlineApiSpecification(final String inlineSpecPayload) {
@@ -430,6 +445,7 @@ public class OpenApiInteractionValidator {
          * </pre>
          *
          * @param specUrl The OpenAPI / Swagger specification to use in the validator.
+         *
          * @return this builder instance.
          */
         public Builder withApiSpecificationUrl(final String specUrl) {
@@ -451,6 +467,7 @@ public class OpenApiInteractionValidator {
          * requests against an internal URL where the URL paths differ.
          *
          * @param basePathOverride An optional basepath override to override the one defined in the spec.
+         *
          * @return this builder instance.
          */
         public Builder withBasePathOverride(final String basePathOverride) {
@@ -467,6 +484,7 @@ public class OpenApiInteractionValidator {
          * If not provided, a default resolver will be used that resolves all message to ERROR.
          *
          * @param levelResolver The resolver to use for resolving validation message levels.
+         *
          * @return this builder instance.
          */
         public Builder withLevelResolver(final LevelResolver levelResolver) {
@@ -479,6 +497,7 @@ public class OpenApiInteractionValidator {
          * changed to IGNORE and additional information about whitelisting will be added.
          *
          * @param whitelist The whitelist to use.
+         *
          * @return this builder instance
          */
         public Builder withWhitelist(final ValidationErrorsWhitelist whitelist) {
@@ -489,10 +508,12 @@ public class OpenApiInteractionValidator {
         /**
          * An optional key value header to add to the OpenAPI / Swagger spec retrieval request.
          * <p>
-         * This is necessary if e.g. your specification is retrieved from a remote host and the path to retrieve is secured by an api key in the request header.
+         * This is necessary if e.g. your specification is retrieved from a remote host and the path to retrieve is
+         * secured by an api key in the request header.
          *
-         * @param key   A key name to add as request header key.
+         * @param key A key name to add as request header key.
          * @param value (Optional) A value to add as request header value for the given key.
+         *
          * @return this builder instance.
          */
         public Builder withAuthHeaderData(final String key,
@@ -508,6 +529,7 @@ public class OpenApiInteractionValidator {
          * Possible usages include validation of vendor specific extensions.
          *
          * @param validator The validator to apply
+         *
          * @return this builder instance
          */
         public Builder withCustomRequestValidation(final CustomRequestValidator validator) {
@@ -521,6 +543,7 @@ public class OpenApiInteractionValidator {
          * Possible usages include validation of vendor specific extensions.
          *
          * @param validator The validator to apply
+         *
          * @return this builder instance
          */
         public Builder withCustomResponseValidation(final CustomResponseValidator validator) {
@@ -530,15 +553,57 @@ public class OpenApiInteractionValidator {
         }
 
         /**
+         * Sets the {@code resolveCombinators} flag on the {@link ParseOptions} supplied to the underlying {@Link OpenAPIParser}.
+         * Useful when using {@code allOf} composition to avoid the problems with {@code additionalProperties}.
+         * <p>
+         * If additional parse options are needed use {@link #withParseOptions(ParseOptions)} to supply a fully-constructed
+         * instance.
+         *
+         * @return this builder instance
+         *
+         * @see #withParseOptions(ParseOptions)
+         */
+        public Builder withResolveCombinators(final boolean resolveCombinators) {
+            parseOptions.setResolveCombinators(resolveCombinators);
+            return this;
+        }
+
+        /**
+         * Optionally supply parse options to control the behavior of the underlying {@Link OpenAPIParser} parser.
+         * <p>
+         * Sensible defaults are provided, but this can be useful if you need more fine-grained control over the behavior.
+         * One example use case is to resolve schema combinators ({@code allOf} etc) to flatten the schema prior to validation
+         * to avoid some of the problems with {@code allOf} and {@code additionalProperties}
+         * <p>
+         * The defaults used are:
+         * <ul>
+         *     <li>{@code resolve = true}</li>
+         *     <li>{@code resolveFully = true}</li>
+         *     <li>{@code resolveCombinators = false}</li>
+         *     <li>{@code flatten = false}</li>
+         * </ul>
+         *
+         * @param parseOptions Parse options to replace the defaults
+         *
+         * @return this builder instance
+         */
+        public Builder withParseOptions(final ParseOptions parseOptions) {
+            requireNonNull(parseOptions, "Parse options are required");
+            this.parseOptions = parseOptions;
+            return this;
+        }
+
+        /**
          * Build a configured {@link OpenApiInteractionValidator} instance with the values collected in this builder.
          *
          * @return The configured {@link OpenApiInteractionValidator} instance.
+         *
          * @throws IllegalArgumentException if the provided <code>specUrlOrPayload</code> is empty
-         * @throws ApiLoadException         if there was a problem loading the API spec
+         * @throws ApiLoadException if there was a problem loading the API spec
          */
         public OpenApiInteractionValidator build() {
             if (api == null) {
-                this.api = new OpenApiLoader().loadApi(specSource, authData);
+                this.api = new OpenApiLoader().loadApi(specSource, authData, parseOptions);
             }
             return new OpenApiInteractionValidator(
                     api,
@@ -547,6 +612,14 @@ public class OpenApiInteractionValidator {
                     whitelist,
                     customRequestValidators,
                     customResponseValidators);
+        }
+
+        private static ParseOptions defaultParseOptions() {
+            final ParseOptions parseOptions = new ParseOptions();
+            parseOptions.setResolve(true);
+            parseOptions.setResolveFully(true);
+            parseOptions.setResolveCombinators(false);
+            return parseOptions;
         }
     }
 

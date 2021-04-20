@@ -325,6 +325,23 @@ public class OpenAPIV3RequestValidationTest {
     }
 
     @Test
+    public void validate_withAllOfComposition_passes_whenResolveCombinatorsOptionUsed() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createForSpecificationUrl("/oai/v3/api-complex-composition.yaml")
+                        .withResolveCombinators(true)
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/allOf")
+                .withContentType("application/json")
+                .withBody("{ \"stringField\": \"foo\", \"intField\": 1, \"boolField\": false }")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
     public void validate_withAllOfComposition_shouldFail_whenInvalidAccordingToSchema() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
