@@ -1,0 +1,95 @@
+{
+  "input": {
+    "level": "error",
+    "schema": "/components/schemas/Cat",
+    "instance": {
+      "pointer": ""
+    },
+    "domain": "validation",
+    "keyword": "discriminator",
+    "message": "failed validation of discriminator schema '/components/schemas/Cat'",
+    "key": "err.swaggerv2.discriminator.fail",
+    "reports": [
+      {
+        "level": "error",
+        "schema": {
+          "loadingURI": "#",
+          "pointer": "/components/schemas/Cat"
+        },
+        "instance": {
+          "pointer": "/data/something"
+        },
+        "domain": "validation",
+        "keyword": "allOf",
+        "message": "instance failed to match all required schemas (matched only 1 out of 2)",
+        "matched": 1,
+        "nrSchemas": 2,
+        "reports": {
+          "/components/schemas/Cat/allOf/0": [],
+          "/components/schemas/Cat/allOf/1": [
+            {
+              "level": "error",
+              "schema": {
+                "loadingURI": "#",
+                "pointer": "/components/schemas/Cat/allOf/1/properties/huntingSkill"
+              },
+              "instance": {
+                "pointer": "/huntingSkill"
+              },
+              "domain": "validation",
+              "keyword": "enum",
+              "message": "instance value (\"ruthless\") not found in enum (possible values: [\"clueless\",\"lazy\",\"adventurous\",\"aggressive\"])",
+              "value": "ruthless",
+              "enum": [
+                "clueless",
+                "lazy",
+                "adventurous",
+                "aggressive"
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "expected": {
+    "key": "validation.prefix.schema.discriminator",
+    "level": "ERROR",
+    "message": "Failed validation of discriminator schema '/components/schemas/Cat'",
+    "nestedMessages": [
+      {
+        "key": "validation.prefix.schema.allOf",
+        "level": "ERROR",
+        "message": "[Path '/data/something'] Instance failed to match all required schemas (matched only 1 out of 2)",
+        "additionalInfo": [
+          "/components/schemas/Cat/allOf/1: Instance value (\"ruthless\") not found in enum (possible values: [\"clueless\",\"lazy\",\"adventurous\",\"aggressive\"])"
+        ],
+        "nestedMessages": [
+          {
+            "key": "validation.prefix.schema.enum",
+            "level": "ERROR",
+            "message": "[Path '/huntingSkill'] Instance value (\"ruthless\") not found in enum (possible values: [\"clueless\",\"lazy\",\"adventurous\",\"aggressive\"])",
+            "context": {
+              "pointers": {
+                "instance": "/huntingSkill",
+                "schema": "/components/schemas/Cat/allOf/1/properties/huntingSkill"
+              }
+            }
+          }
+        ],
+        "context": {
+          "pointers": {
+            "schema": "/components/schemas/Cat",
+            "instance": "/data/something"
+          }
+        }
+      }
+    ],
+    "context": {
+      "pointers": {
+        "instance": "/",
+        "schema": "/components/schemas/Cat"
+      }
+    }
+  }
+}

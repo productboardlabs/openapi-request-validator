@@ -175,7 +175,7 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
         if (!subReport.isSuccess()) {
             report.error(msg(data, bundle, "err.swaggerv2.discriminator.fail")
                     .putArgument("schema", ptrToChildSchema.toString())
-                    .put("report", subReport.asJson()));
+                    .put("reports", subReport.asJson()));
         }
     }
 

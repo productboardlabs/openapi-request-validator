@@ -37,6 +37,14 @@ public class JsonValidationReportFormat implements ValidationReportFormat {
         }
     }
 
+    public String apply(final ValidationReport.Message message) {
+        try {
+            return OBJECT_MAPPER.writeValueAsString(message);
+        } catch (final JsonProcessingException e) {
+            return "";
+        }
+    }
+
     private JsonValidationReportFormat() {
 
     }
