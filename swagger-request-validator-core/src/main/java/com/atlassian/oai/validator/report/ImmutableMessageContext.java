@@ -28,6 +28,8 @@ class ImmutableMessageContext implements ValidationReport.MessageContext {
 
     private final NamedWhitelistRule whitelistRule;
 
+    private final Pointers pointers;
+
     ImmutableMessageContext(final Builder builder) {
         requestPath = builder.requestPath;
         method = builder.method;
@@ -39,6 +41,7 @@ class ImmutableMessageContext implements ValidationReport.MessageContext {
         apiResponseDefinition = builder.apiResponse;
         location = builder.location;
         whitelistRule = builder.whitelistRule;
+        pointers = builder.pointers;
     }
 
     @Override
@@ -95,6 +98,11 @@ class ImmutableMessageContext implements ValidationReport.MessageContext {
     }
 
     @Override
+    public Optional<Pointers> getPointers() {
+        return Optional.ofNullable(pointers);
+    }
+
+    @Override
     public boolean hasData() {
         return requestPath != null ||
                 method != null ||
@@ -105,7 +113,8 @@ class ImmutableMessageContext implements ValidationReport.MessageContext {
                 responseStatus != null ||
                 apiResponseDefinition != null ||
                 location != null ||
-                whitelistRule != null;
+                whitelistRule != null ||
+                pointers != null;
     }
 
     @Override
@@ -134,6 +143,7 @@ class ImmutableMessageContext implements ValidationReport.MessageContext {
                 Objects.equals(responseStatus, that.responseStatus) &&
                 Objects.equals(apiResponseDefinition, that.apiResponseDefinition) &&
                 Objects.equals(whitelistRule, that.whitelistRule) &&
+                Objects.equals(pointers, that.pointers) &&
                 location == that.location;
     }
 
@@ -142,7 +152,7 @@ class ImmutableMessageContext implements ValidationReport.MessageContext {
         return Objects.hash(
                 requestPath, method, apiOperation,
                 parameter, apiRequestBodyDefinition, apiRequestContentType,
-                responseStatus, apiResponseDefinition, location,
+                responseStatus, apiResponseDefinition, location, pointers,
                 whitelistRule
         );
     }

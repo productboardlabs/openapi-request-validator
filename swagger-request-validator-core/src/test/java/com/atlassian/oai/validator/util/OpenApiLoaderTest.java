@@ -5,6 +5,7 @@ import com.atlassian.oai.validator.OpenApiInteractionValidator.SpecSource;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.parser.core.models.ParseOptions;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
@@ -20,7 +21,7 @@ import static org.mockito.Mockito.when;
 
 public class OpenApiLoaderTest {
 
-    private OpenApiLoader classUnderTest = new OpenApiLoader();
+    private final OpenApiLoader classUnderTest = new OpenApiLoader();
 
     private static SpecSource mockSpecSource(final String value, final boolean isSpecUrl, final boolean isInlineSpec) {
         final SpecSource specSource = mock(SpecSource.class);
@@ -38,7 +39,7 @@ public class OpenApiLoaderTest {
         final SpecSource specSource = mockSpecSource(inlineSpec, false, true);
 
         // when:
-        final OpenAPI result = classUnderTest.loadApi(specSource, emptyList());
+        final OpenAPI result = classUnderTest.loadApi(specSource, emptyList(), new ParseOptions());
 
         // then:
         assertThat(result, notNullValue());
@@ -50,7 +51,7 @@ public class OpenApiLoaderTest {
         final SpecSource specSource = mockSpecSource("/oai/v2/api-ref-params.json", true, false);
 
         // when:
-        final OpenAPI result = classUnderTest.loadApi(specSource, emptyList());
+        final OpenAPI result = classUnderTest.loadApi(specSource, emptyList(), new ParseOptions());
 
         // then:
         assertThat(result, notNullValue());
@@ -64,7 +65,7 @@ public class OpenApiLoaderTest {
         final SpecSource specSource = mockSpecSource(inlineSpec, false, false);
 
         // when:
-        final OpenAPI result = classUnderTest.loadApi(specSource, emptyList());
+        final OpenAPI result = classUnderTest.loadApi(specSource, emptyList(), new ParseOptions());
 
         // then:
         assertThat(result, notNullValue());
@@ -76,7 +77,7 @@ public class OpenApiLoaderTest {
         final SpecSource specSource = mockSpecSource("/oai/v3/api-formdata.yaml", false, false);
 
         // when:
-        final OpenAPI result = classUnderTest.loadApi(specSource, emptyList());
+        final OpenAPI result = classUnderTest.loadApi(specSource, emptyList(), new ParseOptions());
 
         // then:
         assertThat(result, notNullValue());
@@ -88,7 +89,7 @@ public class OpenApiLoaderTest {
         final SpecSource specSource = mockSpecSource("missing.yaml", true, false);
 
         // expect:
-        classUnderTest.loadApi(specSource, emptyList());
+        classUnderTest.loadApi(specSource, emptyList(), new ParseOptions());
     }
 
     @Test(expected = OpenApiInteractionValidator.ApiLoadException.class)
@@ -99,7 +100,7 @@ public class OpenApiLoaderTest {
         when(specSource.getValue()).thenReturn("spec.url");
 
         // expect:
-        classUnderTest.loadApi(specSource, emptyList());
+        classUnderTest.loadApi(specSource, emptyList(), new ParseOptions());
     }
 
     @Test
@@ -108,7 +109,7 @@ public class OpenApiLoaderTest {
         final SpecSource specSource = mockSpecSource("/oai/v2/api-string-byte-pattern.json", true, false);
 
         // when:
-        final OpenAPI result = classUnderTest.loadApi(specSource, emptyList());
+        final OpenAPI result = classUnderTest.loadApi(specSource, emptyList(), new ParseOptions());
 
         // then:
         final String json = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(result);
@@ -121,7 +122,7 @@ public class OpenApiLoaderTest {
         final SpecSource specSource = mockSpecSource("/oai/v3/api-string-byte-pattern.yaml", true, false);
 
         // when:
-        final OpenAPI result = classUnderTest.loadApi(specSource, emptyList());
+        final OpenAPI result = classUnderTest.loadApi(specSource, emptyList(), new ParseOptions());
 
         // then:
         final String json = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(result);

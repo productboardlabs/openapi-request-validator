@@ -13,7 +13,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.report.ListProcessingReport;
-import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.common.base.Throwables;
@@ -35,7 +34,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -45,7 +43,6 @@ import static com.atlassian.oai.validator.schema.SwaggerV20Library.schemaFactory
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.StreamSupport.stream;
-import static org.apache.commons.lang3.StringUtils.capitalize;
 
 /**
  * Validate a value against the schema defined in an OpenAPI / Swagger specification.
@@ -64,6 +61,7 @@ public class SchemaValidator {
 
     private final MessageResolver messages;
     private final LoadingCache<JsonSchemaKey, JsonSchema> jsonSchemaCache;
+    private final ProcessingMessageConverter messageConverter;
 
     /**
      * Transformations applied to the schema before validation.
@@ -102,6 +100,7 @@ public class SchemaValidator {
                         return schemaFactory.getJsonSchema(schemaObject);
                     }
                 });
+        this.messageConverter = new ProcessingMessageConverter(messages);
     }
 
     /**
@@ -148,7 +147,7 @@ public class SchemaValidator {
                         .validate(content, true);
 
             } catch (final ProcessingException e) {
-                return getProcessingMessage(e.getProcessingMessage(), "processingError", keyPrefix);
+                return messageConverter.toValidationReport(e.getProcessingMessage(), "processingError", keyPrefix);
             } catch (final IOException e) {
                 return ValidationReport.singleton(
                         messages.create(
@@ -160,7 +159,7 @@ public class SchemaValidator {
 
             if ((processingReport != null) && !processingReport.isSuccess()) {
                 return stream(processingReport.spliterator(), false)
-                        .map(pm -> getProcessingMessage(pm, null, keyPrefix))
+                        .map(pm -> messageConverter.toValidationReport(pm, null, keyPrefix))
                         .reduce(ValidationReport.empty(), ValidationReport::merge);
             }
             return ValidationReport.empty();
@@ -265,66 +264,6 @@ public class SchemaValidator {
                     "Validation of 'additionalProperties' may fail with unexpected errors. " +
                     "See the project README FAQ for more information.");
         }
-    }
-
-    private ValidationReport getProcessingMessage(final ProcessingMessage pm,
-                                                  final String keywordOverride,
-                                                  final String keyPrefix) {
-
-        return ValidationReport.singleton(
-                toValidationReportMessage(pm.asJson(), keywordOverride, keyPrefix));
-    }
-
-    private ValidationReport.Message toValidationReportMessage(final JsonNode processingMessage,
-                                                               final String keywordOverride,
-                                                               final String keyPrefix) {
-
-        final String validationKeyword = keywordOverride != null
-                ? keywordOverride
-                : processingMessage.get("keyword").textValue()
-                + (processingMessage.has("attribute") ? "." + processingMessage.get("attribute").textValue() : "");
-
-        final String pointer = processingMessage.has("instance") ? processingMessage.get("instance").get("pointer").textValue() : "";
-
-        final List<String> subReports = new ArrayList<>();
-        if (processingMessage.has("reports")) {
-            final JsonNode reports = processingMessage.get("reports");
-            reports.fields().forEachRemaining(field -> {
-                field.getValue().elements().forEachRemaining(report -> {
-                    subReports.add(field.getKey() + ": " + capitalize(report.get("message").textValue()));
-                });
-            });
-        }
-
-        final String message =
-                (pointer.isEmpty() ? "" : "[Path '" + pointer + "'] ")
-                        + capitalize(processingMessage.get("message").textValue());
-
-        final ValidationReport.Message validationReportMessage = messages.create(
-                "validation." + keyPrefix + ".schema." + validationKeyword,
-                message, subReports.toArray(new String[0]));
-
-        return withNestedMessages(processingMessage, keywordOverride, keyPrefix, validationReportMessage);
-    }
-
-    private ValidationReport.Message withNestedMessages(final JsonNode processingMessage,
-                                                        final String keywordOverride,
-                                                        final String keyPrefix,
-                                                        final ValidationReport.Message validationReportMessage) {
-        if (!processingMessage.has("reports")) {
-            return validationReportMessage;
-        }
-
-        // Recursively convert 'reports' node children to ValidationReport.Message and add as nested messages
-        final List<ValidationReport.Message> nestedMessages = new ArrayList<>();
-        final JsonNode reports = processingMessage.get("reports");
-        reports.fields().forEachRemaining(field -> {
-            field.getValue().elements().forEachRemaining(report -> {
-                nestedMessages.add(toValidationReportMessage(report, keywordOverride, keyPrefix));
-            });
-        });
-
-        return validationReportMessage.withNestedMessages(nestedMessages);
     }
 
     @FunctionalInterface

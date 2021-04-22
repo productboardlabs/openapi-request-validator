@@ -1,0 +1,24 @@
+{
+  "input": {
+    "level": "error",
+    "schema": "/path/to/Schema",
+    "instance": {
+      "pointer": ""
+    },
+    "domain": "validation",
+    "keyword": "keyword",
+    "message": "some message",
+    "key": "some.key.here"
+  },
+  "expected": {
+    "key": "validation.prefix.schema.keyword",
+    "level": "ERROR",
+    "message": "Some message",
+    "context": {
+      "pointers": {
+        "schema": "/path/to/Schema",
+        "instance": "/"
+      }
+    }
+  }
+}
