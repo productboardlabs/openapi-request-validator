@@ -1,3 +1,20 @@
+# 2.18.0
+
+* Exposed `ParseOptions` from the underlying [swagger-parser](https://github.com/swagger-api/swagger-parser)
+  library so they can be set during validator creation. Specifically, the `resolveCombinators` option may be used in
+  some cases to avoid the problem with `additionalProperties` validation with the `allOf` keyword
+  (see the [FAQ](./docs/FAQ.md) for details)
+  [[#320]](https://bitbucket.org/atlassian/swagger-request-validator/issues/320)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/228)
+* Fixed a regression where nested `Message`s from sub-validations were not being included in the validation report
+  [[#316]](https://bitbucket.org/atlassian/swagger-request-validator/issues/316)
+  [[#323]](https://bitbucket.org/atlassian/swagger-request-validator/issues/323)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/229)
+* Added optional `Pointer` information to the message context to give access to the instance and schema pointers in the
+  case where a validation error has come from schema validation.
+  [[#300]](https://bitbucket.org/atlassian/swagger-request-validator/issues/300)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/229)
+
 # v2.17.0
 
 * Bumped a number of minor/patch versions of dependencies:
@@ -154,8 +171,7 @@ header).
   to exercise this scenario.
   [[#275]](https://bitbucket.org/atlassian/swagger-request-validator/issues/275)
   [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/172)
-* Add support for basic validation
-  for [cookie authentication](https://swagger.io/docs/specification/authentication/cookie-authentication/)
+* Add support for basic validation for [cookie authentication](https://swagger.io/docs/specification/authentication/cookie-authentication/)
   [[#278]](https://bitbucket.org/atlassian/swagger-request-validator/issues/278)
   [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/173)
 
@@ -381,8 +397,7 @@ See `OpenApiValidatorPactConsumerTestExample` for examples.
 
 * Fixed NPE when `security` defined but no `securitySchemes` defined
   [[#188]](https://bitbucket.org/atlassian/swagger-request-validator/issues/188)
-* Added better support
-  for [using multiple authentication types](https://swagger.io/docs/specification/authentication/#multiple)
+* Added better support for [using multiple authentication types](https://swagger.io/docs/specification/authentication/#multiple)
   [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/123)
 
 # v2.2.0
@@ -451,8 +466,7 @@ Provides support for both Swagger v2 and OpenAPI v3 specifications.
 
 ### Upgrade notes
 
-* `SwaggerRequestResponseValidator` has been deprecated in favor of `OpenApiInteractionValidator`. The
-  original `SwaggerRequestResponseValidator` will be removed in a future release.
+* `SwaggerRequestResponseValidator` has been deprecated in favor of `OpenApiInteractionValidator`. The original `SwaggerRequestResponseValidator` will be removed in a future release.
 * Various filters and interceptors etc. in the adapter modules have been deprecated and replaced with versions named
   with `OpenApi*`. The original `Swagger*` named versions will be removed in a future release.
 * Schema validation errors now have the form `validation.{request|response}.{body|parameter}.schema.{keyword}`
@@ -467,8 +481,7 @@ See [OpenAPI v3 feature coverage](./docs/OPENAPIv3.md) for details on supported 
   [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/100)
 
   *Important:* This changes the required Scala version from 2.11 to 2.12. There are also breaking changes in the Pact
-  API. Importantly, usages of the `ValidatedPactProviderRule` should now use `provider.getUrl()` instead
-  of `provider.config().url()`.
+  API. Importantly, usages of the `ValidatedPactProviderRule` should now use `provider.getUrl()` instead of `provider.config().url()`.
 
 # v1.4.7
 
