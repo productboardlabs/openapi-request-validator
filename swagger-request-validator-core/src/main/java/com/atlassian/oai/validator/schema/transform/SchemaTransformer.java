@@ -74,6 +74,10 @@ public abstract class SchemaTransformer {
         return n.has(ALLOF_FIELD);
     }
 
+    protected static boolean hasPropertiesField(final JsonNode n) {
+        return n != null && n.has(PROPERTIES_FIELD);
+    }
+
     @Nullable
     protected static JsonNode itemsDefinition(final JsonNode n) {
         return n.get("items");
