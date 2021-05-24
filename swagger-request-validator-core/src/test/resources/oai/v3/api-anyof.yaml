@@ -1,0 +1,58 @@
+openapi: 3.0.0
+info:
+  title: anyOf test
+  description: >-
+    AnyOf test schema
+  version: 1.0.0
+servers:
+  - url: 'http://test.com'
+    description: stage
+paths:
+  /anyOfRequest:
+    get:
+      summary: placeholder summary
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/anyOfResponse'
+components:
+  schemas:
+    anyOfResponse:
+      type: object
+      properties:
+        anyOfObjectProperty:
+          type: object
+          properties:
+            primitive:
+              anyOf:
+                - type: string
+                - type: integer
+            objectModel:
+              anyOf:
+                - $ref: '#/components/schemas/modelA'
+                - $ref: '#/components/schemas/modelB'
+        anyOfArrayProperty:
+          type: array
+          items:
+            anyOf:
+              - $ref: '#/components/schemas/modelA'
+              - $ref: '#/components/schemas/modelB'
+              - type: string
+              - type: integer
+    modelA:
+      type: object
+      properties:
+        foo:
+          type: string
+        bar:
+          type: integer
+    modelB:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
