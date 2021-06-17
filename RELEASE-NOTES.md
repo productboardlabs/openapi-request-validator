@@ -1,3 +1,9 @@
+# Unreleased
+
+* Allow adding multiple headers using `OpenApiInteractionValidator.Builder#withAuthHeaderData`.
+  The Javadoc for the method already made it sound like that was the case, but the implementation
+  only used one value (the one from the last invocation).
+
 # 2.18.0
 
 * Exposed `ParseOptions` from the underlying [swagger-parser](https://github.com/swagger-api/swagger-parser)
