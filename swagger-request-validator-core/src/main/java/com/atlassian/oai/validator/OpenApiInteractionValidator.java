@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 
 import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 
@@ -341,7 +340,7 @@ public class OpenApiInteractionValidator {
         private SpecSource specSource;
         private String basePathOverride;
         private LevelResolver levelResolver = LevelResolver.defaultResolver();
-        private List<AuthorizationValue> authData;
+        private final List<AuthorizationValue> authData = new ArrayList<>();
         private ParseOptions parseOptions = defaultParseOptions();
         private ValidationErrorsWhitelist whitelist = ValidationErrorsWhitelist.create();
         private final List<CustomRequestValidator> customRequestValidators = new ArrayList<>();
@@ -520,7 +519,7 @@ public class OpenApiInteractionValidator {
                                           final String value) {
             requireNonNull(key, "A key for the auth header is required");
 
-            authData = singletonList(new AuthorizationValue(key, value, "header"));
+            authData.add(new AuthorizationValue(key, value, "header"));
             return this;
         }
 
