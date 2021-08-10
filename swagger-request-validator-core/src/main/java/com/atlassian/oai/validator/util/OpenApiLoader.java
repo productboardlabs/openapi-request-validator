@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import static java.util.Objects.requireNonNull;
+
 public class OpenApiLoader {
 
     /**
@@ -31,12 +33,17 @@ public class OpenApiLoader {
      * on the preparation.
      *
      * @param specSource The OpenAPI / Swagger specification to use in the validator.
-     * @param authData   Authentication data for reading the specification.
+     * @param authData Authentication data for reading the specification.
+     *
      * @return the loaded and prepared {@link OpenAPI}
      */
     public OpenAPI loadApi(@Nonnull final SpecSource specSource,
-                           @Nonnull final List<AuthorizationValue> authData) {
-        final SwaggerParseResult parseResult = readSwaggerParserResult(specSource, authData);
+                           @Nonnull final List<AuthorizationValue> authData,
+                           @Nonnull final ParseOptions parseOptions) {
+        requireNonNull(specSource, "A spec source is required");
+        requireNonNull(parseOptions, "Parse options are required");
+
+        final SwaggerParseResult parseResult = readSwaggerParserResult(specSource, authData, parseOptions);
         if (parseResult == null || parseResult.getOpenAPI() == null ||
                 (parseResult.getMessages() != null && !parseResult.getMessages().isEmpty())) {
             throw new ApiLoadException(specSource.getValue(), parseResult);
@@ -47,13 +54,10 @@ public class OpenApiLoader {
         return api;
     }
 
-    private SwaggerParseResult readSwaggerParserResult(final SpecSource specSource, final List<AuthorizationValue> authData) {
+    private SwaggerParseResult readSwaggerParserResult(final SpecSource specSource,
+                                                       final List<AuthorizationValue> authData,
+                                                       final ParseOptions parseOptions) {
         final OpenAPIParser openAPIParser = new OpenAPIParser();
-        final ParseOptions parseOptions = new ParseOptions();
-        parseOptions.setResolve(true);
-        parseOptions.setResolveFully(true);
-        parseOptions.setResolveCombinators(false);
-
         try {
             if (specSource.isInlineSpecification()) {
                 return openAPIParser.readContents(specSource.getValue(), authData, parseOptions);

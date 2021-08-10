@@ -2,7 +2,7 @@ package com.atlassian.oai.validator.springmvc;
 
 import com.google.common.primitives.Bytes;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import javax.servlet.ReadListener;
@@ -18,11 +18,10 @@ import static com.google.common.io.ByteStreams.exhaust;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.copyOfRange;
 import static org.apache.commons.io.IOUtils.toByteArray;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -242,7 +241,7 @@ public class ResettableRequestServletWrapperTest {
 
         // Test: initial reading the stream - this will fill the cache
         final byte[] initialRead = initialContentReader.read(classUnderTest);
-        assertArrayEquals(bytes, initialRead);
+        assertThat(bytes, equalTo(initialRead));
 
         // Test: reading more content from the exhausted stream does no harm
         assertThat(servletInputStream.read(), is(-1));
@@ -253,26 +252,26 @@ public class ResettableRequestServletWrapperTest {
         classUnderTest.resetInputStream();
 
         final byte[] readAfterResetWithStream = toByteArray(classUnderTest.getInputStream());
-        assertArrayEquals(bytes, readAfterResetWithStream);
+        assertThat(bytes, equalTo(readAfterResetWithStream));
 
         // Test: reset the input stream and reread it again from the buffered reader
         classUnderTest.resetInputStream();
 
         final byte[] readAfterResetWithReader = toByteArray(classUnderTest.getReader(), UTF_8);
-        assertArrayEquals(bytes, readAfterResetWithReader);
+        assertThat(bytes, equalTo(readAfterResetWithReader));
 
         // Test: reset the input stream and reread it again from the buffered reader with set charset
         classUnderTest.resetInputStream();
 
         when(servletRequest.getCharacterEncoding()).thenReturn("UTF-8");
         final byte[] readAfterResetWithReaderWithCharset = toByteArray(classUnderTest.getReader(), UTF_8);
-        assertArrayEquals(bytes, readAfterResetWithReaderWithCharset);
+        assertThat(bytes, equalTo(readAfterResetWithReaderWithCharset));
 
         // Test: reset the input stream and reread it again with plain reading the stream
         classUnderTest.resetInputStream();
 
         final byte[] readAfterResetWithPlainReading = customReadingStream(classUnderTest.getInputStream());
-        assertArrayEquals(bytes, readAfterResetWithPlainReading);
+        assertThat(bytes, equalTo(readAfterResetWithPlainReading));
     }
 
     private void testingPartialReadingAndResettingInputStream(final int contentLength, final int partialReadLength) throws IOException {
@@ -287,7 +286,7 @@ public class ResettableRequestServletWrapperTest {
 
         // Test: initial reading the stream - this will partially fill the cache
         final byte[] initialRead = toByteArray(classUnderTest.getInputStream(), partialReadLength);
-        assertArrayEquals(Arrays.copyOf(bytes, partialReadLength), initialRead);
+        assertThat(Arrays.copyOf(bytes, partialReadLength), equalTo(initialRead));
 
         // Test: reset the input stream and reread the first byte
         classUnderTest.resetInputStream();
@@ -300,31 +299,31 @@ public class ResettableRequestServletWrapperTest {
         final int readBytes1 = classUnderTest.getInputStream().read(moreBytes);
         assertThat(readBytes1, equalTo(partialReadLength - 1));
         assertThat(moreBytes[partialReadLength - 1], equalTo((byte) 0));
-        assertArrayEquals(copyOfRange(bytes, 1, partialReadLength), copyOfRange(moreBytes, 0, partialReadLength - 1));
+        assertThat(copyOfRange(bytes, 1, partialReadLength), equalTo(copyOfRange(moreBytes, 0, partialReadLength - 1)));
 
         // Test: further reading stream - now the original stream is read further
         final byte[] evenMoreBytes = new byte[10];
         final int readBytes2 = classUnderTest.getInputStream().read(evenMoreBytes);
         assertThat(readBytes2, equalTo(10));
-        assertArrayEquals(copyOfRange(bytes, partialReadLength, partialReadLength + 10), evenMoreBytes);
+        assertThat(copyOfRange(bytes, partialReadLength, partialReadLength + 10), equalTo(evenMoreBytes));
 
         // Test: reset the input stream and reread it fully
         classUnderTest.resetInputStream();
 
         final byte[] readAfterResetWithStream = toByteArray(classUnderTest.getInputStream());
-        assertArrayEquals(bytes, readAfterResetWithStream);
+        assertThat(bytes, equalTo(readAfterResetWithStream));
 
         // Test: reset the input stream and reread it again from the buffered reader with set charset
         classUnderTest.resetInputStream();
 
         final byte[] readAfterResetWithReaderWithCharset = toByteArray(classUnderTest.getReader(), UTF_8);
-        assertArrayEquals(bytes, readAfterResetWithReaderWithCharset);
+        assertThat(bytes, equalTo(readAfterResetWithReaderWithCharset));
 
         // Test: reset the input stream and reread it again with plain reading the stream
         classUnderTest.resetInputStream();
 
         final byte[] readAfterResetWithPlainReading = customReadingStream(classUnderTest.getInputStream());
-        assertArrayEquals(bytes, readAfterResetWithPlainReading);
+        assertThat(bytes, equalTo(readAfterResetWithPlainReading));
     }
 
     private byte[] customReadingStream(final InputStream inputStream) throws IOException {

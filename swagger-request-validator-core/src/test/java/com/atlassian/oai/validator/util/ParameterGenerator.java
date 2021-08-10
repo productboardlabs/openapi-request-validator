@@ -112,10 +112,14 @@ public class ParameterGenerator {
     }
 
     public static Parameter stringParam(final Integer minLength, final Integer maxLength) {
+        return stringParam(minLength, maxLength, true);
+    }
+
+    public static Parameter stringParam(final Integer minLength, final Integer maxLength, final boolean required) {
         final StringSchema schema = new StringSchema();
         schema.setMinLength(minLength);
         schema.setMaxLength(maxLength);
-        return param(schema, true);
+        return param(schema, required);
     }
 
     public static Parameter patternStringParam(final String pattern) {

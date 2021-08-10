@@ -1,4 +1,5 @@
 # Swagger Request Validator - Core #
+
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-core/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-core)
 
 The core validator logic in the Swagger Request Validator.
@@ -23,11 +24,12 @@ See [Features](../docs/FEATURES.md) for more details.
 </dependency>
 ```
 
-See the [examples module](https://bitbucket.org/atlassian/swagger-request-validator/src/master/swagger-request-validator-examples/?at=master)
+See
+the [examples module](https://bitbucket.org/atlassian/swagger-request-validator/src/master/swagger-request-validator-examples/?at=master)
 for examples on how the library is used.
 
-The main entry point to the library is the `com.atlassian.oai.validator.OpenApiInteractionValidator`.
-This validator takes a specification file (local or remote URL) and can then be used to validate request/response pairs.
+The main entry point to the library is the `com.atlassian.oai.validator.OpenApiInteractionValidator`. This validator
+takes a specification file (local or remote URL) and can then be used to validate request/response pairs.
 
 The validator returns a `com.atlassian.oai.validator.report.ValidationReport` which will contain any errors that
 occurred during the validation. These can be used to generate a report for users etc.
@@ -44,13 +46,16 @@ if (report.hasErrors()) {
 }
 ```
 
-Each report will contain 0 or more `Message`s, which include a key, a human-readable message (suitable for display to users),
-a 'level' indicating the severity of the message, and additional context to help identify where the message was generated.
+Each report will contain 0 or more `Message`s, which include a key, a human-readable message (suitable for display to
+users), a 'level' indicating the severity of the message, and additional context to help identify where the message was
+generated.
 
-A String representation of the report can be generated using one of the `ValidationReportFormat` implementations. Currently two
-implementations are provided:
+A String representation of the report can be generated using one of the `ValidationReportFormat` implementations.
+Currently two implementations are provided:
+
 1. A `SimpleValidationReportFormat` that can be used to generate a human-readable format suitable for logging etc.; and
-2. A `JsonValidationReportFormat` that outputs the report in a JSON format suitable for consumption by scripts / tooling etc.
+2. A `JsonValidationReportFormat` that outputs the report in a JSON format suitable for consumption by scripts / tooling
+   etc.
 
 ```java
 final ValidationReport report = validator.validate(request, response);
@@ -63,13 +68,13 @@ See the javadoc for the library for more information on how to use individual cl
 
 ### Controlling validation behaviour ###
 
-By default all validation failures are emitted at `ERROR` level. This behaviour can be controlled on a per-validation 
+By default, all validation failures are emitted at `ERROR` level. This behaviour can be controlled on a per-validation
 level, or for groups of validations.
 
-The validation level resolution mechanism uses a hierarchical mechanism to resolve the level for a given validation message. 
-It begins with the message key and then checks each parent key for a level. If none are found, a global default 
+The validation level resolution mechanism uses a hierarchical mechanism to resolve the level for a given validation
+message. It begins with the message key and then checks each parent key for a level. If none are found, a global default
 level is used.
- 
+
 For example, with the following configuration:
 
 ```
@@ -79,10 +84,10 @@ validation.response=WARN
 validation.response.body.missing=ERROR
 ```
 
-The validation error `validation.response.body.missing` will be emitted at `ERROR` level, while the 
-error `validation.response.status.unknown` will be emitted at `WARN` (as it is a child of `validation.response`) 
-and `validation.schema.required` will be ignored (the `defaultLevel` will be applied as there are no parent 
-keys that match).
+The validation error `validation.response.body.missing` will be emitted at `ERROR` level, while the
+error `validation.response.status.unknown` will be emitted at `WARN` (as it is a child of `validation.response`)
+and `validation.schema.required` will be ignored (the `defaultLevel` will be applied as there are no parent keys that
+match).
 
 There are four levels that messages can be emitted at:
 
@@ -97,8 +102,8 @@ There are 4 options for controlling validation behavior in your project.
 
 #### Option 1 - Programmatically ####
 
-When creating a `OpenApiInteractionValidator` instance you can specify a `LevelResolver` instance 
-with programmatically added validation level configuration.
+When creating a `OpenApiInteractionValidator` instance you can specify a `LevelResolver` instance with programmatically
+added validation level configuration.
 
 ```
 this.validator = OpenApiInteractionValidator
@@ -116,10 +121,10 @@ This is useful if you want to define a set of validation rules to be used across
 
 #### Option 2 - via `swagger-validator.properties` ####
 
-The second option is to load configuration from a `swagger-validator.properties` file located at the root of 
-your project classpath (e.g. `src/main/resources/swagger-validator.properties`).
+The second option is to load configuration from a `swagger-validator.properties` file located at the root of your
+project classpath (e.g. `src/main/resources/swagger-validator.properties`).
 
-This file should contain properties of the form `{key}={LEVEL}`. 
+This file should contain properties of the form `{key}={LEVEL}`.
 
 A special key `defaultLevel` can be used to set the global default.
 
@@ -134,11 +139,11 @@ Keys in this file wil override any set programmatically.
 
 #### Option 3 - in `.swagger-validator` ####
 
-The third option is to have a file `.swagger-validator` in the working directory of your project 
+The third option is to have a file `.swagger-validator` in the working directory of your project
 (e.g. the directory your project was run from).
 
-This file has the same format as the `swagger-validator.properties` file above. 
-Keys in this file wil override any set via `swagger-validator.properties`.
+This file has the same format as the `swagger-validator.properties` file above. Keys in this file wil override any set
+via `swagger-validator.properties`.
 
 #### Option 4 - via system properties ####
 
@@ -152,27 +157,28 @@ These keys will override any other key that has been set.
 
 ### Whitelisting errors ###
 
-There are scenarios where simple control of message levels is not enough. 
-Perhaps you want to treat all messages of certain types as errors but not in this one 
-particular endpoint. Or maybe the validator reports some errors incorrectly in a few obscure edge
-cases. Or maybe your OpenAPI / Swagger spec is not really that precise but for whatever reason you can't
-make it 100% correct.
+There are scenarios where simple control of message levels is not enough. Perhaps you want to treat all messages of
+certain types as errors but not in this one particular endpoint. Or maybe the validator reports some errors incorrectly
+in a few obscure edge cases. Or maybe your OpenAPI / Swagger spec is not really that precise but for whatever reason you
+can't make it 100% correct.
 
-If that's the case, you can define whitelists to ignore messages based on fine-grained rules, 
-defined using a declarative fluent interface.  
+If that's the case, you can define whitelists to ignore messages based on fine-grained rules, defined using a
+declarative fluent interface.
 
 #### Example
 
 Let's say that:
- 1. We have beans with properties of schema types valid in OpenApi 3.0 spec, but not 2.0, currently
-supported by this validator. Because of this, it incorrectly reports "validation.schema.additionalProperties"
-for these beans errors, which we would very much like to ignore. 
- 2. What's more, we don't want to document 401 or 403 responses at all, and so we don't care about  
-"validation.response.status.unknown" errors for theses codes.
- 3. Also, we have some endpoints that don't return or accept "application/json", and we don't want validation to run in this case.
- 
- Here is a whitelist definition that we would create to rule out all the above:
- 
+
+1. We have beans with properties of schema types valid in OpenApi 3.0 spec, but not 2.0, currently supported by this
+   validator. Because of this, it incorrectly reports "validation.schema.additionalProperties"
+   for these beans errors, which we would very much like to ignore.
+2. What's more, we don't want to document 401 or 403 responses at all, and so we don't care about  
+   "validation.response.status.unknown" errors for theses codes.
+3. Also, we have some endpoints that don't return or accept "application/json", and we don't want validation to run in
+   this case.
+
+Here is a whitelist definition that we would create to rule out all the above:
+
 ```java
     ValidationErrorsWhitelist whitelist = ValidationErrorsWhitelist.create()
         .withRule(
@@ -194,8 +200,8 @@ for these beans errors, which we would very much like to ignore.
             headerContainsRegexp("Content-Type", "application/json").not()); // notice "not()" at the end
 ```
 
-All rules (`allOf`, `messageHasKey`, `entityIs` etc.) available for creating whitelists are defined 
-in the `WhitelistRules` class as static factory methods. Additionally, each rule can be negated with `.not()`.
+All rules (`allOf`, `messageHasKey`, `entityIs` etc.) available for creating whitelists are defined in
+the `WhitelistRules` class as static factory methods. Additionally, each rule can be negated with `.not()`.
 
 Once you have a whitelist, simply pass it on to the validator builder:
 
@@ -207,15 +213,14 @@ final OpenApiInteractionValidator validator = OpenApiInteractionValidator.create
                 .build();
 ```
 
-If a message is whitelisted, it will still remain in the validation report, but its level will be changed
-to IGNORE, and additional information with the matched rule name will be attached to it.
+If a message is whitelisted, it will still remain in the validation report, but its level will be changed to IGNORE, and
+additional information with the matched rule name will be attached to it.
 
 ### Custom validation ###
 
-In some cases, validation may be desired that is not provided out of the box.
-To add your own validation logic, a custom validator can be created and registered.
-Custom validators can be registered to verify either the request or response.
-A registered custom validator will be run for each request or response being validated against a specified operation.
+In some cases, validation may be desired that is not provided out of the box. To add your own validation logic, a custom
+validator can be created and registered. Custom validators can be registered to verify either the request or response. A
+registered custom validator will be run for each request or response being validated against a specified operation.
 
 An example of when to use a custom validator would be when a specification includes known extensions.
 

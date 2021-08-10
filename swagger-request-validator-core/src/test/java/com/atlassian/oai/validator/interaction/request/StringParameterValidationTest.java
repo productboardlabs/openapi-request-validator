@@ -80,6 +80,11 @@ public class StringParameterValidationTest {
     }
 
     @Test
+    public void validate_withMinLength_shouldPass_whenMissingButNotRequired() {
+        assertPass(classUnderTest.validate((String) null, stringParam(6, null, false)));
+    }
+
+    @Test
     public void validate_withMinLength_shouldPass_whenLongEnough() {
         assertPass(classUnderTest.validate("longer", stringParam(6, null)));
     }
@@ -93,6 +98,11 @@ public class StringParameterValidationTest {
     @Test
     public void validate_withMaxLength_shouldPass_whenShortEnough() {
         assertPass(classUnderTest.validate("easily short enough", stringParam(null, 30)));
+    }
+
+    @Test
+    public void validate_withMaxLength_shouldPass_whenMissingButNotRequired() {
+        assertPass(classUnderTest.validate((String) null, stringParam(null, 6, false)));
     }
 
     @Test
