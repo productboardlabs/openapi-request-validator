@@ -1,3 +1,25 @@
+# 2.18.1
+
+* Allow adding multiple headers using `OpenApiInteractionValidator.Builder#withAuthHeaderData`.
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/241)
+
+# 2.18.0
+
+* Exposed `ParseOptions` from the underlying [swagger-parser](https://github.com/swagger-api/swagger-parser)
+  library so they can be set during validator creation. Specifically, the `resolveCombinators` option may be used in
+  some cases to avoid the problem with `additionalProperties` validation with the `allOf` keyword
+  (see the [FAQ](./docs/FAQ.md) for details)
+  [[#320]](https://bitbucket.org/atlassian/swagger-request-validator/issues/320)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/228)
+* Fixed a regression where nested `Message`s from sub-validations were not being included in the validation report
+  [[#316]](https://bitbucket.org/atlassian/swagger-request-validator/issues/316)
+  [[#323]](https://bitbucket.org/atlassian/swagger-request-validator/issues/323)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/229)
+* Added optional `Pointer` information to the message context to give access to the instance and schema pointers in the
+  case where a validation error has come from schema validation.
+  [[#300]](https://bitbucket.org/atlassian/swagger-request-validator/issues/300)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/229)
+
 # v2.17.0
 
 * Bumped a number of minor/patch versions of dependencies:
