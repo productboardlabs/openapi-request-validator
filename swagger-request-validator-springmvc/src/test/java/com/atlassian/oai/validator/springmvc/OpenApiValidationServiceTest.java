@@ -1,13 +1,14 @@
 package com.atlassian.oai.validator.springmvc;
 
 import com.atlassian.oai.validator.OpenApiInteractionValidator;
+import com.atlassian.oai.validator.example.simple.RestServiceApplication;
 import com.atlassian.oai.validator.model.Body;
+import com.atlassian.oai.validator.model.InputStreamBody;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.ValidationReport;
-import com.atlassian.oai.validator.example.simple.RestServiceApplication;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,20 +49,18 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Map;
-import java.util.Optional;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.util.ReflectionTestUtils.getField;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {"server.contextPath=/v1", "server.error.include-message=always"})
@@ -83,10 +82,6 @@ public class OpenApiValidationServiceTest {
 
     private static Enumeration<String> asEnumeration(final String... values) {
         return Iterators.asEnumeration(Arrays.asList(values).iterator());
-    }
-
-    private static Object getInputStreamField(final Optional<Body> requestBody) {
-        return getField(getField(requestBody.get(), "content"), "in");
     }
 
     @BeforeEach
@@ -143,7 +138,8 @@ public class OpenApiValidationServiceTest {
         when(servletRequest.getMethod()).thenReturn("GET");
         when(servletRequest.getQueryString()).thenReturn("");
         when(urlPathHelper.getPathWithinApplication(servletRequest)).thenReturn("/swagger-request-validator");
-        final ServletInputStream inputStream = mock(ServletInputStream.class);
+        final String content = "hello";
+        final ServletInputStream inputStream = new ServletInputStreamMock(content.getBytes(StandardCharsets.UTF_8));
         when(servletRequest.getInputStream()).thenReturn(inputStream);
         when(servletRequest.getParameterNames()).thenReturn(asEnumeration("not-a-query-parameter"));
         when(servletRequest.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
@@ -152,7 +148,9 @@ public class OpenApiValidationServiceTest {
 
         assertThat(result.getPath(), equalTo("/swagger-request-validator"));
         assertThat(result.getMethod(), equalTo(Request.Method.GET));
-        assertThat(getInputStreamField(result.getRequestBody()), sameInstance(inputStream));
+        final Body body = result.getRequestBody().get();
+        assertThat(body, instanceOf(InputStreamBody.class));
+        assertThat(body.toString(StandardCharsets.UTF_8), equalTo(content));
         assertThat(result.getHeaders().size(), equalTo(0));
         assertThat(result.getQueryParameters().size(), equalTo(0));
     }
@@ -164,7 +162,8 @@ public class OpenApiValidationServiceTest {
         when(servletRequest.getQueryString())
                 .thenReturn("query1=QUERY_ONE&&query2=query_two&query2=QUERY_TWO&");
         when(urlPathHelper.getPathWithinApplication(servletRequest)).thenReturn("/swagger-request-validator");
-        final ServletInputStream inputStream = mock(ServletInputStream.class);
+        final String content = "hello";
+        final ServletInputStream inputStream = new ServletInputStreamMock(content.getBytes(StandardCharsets.UTF_8));
         when(servletRequest.getInputStream()).thenReturn(inputStream);
         when(servletRequest.getParameterNames())
                 .thenReturn(asEnumeration("query1", "query2", "query3"));
@@ -183,7 +182,9 @@ public class OpenApiValidationServiceTest {
 
         assertThat(result.getPath(), equalTo("/swagger-request-validator"));
         assertThat(result.getMethod(), equalTo(Request.Method.POST));
-        assertThat(getInputStreamField(result.getRequestBody()), sameInstance(inputStream));
+        final Body body = result.getRequestBody().get();
+        assertThat(body, instanceOf(InputStreamBody.class));
+        assertThat(body.toString(StandardCharsets.UTF_8), equalTo(content));
         assertThat(result.getHeaders().size(), equalTo(2));
         assertThat(result.getHeaderValues("header1"),
                 equalTo(asList("HEADER_ONE")));
