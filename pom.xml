@@ -58,26 +58,26 @@
         <guava.version>28.2-jre</guava.version>
         <hamcrest.version>2.2</hamcrest.version>
         <hamcrest-optional.version>1.2.0</hamcrest-optional.version>
-        <jackson.version>2.12.2</jackson.version>
+        <jackson.version>2.12.3</jackson.version>
         <json-schema-validator.version>2.2.14</json-schema-validator.version>
         <jsr305.version>3.0.2</jsr305.version>
         <junit.version>4.13.2</junit.version>
-        <logback.version>1.2.3</logback.version>
+        <logback.version>1.2.5</logback.version>
         <mockito.version>3.11.2</mockito.version>
         <pact-jvm.version>3.6.15</pact-jvm.version>
-        <rest-assured.version>4.3.3</rest-assured.version>
+        <rest-assured.version>4.4.0</rest-assured.version>
         <servlet.api.version>4.0.1</servlet.api.version>
-        <slf4j.version>1.7.30</slf4j.version>
+        <slf4j.version>1.7.32</slf4j.version>
         <spring.version>5.3.3</spring.version>
-        <swagger-parser.version>2.0.25</swagger-parser.version>
+        <swagger-parser.version>2.0.27</swagger-parser.version>
         <wiremock.version>2.27.2</wiremock.version>
-        <jmh-core.version>1.29</jmh-core.version>
+        <jmh-core.version>1.32</jmh-core.version>
 
         <!-- Overrides for transitive dependencies to address vulnerabilities -->
-        <jetty.version>9.4.39.v20210325</jetty.version>
+        <jetty.version>9.4.43.v20210629</jetty.version>
         <commons-codec.version>1.15</commons-codec.version>
         <httpclient.version>4.5.13</httpclient.version>
-        <netty.version>4.1.63.Final</netty.version>
+        <netty.version>4.1.66.Final</netty.version>
         <jsonassert.version>1.5.0</jsonassert.version>
 
         <!-- Plugin versions -->
