@@ -268,7 +268,7 @@ public class ContentTypeUtils {
      */
     public static Optional<Charset> getCharsetFromContentType(@Nullable final String contentType) {
         return parseContentType(contentType)
-                .flatMap(m -> m.charset().toJavaUtil());
+                .flatMap(m -> Optional.ofNullable(m.charset().orNull()));
     }
 
     /**
