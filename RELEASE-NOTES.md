@@ -1,4 +1,4 @@
-# v2.19.0
+# v2.19.2
 
 * Made the library backwards compatible with older versions of Guava (this is a temporary state - do not rely on this
   being the case going forward)
@@ -16,6 +16,14 @@
   * `jmh`: 1.29 -> 1.32
   * `jetty`: 9.4.39.v20210325 -> 9.4.43.v20210629
   * `netty`: 4.1.63.FINAL -> 4.1.66.FINAL
+
+# v2.19.1
+
+Version burned (broken release pipeline)
+
+# v2.19.0
+
+Version burned (broken release pipeline)
 
 # v2.18.1
 
