@@ -18,6 +18,7 @@ import io.swagger.v3.parser.core.models.ParseOptions;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -44,14 +45,20 @@ public class OpenApiLoader {
         requireNonNull(parseOptions, "Parse options are required");
 
         final SwaggerParseResult parseResult = readSwaggerParserResult(specSource, authData, parseOptions);
-        if (parseResult == null || parseResult.getOpenAPI() == null ||
-                (parseResult.getMessages() != null && !parseResult.getMessages().isEmpty())) {
+        if (hasParseErrors(parseResult)) {
             throw new ApiLoadException(specSource.getValue(), parseResult);
         }
 
         final OpenAPI api = parseResult.getOpenAPI();
         removeRegexPatternOnStringsOfFormatByte(api);
         return api;
+    }
+
+    private boolean hasParseErrors(@Nullable final SwaggerParseResult parseResult) {
+        if (parseResult == null || parseResult.getOpenAPI() == null) {
+            return true;
+        }
+        return parseResult.getMessages() != null && !parseResult.getMessages().isEmpty();
     }
 
     private SwaggerParseResult readSwaggerParserResult(final SpecSource specSource,
