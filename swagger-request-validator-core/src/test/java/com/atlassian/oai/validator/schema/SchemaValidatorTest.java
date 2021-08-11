@@ -316,15 +316,28 @@ public class SchemaValidatorTest {
     }
 
     @Test
-    public void validate_withJsonSchemaComposition_shouldFail_whenAdditionalPropertyValidationNotIgnored() {
+    public void validate_withJsonSchemaComposition_shouldPass_whenAdditionalPropertyValidationNotIgnored() {
 
-        final SchemaValidator classUnderTest = validator("/oai/v2/api-composition.yaml");
+        final SchemaValidator classUnderTest = validatorWithResolveCombinators("/oai/v3/api-composition.yaml");
 
         final Schema schema = new Schema().$ref("#/components/schemas/User");
         final String value = "{\"firstname\":\"user_firstname\", \"lastname\":\"user_lastname\", \"city\":\"user_city\"}";
 
+        final ValidationReport report = classUnderTest.validate(value, schema, "prefix");
+        assertPass(report);
+    }
+
+    @Test
+    public void validate_withJsonSchemaComposition_shouldFail_whenAdditionalPropertyValidationNotIgnored_andUndefinedPropertyReturnedInResponse() {
+
+        final SchemaValidator classUnderTest = validatorWithResolveCombinators("/oai/v3/api-composition.yaml");
+
+        final Schema schema = new Schema().$ref("#/components/schemas/User");
+        final String value = "{\"firstname\":\"user_firstname\", \"lastname\":\"user_lastname\", \"city\":\"user_city\", \"zip\":\"97201\"}";
+
+        final ValidationReport report = classUnderTest.validate(value, schema, "prefix");
         assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
-                "validation.prefix.schema.additionalProperties");
+            "validation.prefix.schema.additionalProperties");
     }
 
     @Test
@@ -900,6 +913,13 @@ public class SchemaValidatorTest {
     private SchemaValidator validator(final String api) {
         final ParseOptions parseOptions = new ParseOptions();
         parseOptions.setResolve(true);
+        return new SchemaValidator(new OpenAPIParser().readLocation(api, null, parseOptions).getOpenAPI(), new MessageResolver());
+    }
+
+    private SchemaValidator validatorWithResolveCombinators(final String api) {
+        final ParseOptions parseOptions = new ParseOptions();
+        parseOptions.setResolveFully(true);
+        parseOptions.setResolveCombinators(true);
         return new SchemaValidator(new OpenAPIParser().readLocation(api, null, parseOptions).getOpenAPI(), new MessageResolver());
     }
 }

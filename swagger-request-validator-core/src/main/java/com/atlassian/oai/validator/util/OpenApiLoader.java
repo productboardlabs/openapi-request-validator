@@ -6,6 +6,7 @@ import io.swagger.parser.OpenAPIParser;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.headers.Header;
 import io.swagger.v3.oas.models.media.ArraySchema;
+import io.swagger.v3.oas.models.media.ComposedSchema;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.ObjectSchema;
@@ -51,6 +52,7 @@ public class OpenApiLoader {
 
         final OpenAPI api = parseResult.getOpenAPI();
         removeRegexPatternOnStringsOfFormatByte(api);
+        removeTypeObjectAssociationWithOneOfAndAnyOfModels(api);
         return api;
     }
 
@@ -83,6 +85,33 @@ public class OpenApiLoader {
             return openAPIParser.readContents(specSource.getValue(), authData, parseOptions);
         } catch (final RuntimeException e) {
             throw new ApiLoadException(specSource.getValue(), e);
+        }
+    }
+
+    // Adding this method to strip off the object type association applied by
+    // io.swagger.v3.parser.util.ResolverFully (ln 410) where the operation sets
+    // type field to "object" if type field is null. This causes issues for anyOf
+    // and oneOf validations.
+    private static void removeTypeObjectAssociationWithOneOfAndAnyOfModels(@Nonnull final OpenAPI openAPI) {
+        if (openAPI.getComponents() != null) {
+            removeTypeObjectFromEachValue(openAPI.getComponents().getSchemas(), schema -> schema);
+        }
+    }
+
+    private static <T> void removeTypeObjectFromEachValue(final Map<String, T> map, final Function<T, Object> function) {
+        if (map != null) {
+            map.values().forEach(it -> removeTypeObjectAssociationWithOneOfAndAnyOfFromSchema(function.apply(it)));
+        }
+    }
+
+    private static void removeTypeObjectAssociationWithOneOfAndAnyOfFromSchema(@Nonnull final Object object) {
+        if (object instanceof ObjectSchema) {
+            removeTypeObjectFromEachValue(((ObjectSchema) object).getProperties(), schema -> schema);
+        } else if (object instanceof ArraySchema) {
+            removeTypeObjectAssociationWithOneOfAndAnyOfFromSchema(((ArraySchema) object).getItems());
+        } else if (object instanceof ComposedSchema) {
+            final ComposedSchema composedSchema = (ComposedSchema) object;
+            composedSchema.setType(null);
         }
     }
 

@@ -1,0 +1,146 @@
+openapi: 3.0.0
+info:
+  title: Test Contract
+  description: Complex oneOf test scenario.
+  version: "1"
+servers:
+- url: https://test.com
+  description: staging
+security:
+- bearerAuth: []
+paths:
+  /complex:
+    post:
+      summary: Complex test schema
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/complexResponse'
+components:
+  schemas:
+    complexResponse:
+      type: object
+      properties:
+        mods:
+          type: object
+          properties:
+            details:
+              $ref: '#/components/schemas/details'
+    details:
+      allOf:
+      - $ref: '#/components/schemas/base'
+      - type: object
+        properties:
+          id:
+            type: string
+          container:
+            type: array
+            items:
+              $ref: '#/components/schemas/container'
+    base:
+      type: object
+      properties:
+        title:
+          type: string
+    container:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/disableable'
+      - type: object
+        properties:
+          lineItems:
+            type: array
+            items:
+              $ref: '#/components/schemas/lineItem'
+    lineItem:
+      type: object
+      properties:
+        id:
+          type: string
+        summary:
+          type: array
+          items:
+            $ref: '#/components/schemas/summary'
+    disableable:
+      type: object
+      properties:
+        disabled:
+          type: boolean
+    summary:
+      type: object
+      properties:
+        id:
+          type: string
+        special:
+          description: Special description
+          allOf:
+          - $ref: '#/components/schemas/extension'
+    field:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          anyOf:
+          - type: string
+          - type: integer
+        valueType:
+          type: string
+    extension:
+      allOf:
+      - $ref: '#/components/schemas/disableable'
+      - type: object
+        properties:
+          form:
+            $ref: '#/components/schemas/form'
+    form:
+      type: object
+      properties:
+        entryForm:
+          $ref: '#/components/schemas/entryForm'
+        selectionForm:
+          $ref: '#/components/schemas/selectForm'
+    entryForm:
+      type: object
+      properties:
+        id:
+          type: string
+        group:
+          type: array
+          items:
+            anyOf:
+            - $ref: '#/components/schemas/selection'
+            - $ref: '#/components/schemas/entry'
+    selectForm:
+      type: object
+      properties:
+        id:
+          type: string
+        group:
+          type: array
+          items:
+            $ref: '#/components/schemas/selection'
+    selection:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/field'
+      - type: object
+        properties:
+          defaultParamValue:
+            type: object
+    entry:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/field'
+      - type: object
+        properties:
+          readOnly:
+            type: boolean
+            default: false
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer

@@ -232,8 +232,7 @@ public class OpenAPIV3RequestValidationTest {
                 .withBody("{ \"stringField\": \"foo\" }")
                 .build();
 
-        assertFail(classUnderTest.validateRequest(request),
-                "validation.request.body.schema.additionalProperties");
+        assertPass(classUnderTest.validateRequest(request));
     }
 
     @Test
@@ -308,10 +307,11 @@ public class OpenAPIV3RequestValidationTest {
     }
 
     @Test
-    public void validate_withAllOfComposition_fails_whenAdditionalPropertiesNotIgnored() {
+    public void validate_withAllOfComposition_passes_whenAdditionalPropertiesNotIgnored() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
                         .createForSpecificationUrl("/oai/v3/api-complex-composition.yaml")
+                        .withResolveCombinators(true)
                         .build();
 
         final Request request = SimpleRequest.Builder
@@ -320,8 +320,7 @@ public class OpenAPIV3RequestValidationTest {
                 .withBody("{ \"stringField\": \"foo\", \"intField\": 1, \"boolField\": false }")
                 .build();
 
-        assertFail(classUnderTest.validateRequest(request),
-                "validation.request.body.schema.additionalProperties");
+        assertPass(classUnderTest.validateRequest(request));
     }
 
     @Test
@@ -412,7 +411,7 @@ public class OpenAPIV3RequestValidationTest {
     }
 
     @Test
-    public void validate_withAnyOfComposition_fails_whenAdditionalPropertiesNotIgnored() {
+    public void validate_withAnyOfComposition_passes_whenAdditionalPropertiesNotIgnored() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
                         .createForSpecificationUrl("/oai/v3/api-complex-composition.yaml")
@@ -421,11 +420,10 @@ public class OpenAPIV3RequestValidationTest {
         final Request request = SimpleRequest.Builder
                 .post("/anyOf")
                 .withContentType("application/json")
-                .withBody("{ \"stringField\": \"foo\", \"intField\": 1 }")
+                .withBody("{ \"stringField\": \"foo\" }")
                 .build();
 
-        assertFail(classUnderTest.validateRequest(request),
-                "validation.request.body.schema.additionalProperties");
+        assertPass(classUnderTest.validateRequest(request));
     }
 
     @Test
