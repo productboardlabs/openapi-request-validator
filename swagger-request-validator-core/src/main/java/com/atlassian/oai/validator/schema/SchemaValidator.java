@@ -157,7 +157,7 @@ public class SchemaValidator {
                 );
             }
 
-            if ((processingReport != null) && !processingReport.isSuccess()) {
+            if (processingReport != null && !processingReport.isSuccess()) {
                 return stream(processingReport.spliterator(), false)
                         .map(pm -> messageConverter.toValidationReport(pm, null, keyPrefix))
                         .reduce(ValidationReport.empty(), ValidationReport::merge);
