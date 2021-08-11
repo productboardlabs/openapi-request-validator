@@ -1,9 +1,28 @@
-# 2.18.1
+# v2.19.0
+
+* Made the library backwards compatible with older versions of Guava (this is a temporary state - do not rely on this
+  being the case going forward)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/246)
+* Bumped parent pom version to fix incorrect licensing
+  [[#338]](https://bitbucket.org/atlassian/swagger-request-validator/issues/338)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/245)
+* Bumped a number of minor/patch versions of dependencies:
+  * `jackson`: 2.12.2 -> 2.12.3
+  * `logback`: 1.2.3 -> 1.2.5
+  * `slf4j`: 1.7.30 -> 1.7.32
+  * `mockito`: 3.9.0 -> 3.11.2
+  * `rest-assured`: 4.3.3 -> 4.4.0
+  * `swagger-parser`: 2.0.25 -> 2.0.27
+  * `jmh`: 1.29 -> 1.32
+  * `jetty`: 9.4.39.v20210325 -> 9.4.43.v20210629
+  * `netty`: 4.1.63.FINAL -> 4.1.66.FINAL
+
+# v2.18.1
 
 * Allow adding multiple headers using `OpenApiInteractionValidator.Builder#withAuthHeaderData`.
   [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/241)
 
-# 2.18.0
+# v2.18.0
 
 * Exposed `ParseOptions` from the underlying [swagger-parser](https://github.com/swagger-api/swagger-parser)
   library so they can be set during validator creation. Specifically, the `resolveCombinators` option may be used in
