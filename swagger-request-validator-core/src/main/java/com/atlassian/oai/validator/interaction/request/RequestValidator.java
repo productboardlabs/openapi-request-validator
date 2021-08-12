@@ -11,7 +11,7 @@ import com.atlassian.oai.validator.schema.SchemaValidator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Joiner;
 import com.google.common.net.MediaType;
-import io.swagger.util.Json;
+import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.parameters.Parameter;
