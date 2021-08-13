@@ -65,4 +65,13 @@ Publishing a release to Maven Central is currently a two step process:
 
 2. Run the [release build](https://jira-software-bamboo.internal.atlassian.com/browse/JNAV-SRVR)
 
-   This builds, signs and publishes the release from the `latest-release` tag. 
+   This builds, signs and publishes the release from the `latest-release` tag.
+
+3. Update the `RELEASE-NOTES.md` with details on what issues are included in the release (and ideally links to the PRs)
+
+   Running `git log` can give you a hint as to what is included in the release
+   (see the output from the `prepare-release.sh` script).
+
+4. (Optional) Update the issues and PRs included in the release with a comment of the released version.
+
+   This is a nice to have, but helps communicate to consumers when changes are available.
