@@ -48,6 +48,11 @@ function checkUpToDate() {
     fi
 }
 
+function currentReleaseTag() {
+    # Relies on git remote update having been called already
+    git tag --points-at latest-release | grep "swagger-request-validator"
+}
+
 while [ $# -gt 0 ]; do
   case $1 in
     -h|--help )
@@ -79,10 +84,16 @@ fi
 
 pushd "$(dirname ${BASH_SOURCE[0]})/.." > /dev/null
 
+previousReleaseTag="$(currentReleaseTag)"
+
 mvn build-helper:parse-version release:prepare -B -P${profile}
 scmTag="$(prop 'scm.tag')"
 git tag -f "latest-release" "${scmTag}"
 git push "origin" "${scmTag}" "latest-release" -f
 mvn release:clean -q
+
+echo ""
+echo "Release successfully prepared."
+echo "Run 'git log ${previousReleaseTag}..${scmTag}' to see changes."
 
 popd > /dev/null
