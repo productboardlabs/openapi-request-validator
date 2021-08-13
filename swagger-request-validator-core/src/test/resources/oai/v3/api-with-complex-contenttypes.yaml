@@ -30,8 +30,32 @@ paths:
                 type: integer
             image/*:
               schema:
-                type: string
-                format: binary
+                $ref: '#/components/schemas/Anything'
+  /request/nonwildcard/single:
+    post:
+      summary: Single valid mediatype
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnyObject'
+      responses:
+        '201':
+          description: OK
+  /request/nonwildcard/multiple:
+    post:
+      summary: Multiple valid mediatypes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnyObject'
+          text/plain:
+            schema:
+              $ref: '#/components/schemas/AnyString'
+      responses:
+        '201':
+          description: OK
   /request/wildcard/subtype:
     post:
       summary: Mediatype with wildcards in the subtype
@@ -39,9 +63,7 @@ paths:
         content:
           image/*:
             schema:
-              description: Any image format
-              type: string
-              format: binary
+              $ref: '#/components/schemas/Anything'
       responses:
         '201':
           description: OK
@@ -52,9 +74,31 @@ paths:
         content:
           '*/*':
             schema:
-              description: Anything
-              type: string
-              format: binary
+              $ref: '#/components/schemas/Anything'
       responses:
         '201':
           description: OK
+  /request/mixed:
+    post:
+      summary: Multiple mediatypes including wildcards
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnyObject'
+          image/*:
+            schema:
+              $ref: '#/components/schemas/Anything'
+      responses:
+        '201':
+          description: OK
+components:
+  schemas:
+    Anything:
+      type: string
+      format: binary
+    AnyString:
+      type: string
+    AnyObject:
+      type: object
+      additionalProperties: true
