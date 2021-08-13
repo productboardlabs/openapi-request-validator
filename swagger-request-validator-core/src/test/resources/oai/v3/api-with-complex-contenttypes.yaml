@@ -1,11 +1,11 @@
 openapi: 3.0.0
 info:
-  title: Charsets and wildcards in response content types
+  title: Charsets and wildcards in content types
   version: 1.0.0
 servers:
   - url: /
 paths:
-  /charset/withoutwhitespace:
+  /response/charset/withoutwhitespace:
     get:
       summary: Charset directive with no whitespace
       responses:
@@ -18,7 +18,7 @@ paths:
             application/json;charset=utf-16:
               schema:
                 type: string
-  /wildcard/subtype:
+  /response/wildcard/subtype:
     get:
       summary: Mediatype with wildcards in the subtype
       responses:
@@ -32,3 +32,29 @@ paths:
               schema:
                 type: string
                 format: binary
+  /request/wildcard/subtype:
+    post:
+      summary: Mediatype with wildcards in the subtype
+      requestBody:
+        content:
+          image/*:
+            schema:
+              description: Any image format
+              type: string
+              format: binary
+      responses:
+        '201':
+          description: OK
+  /request/wildcard/global:
+    post:
+      summary: Mediatype with the global wildcard
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              description: Anything
+              type: string
+              format: binary
+      responses:
+        '201':
+          description: OK
