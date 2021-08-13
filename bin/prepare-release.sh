@@ -80,8 +80,9 @@ fi
 pushd "$(dirname ${BASH_SOURCE[0]})/.." > /dev/null
 
 mvn build-helper:parse-version release:prepare -B -P${profile}
-git tag -f latest-release "$(prop 'scm.tag')"
-git push origin --tags -f
+scmTag="$(prop 'scm.tag')"
+git tag -f "latest-release" "${scmTag}"
+git push "origin" "${scmTag}" "latest-release" -f
 mvn release:clean -q
 
 popd > /dev/null
