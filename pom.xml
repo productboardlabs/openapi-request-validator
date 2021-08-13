@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.atlassian.pom</groupId>
@@ -84,6 +85,7 @@
         <checkstyle.version>8.45.1</checkstyle.version>
         <license-maven-plugin.version>2.0.0</license-maven-plugin.version>
         <maven-checkstyle-plugin.version>3.1.2</maven-checkstyle-plugin.version>
+        <build-helper-maven-plugin.version>3.2.0</build-helper-maven-plugin.version>
     </properties>
 
     <modules>
@@ -97,6 +99,38 @@
         <module>swagger-request-validator-spring-web-client</module>
         <module>swagger-request-validator-examples</module>
     </modules>
+
+    <!--
+      Uses the info from the build helper plugin to determine how to set the versions
+
+      mvn build-helper:parse-version release:prepare -B -Ppatch-release
+      OR
+      mvn build-helper:parse-version release:prepare -B -Pminor-release
+    -->
+    <profiles>
+        <profile>
+            <id>patch-release</id>
+            <properties>
+                <releaseVersion>
+                    ${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}
+                </releaseVersion>
+                <developmentVersion>
+                    ${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.nextIncrementalVersion}-SNAPSHOT
+                </developmentVersion>
+            </properties>
+        </profile>
+        <profile>
+            <id>minor-release</id>
+            <properties>
+                <releaseVersion>
+                    ${parsedVersion.majorVersion}.${parsedVersion.nextMinorVersion}.0
+                </releaseVersion>
+                <developmentVersion>
+                    ${parsedVersion.majorVersion}.${parsedVersion.nextMinorVersion}.1-SNAPSHOT
+                </developmentVersion>
+            </properties>
+        </profile>
+    </profiles>
 
     <dependencyManagement>
         <dependencies>
@@ -335,6 +369,22 @@
 
     <build>
         <plugins>
+            <!--
+            Used to generate the correct version when preparing a release
+            -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>${build-helper-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>parse-version</id>
+                        <goals>
+                            <goal>parse-version</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <!--
             THIRD-PARTY.txt can be generated with "mvn license:aggregate-add-third-party"
             -->
