@@ -34,6 +34,11 @@ If you need more fine-grained control over validation behavior you can also use 
 much more control over when to ignore a specific validation error that can take into account the operation, path,
 parameter values etc.
 
+There are some examples of controlling validation behavior in the `swagger-request-validator-examples` module:
+
+- [WhitelistingValidationErrorsTestExample](https://bitbucket.org/atlassian/swagger-request-validator/src/master/swagger-request-validator-examples/src/test/java/com/atlassian/oai/validator/examples/whitelist/WhitelistingValidationErrorsTestExample.java)
+- [ValidationControlExamplesTest](https://bitbucket.org/atlassian/swagger-request-validator/src/master/swagger-request-validator-examples/src/test/java/com/atlassian/oai/validator/examples/validationcontrol/ValidationControlExamplesTest.java)
+
 See the [Core README](../swagger-request-validator-core/README.md) for more details on controlling validation behavior.
 
 ### I use JSON schema composition with `allOf`, `anyOf` or `oneOf` and am getting unexpected validation errors. What's going on?
