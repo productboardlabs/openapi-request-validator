@@ -3,7 +3,7 @@ package com.atlassian.oai.validator.schema.transform;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.swagger.util.Json;
+import io.swagger.v3.core.util.Json;
 
 import javax.annotation.Nullable;
 import java.util.Iterator;

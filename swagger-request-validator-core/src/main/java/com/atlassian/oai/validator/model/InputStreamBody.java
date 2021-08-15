@@ -1,7 +1,7 @@
 package com.atlassian.oai.validator.model;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.swagger.util.Json;
+import io.swagger.v3.core.util.Json;
 import org.apache.commons.io.IOUtils;
 
 import javax.annotation.Nonnull;
