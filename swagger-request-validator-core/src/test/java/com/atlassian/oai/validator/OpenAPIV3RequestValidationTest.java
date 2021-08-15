@@ -17,6 +17,8 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadJsonRequest;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadRequest;
+import static com.google.common.collect.ImmutableMap.of;
+import static io.swagger.v3.core.util.Json.pretty;
 
 public class OpenAPIV3RequestValidationTest {
 
@@ -805,6 +807,24 @@ public class OpenAPIV3RequestValidationTest {
                 .withContentType("application/json")
                 // Body missing `nonRequiredField` that also has a minLength: 1
                 .withBody("{\"requiredField\": \"foo\"}")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withExamples_shouldPass_whenValid() {
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-with-examples.yaml")
+                .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/test")
+                .withContentType("application/json")
+                .withBody(pretty(of(
+                        "timestamp", "1937-01-01T12:00:27.87+00:20",
+                        "uri", "http://example.com"
+                )))
                 .build();
 
         assertPass(classUnderTest.validateRequest(request));

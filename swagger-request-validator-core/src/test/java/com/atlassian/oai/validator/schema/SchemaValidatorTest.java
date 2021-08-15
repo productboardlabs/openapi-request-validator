@@ -337,7 +337,7 @@ public class SchemaValidatorTest {
 
         final ValidationReport report = classUnderTest.validate(value, schema, "prefix");
         assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
-            "validation.prefix.schema.additionalProperties");
+                "validation.prefix.schema.additionalProperties");
     }
 
     @Test
@@ -582,6 +582,15 @@ public class SchemaValidatorTest {
     public void validate_withDateTimeProperty_shouldPass_whenValid() {
         final String value = "1985-04-12T23:20:50.52Z";
         final Schema schema = new DateTimeSchema();
+
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
+    }
+
+    @Test
+    public void validate_withDateTimeProperty_shouldPass_whenExampleIncluded() {
+        final String value = "1985-04-12T23:20:50.52Z";
+        final Schema schema = new DateTimeSchema()
+                .example("1937-01-01T12:00:27.87+00:20");
 
         assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
