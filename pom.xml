@@ -77,7 +77,7 @@
         <jetty.version>9.4.43.v20210629</jetty.version>
         <commons-codec.version>1.15</commons-codec.version>
         <httpclient.version>4.5.13</httpclient.version>
-        <netty.version>4.1.66.Final</netty.version>
+        <netty.version>4.1.68.Final</netty.version>
         <jsonassert.version>1.5.0</jsonassert.version>
 
         <!-- Plugin versions -->
