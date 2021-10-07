@@ -44,6 +44,7 @@ class ParameterValidator {
      *
      * @return A report with any validation errors
      */
+    @SuppressWarnings("checkstyle:UnnecessaryParentheses")
     ValidationReport validate(@Nullable final String value,
                               final Parameter parameter) {
         requireNonNull(parameter);
@@ -174,6 +175,7 @@ class ParameterValidator {
         return ValidationReport.empty();
     }
 
+    @SuppressWarnings("checkstyle:UnnecessaryParentheses")
     private boolean emptyAllowed(final Parameter parameter) {
         // See https://swagger.io/specification/#parameter-object
         return (TRUE.equals(parameter.getAllowEmptyValue())

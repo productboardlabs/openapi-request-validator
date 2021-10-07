@@ -1,9 +1,66 @@
-# 2.18.1
+# v2.19.5
+
+* Fixed the broken release pipeline. No lib changes
+  (see release notes for `2.19.2`, `2.19.3` and `2.19.4`).
+
+# v2.19.4
+
+**Important** Due to a broken release pipeline this version is not available in Maven Central. Please use `2.19.5`.
+
+* Added an example configuration for request-only validation. See the FAQ for details.
+  [[#348]](https://bitbucket.org/atlassian/swagger-request-validator/issues/348)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/251)
+* Fixed behavior of mediatype matching for the `ContentType` header when wildcard ranges exist
+  [[#318]](https://bitbucket.org/atlassian/swagger-request-validator/issues/318)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/252)
+* Fixed a problem with the JDK8 time module not being registered with Jackson during schema parsing
+  [[#331]](https://bitbucket.org/atlassian/swagger-request-validator/issues/331)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/250)
+
+# v2.19.3
+
+**Important** Due to a broken release pipeline this version is not available in Maven Central. Please use `2.19.5`.
+
+* Fixed behavior around `additionalProperties` validations for the case of non-Object schemas. This should address a
+  number of problems around `oneOf`, `anyOf` and `allOf` validation for schemas that contain non-Object types.
+  [[#336]](https://bitbucket.org/atlassian/swagger-request-validator/issues/336)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/238)
+
+# v2.19.2
+
+**Important** Due to a broken release pipeline this version is not available in Maven Central. Please use `2.19.5`.
+
+* Made the library backwards compatible with older versions of Guava (this is a temporary state - do not rely on this
+  being the case going forward)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/246)
+* Bumped parent pom version to fix incorrect licensing
+  [[#338]](https://bitbucket.org/atlassian/swagger-request-validator/issues/338)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/245)
+* Bumped a number of minor/patch versions of dependencies:
+  * `jackson`: 2.12.2 -> 2.12.3
+  * `logback`: 1.2.3 -> 1.2.5
+  * `slf4j`: 1.7.30 -> 1.7.32
+  * `mockito`: 3.9.0 -> 3.11.2
+  * `rest-assured`: 4.3.3 -> 4.4.0
+  * `swagger-parser`: 2.0.25 -> 2.0.27
+  * `jmh`: 1.29 -> 1.32
+  * `jetty`: 9.4.39.v20210325 -> 9.4.43.v20210629
+  * `netty`: 4.1.63.FINAL -> 4.1.66.FINAL
+
+# v2.19.1
+
+Version burned (broken release pipeline)
+
+# v2.19.0
+
+Version burned (broken release pipeline)
+
+# v2.18.1
 
 * Allow adding multiple headers using `OpenApiInteractionValidator.Builder#withAuthHeaderData`.
   [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/241)
 
-# 2.18.0
+# v2.18.0
 
 * Exposed `ParseOptions` from the underlying [swagger-parser](https://github.com/swagger-api/swagger-parser)
   library so they can be set during validator creation. Specifically, the `resolveCombinators` option may be used in
