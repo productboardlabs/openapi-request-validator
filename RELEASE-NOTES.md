@@ -1,4 +1,34 @@
+# v2.19.5
+
+* Fixed the broken release pipeline. No lib changes
+  (see release notes for `2.19.2`, `2.19.3` and `2.19.4`).
+
+# v2.19.4
+
+**Important** Due to a broken release pipeline this version is not available in Maven Central. Please use `2.19.5`.
+
+* Added an example configuration for request-only validation. See the FAQ for details.
+  [[#348]](https://bitbucket.org/atlassian/swagger-request-validator/issues/348)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/251)
+* Fixed behavior of mediatype matching for the `ContentType` header when wildcard ranges exist
+  [[#318]](https://bitbucket.org/atlassian/swagger-request-validator/issues/318)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/252)
+* Fixed a problem with the JDK8 time module not being registered with Jackson during schema parsing
+  [[#331]](https://bitbucket.org/atlassian/swagger-request-validator/issues/331)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/250)
+
+# v2.19.3
+
+**Important** Due to a broken release pipeline this version is not available in Maven Central. Please use `2.19.5`.
+
+* Fixed behavior around `additionalProperties` validations for the case of non-Object schemas. This should address a
+  number of problems around `oneOf`, `anyOf` and `allOf` validation for schemas that contain non-Object types.
+  [[#336]](https://bitbucket.org/atlassian/swagger-request-validator/issues/336)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/238)
+
 # v2.19.2
+
+**Important** Due to a broken release pipeline this version is not available in Maven Central. Please use `2.19.5`.
 
 * Made the library backwards compatible with older versions of Guava (this is a temporary state - do not rely on this
   being the case going forward)
