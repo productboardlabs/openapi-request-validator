@@ -62,7 +62,7 @@
         <json-schema-validator.version>2.2.14</json-schema-validator.version>
         <jsr305.version>3.0.2</jsr305.version>
         <junit.version>4.13.2</junit.version>
-        <logback.version>1.2.5</logback.version>
+        <logback.version>1.2.6</logback.version>
         <mockito.version>3.11.2</mockito.version>
         <pact-jvm.version>3.6.15</pact-jvm.version>
         <rest-assured.version>4.4.0</rest-assured.version>
@@ -71,7 +71,7 @@
         <spring.version>5.3.3</spring.version>
         <swagger-parser.version>2.0.28</swagger-parser.version>
         <wiremock.version>2.27.2</wiremock.version>
-        <jmh-core.version>1.32</jmh-core.version>
+        <jmh-core.version>1.33</jmh-core.version>
 
         <!-- Overrides for transitive dependencies to address vulnerabilities -->
         <jetty.version>9.4.43.v20210629</jetty.version>
@@ -81,7 +81,7 @@
         <jsonassert.version>1.5.0</jsonassert.version>
 
         <!-- Plugin versions -->
-        <checkstyle.version>8.45.1</checkstyle.version>
+        <checkstyle.version>9.0.1</checkstyle.version>
         <license-maven-plugin.version>2.0.0</license-maven-plugin.version>
         <maven-checkstyle-plugin.version>3.1.2</maven-checkstyle-plugin.version>
         <build-helper-maven-plugin.version>3.2.0</build-helper-maven-plugin.version>
