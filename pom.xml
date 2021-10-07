@@ -69,7 +69,7 @@
         <servlet.api.version>4.0.1</servlet.api.version>
         <slf4j.version>1.7.32</slf4j.version>
         <spring.version>5.3.3</spring.version>
-        <swagger-parser.version>2.0.27</swagger-parser.version>
+        <swagger-parser.version>2.0.28</swagger-parser.version>
         <wiremock.version>2.27.2</wiremock.version>
         <jmh-core.version>1.33</jmh-core.version>
 
