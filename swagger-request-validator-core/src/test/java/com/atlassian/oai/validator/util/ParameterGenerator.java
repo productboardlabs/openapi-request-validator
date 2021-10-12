@@ -36,14 +36,36 @@ public class ParameterGenerator {
     }
 
     public static Parameter emptyAllowedQueryParam() {
-        final Parameter parameter = stringParam(true);
+        return emptyAllowedQueryParam(true);
+    }
+
+    public static Parameter emptyAllowedQueryParam(final boolean isRequired) {
+        final Parameter parameter = stringParam(isRequired);
+        parameter.setAllowEmptyValue(true);
+        parameter.setIn("query");
+        return parameter;
+    }
+
+    public static Parameter emptyAllowedNonConformQueryParam(final boolean isRequired) {
+        final Parameter parameter = patternStringParam("^.+$", isRequired);
         parameter.setAllowEmptyValue(true);
         parameter.setIn("query");
         return parameter;
     }
 
     public static Parameter emptyAllowedHeaderParam() {
-        final Parameter parameter = stringParam(true);
+        return emptyAllowedHeaderParam(true);
+    }
+
+    public static Parameter emptyAllowedHeaderParam(final boolean isRequired) {
+        final Parameter parameter = stringParam(isRequired);
+        parameter.setAllowEmptyValue(true);
+        parameter.setIn("head");
+        return parameter;
+    }
+
+    public static Parameter emptyAllowedNonConformHeaderParam(final boolean isRequired) {
+        final Parameter parameter = patternStringParam("^.+$", isRequired);
         parameter.setAllowEmptyValue(true);
         parameter.setIn("head");
         return parameter;
@@ -123,15 +145,23 @@ public class ParameterGenerator {
     }
 
     public static Parameter patternStringParam(final String pattern) {
+        return patternStringParam(pattern, true);
+    }
+
+    public static Parameter patternStringParam(final String pattern, final boolean isRequired) {
         final StringSchema schema = new StringSchema();
         schema.setPattern(pattern);
-        return param(schema, true);
+        return param(schema, isRequired);
     }
 
     public static Parameter enumeratedStringParam(final String... _enum) {
+        return enumeratedStringParam(true, _enum);
+    }
+
+    public static Parameter enumeratedStringParam(final boolean isRequired, final String... _enum) {
         final StringSchema schema = new StringSchema();
         schema.setEnum(asList(_enum));
-        return param(schema, true);
+        return param(schema, isRequired);
     }
 
     public static Parameter stringParamFormat(final String format) {

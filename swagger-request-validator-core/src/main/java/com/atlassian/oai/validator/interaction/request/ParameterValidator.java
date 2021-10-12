@@ -60,8 +60,8 @@ class ParameterValidator {
                 ).withAdditionalContext(context);
             }
         } else {
-            // For optional params, pass if null or empty
-            if (value == null || value.trim().isEmpty()) {
+            // For optional params, pass if null or empty and empty is allowed
+            if (value == null || (value.trim().isEmpty() && emptyAllowed(parameter))) {
                 return ValidationReport.empty();
             }
         }

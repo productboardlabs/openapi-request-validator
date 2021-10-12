@@ -24,8 +24,9 @@ public class NumberParameterValidationTest {
     }
 
     @Test
-    public void validate_withEmptyValue_shouldPass_whenNotRequired() {
-        assertPass(classUnderTest.validate("", floatParam(false)));
+    public void validate_withEmptyValue_shouldFail() {
+        assertFail(classUnderTest.validate("", floatParam(false)),
+                "validation.request.parameter.schema.type");
     }
 
     @Test
