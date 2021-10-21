@@ -23,9 +23,9 @@ public class IntegerParameterValidationTest {
     }
 
     @Test
-    public void validate_withEmptyValue_shouldFail() {
+    public void validate_withEmptyValue_shouldFail_whenNotRequired() {
         assertFail(classUnderTest.validate("", intParam(false)),
-                "validation.request.parameter.schema.type");
+                "validation.request.parameter.missing");
     }
 
     @Test
