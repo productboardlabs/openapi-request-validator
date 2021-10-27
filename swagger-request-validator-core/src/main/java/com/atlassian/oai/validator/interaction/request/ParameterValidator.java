@@ -60,9 +60,19 @@ class ParameterValidator {
                 ).withAdditionalContext(context);
             }
         } else {
-            // For optional params, pass if null or empty
-            if (value == null || value.trim().isEmpty()) {
+            // Optional null params should pass
+            if (value == null) {
                 return ValidationReport.empty();
+            } else if (value.trim().isEmpty()) {
+                // Optional empty params should pass if empty is allowed
+                if (emptyAllowed(parameter)) {
+                    return ValidationReport.empty();
+                // If empty not allowed then String should proceed to schema validation (eg enum, pattern etc) but others fail
+                } else if (!(parameter.getSchema() instanceof StringSchema)) {
+                    return ValidationReport.singleton(
+                            messages.get("validation.request.parameter.missing", parameter.getName())
+                    ).withAdditionalContext(context);
+                }
             }
         }
 
