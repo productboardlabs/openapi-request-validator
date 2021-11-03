@@ -10,6 +10,8 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.lang.Byte.toUnsignedInt;
+
 /**
  * A {@link javax.servlet.http.HttpServletRequestWrapper} those {@link ServletInputStream} is
  * cached and can be reset and read again as often as necessary.
@@ -130,7 +132,7 @@ public class ResettableRequestServletWrapper extends HttpServletRequestWrapper {
 
             // use the data from the cache if applicable
             if (pos < count) {
-                return getChunkForCurrentPos()[(int) (pos++ % CHUNK_SIZE)];
+                return toUnsignedInt(getChunkForCurrentPos()[(int) (pos++ % CHUNK_SIZE)]);
             }
 
             // read the data from the original stream
