@@ -5,12 +5,12 @@
     <parent>
         <groupId>com.atlassian.pom</groupId>
         <artifactId>central-pom</artifactId>
-        <version>5.0.29</version>
+        <version>6.2.2</version>
     </parent>
 
     <groupId>com.atlassian.oai</groupId>
     <artifactId>swagger-request-validator</artifactId>
-    <version>2.10.4-SNAPSHOT</version>
+    <version>2.21.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Swagger Request Validator</name>
@@ -34,7 +34,8 @@
     </issueManagement>
     <scm>
         <connection>scm:git:ssh://git@bitbucket.org/atlassian/swagger-request-validator.git</connection>
-        <developerConnection>scm:git:ssh://git@bitbucket.org/atlassian/swagger-request-validator.git</developerConnection>
+        <developerConnection>scm:git:ssh://git@bitbucket.org/atlassian/swagger-request-validator.git
+        </developerConnection>
         <tag>HEAD</tag>
         <url>https://bitbucket.org/atlassian/swagger-request-validator</url>
     </scm>
@@ -53,26 +54,37 @@
         <source.encoding>UTF-8</source.encoding>
         <jdk.version>1.8</jdk.version>
 
-        <guava.version>28.1-jre</guava.version>
+        <!-- Direct dependency versions -->
+        <guava.version>28.2-jre</guava.version>
         <hamcrest.version>2.2</hamcrest.version>
-        <hamcrest-optional.version>1.1.5</hamcrest-optional.version>
-        <jackson.version>2.10.3</jackson.version>
-        <json-schema-validator.version>2.2.11</json-schema-validator.version>
+        <hamcrest-optional.version>1.2.0</hamcrest-optional.version>
+        <jackson.version>2.12.5</jackson.version>
+        <json-schema-validator.version>2.2.14</json-schema-validator.version>
         <jsr305.version>3.0.2</jsr305.version>
-        <junit.version>4.12</junit.version>
-        <logback.version>1.2.3</logback.version>
-        <mockito.version>3.3.3</mockito.version>
-        <pact-jvm.version>3.6.14</pact-jvm.version>
-        <rest-assured.version>3.3.0</rest-assured.version>
-        <servlet.api.version>3.1.0</servlet.api.version>
-        <slf4j.version>1.7.30</slf4j.version>
-        <spring.version>4.3.26.RELEASE</spring.version>
-        <swagger-parser.version>2.0.20</swagger-parser.version>
-        <wiremock.version>2.25.1</wiremock.version>
+        <junit.version>4.13.2</junit.version>
+        <logback.version>1.2.6</logback.version>
+        <mockito.version>3.12.4</mockito.version>
+        <pact-jvm.version>3.6.15</pact-jvm.version>
+        <rest-assured.version>4.4.0</rest-assured.version>
+        <servlet.api.version>4.0.1</servlet.api.version>
+        <slf4j.version>1.7.32</slf4j.version>
+        <spring.version>5.3.9</spring.version>
+        <swagger-parser.version>2.0.28</swagger-parser.version>
+        <wiremock.version>2.27.2</wiremock.version>
+        <jmh-core.version>1.33</jmh-core.version>
 
-        <checkstyle.version>8.25</checkstyle.version>
-        <license-maven-plugin.version>1.20</license-maven-plugin.version>
-        <maven-checkstyle-plugin.version>3.1.0</maven-checkstyle-plugin.version>
+        <!-- Overrides for transitive dependencies to address vulnerabilities -->
+        <jetty.version>9.4.44.v20210927</jetty.version>
+        <commons-codec.version>1.15</commons-codec.version>
+        <httpclient.version>4.5.13</httpclient.version>
+        <netty.version>4.1.68.Final</netty.version>
+        <jsonassert.version>1.5.0</jsonassert.version>
+
+        <!-- Plugin versions -->
+        <checkstyle.version>9.0.1</checkstyle.version>
+        <license-maven-plugin.version>2.0.0</license-maven-plugin.version>
+        <maven-checkstyle-plugin.version>3.1.2</maven-checkstyle-plugin.version>
+        <build-helper-maven-plugin.version>3.2.0</build-helper-maven-plugin.version>
     </properties>
 
     <modules>
@@ -86,6 +98,38 @@
         <module>swagger-request-validator-spring-web-client</module>
         <module>swagger-request-validator-examples</module>
     </modules>
+
+    <!--
+      Uses the info from the build helper plugin to determine how to set the versions
+
+      mvn build-helper:parse-version release:prepare -B -Ppatch-release
+      OR
+      mvn build-helper:parse-version release:prepare -B -Pminor-release
+    -->
+    <profiles>
+        <profile>
+            <id>patch-release</id>
+            <properties>
+                <releaseVersion>
+                    ${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}
+                </releaseVersion>
+                <developmentVersion>
+                    ${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.nextIncrementalVersion}-SNAPSHOT
+                </developmentVersion>
+            </properties>
+        </profile>
+        <profile>
+            <id>minor-release</id>
+            <properties>
+                <releaseVersion>
+                    ${parsedVersion.majorVersion}.${parsedVersion.nextMinorVersion}.0
+                </releaseVersion>
+                <developmentVersion>
+                    ${parsedVersion.majorVersion}.${parsedVersion.nextMinorVersion}.1-SNAPSHOT
+                </developmentVersion>
+            </properties>
+        </profile>
+    </profiles>
 
     <dependencyManagement>
         <dependencies>
@@ -135,11 +179,28 @@
                 <artifactId>json-schema-validator</artifactId>
                 <version>${json-schema-validator.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>au.com.dius</groupId>
                 <artifactId>pact-jvm-model</artifactId>
                 <version>${pact-jvm.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec-http</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-handler</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
@@ -190,11 +251,53 @@
                 <artifactId>rest-assured</artifactId>
                 <version>${rest-assured.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>com.github.tomakehurst</groupId>
                 <artifactId>wiremock</artifactId>
                 <version>${wiremock.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-client</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlets</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-proxy</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-webapp</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-codec</groupId>
+                <artifactId>commons-codec</artifactId>
+                <version>${commons-codec.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>${httpclient.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
@@ -245,11 +348,42 @@
                 <artifactId>hamcrest-optional</artifactId>
                 <version>${hamcrest-optional.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.openjdk.jmh</groupId>
+                <artifactId>jmh-core</artifactId>
+                <version>${jmh-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openjdk.jmh</groupId>
+                <artifactId>jmh-generator-annprocess</artifactId>
+                <version>${jmh-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.skyscreamer</groupId>
+                <artifactId>jsonassert</artifactId>
+                <version>${jsonassert.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <build>
         <plugins>
+            <!--
+            Used to generate the correct version when preparing a release
+            -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>${build-helper-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>parse-version</id>
+                        <goals>
+                            <goal>parse-version</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <!--
             THIRD-PARTY.txt can be generated with "mvn license:aggregate-add-third-party"
             -->

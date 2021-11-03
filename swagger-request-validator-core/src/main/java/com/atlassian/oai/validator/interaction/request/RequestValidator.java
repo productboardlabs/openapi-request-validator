@@ -11,7 +11,7 @@ import com.atlassian.oai.validator.schema.SchemaValidator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Joiner;
 import com.google.common.net.MediaType;
-import io.swagger.util.Json;
+import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.parameters.Parameter;
@@ -28,17 +28,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiPredicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.REQUEST;
 import static com.atlassian.oai.validator.report.ValidationReport.empty;
+import static com.atlassian.oai.validator.util.HttpAcceptUtils.splitAcceptHeader;
 import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -60,9 +63,9 @@ public class RequestValidator {
     /**
      * Construct a new request validator with the given schema validator.
      *
-     * @param schemaValidator         The schema validator to use when validating request bodies
-     * @param messages                The message resolver to use
-     * @param api                     The OpenAPI spec to validate against
+     * @param schemaValidator The schema validator to use when validating request bodies
+     * @param messages The message resolver to use
+     * @param api The OpenAPI spec to validate against
      * @param customRequestValidators The list of custom validators to run
      */
     public RequestValidator(final SchemaValidator schemaValidator,
@@ -82,8 +85,9 @@ public class RequestValidator {
     /**
      * Validate the request against the given API operation
      *
-     * @param request      The request to validate
+     * @param request The request to validate
      * @param apiOperation The operation to validate the request against
+     *
      * @return A validation report containing validation errors
      */
     @Nonnull
@@ -120,7 +124,9 @@ public class RequestValidator {
                 Headers.CONTENT_TYPE,
                 getConsumes(apiOperation),
                 "validation.request.contentType.invalid",
-                "validation.request.contentType.notAllowed");
+                "validation.request.contentType.notAllowed",
+                // For content types we expect the wildcards to appear in the spec and concrete types to appear on the request
+                (specType, contentType) -> contentType.withoutParameters().is(specType.withoutParameters()));
     }
 
     @Nonnull
@@ -130,7 +136,9 @@ public class RequestValidator {
                 Headers.ACCEPT,
                 getProduces(apiOperation),
                 "validation.request.accept.invalid",
-                "validation.request.accept.notAllowed");
+                "validation.request.accept.notAllowed",
+                // For accept types we expect the wildcards to appear in the accept header and concrete types to appear in the spec
+                (specType, acceptType) -> specType.withoutParameters().is(acceptType.withoutParameters()));
     }
 
     @Nonnull
@@ -138,9 +146,15 @@ public class RequestValidator {
                                                 final String headerName,
                                                 final Collection<String> specMediaTypes,
                                                 final String invalidTypeKey,
-                                                final String notAllowedKey) {
+                                                final String notAllowedKey,
+                                                final BiPredicate<MediaType, MediaType> typeComparer) {
 
-        final Collection<String> requestHeaderValues = request.getHeaderValues(headerName);
+        // Handle the case where multiple media types are supplied in a single header
+        final Collection<String> requestHeaderValues = request.getHeaderValues(headerName)
+                .stream()
+                .flatMap(v -> splitAcceptHeader(v).stream())
+                .collect(toList());
+
         if (requestHeaderValues.isEmpty()) {
             return empty();
         }
@@ -167,12 +181,7 @@ public class RequestValidator {
         return specMediaTypes
                 .stream()
                 .map(MediaType::parse)
-                .filter(specType ->
-                        requestMediaTypes.stream()
-                                .anyMatch(requestType ->
-                                        specType.withoutParameters().is(requestType.withoutParameters())
-                                )
-                )
+                .filter(specType -> requestMediaTypes.stream().anyMatch(requestType -> typeComparer.test(specType, requestType)))
                 .findFirst()
                 .map(m -> empty())
                 .orElse(ValidationReport.singleton(messages.get(notAllowedKey, requestHeaderValues, specMediaTypes)));
@@ -410,6 +419,10 @@ public class RequestValidator {
             return ValidationReport.singleton(
                     messages.get(missingKey, parameter.getName(), apiOperation.getApiPath().original())
             ).withAdditionalContext(context);
+        }
+
+        if (parameterValues.size() > 1) {
+            return parameterValidator.validate(parameterValues, parameter);
         }
 
         return parameterValues

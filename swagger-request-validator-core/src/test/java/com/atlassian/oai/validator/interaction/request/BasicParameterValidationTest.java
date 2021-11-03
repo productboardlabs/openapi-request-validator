@@ -14,6 +14,8 @@ import java.util.function.Consumer;
 import static com.atlassian.oai.validator.util.ParameterGenerator.boolParam;
 import static com.atlassian.oai.validator.util.ParameterGenerator.doubleParam;
 import static com.atlassian.oai.validator.util.ParameterGenerator.emptyAllowedHeaderParam;
+import static com.atlassian.oai.validator.util.ParameterGenerator.emptyAllowedNonConformHeaderParam;
+import static com.atlassian.oai.validator.util.ParameterGenerator.emptyAllowedNonConformQueryParam;
 import static com.atlassian.oai.validator.util.ParameterGenerator.emptyAllowedQueryParam;
 import static com.atlassian.oai.validator.util.ParameterGenerator.floatParam;
 import static com.atlassian.oai.validator.util.ParameterGenerator.intParam;
@@ -46,6 +48,11 @@ public class BasicParameterValidationTest {
                 {"empty required param should pass when empty allowed", "", emptyAllowedQueryParam(), assertPass()},
                 {"empty required param should fail when empty allowed but not query param", "", emptyAllowedHeaderParam(), assertFail("validation.request.parameter.missing")},
                 {"null required param should fail", null, emptyAllowedQueryParam(), assertFail("validation.request.parameter.missing")},
+                {"empty optional param should pass when empty allowed", "", emptyAllowedQueryParam(false), assertPass()},
+                {"empty optional param should pass when not conform schema but empty allowed", "", emptyAllowedNonConformQueryParam(false), assertPass()},
+                {"empty optional param should pass when conform schema and empty allowed but not query param", "", emptyAllowedHeaderParam(false), assertPass()},
+                {"empty optional param should fail when not conform schema and empty allowed but not query param", "", emptyAllowedNonConformHeaderParam(false),
+                        assertFail("validation.request.parameter.schema.pattern")}
         };
     }
 

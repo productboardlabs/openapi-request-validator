@@ -1,11 +1,9 @@
 package com.atlassian.oai.validator.springmvc;
 
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.atlassian.oai.validator.util.ContentTypeUtils;
 import org.springframework.web.cors.CorsUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.util.ContentCachingResponseWrapper;
+import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -13,21 +11,26 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import static com.atlassian.oai.validator.springmvc.ResponseUtils.getCachingResponse;
+import static javax.servlet.DispatcherType.ASYNC;
+import static org.apache.commons.lang3.ClassUtils.getPackageName;
+
 /**
- * A filter which wraps the {@link HttpServletRequest} into a {@link ResettableRequestServletWrapper}
- * which has the ability to reset its {@link javax.servlet.ServletInputStream}.
+ * A filter for wrapping the {@link HttpServletRequest} and {@link HttpServletResponse}.
  * <p>
  * Wrapping is necessary for the validation.<br>
  * The Swagger Request Validator needs the pure request body for its validation. Additionally the Spring
  * {@link org.springframework.web.bind.annotation.RestController} / {@link org.springframework.stereotype.Controller}
- * needs the pure request body to unmarshal the JSON.
+ * needs the pure request body to unmarshal the JSON / form data.
  * <p>
  * But a {@link javax.servlet.ServletInputStream} can only be read once and needs to be rewind after
  * successful validation against the OpenAPI / Swagger definition. So the controller can then access it again.
+ * <p>
+ * The same applies to response validation and writing to the {@link javax.servlet.ServletOutputStream}.
  */
 public class OpenApiValidationFilter extends OncePerRequestFilter {
-
-    private static final Logger LOG = LoggerFactory.getLogger(OpenApiValidationFilter.class);
+    static final String ATTRIBUTE_REQUEST_VALIDATION = getPackageName(OpenApiValidationFilter.class) + ".requestValidation";
+    static final String ATTRIBUTE_RESPONSE_VALIDATION = getPackageName(OpenApiValidationFilter.class) + ".responseValidation";
 
     private final boolean validateRequests;
     private final boolean validateResponses;
@@ -58,37 +61,58 @@ public class OpenApiValidationFilter extends OncePerRequestFilter {
         filterChain.doFilter(requestToUse, responseToUse);
 
         // in case the response was cached it has to be written to the original response
-        if (responseToUse instanceof ContentCachingResponseWrapper) {
-            ((ContentCachingResponseWrapper) responseToUse).copyBodyToResponse();
+        if (!isAsyncStarted(requestToUse)) {
+            final OpenApiValidationContentCachingResponseWrapper cachingResponse = getCachingResponse(responseToUse);
+            if (cachingResponse != null) {
+                cachingResponse.copyBodyToResponse();
+            }
         }
     }
 
+    @Override
+    protected boolean shouldNotFilterAsyncDispatch() {
+        return false;
+    }
+
     private HttpServletRequest wrapValidatableServletRequest(final HttpServletRequest servletRequest) {
-        // wrap only validatable requests
+        // set validation information used by the interceptor
         final boolean doValidationStep = validateRequests &&
-                getContentLength(servletRequest) <= Integer.MAX_VALUE &&
-                !CorsUtils.isPreFlightRequest(servletRequest);
-        return doValidationStep ? new ResettableRequestServletWrapper(servletRequest) : servletRequest;
+                !CorsUtils.isPreFlightRequest(servletRequest) &&
+                servletRequest.getDispatcherType() != ASYNC;
+
+        servletRequest.setAttribute(ATTRIBUTE_REQUEST_VALIDATION, doValidationStep);
+
+        // do not wrap requests that aren't validated
+        if (!doValidationStep) {
+            return servletRequest;
+        }
+
+        // Wrap form requests into a ContentCachingRequestWrapper. The servlet container parses the body into
+        // the parameter map. Springs ContentCachingRequestWrapper is able to recreate the already read body.
+        // This body will then be used by the swagger-request-validator for validation.
+        if (ContentTypeUtils.isFormDataContentType(servletRequest.getContentType())) {
+            // do not re-wrap already wrapped requests
+            return (servletRequest instanceof ContentCachingRequestWrapper) ? servletRequest
+                    : new ContentCachingRequestWrapper(servletRequest);
+        }
+        return new ResettableRequestServletWrapper(servletRequest);
     }
 
     private HttpServletResponse wrapValidatableServletResponse(final HttpServletRequest servletRequest,
                                                                final HttpServletResponse servletResponse) {
-        // wrap only validatable responses
+        // set validation information used by the interceptor
         final boolean doValidationStep = validateResponses &&
                 !CorsUtils.isPreFlightRequest(servletRequest);
-        return doValidationStep ? new ContentCachingResponseWrapper(servletResponse) : servletResponse;
+        servletRequest.setAttribute(ATTRIBUTE_RESPONSE_VALIDATION, doValidationStep);
+
+        // do not wrap responses that aren't validated
+        if (!doValidationStep) {
+            return servletResponse;
+        }
+
+        // do not re-wrap already wrapped responses
+        return getCachingResponse(servletResponse) != null ? servletResponse
+                : new OpenApiValidationContentCachingResponseWrapper(servletResponse);
     }
 
-    private static long getContentLength(final HttpServletRequest servletRequest) {
-        final String contentLength = servletRequest.getHeader("content-length");
-        if (StringUtils.isNotBlank(contentLength)) {
-            try {
-                return Long.parseLong(contentLength);
-            } catch (final NumberFormatException e) {
-                // either no valid content-length was set or the content-length exceeded Long.MAX_VALUE
-                LOG.warn("Invalid content-length header value on request: '" + contentLength + "'");
-            }
-        }
-        return -1L;
-    }
 }

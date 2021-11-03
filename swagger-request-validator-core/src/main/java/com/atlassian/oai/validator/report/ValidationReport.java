@@ -78,7 +78,7 @@ public interface ValidationReport {
         /**
          * Returns a new instance, the same as this message, but with nested messages attached.
          */
-        default Message withNestedMessages(Collection<Message> messages) {
+        default Message withNestedMessages(final Collection<Message> messages) {
             return this;
         }
 
@@ -137,6 +137,27 @@ public interface ValidationReport {
             RESPONSE
         }
 
+        /**
+         * Pointers to the instance being validated and the schema being used for validation
+         */
+        class Pointers {
+            private final String instance;
+            private final String schema;
+
+            public Pointers(final String instance, final String schema) {
+                this.instance = instance;
+                this.schema = schema;
+            }
+
+            public String getInstance() {
+                return instance;
+            }
+
+            public String getSchema() {
+                return schema;
+            }
+        }
+
         static MessageContext empty() {
             return create().build();
         }
@@ -165,9 +186,21 @@ public interface ValidationReport {
 
         Optional<ApiResponse> getApiResponseDefinition();
 
+        /**
+         * @return Which part of the request/response interaction triggered the failure
+         */
         Optional<Location> getLocation();
 
+        /**
+         * @return The whitelist rule applied to the message, if applicable.
+         */
         Optional<NamedWhitelistRule> getAppliedWhitelistRule();
+
+        /**
+         * @return Pointers to the instance and schema that caused the validation failure,
+         * if the failure is from schema validation.
+         */
+        Optional<Pointers> getPointers();
 
         /**
          * @return {@code true} if at least one field on this context object has been set; {@code false} otherwise.
@@ -198,6 +231,8 @@ public interface ValidationReport {
 
             NamedWhitelistRule whitelistRule;
 
+            Pointers pointers;
+
             private Builder() {
             }
 
@@ -212,6 +247,7 @@ public interface ValidationReport {
                 apiResponse = init.getApiResponseDefinition().orElse(null);
                 location = init.getLocation().orElse(null);
                 whitelistRule = init.getAppliedWhitelistRule().orElse(null);
+                pointers = init.getPointers().orElse(null);
             }
 
             public Builder withRequestPath(final String requestPath) {
@@ -264,6 +300,11 @@ public interface ValidationReport {
                 return this;
             }
 
+            public Builder withPointers(final String instance, final String schema) {
+                this.pointers = new Pointers(instance, schema);
+                return this;
+            }
+
             public Builder withAdditionalDataFrom(final MessageContext other) {
                 if (requestPath == null) {
                     requestPath = other.getRequestPath().orElse(null);
@@ -295,6 +336,9 @@ public interface ValidationReport {
                 if (whitelistRule == null) {
                     whitelistRule = other.getAppliedWhitelistRule().orElse(null);
                 }
+                if (pointers == null) {
+                    pointers = other.getPointers().orElse(null);
+                }
                 return this;
             }
 
@@ -318,6 +362,7 @@ public interface ValidationReport {
      * Return an unmodifiable report that contains a single message.
      *
      * @param message The message to add to the report
+     *
      * @return An unmodifiable validation report with a single message
      */
     static ValidationReport singleton(@Nullable final Message message) {
@@ -331,6 +376,7 @@ public interface ValidationReport {
      * Return an unmodifiable report containing all the provided messages
      *
      * @param messages The messages to add to the report
+     *
      * @return an unmodifiable report containing all the provided messages
      */
     static ValidationReport from(final Collection<Message> messages) {
@@ -341,6 +387,7 @@ public interface ValidationReport {
      * Return an unmodifiable report containing all the provided messages
      *
      * @param messages The messages to add to the report
+     *
      * @return an unmodifiable report containing all the provided messages
      */
     static ValidationReport from(final Message... messages) {
@@ -384,6 +431,7 @@ public interface ValidationReport {
      * containing the messages from both reports.
      *
      * @param other The validation report to merge with this one
+     *
      * @return A new, unmodifiable validation report containing all the messages from this report
      * and the other report
      */
@@ -397,6 +445,7 @@ public interface ValidationReport {
      * returning a new unmodifiable report.
      *
      * @param context The additional context to apply to each message in the report
+     *
      * @return A new, unmodifiable validation report containing all of the messages from this report,
      * enhanced with the additional supplied context
      */

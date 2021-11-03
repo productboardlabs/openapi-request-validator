@@ -1,26 +1,25 @@
 package com.atlassian.oai.validator.util;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.DoubleNode;
-import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.LongNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import org.junit.Test;
 
-import java.util.Iterator;
 import java.util.Optional;
-import java.util.Spliterators;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import static com.atlassian.oai.validator.util.HttpParsingUtils.extractMultipartBoundary;
 import static com.atlassian.oai.validator.util.HttpParsingUtils.isMultipartContentTypeAcceptedByConsumer;
 import static com.atlassian.oai.validator.util.HttpParsingUtils.parseUrlEncodedFormDataBodyAsJson;
+import static com.atlassian.oai.validator.util.HttpParsingUtils.parseUrlEncodedFormDataBodyAsJsonNode;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadRawRequest;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
@@ -78,10 +77,9 @@ public class HttpParsingUtilsTest {
     }
 
     @Test
-    public void parseToJson_successfullyParsesData() throws Exception {
-        final String json = parseUrlEncodedFormDataBodyAsJson(loadRawRequest("formdata-request"));
+    public void parseToJsonNode_successfullyParsesData() {
+        final JsonNode tree = parseUrlEncodedFormDataBodyAsJsonNode(loadRawRequest("formdata-request"));
 
-        final JsonNode tree = new ObjectMapper().readTree(json);
         assertThat(tree.has("string"), is(true));
         assertThat(tree.get("string"), instanceOf(TextNode.class));
 
@@ -97,13 +95,23 @@ public class HttpParsingUtilsTest {
         assertThat(tree.has("numArray"), is(true));
         final JsonNode numArray = tree.get("numArray");
         assertThat(numArray, instanceOf(ArrayNode.class));
-        assertThat(stream(numArray.elements()).allMatch(n -> n instanceof LongNode || n instanceof IntNode), is(true));
+        assertThat((Iterable<JsonNode>) () -> numArray.elements(), everyItem(instanceOf(LongNode.class)));
 
         assertThat(tree.has("solo"), is(true));
         assertThat(tree.get("solo"), instanceOf(NullNode.class));
     }
 
-    private static <T> Stream<T> stream(final Iterator<T> iterator) {
-        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, 0), false);
+    @Test
+    public void parseToJson_successfullyParsesData() throws Exception {
+        final String json = parseUrlEncodedFormDataBodyAsJson(loadRawRequest("formdata-request"));
+
+        // on first deserialization the num array will be of type LongNode, on second it will be IntNode - force Long to get equality between
+        // the result and the expected value
+        final JsonNode tree = new ObjectMapper()
+                .configure(DeserializationFeature.USE_LONG_FOR_INTS, true)
+                .readTree(json);
+        final JsonNode expected = parseUrlEncodedFormDataBodyAsJsonNode(loadRawRequest("formdata-request"));
+
+        assertThat(tree, equalTo(expected));
     }
 }

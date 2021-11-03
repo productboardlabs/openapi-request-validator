@@ -35,6 +35,33 @@
         }
       }
     },
+    "/spring/post/blob": {
+      "post": {
+        "summary": "Spring POST Blob",
+        "operationId": "springPostBlob#POST",
+        "produces": [
+          "application/json"
+        ],
+        "consumes": [
+          "application/octet-stream"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Spring POST response",
+            "schema": {
+              "$ref": "#/definitions/PostBlobResponse"
+            }
+          }
+        }
+      }
+    },
     "/spring/{pathVariable}": {
       "get": {
         "summary": "Spring GET",
@@ -177,6 +204,17 @@
               "type": "boolean"
             }
           }
+        }
+      }
+    },
+    "PostBlobResponse": {
+      "type": "object",
+      "required": [
+        "size"
+      ],
+      "properties": {
+        "size": {
+          "type": "integer"
         }
       }
     },

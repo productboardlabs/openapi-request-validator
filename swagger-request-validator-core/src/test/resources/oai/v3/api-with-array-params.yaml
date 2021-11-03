@@ -1,0 +1,194 @@
+openapi: 3.0.0
+info:
+  title: Array params
+  version: 1.0.0
+servers:
+  - url: /
+paths:
+  /style/simple/{param}:
+    get:
+      summary: Simple style path params
+      parameters:
+        - name: param
+          in: path
+          description: simple-style path param
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: array
+            items:
+              type: number
+              format: int32
+            maxItems: 3
+      responses:
+        '201':
+          description: OK
+  /style/simple:
+    get:
+      summary: Simple style non-path params
+      parameters:
+        - name: param
+          in: header
+          description: simple-style header param
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: array
+            items:
+              type: number
+              format: int32
+            maxItems: 3
+      responses:
+        '201':
+          description: OK
+  /style/label/{param}:
+    get:
+      summary: Label style params
+      parameters:
+        - name: param
+          in: path
+          description: label-style path param
+          required: true
+          style: label
+          explode: false
+          schema:
+            type: array
+            items:
+              type: number
+              format: int32
+            maxItems: 3
+      responses:
+        '201':
+          description: OK
+  /style/matrix/exploded/{param}:
+    get:
+      summary: Exploded matrix-style params
+      parameters:
+        - name: param
+          in: path
+          description: exploded matrix-style path param
+          required: true
+          style: matrix
+          explode: true
+          schema:
+            type: array
+            items:
+              type: number
+              format: int32
+            maxItems: 3
+      responses:
+        '201':
+          description: OK
+  /style/matrix/nonexploded/{param}:
+    get:
+      summary: Non-exploded matrix-style params
+      parameters:
+        - name: param
+          in: path
+          description: non-exploded matrix-style path param
+          required: true
+          style: matrix
+          explode: false
+          schema:
+            type: array
+            items:
+              type: number
+              format: int32
+            maxItems: 3
+      responses:
+        '201':
+          description: OK
+  /style/form:
+    get:
+      summary: Form style params
+      parameters:
+        - name: exploded
+          in: query
+          description: Exploded form-style query param
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: number
+              format: int32
+            maxItems: 3
+        - name: nonexploded
+          in: query
+          description: Non-exploded form-style query param
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: number
+              format: int32
+            maxItems: 3
+        - name: explodednotdefined
+          in: query
+          description: Form-style query param without "explode" set
+          required: false
+          style: form
+          schema:
+            type: array
+            items:
+              type: number
+              format: int32
+            maxItems: 3
+        - name: exploded
+          in: header
+          description: Exploded form-style header param
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: number
+              format: int32
+            maxItems: 3
+      responses:
+        '201':
+          description: OK
+  /style/spaceDelimited:
+    get:
+      summary: Space delimited style params
+      parameters:
+        - name: query
+          in: query
+          description: spaceDelimited-style query param
+          required: false
+          style: spaceDelimited
+          explode: false
+          schema:
+            type: array
+            items:
+              type: number
+              format: int32
+            maxItems: 3
+      responses:
+        '201':
+          description: OK
+  /style/pipeDelimited:
+    get:
+      summary: Pipe delimited style params
+      parameters:
+        - name: query
+          in: query
+          description: pipeDelimited-style query param
+          required: false
+          style: pipeDelimited
+          explode: false
+          schema:
+            type: array
+            items:
+              type: number
+              format: int32
+            maxItems: 3
+      responses:
+        '201':
+          description: OK

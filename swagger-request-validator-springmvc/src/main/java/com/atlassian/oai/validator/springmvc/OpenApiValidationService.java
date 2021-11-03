@@ -10,13 +10,12 @@ import com.google.common.collect.Lists;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.support.EncodedResource;
+import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 import org.springframework.web.util.UrlPathHelper;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.io.Reader;
-import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
@@ -37,7 +36,7 @@ class OpenApiValidationService {
 
     OpenApiValidationService(final EncodedResource specAsResource, final UrlPathHelper urlPathHelper) throws IOException {
         this(OpenApiInteractionValidator
-                .createForInlineApiSpecification(readReader(specAsResource.getReader(), -1))
+                .createForInlineApiSpecification(IOUtils.toString(specAsResource.getReader()))
                 .withLevelResolver(SpringMVCLevelResolverFactory.create())
                 .build(), urlPathHelper);
     }
@@ -77,15 +76,19 @@ class OpenApiValidationService {
         final Request.Method method = Request.Method.valueOf(servletRequest.getMethod());
         final String path = resolveServletPath(servletRequest);
         final SimpleRequest.Builder builder = new SimpleRequest.Builder(method, path);
-        final int contentLength = servletRequest.getContentLength();
-        final String body = readReader(servletRequest.getReader(), contentLength);
-        // The content length of a request does not need to be set. It might by "-1" and
-        // there is still a body. Only in conjunction with an empty / unset body it was
-        // really empty.
-        if (contentLength >= 0 || StringUtils.isNotEmpty(body)) {
-            builder.withBody(body);
+        final Set<String> queryParameterNames;
+        if (servletRequest instanceof ContentCachingRequestWrapper) {
+            // In case of form data - wrapped in a ContentCachingRequestWrapper - the parameters have to be
+            // read before (!!) the body. The RequestFacade parses the parameters from the bodies input stream.
+            final ContentCachingRequestWrapper wrappedRequest = (ContentCachingRequestWrapper) servletRequest;
+            queryParameterNames = getQueryParameterNames(servletRequest);
+            builder.withBody(wrappedRequest.getContentAsByteArray());
+        } else {
+            // In all other cases the parameters have to be read after (!!) the body.
+            builder.withBody(servletRequest.getInputStream());
+            queryParameterNames = getQueryParameterNames(servletRequest);
         }
-        for (final String queryParameterName : getQueryParameterNames(servletRequest)) {
+        for (final String queryParameterName : queryParameterNames) {
             builder.withQueryParam(queryParameterName, servletRequest.getParameterValues(queryParameterName));
         }
         for (final String headerName : Collections.list(servletRequest.getHeaderNames())) {
@@ -101,11 +104,11 @@ class OpenApiValidationService {
      *
      * @throws IOException if the cached response body can't be read
      */
-    Response buildResponse(final ContentCachingResponseWrapper servletResponse) throws IOException {
+    Response buildResponse(final ContentCachingResponseWrapper servletResponse) {
         final int statusCode = servletResponse.getStatusCode();
         final SimpleResponse.Builder builder =
                 new SimpleResponse.Builder(statusCode)
-                        .withBody(new String(servletResponse.getContentAsByteArray(), servletResponse.getCharacterEncoding()))
+                        .withBody(servletResponse.getContentAsByteArray())
                         .withContentType(servletResponse.getContentType());
         for (final String headerName : servletResponse.getHeaderNames()) {
             builder.withHeader(headerName, Lists.newArrayList(servletResponse.getHeaders(headerName)));
@@ -134,14 +137,6 @@ class OpenApiValidationService {
         final Request.Method method = Request.Method.valueOf(servletRequest.getMethod());
         final String path = resolveServletPath(servletRequest);
         return validator.validateResponse(path, method, response);
-    }
-
-    private static String readReader(final Reader reader, final int length) throws IOException {
-        try (Reader reassignedReader = reader) {
-            final StringWriter writer = length > 0 ? new StringWriter(length) : new StringWriter();
-            IOUtils.copy(reassignedReader, writer);
-            return writer.toString();
-        }
     }
 
     private static Set<String> getQueryParameterNames(final HttpServletRequest servletRequest) {

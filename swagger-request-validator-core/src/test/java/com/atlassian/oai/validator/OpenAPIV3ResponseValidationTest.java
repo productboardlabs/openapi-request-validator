@@ -2,10 +2,12 @@ package com.atlassian.oai.validator;
 
 import com.atlassian.oai.validator.interaction.response.CustomResponseValidator;
 import com.atlassian.oai.validator.model.ApiOperation;
+import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.LevelResolverFactory;
 import com.atlassian.oai.validator.report.ValidationReport;
+import io.swagger.v3.parser.core.models.ParseOptions;
 import org.junit.Test;
 
 import javax.annotation.Nonnull;
@@ -116,7 +118,7 @@ public class OpenAPIV3ResponseValidationTest {
                 .withBody("1")
                 .build();
 
-        assertPass(classUnderTest.validateResponse("/charset/withoutwhitespace", GET, response));
+        assertPass(classUnderTest.validateResponse("/response/charset/withoutwhitespace", GET, response));
     }
 
     @Test
@@ -130,7 +132,7 @@ public class OpenAPIV3ResponseValidationTest {
                 .withBody("123")
                 .build();
 
-        assertPass(classUnderTest.validateResponse("/wildcard/subtype", GET, response));
+        assertPass(classUnderTest.validateResponse("/response/wildcard/subtype", GET, response));
     }
 
     @Test
@@ -144,7 +146,7 @@ public class OpenAPIV3ResponseValidationTest {
                 .withBody("123")
                 .build();
 
-        assertFail(classUnderTest.validateResponse("/wildcard/subtype", GET, response),
+        assertFail(classUnderTest.validateResponse("/response/wildcard/subtype", GET, response),
                 "validation.response.contentType.notAllowed");
     }
 
@@ -275,6 +277,241 @@ public class OpenAPIV3ResponseValidationTest {
                 .build();
 
         assertFail(classUnderTest.validateResponse("/extensions", GET, response));
+    }
+
+    @Test
+    public void validate_anyOfWithPrimitiveMatch_mustPass() {
+
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-anyof.yaml")
+                .withResolveCombinators(true)
+                .build();
+
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("application/json")
+                .withBody("{ \"anyOfObjectProperty\": { \"primitive\": 1 } }")
+                .build();
+
+        final ValidationReport report = classUnderTest.validateResponse("/anyOfRequest", GET, response);
+        assertPass(report);
+    }
+
+    @Test
+    public void validate_anyOfWithPrimitiveUndefined_mustFail() {
+
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-anyof.yaml")
+                .withResolveCombinators(true)
+                .build();
+
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("application/json")
+                .withBody("{ \"anyOfObjectProperty\": { \"primative\": false } }")
+                .build();
+
+        assertFail(classUnderTest.validateResponse("/anyOfRequest", GET, response));
+    }
+
+    @Test
+    public void validate_anyOfWithObjectMatch_mustPass() {
+
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-anyof.yaml")
+                .withResolveCombinators(true)
+                .build();
+
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("application/json")
+                .withBody("{ \"anyOfObjectProperty\": { \"objectModel\": { \"name\": \"Jack Sparrow\", \"email\" : \"capjacksparrow@pearl.com\" } } }")
+                .build();
+
+        assertPass(classUnderTest.validateResponse("/anyOfRequest", GET, response));
+    }
+
+    @Test
+    public void validate_anyOfWithObjectUndefined_mustFail() {
+
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-anyof.yaml")
+                .withResolveCombinators(true)
+                .build();
+
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("application/json")
+                .withBody("{ \"anyOfObjectProperty\": { \"objectModel\": { \"person\": \"Jack Sparrow\", \"contact\" : \"capjacksparrow@pearl.com\" } } }")
+                .build();
+
+        assertFail(classUnderTest.validateResponse("/anyOfRequest", GET, response));
+    }
+
+    @Test
+    public void validate_anyOfWithArrayMatch_mustPass() {
+
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-anyof.yaml")
+                .withResolveCombinators(true)
+                .build();
+
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("application/json")
+                .withBody("{ \"anyOfArrayProperty\": [ { \"name\": \"Jack Sparrow\", \"email\" : \"capjacksparrow@pearl.com\" },"
+                        + " \"BALL\", 1, { \"foo\" : \"fooval\", \"bar\" : 2 } ] }")
+                .build();
+
+        assertPass(classUnderTest.validateResponse("/anyOfRequest", GET, response));
+    }
+
+    @Test
+    public void validate_anyOfWithArrayUndefined_mustFail() {
+
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-anyof.yaml")
+                .withResolveCombinators(true)
+                .build();
+
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("application/json")
+                .withBody("{ \"anyOfArrayProperty\": [ { \"name\": \"Jack Sparrow\", \"email\" : \"capjacksparrow@pearl.com\" },"
+                        + " \"BALL\", 1, { \"foo\" : \"fooval\", \"bar\" : 2 }, true ] }")
+                .build();
+
+        assertFail(classUnderTest.validateResponse("/anyOfRequest", GET, response));
+    }
+
+    @Test
+    public void validate_oneOfWithPrimitiveMatch_mustPass() {
+
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-oneof.yaml")
+                .withResolveCombinators(true)
+                .build();
+
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("application/json")
+                .withBody("{ \"oneOfObjectProperty\": { \"primitive\": 1 } }")
+                .build();
+
+        final ValidationReport report = classUnderTest.validateResponse("/oneOfRequest", GET, response);
+        assertPass(report);
+    }
+
+    @Test
+    public void validate_oneOfWithPrimitiveUndefined_mustFail() {
+
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-oneof.yaml")
+                .withResolveCombinators(true)
+                .build();
+
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("application/json")
+                .withBody("{ \"oneOfObjectProperty\": { \"primative\": false } }")
+                .build();
+
+        assertFail(classUnderTest.validateResponse("/oneOfRequest", GET, response));
+    }
+
+    @Test
+    public void validate_oneOfWithObjectMatch_mustPass() {
+
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-oneof.yaml")
+                .withResolveCombinators(true)
+                .build();
+
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("application/json")
+                .withBody("{ \"oneOfObjectProperty\": { \"objectModel\": { \"name\": \"Jack Sparrow\", \"email\" : \"capjacksparrow@pearl.com\" } } }")
+                .build();
+
+        assertPass(classUnderTest.validateResponse("/oneOfRequest", GET, response));
+    }
+
+    @Test
+    public void validate_oneOfWithObjectUndefined_mustFail() {
+
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-oneof.yaml")
+                .withResolveCombinators(true)
+                .build();
+
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("application/json")
+                .withBody("{ \"oneOfObjectProperty\": { \"objectModel\": { \"person\": \"Jack Sparrow\", \"contact\" : \"capjacksparrow@pearl.com\" } } }")
+                .build();
+
+        assertFail(classUnderTest.validateResponse("/oneOfRequest", GET, response));
+    }
+
+    @Test
+    public void validate_oneOfWithArrayMatch_mustPass() {
+
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-oneof.yaml")
+                .withResolveCombinators(true)
+                .build();
+
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("application/json")
+                .withBody("{ \"oneOfArrayProperty\": [ { \"name\": \"Jack Sparrow\", \"email\" : \"capjacksparrow@pearl.com\" },"
+                        + " \"BALL\", 1, { \"foo\" : \"fooval\", \"bar\" : 2 } ] }")
+                .build();
+
+        assertPass(classUnderTest.validateResponse("/oneOfRequest", GET, response));
+    }
+
+    @Test
+    public void validate_oneOfWithArrayUndefined_mustFail() {
+
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-oneof.yaml")
+                .withResolveCombinators(true)
+                .build();
+
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("application/json")
+                .withBody("{ \"oneOfArrayProperty\": [ { \"name\": \"Jack Sparrow\", \"email\" : \"capjacksparrow@pearl.com\" },"
+                        + " \"BALL\", 1, { \"foo\" : \"fooval\", \"bar\" : 2 }, true ] }")
+                .build();
+
+        assertFail(classUnderTest.validateResponse("/oneOfRequest", GET, response));
+    }
+
+    @Test
+    public void validate_deeplyNestedOneOf_mustPass() {
+
+        final ParseOptions parseOptions = new ParseOptions();
+        parseOptions.setResolveCombinators(true);
+        parseOptions.setResolve(true);
+        parseOptions.setResolveFully(true);
+
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-oneof-complex.yaml")
+                .withParseOptions(parseOptions)
+                .build();
+
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .withContentType("application/json")
+                .withBody("{ \"mods\" : { \"details\" : { \"container\" : [ { \"lineItems\" : [ { \"summary\" : [ { \"special\" : { \"form\" : { \"entryForm\" :"
+                        + " { \"group\" : [ { \"key\" : \"number\", \"value\" : 1, \"valueType\" : \"NUMBER_UNSIGNED\" } ] }, \"selectionForm\" : { \"group\" : "
+                        + "[ { \"key\" : \"sel\", \"value\" : \"1\", \"valueType\" : \"STRING\" } ] } } } } ], \"id\" : \"10\" } ], \"disabled\" : false } ] } }}")
+                .build();
+
+        final ValidationReport report = classUnderTest.validateResponse("/complex", Request.Method.POST, response);
+        assertPass(report);
     }
 
     private class TestValidator implements CustomResponseValidator {

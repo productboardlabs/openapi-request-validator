@@ -17,6 +17,8 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadJsonRequest;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadRequest;
+import static com.google.common.collect.ImmutableMap.of;
+import static io.swagger.v3.core.util.Json.pretty;
 
 public class OpenAPIV3RequestValidationTest {
 
@@ -157,38 +159,6 @@ public class OpenAPIV3RequestValidationTest {
     }
 
     @Test
-    public void validate_withArrayQueryParam_shouldPass_whenValid() {
-        final Request request = SimpleRequest.Builder
-                .get("/users")
-                .withAuthorization("Basic EncryptedUsernameAndPassword")
-                .withQueryParam("filter", "1", "2", "3")
-                .build();
-
-        assertPass(classUnderTest.validateRequest(request));
-    }
-
-    @Test
-    public void validate_withArrayQueryParam_shouldFail_whenInvalidAccordingToDefinedStyle() {
-        final Request request = SimpleRequest.Builder
-                .get("/users")
-                .withAuthorization("Basic EncryptedUsernameAndPassword")
-                .withQueryParam("filter", "1,2,3")
-                .build();
-
-        assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.schema.type");
-    }
-
-    @Test
-    public void validate_withArrayQueryParam_shouldFail_whenInvalidFormat() {
-        final Request request = SimpleRequest.Builder
-                .get("/users")
-                .withQueryParam("filter", "1", "bob", "3")
-                .build();
-
-        assertFail(classUnderTest.validateRequest(request), "validation.request.parameter.schema.type");
-    }
-
-    @Test
     public void validate_withExtraQueryParams_shouldPass() {
         final Request request = SimpleRequest.Builder
                 .get("/users")
@@ -264,8 +234,7 @@ public class OpenAPIV3RequestValidationTest {
                 .withBody("{ \"stringField\": \"foo\" }")
                 .build();
 
-        assertFail(classUnderTest.validateRequest(request),
-                "validation.request.body.schema.additionalProperties");
+        assertPass(classUnderTest.validateRequest(request));
     }
 
     @Test
@@ -340,10 +309,11 @@ public class OpenAPIV3RequestValidationTest {
     }
 
     @Test
-    public void validate_withAllOfComposition_fails_whenAdditionalPropertiesNotIgnored() {
+    public void validate_withAllOfComposition_passes_whenAdditionalPropertiesNotIgnored() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
                         .createForSpecificationUrl("/oai/v3/api-complex-composition.yaml")
+                        .withResolveCombinators(true)
                         .build();
 
         final Request request = SimpleRequest.Builder
@@ -352,8 +322,24 @@ public class OpenAPIV3RequestValidationTest {
                 .withBody("{ \"stringField\": \"foo\", \"intField\": 1, \"boolField\": false }")
                 .build();
 
-        assertFail(classUnderTest.validateRequest(request),
-                "validation.request.body.schema.additionalProperties");
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withAllOfComposition_passes_whenResolveCombinatorsOptionUsed() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createForSpecificationUrl("/oai/v3/api-complex-composition.yaml")
+                        .withResolveCombinators(true)
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/allOf")
+                .withContentType("application/json")
+                .withBody("{ \"stringField\": \"foo\", \"intField\": 1, \"boolField\": false }")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
     }
 
     @Test
@@ -427,7 +413,7 @@ public class OpenAPIV3RequestValidationTest {
     }
 
     @Test
-    public void validate_withAnyOfComposition_fails_whenAdditionalPropertiesNotIgnored() {
+    public void validate_withAnyOfComposition_passes_whenAdditionalPropertiesNotIgnored() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
                         .createForSpecificationUrl("/oai/v3/api-complex-composition.yaml")
@@ -436,11 +422,10 @@ public class OpenAPIV3RequestValidationTest {
         final Request request = SimpleRequest.Builder
                 .post("/anyOf")
                 .withContentType("application/json")
-                .withBody("{ \"stringField\": \"foo\", \"intField\": 1 }")
+                .withBody("{ \"stringField\": \"foo\" }")
                 .build();
 
-        assertFail(classUnderTest.validateRequest(request),
-                "validation.request.body.schema.additionalProperties");
+        assertPass(classUnderTest.validateRequest(request));
     }
 
     @Test
@@ -515,24 +500,6 @@ public class OpenAPIV3RequestValidationTest {
     }
 
     @Test
-    public void validate_withOneOfDiscriminators_shouldFail_whenMatchesNone() {
-        final OpenApiInteractionValidator classUnderTest =
-                OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-discriminator.yaml")
-                        .withLevelResolver(withAdditionalPropertiesIgnored())
-                        .build();
-
-        final Request request = SimpleRequest.Builder
-                .post("/oneOf")
-                .withContentType("application/json")
-                .withBody("{ \"type\": \"random-bogus\", \"whateverField\": 1 }")
-                .build();
-
-        assertFail(classUnderTest.validateRequest(request),
-                "validation.request.body.schema.discriminator");
-    }
-
-    @Test
     public void validate_withOneOfDiscriminatorsWithMapping_shouldPass_whenValid() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
@@ -547,24 +514,6 @@ public class OpenAPIV3RequestValidationTest {
                 .build();
 
         assertPass(classUnderTest.validateRequest(request));
-    }
-
-    @Test
-    public void validate_withOneOfDiscriminatorsWithMapping_shouldFail_whenMatchesNone() {
-        final OpenApiInteractionValidator classUnderTest =
-                OpenApiInteractionValidator
-                        .createFor("/oai/v3/api-discriminator.yaml")
-                        .withLevelResolver(withAdditionalPropertiesIgnored())
-                        .build();
-
-        final Request request = SimpleRequest.Builder
-                .post("/oneOfWithMapping")
-                .withContentType("application/json")
-                .withBody("{ \"type\": \"random-bogus\", \"whateverField\": 1 }")
-                .build();
-
-        assertFail(classUnderTest.validateRequest(request),
-                "validation.request.body.schema.discriminator");
     }
 
     @Test
@@ -845,6 +794,40 @@ public class OpenAPIV3RequestValidationTest {
                 .build();
 
         assertFail(classUnderTest.validateRequest(request), "validation.request.body.schema.pattern");
+    }
+
+    @Test
+    public void validate_withNonRequired_minLength_shouldPass() {
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-with-minlength-properties.yaml")
+                .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/minLengthProperties")
+                .withContentType("application/json")
+                // Body missing `nonRequiredField` that also has a minLength: 1
+                .withBody("{\"requiredField\": \"foo\"}")
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withExamples_shouldPass_whenValid() {
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-with-examples.yaml")
+                .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/test")
+                .withContentType("application/json")
+                .withBody(pretty(of(
+                        "timestamp", "1937-01-01T12:00:27.87+00:20",
+                        "uri", "http://example.com"
+                )))
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
     }
 
     private class TestValidator implements CustomRequestValidator {

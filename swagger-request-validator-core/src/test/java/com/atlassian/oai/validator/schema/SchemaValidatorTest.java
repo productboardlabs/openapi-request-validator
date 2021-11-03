@@ -5,6 +5,8 @@ import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.SimpleValidationReportFormat;
 import com.atlassian.oai.validator.report.ValidationReport;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import io.swagger.parser.OpenAPIParser;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -49,11 +51,28 @@ public class SchemaValidatorTest {
     }
 
     @Test
-    public void validate_withEmptyValue_shouldPass_whenMinLengthZero() {
-        final String value = "";
+    public void validate_withStringNull_shouldPass() {
+        final String value = "null";
         final Schema schema = new Schema();
 
-        classUnderTest.validate(value, schema, "prefix");
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
+    }
+
+    @Test
+    public void validate_withEmptyValue_shouldPass_whenMinLengthZero() {
+        final String value = "";
+        final Schema schema = new StringSchema().minLength(0);
+
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
+    }
+
+    @Test
+    public void validate_withEmptyValue_shouldFail_whenMinLengthNonZero() {
+        final String value = "";
+        final Schema schema = new StringSchema().minLength(1);
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.minLength");
     }
 
     @Test
@@ -147,6 +166,15 @@ public class SchemaValidatorTest {
 
         assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
                 "validation.prefix.schema.format.double");
+    }
+
+    @Test
+    public void validate_shouldFail_whenInvalidJson() {
+        final String value = "#";
+        final Schema schema = new Schema();
+
+        assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
+                "validation.prefix.schema.invalidJson");
     }
 
     @Test
@@ -288,13 +316,26 @@ public class SchemaValidatorTest {
     }
 
     @Test
-    public void validate_withJsonSchemaComposition_shouldFail_whenAdditionalPropertyValidationNotIgnored() {
+    public void validate_withJsonSchemaComposition_shouldPass_whenAdditionalPropertyValidationNotIgnored() {
 
-        final SchemaValidator classUnderTest = validator("/oai/v2/api-composition.yaml");
+        final SchemaValidator classUnderTest = validatorWithResolveCombinators("/oai/v3/api-composition.yaml");
 
         final Schema schema = new Schema().$ref("#/components/schemas/User");
         final String value = "{\"firstname\":\"user_firstname\", \"lastname\":\"user_lastname\", \"city\":\"user_city\"}";
 
+        final ValidationReport report = classUnderTest.validate(value, schema, "prefix");
+        assertPass(report);
+    }
+
+    @Test
+    public void validate_withJsonSchemaComposition_shouldFail_whenAdditionalPropertyValidationNotIgnored_andUndefinedPropertyReturnedInResponse() {
+
+        final SchemaValidator classUnderTest = validatorWithResolveCombinators("/oai/v3/api-composition.yaml");
+
+        final Schema schema = new Schema().$ref("#/components/schemas/User");
+        final String value = "{\"firstname\":\"user_firstname\", \"lastname\":\"user_lastname\", \"city\":\"user_city\", \"zip\":\"97201\"}";
+
+        final ValidationReport report = classUnderTest.validate(value, schema, "prefix");
         assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
                 "validation.prefix.schema.additionalProperties");
     }
@@ -541,6 +582,15 @@ public class SchemaValidatorTest {
     public void validate_withDateTimeProperty_shouldPass_whenValid() {
         final String value = "1985-04-12T23:20:50.52Z";
         final Schema schema = new DateTimeSchema();
+
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
+    }
+
+    @Test
+    public void validate_withDateTimeProperty_shouldPass_whenExampleIncluded() {
+        final String value = "1985-04-12T23:20:50.52Z";
+        final Schema schema = new DateTimeSchema()
+                .example("1937-01-01T12:00:27.87+00:20");
 
         assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
@@ -831,6 +881,25 @@ public class SchemaValidatorTest {
         assertTrue(JsonValidationReportFormat.getInstance().apply(reportDeep).contains(expectedJsonFormatError));
     }
 
+    @Test
+    public void validateJsonNode_withEmptyJsonNodeAndEmptySchema_shouldPass() {
+        final JsonNode value = new ObjectMapper().createObjectNode();
+        final Schema schema = new Schema();
+
+        assertPass(classUnderTest.validate(() -> value, schema, "prefix"));
+    }
+
+    @Test
+    public void validate_nonRequired_minLength_stringProperty_shouldPass() {
+        final String value = "{\"requiredField\":\"foo\"}";
+        final Schema schema = new ObjectSchema()
+                .addProperties("requiredField", new StringSchema().minLength(1))
+                .addProperties("nonRequiredField", new StringSchema().minLength(3))
+                .addRequiredItem("requiredField");
+
+        assertPass(classUnderTest.validate(value, schema, "prefix"));
+    }
+
     private Map<String, Schema> getSchemasFrom(final String api) {
         final ParseOptions parseOptions = new ParseOptions();
         parseOptions.setResolveFully(true);
@@ -853,6 +922,13 @@ public class SchemaValidatorTest {
     private SchemaValidator validator(final String api) {
         final ParseOptions parseOptions = new ParseOptions();
         parseOptions.setResolve(true);
+        return new SchemaValidator(new OpenAPIParser().readLocation(api, null, parseOptions).getOpenAPI(), new MessageResolver());
+    }
+
+    private SchemaValidator validatorWithResolveCombinators(final String api) {
+        final ParseOptions parseOptions = new ParseOptions();
+        parseOptions.setResolveFully(true);
+        parseOptions.setResolveCombinators(true);
         return new SchemaValidator(new OpenAPIParser().readLocation(api, null, parseOptions).getOpenAPI(), new MessageResolver());
     }
 }

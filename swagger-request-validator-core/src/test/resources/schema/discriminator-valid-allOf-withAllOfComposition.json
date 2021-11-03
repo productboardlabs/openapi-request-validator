@@ -1,0 +1,195 @@
+{
+  "keyword": "discriminator",
+  "description": "A valid schema using the allOf keyword with referenced properties via allOf",
+  "tests": [
+    {
+      "description": "A valid example",
+      "shouldPass": true,
+      "example": {
+        "name": "Moggy",
+        "petType": "Cat",
+        "huntingSkill": "clueless"
+      }
+    },
+    {
+      "description": "A valid example with an non-required property",
+      "shouldPass": true,
+      "example": {
+        "name": "Moggy",
+        "petType": "Cat",
+        "huntingSkill": "clueless",
+        "age": 10
+      }
+    },
+    {
+      "description": "An invalid example with an invalid referenced schema",
+      "shouldPass": false,
+      "example": {
+        "name": 1.0,
+        "petType": "Cat",
+        "huntingSkill": "clueless",
+        "age": 10
+      },
+      "expectedKeys": [
+        "err.swaggerv2.discriminator.fail"
+      ]
+    },
+    {
+      "description": "A valid example with a property that causes a validation loop",
+      "shouldPass": true,
+      "example": {
+        "name": "Moggy",
+        "petType": "Cat",
+        "huntingSkill": "clueless",
+        "age": 10,
+        "sibling": {
+          "name": "Felix",
+          "petType": "Cat",
+          "age": 9,
+          "huntingSkill": "lazy"
+        }
+      }
+    },
+    {
+      "description": "An invalid example with a nested schema being invalid",
+      "shouldPass": false,
+      "example": {
+        "name": "Moggy",
+        "petType": "Cat",
+        "huntingSkill": "clueless",
+        "age": 10,
+        "sibling": {
+          "name": "Felix",
+          "petType": "Cat",
+          "age": 9,
+          "huntingSkill": "slow"
+        }
+      },
+      "expectedKeys": [
+        "err.swaggerv2.discriminator.fail"
+      ]
+    },
+    {
+      "description": "An invalid example with a nested schema with invalid discriminator",
+      "shouldPass": false,
+      "example": {
+        "name": "Moggy",
+        "petType": "Cat",
+        "huntingSkill": "clueless",
+        "age": 10,
+        "sibling": {
+          "name": "Felix",
+          "petType": "Lizard"
+        }
+      },
+      "expectedKeys": [
+        "err.swaggerv2.discriminator.fail"
+      ]
+    }
+  ],
+  "schema": {
+    "$schema": "https://openapis.org/specification/versions/2.0#",
+    "$ref": "#/definitions/Pet",
+    "definitions": {
+      "Pet": {
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "age": {
+                "type": "number"
+              },
+              "sibling": {
+                "description": "Introduces some circular references",
+                "$ref": "#/definitions/Pet"
+              }
+            }
+          },
+          {
+            "$ref": "#/definitions/PetProperties"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "petType",
+          "mapping": {
+            "cachorro": "Dog"
+          }
+        }
+      },
+      "PetProperties": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "petType": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "petType"
+        ]
+      },
+      "Cat": {
+        "description": "A representation of a cat",
+        "allOf": [
+          {
+            "$ref": "#/definitions/Pet"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "huntingSkill": {
+                "type": "string",
+                "description": "The measured skill for hunting",
+                "default": "lazy",
+                "enum": [
+                  "clueless",
+                  "lazy",
+                  "adventurous",
+                  "aggressive"
+                ]
+              }
+            },
+            "required": [
+              "huntingSkill"
+            ]
+          }
+        ]
+      },
+      "Dog": {
+        "description": "A representation of a dog",
+        "allOf": [
+          {
+            "$ref": "#/definitions/Pet"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "packSize": {
+                "type": "integer",
+                "format": "int32",
+                "description": "the size of the pack the dog is from",
+                "default": 0,
+                "minimum": 0
+              }
+            },
+            "required": [
+              "packSize"
+            ]
+          }
+        ]
+      },
+      "Owner": {
+        "description": "A Pet owner. Not a pet.",
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

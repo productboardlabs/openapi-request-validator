@@ -41,7 +41,7 @@ public class MockMvcRequestTest {
 
         assertThat(classUnderTest.getPath(), is("/path"));
         assertThat(classUnderTest.getMethod(), is(Request.Method.GET));
-        assertThat(classUnderTest.getBody().isPresent(), is(false));
+        assertThat(classUnderTest.getRequestBody().isPresent(), is(false));
         assertThat(classUnderTest.getHeaderValues("x-my-header"), contains("foo", "bar"));
         assertThat(classUnderTest.getHeaderValue("x-my-HEADER").isPresent(), is(true));
         assertThat(classUnderTest.getHeaderValue("not-a-header").isPresent(), is(false));
@@ -62,7 +62,7 @@ public class MockMvcRequestTest {
     }
 
     @Test
-    public void getBody_returnsEmpty_whenNoBodyInRequest() throws Exception {
+    public void getRequestBody_returnsEmpty_whenNoBodyInRequest() {
         final MockHttpServletRequest mockHttpServletRequest = MockMvcRequestBuilders
                 .get("/path")
                 .characterEncoding(UTF_8.name())
@@ -70,11 +70,11 @@ public class MockMvcRequestTest {
 
         final Request classUnderTest = MockMvcRequest.of(mockHttpServletRequest);
 
-        assertThat(classUnderTest.getBody(), is(Optional.empty()));
+        assertThat(classUnderTest.getRequestBody(), is(Optional.empty()));
     }
 
     @Test
-    public void getBody_returnsBody_whenBodyInRequest() throws Exception {
+    public void getRequestBody_returnsBody_whenBodyInRequest() throws Exception {
         final MockHttpServletRequest mockHttpServletRequest = MockMvcRequestBuilders
                 .get("/path")
                 .characterEncoding(UTF_8.name())
@@ -83,7 +83,7 @@ public class MockMvcRequestTest {
 
         final Request classUnderTest = MockMvcRequest.of(mockHttpServletRequest);
 
-        assertThat(classUnderTest.getBody().get(), is("The body"));
+        assertThat(classUnderTest.getRequestBody().get().toString(UTF_8), is("The body"));
     }
 
     @Test

@@ -1,0 +1,178 @@
+{
+  "keyword": "discriminator",
+  "description": "A valid schema using the allOf keyword and a mapping block",
+  "tests": [
+    {
+      "description": "A valid example without mapping",
+      "shouldPass": true,
+      "example": {
+        "name": "Moggy",
+        "petType": "Cat",
+        "huntingSkill": "clueless"
+      }
+    },
+    {
+      "description": "A valid example with mapping",
+      "shouldPass": true,
+      "example": {
+        "name": "Doggy",
+        "petType": "cachorro",
+        "packSize": 5
+      }
+    },
+    {
+      "description": "A valid example with relative ref mapping",
+      "shouldPass": true,
+      "example": {
+        "name": "Doggy",
+        "petType": "puppy",
+        "packSize": 5
+      }
+    },
+    {
+      "description": "An invalid example with a bad discriminator value",
+      "shouldPass": false,
+      "example": {
+        "name": "Fred",
+        "petType": "Owner"
+      },
+      "expectedKeys": [
+        "err.swaggerv2.discriminator.invalid"
+      ]
+    },
+    {
+      "description": "An invalid example with a missing discriminator field",
+      "shouldPass": false,
+      "example": {
+        "name": "Moggy",
+        "huntingSkill": "clueless"
+      },
+      "expectedKeys": [
+        "err.swaggerv2.discriminator.missing"
+      ]
+    },
+    {
+      "description": "An invalid example with an empty discriminator field",
+      "shouldPass": false,
+      "example": {
+        "name": "Moggy",
+        "petType": "",
+        "huntingSkill": "clueless"
+      },
+      "expectedKeys": [
+        "err.swaggerv2.discriminator.missing"
+      ]
+    },
+    {
+      "description": "An invalid example where sub-schema does not match",
+      "shouldPass": false,
+      "example": {
+        "name": "Moggy",
+        "petType": "Cat",
+        "huntingSkill": "bad"
+      },
+      "expectedKeys": [
+        "err.swaggerv2.discriminator.fail"
+      ]
+    },
+    {
+      "description": "An invalid example where sub-schema does not match via mapping",
+      "shouldPass": false,
+      "example": {
+        "name": "Doggy",
+        "petType": "cachorro",
+        "pack": 3
+      },
+      "expectedKeys": [
+        "err.swaggerv2.discriminator.fail"
+      ]
+    }
+  ],
+  "schema": {
+    "$schema": "https://openapis.org/specification/versions/2.0#",
+    "$ref": "#/definitions/Pet",
+    "definitions": {
+      "Pet": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "petType",
+          "mapping": {
+            "cachorro": "Dog",
+            "puppy": "#/definitions/Dog"
+          }
+        },
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "petType": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "petType"
+        ]
+      },
+      "Cat": {
+        "description": "A representation of a cat",
+        "allOf": [
+          {
+            "$ref": "#/definitions/Pet"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "huntingSkill": {
+                "type": "string",
+                "description": "The measured skill for hunting",
+                "default": "lazy",
+                "enum": [
+                  "clueless",
+                  "lazy",
+                  "adventurous",
+                  "aggressive"
+                ]
+              }
+            },
+            "required": [
+              "huntingSkill"
+            ]
+          }
+        ]
+      },
+      "Dog": {
+        "description": "A representation of a dog",
+        "allOf": [
+          {
+            "$ref": "#/definitions/Pet"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "packSize": {
+                "type": "integer",
+                "format": "int32",
+                "description": "the size of the pack the dog is from",
+                "default": 0,
+                "minimum": 0
+              }
+            },
+            "required": [
+              "packSize"
+            ]
+          }
+        ]
+      },
+      "Owner": {
+        "description": "A Pet owner. Not a pet.",
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

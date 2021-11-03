@@ -48,7 +48,7 @@ public class RestAssuredResponse implements Response {
     public static Response of(@Nonnull final io.restassured.response.Response originalResponse) {
         requireNonNull(originalResponse, "An original response is required");
         final SimpleResponse.Builder builder = new SimpleResponse.Builder(originalResponse.getStatusCode())
-                .withBody(originalResponse.getBody().asString());
+                .withBody(originalResponse.getBody().asByteArray());
         if (originalResponse.getHeaders() != null) {
             originalResponse.getHeaders().forEach(header -> builder.withHeader(header.getName(), header.getValue()));
         }

@@ -1,18 +1,70 @@
 {
-  "$schema": "https://openapis.org/specification/versions/2.0#",
-  "$ref": "#/definitions/Thing",
-  "definitions": {
-    "Thing": {
-      "type": "object",
-      "properties": {
-        "nullableProp": {
-          "type": "string",
-          "nullable": true
+  "keyword": "nullable",
+  "description": "A valid schema",
+  "tests": [
+    {
+      "description": "A valid example with no nulls",
+      "shouldPass": true,
+      "example": {
+        "nullableProp": "foo",
+        "nonNullableProp": "bah",
+        "requiredNullableProp": "buzz"
+      }
+    },
+    {
+      "description": "A valid example with a nullable property null",
+      "shouldPass": true,
+      "example": {
+        "nullableProp": null,
+        "nonNullableProp": "bah",
+        "requiredNullableProp": "buzz"
+      }
+    },
+    {
+      "description": "A valid example with a required nullable property null",
+      "shouldPass": true,
+      "example": {
+        "nullableProp": null,
+        "nonNullableProp": "bah",
+        "requiredNullableProp": null
+      }
+    },
+    {
+      "description": "An invalid example with a non-nullable property null",
+      "shouldPass": false,
+      "example": {
+        "nullableProp": null,
+        "nonNullableProp": null,
+        "requiredNullableProp": null
+      },
+      "expectedKeys": [
+        "error.validation.type"
+      ]
+    }
+  ],
+  "schema": {
+    "$schema": "https://openapis.org/specification/versions/2.0#",
+    "$ref": "#/definitions/Thing",
+    "definitions": {
+      "Thing": {
+        "type": "object",
+        "properties": {
+          "nullableProp": {
+            "type": "string",
+            "nullable": true
+          },
+          "nonNullableProp": {
+            "type": "string",
+            "nullable": false
+          },
+          "requiredNullableProp": {
+            "type": "string",
+            "nullable": true
+          }
         },
-        "nonNullableProp": {
-          "type": "string",
-          "nullable": false
-        }
+        "required": [
+          "requiredNullableProp"
+        ]
       }
     }
   }

@@ -4,6 +4,8 @@ import com.atlassian.oai.validator.model.Response;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
+import java.nio.charset.StandardCharsets;
+
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -17,22 +19,22 @@ public class MockMvcResponseTest {
     }
 
     @Test
-    public void canGetBody() throws Exception {
+    public void canGetResponseBody() throws Exception {
         final MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
         mockHttpServletResponse.getWriter().append("The Body");
         mockHttpServletResponse.setContentLength("The Body".length());
         final Response mockMvcResponse = MockMvcResponse.of(mockHttpServletResponse);
 
-        assertThat(mockMvcResponse.getBody().isPresent(), is(true));
-        assertThat(mockMvcResponse.getBody().get(), is("The Body"));
+        assertThat(mockMvcResponse.getResponseBody().isPresent(), is(true));
+        assertThat(mockMvcResponse.getResponseBody().get().toString(StandardCharsets.UTF_8), is("The Body"));
     }
 
     @Test
-    public void getBodyIsEmptyIfThereIsNoContent() throws Exception {
+    public void getResponseBodyIsEmptyIfThereIsNoContent() throws Exception {
         final MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
         final Response mockMvcResponse = MockMvcResponse.of(mockHttpServletResponse);
 
-        assertThat(mockMvcResponse.getBody().isPresent(), is(false));
+        assertThat(mockMvcResponse.getResponseBody().get().hasBody(), is(false));
     }
 
     @Test

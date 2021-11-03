@@ -1,0 +1,32 @@
+openapi: 3.0.0
+info:
+  title: Simple API example
+  version: 1.0.0
+servers:
+  - url: /
+paths:
+  /test:
+    post:
+      summary: Simple request/response test
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                msg:
+                  type: string
+              required:
+                - msg
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reply:
+                    type: string
+                required:
+                  - reply

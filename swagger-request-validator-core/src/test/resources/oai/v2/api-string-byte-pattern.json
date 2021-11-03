@@ -67,6 +67,7 @@
             "name": "queryByteArray",
             "in": "query",
             "type": "array",
+            "collectionFormat": "multi",
             "items": {
               "type": "string",
               "format": "byte"
@@ -88,6 +89,7 @@
             "name": "queryPatternArray",
             "in": "query",
             "type": "array",
+            "collectionFormat": "multi",
             "items": {
               "type": "string",
               "pattern": "a+"
@@ -205,6 +207,7 @@
       "name": "refQueryByteArray",
       "in": "query",
       "type": "array",
+      "collectionFormat": "multi",
       "items": {
         "type": "string",
         "format": "byte"
@@ -220,6 +223,7 @@
       "name": "refQueryPatternArray",
       "in": "query",
       "type": "array",
+      "collectionFormat": "multi",
       "items": {
         "type": "string",
         "pattern": "a+"
