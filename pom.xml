@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.atlassian.pom</groupId>
@@ -79,6 +80,8 @@
         <httpclient.version>4.5.13</httpclient.version>
         <netty.version>4.1.70.Final</netty.version>
         <jsonassert.version>1.5.0</jsonassert.version>
+        <rhino.version>1.7.12</rhino.version>
+        <gson.version>2.8.9</gson.version>
 
         <!-- Plugin versions -->
         <checkstyle.version>9.1</checkstyle.version>
@@ -179,12 +182,19 @@
                 <artifactId>json-schema-validator</artifactId>
                 <version>${json-schema-validator.version}</version>
             </dependency>
+            <!-- Override for transitive dependency to address vuln -->
+            <dependency>
+                <groupId>org.mozilla</groupId>
+                <artifactId>rhino</artifactId>
+                <version>${rhino.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>au.com.dius</groupId>
                 <artifactId>pact-jvm-model</artifactId>
                 <version>${pact-jvm.version}</version>
             </dependency>
+            <!-- Transitive version overrides to address open vulns -->
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-codec</artifactId>
@@ -200,6 +210,17 @@
                 <artifactId>netty-handler</artifactId>
                 <version>${netty.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-cbor</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.code.gson</groupId>
+                <artifactId>gson</artifactId>
+                <version>${gson.version}</version>
+            </dependency>
+            <!-- -->
 
             <dependency>
                 <groupId>junit</groupId>
