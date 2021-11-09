@@ -1,6 +1,6 @@
 package com.atlassian.oai.validator.pact;
 
-import au.com.dius.pact.model.BrokerUrlSource;
+import au.com.dius.pact.core.model.BrokerUrlSource;
 import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -14,12 +14,11 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 public class PactProviderValidatorTest {
 
@@ -54,7 +53,7 @@ public class PactProviderValidatorTest {
 
         assertThat(results.hasErrors(), is(false));
         assertThat(results.getConsumerResults().size(), is(1));
-        assertTrue(results.getConsumerResult("ExampleConsumer").isPresent());
+        assertThat(results.getConsumerResult("ExampleConsumer").isPresent(), is(true));
         assertThat(results.getConsumerResult("ExampleConsumer").get().hasErrors(), is(false));
     }
 
@@ -70,7 +69,7 @@ public class PactProviderValidatorTest {
 
         assertThat(results.hasErrors(), is(true));
         assertThat(results.getConsumerResults().size(), is(1));
-        assertTrue(results.getConsumerResult("ExampleConsumer").isPresent());
+        assertThat(results.getConsumerResult("ExampleConsumer").isPresent(), is(true));
         assertThat(results.getConsumerResult("ExampleConsumer").get().hasErrors(), is(true));
     }
 
@@ -114,7 +113,6 @@ public class PactProviderValidatorTest {
                         .build();
 
         assertThat(validator.getConsumers().size(), is(0));
-
     }
 
     @Test
@@ -133,7 +131,7 @@ public class PactProviderValidatorTest {
 
         assertThat(results.hasErrors(), is(false));
         assertThat(results.getConsumerResults().size(), is(1));
-        assertTrue(results.getConsumerResult("ExampleConsumer").isPresent());
+        assertThat(results.getConsumerResult("ExampleConsumer").isPresent(), is(true));
         assertThat(results.getConsumerResult("ExampleConsumer").get().hasErrors(), is(false));
     }
 

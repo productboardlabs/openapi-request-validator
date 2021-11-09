@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.atlassian.pom</groupId>
@@ -64,7 +65,7 @@
         <junit.version>4.13.2</junit.version>
         <logback.version>1.2.6</logback.version>
         <mockito.version>4.0.0</mockito.version>
-        <pact-jvm.version>3.6.15</pact-jvm.version>
+        <pact-jvm.version>4.1.28</pact-jvm.version>
         <rest-assured.version>4.4.0</rest-assured.version>
         <servlet.api.version>4.0.1</servlet.api.version>
         <slf4j.version>1.7.32</slf4j.version>
@@ -189,8 +190,8 @@
             </dependency>
 
             <dependency>
-                <groupId>au.com.dius</groupId>
-                <artifactId>pact-jvm-model</artifactId>
+                <groupId>au.com.dius.pact.core</groupId>
+                <artifactId>model</artifactId>
                 <version>${pact-jvm.version}</version>
             </dependency>
             <!-- Transitive version overrides to address open vulns -->
@@ -227,18 +228,18 @@
                 <version>${junit.version}</version>
             </dependency>
             <dependency>
-                <groupId>au.com.dius</groupId>
-                <artifactId>pact-jvm-consumer-junit_2.12</artifactId>
+                <groupId>au.com.dius.pact.consumer</groupId>
+                <artifactId>junit</artifactId>
                 <version>${pact-jvm.version}</version>
             </dependency>
             <dependency>
-                <groupId>au.com.dius</groupId>
-                <artifactId>pact-jvm-provider_2.12</artifactId>
+                <groupId>au.com.dius.pact</groupId>
+                <artifactId>provider</artifactId>
                 <version>${pact-jvm.version}</version>
             </dependency>
             <dependency>
-                <groupId>au.com.dius</groupId>
-                <artifactId>pact-jvm-consumer_2.12</artifactId>
+                <groupId>au.com.dius.pact</groupId>
+                <artifactId>consumer</artifactId>
                 <version>${pact-jvm.version}</version>
             </dependency>
             <dependency>

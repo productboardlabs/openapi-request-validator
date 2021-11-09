@@ -2,12 +2,12 @@ package com.atlassian.oai.validator.pact;
 
 //CHECKSTYLE:OFF IllegalImport
 
-import au.com.dius.pact.consumer.Pact;
-import au.com.dius.pact.consumer.PactVerification;
 import au.com.dius.pact.consumer.dsl.DslPart;
 import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
 import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
-import au.com.dius.pact.model.RequestResponsePact;
+import au.com.dius.pact.consumer.junit.PactVerification;
+import au.com.dius.pact.core.model.RequestResponsePact;
+import au.com.dius.pact.core.model.annotations.Pact;
 import com.atlassian.oai.validator.pact.ValidatedPactProviderRule.PactValidationError;
 import com.atlassian.oai.validator.report.ValidationReport.Message;
 import junit.framework.AssertionFailedError;

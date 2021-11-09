@@ -14,10 +14,10 @@ public class PactResponse implements Response {
     private final Response delegate;
 
     /**
-     * @deprecated Use: {@link PactResponse#of(au.com.dius.pact.model.Response)}
+     * @deprecated Use: {@link PactResponse#of(au.com.dius.pact.core.model.Response)}
      */
     @Deprecated
-    public PactResponse(@Nonnull final au.com.dius.pact.model.Response originalResponse) {
+    public PactResponse(@Nonnull final au.com.dius.pact.core.model.Response originalResponse) {
         delegate = PactResponse.of(originalResponse);
     }
 
@@ -40,12 +40,12 @@ public class PactResponse implements Response {
 
     /**
      * Builds a {@link Response} for the OpenAPI validator out of the
-     * original {@link au.com.dius.pact.model.Response}.
+     * original {@link au.com.dius.pact.core.model.Response}.
      *
-     * @param originalResponse the original {@link au.com.dius.pact.model.Response}
+     * @param originalResponse the original {@link au.com.dius.pact.core.model.Response}
      */
     @Nonnull
-    public static Response of(@Nonnull final au.com.dius.pact.model.Response originalResponse) {
+    public static Response of(@Nonnull final au.com.dius.pact.core.model.Response originalResponse) {
         requireNonNull(originalResponse, "An original response is required");
         final SimpleResponse.Builder builder = new SimpleResponse.Builder(originalResponse.getStatus());
         if (originalResponse.getBody() != null && originalResponse.getBody().isPresent()) {

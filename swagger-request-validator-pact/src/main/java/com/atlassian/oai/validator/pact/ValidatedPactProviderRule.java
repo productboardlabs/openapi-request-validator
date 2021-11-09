@@ -2,12 +2,12 @@ package com.atlassian.oai.validator.pact;
 
 import au.com.dius.pact.consumer.ConsumerPactBuilder;
 import au.com.dius.pact.consumer.MockServer;
-import au.com.dius.pact.consumer.Pact;
-import au.com.dius.pact.consumer.PactProviderRuleMk2;
-import au.com.dius.pact.consumer.PactVerification;
 import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
-import au.com.dius.pact.model.MockProviderConfig;
-import au.com.dius.pact.model.RequestResponsePact;
+import au.com.dius.pact.consumer.junit.PactProviderRule;
+import au.com.dius.pact.consumer.junit.PactVerification;
+import au.com.dius.pact.consumer.model.MockProviderConfig;
+import au.com.dius.pact.core.model.RequestResponsePact;
+import au.com.dius.pact.core.model.annotations.Pact;
 import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.report.JsonValidationReportFormat;
 import com.atlassian.oai.validator.report.ValidationReport;
@@ -25,7 +25,7 @@ import java.util.Optional;
  * This gives consumers fast feedback if their expectations fail to meet the format expected by the Provider API.
  */
 public class ValidatedPactProviderRule implements TestRule {
-    private final PactProviderRuleMk2 delegate;
+    private final PactProviderRule delegate;
     private final String providerId;
     private final Object target;
     private final OpenApiInteractionValidator validator;
@@ -34,7 +34,7 @@ public class ValidatedPactProviderRule implements TestRule {
                                      final String basePathOverride,
                                      final String providerId,
                                      final Object target) {
-        this(specUrlOrPayload, basePathOverride, providerId, target, new PactProviderRuleMk2(providerId, target));
+        this(specUrlOrPayload, basePathOverride, providerId, target, new PactProviderRule(providerId, target));
     }
 
     public ValidatedPactProviderRule(final String specUrlOrPayload,
@@ -43,14 +43,14 @@ public class ValidatedPactProviderRule implements TestRule {
                                      final String host,
                                      final Integer port,
                                      final Object target) {
-        this(specUrlOrPayload, basePathOverride, providerId, target, new PactProviderRuleMk2(providerId, host, port, target));
+        this(specUrlOrPayload, basePathOverride, providerId, target, new PactProviderRule(providerId, host, port, target));
     }
 
     private ValidatedPactProviderRule(final String specUrlOrPayload,
                                       final String basePathOverride,
                                       final String providerId,
                                       final Object target,
-                                      final PactProviderRuleMk2 delegate) {
+                                      final PactProviderRule delegate) {
         validator = OpenApiInteractionValidator
                 .createFor(specUrlOrPayload)
                 .withLevelResolver(PactLevelResolverFactory.create())
@@ -68,7 +68,7 @@ public class ValidatedPactProviderRule implements TestRule {
         this.validator = validator;
         this.providerId = providerId;
         this.target = target;
-        delegate = new PactProviderRuleMk2(providerId, target);
+        delegate = new PactProviderRule(providerId, target);
     }
 
     public ValidatedPactProviderRule(final OpenApiInteractionValidator validator,
@@ -79,7 +79,7 @@ public class ValidatedPactProviderRule implements TestRule {
         this.validator = validator;
         this.providerId = providerId;
         this.target = target;
-        delegate = new PactProviderRuleMk2(providerId, host, port, target);
+        delegate = new PactProviderRule(providerId, host, port, target);
     }
 
     public MockProviderConfig getConfig() {
