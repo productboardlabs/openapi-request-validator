@@ -1,3 +1,17 @@
+# v2.21.1
+
+* Fix for `ResettableRequestServletWrapper` treating bytes as signed and incorrectly reporting negative numbers
+  [[#367]](https://bitbucket.org/atlassian/swagger-request-validator/issues/367)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/269)
+
+# v2.21.0
+
+* Report empty params as missing if they don't adhere to schema
+  [[#364]](https://bitbucket.org/atlassian/swagger-request-validator/issues/364)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/267)
+
+*Note*: This makes the validator stricter in the way it handles empty parameters.
+
 # v2.20.0
 
 * Bumped a number of dependencies:
