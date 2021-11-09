@@ -3,7 +3,7 @@ package com.atlassian.oai.validator.schema.transform;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.swagger.util.Json;
+import io.swagger.v3.core.util.Json;
 
 import javax.annotation.Nullable;
 import java.util.Iterator;
@@ -72,6 +72,10 @@ public abstract class SchemaTransformer {
 
     protected static boolean hasAllOfField(final JsonNode n) {
         return n.has(ALLOF_FIELD);
+    }
+
+    protected static boolean hasPropertiesField(final JsonNode n) {
+        return n != null && n.has(PROPERTIES_FIELD);
     }
 
     @Nullable

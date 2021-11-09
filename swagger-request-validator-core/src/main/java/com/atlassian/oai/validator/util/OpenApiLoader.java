@@ -6,6 +6,7 @@ import io.swagger.parser.OpenAPIParser;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.headers.Header;
 import io.swagger.v3.oas.models.media.ArraySchema;
+import io.swagger.v3.oas.models.media.ComposedSchema;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.ObjectSchema;
@@ -18,6 +19,7 @@ import io.swagger.v3.parser.core.models.ParseOptions;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -44,14 +46,21 @@ public class OpenApiLoader {
         requireNonNull(parseOptions, "Parse options are required");
 
         final SwaggerParseResult parseResult = readSwaggerParserResult(specSource, authData, parseOptions);
-        if (parseResult == null || parseResult.getOpenAPI() == null ||
-                (parseResult.getMessages() != null && !parseResult.getMessages().isEmpty())) {
+        if (hasParseErrors(parseResult)) {
             throw new ApiLoadException(specSource.getValue(), parseResult);
         }
 
         final OpenAPI api = parseResult.getOpenAPI();
         removeRegexPatternOnStringsOfFormatByte(api);
+        removeTypeObjectAssociationWithOneOfAndAnyOfModels(api);
         return api;
+    }
+
+    private boolean hasParseErrors(@Nullable final SwaggerParseResult parseResult) {
+        if (parseResult == null || parseResult.getOpenAPI() == null) {
+            return true;
+        }
+        return parseResult.getMessages() != null && !parseResult.getMessages().isEmpty();
     }
 
     private SwaggerParseResult readSwaggerParserResult(final SpecSource specSource,
@@ -76,6 +85,33 @@ public class OpenApiLoader {
             return openAPIParser.readContents(specSource.getValue(), authData, parseOptions);
         } catch (final RuntimeException e) {
             throw new ApiLoadException(specSource.getValue(), e);
+        }
+    }
+
+    // Adding this method to strip off the object type association applied by
+    // io.swagger.v3.parser.util.ResolverFully (ln 410) where the operation sets
+    // type field to "object" if type field is null. This causes issues for anyOf
+    // and oneOf validations.
+    private static void removeTypeObjectAssociationWithOneOfAndAnyOfModels(@Nonnull final OpenAPI openAPI) {
+        if (openAPI.getComponents() != null) {
+            removeTypeObjectFromEachValue(openAPI.getComponents().getSchemas(), schema -> schema);
+        }
+    }
+
+    private static <T> void removeTypeObjectFromEachValue(final Map<String, T> map, final Function<T, Object> function) {
+        if (map != null) {
+            map.values().forEach(it -> removeTypeObjectAssociationWithOneOfAndAnyOfFromSchema(function.apply(it)));
+        }
+    }
+
+    private static void removeTypeObjectAssociationWithOneOfAndAnyOfFromSchema(@Nonnull final Object object) {
+        if (object instanceof ObjectSchema) {
+            removeTypeObjectFromEachValue(((ObjectSchema) object).getProperties(), schema -> schema);
+        } else if (object instanceof ArraySchema) {
+            removeTypeObjectAssociationWithOneOfAndAnyOfFromSchema(((ArraySchema) object).getItems());
+        } else if (object instanceof ComposedSchema) {
+            final ComposedSchema composedSchema = (ComposedSchema) object;
+            composedSchema.setType(null);
         }
     }
 

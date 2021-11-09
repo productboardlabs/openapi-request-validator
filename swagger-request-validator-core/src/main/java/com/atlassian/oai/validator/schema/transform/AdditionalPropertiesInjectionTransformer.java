@@ -22,7 +22,7 @@ public class AdditionalPropertiesInjectionTransformer extends SchemaTransformer 
             return;
         }
 
-        if (!hasAdditionalFieldSet(schemaObject) && !hasDiscriminatorField(schemaObject)) {
+        if (!hasAdditionalFieldSet(schemaObject) && !hasDiscriminatorField(schemaObject) && hasPropertiesField(schemaObject)) {
             disableAdditionalProperties((ObjectNode) schemaObject);
         }
 

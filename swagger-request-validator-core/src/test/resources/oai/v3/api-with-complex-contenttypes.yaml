@@ -1,11 +1,11 @@
 openapi: 3.0.0
 info:
-  title: Charsets and wildcards in response content types
+  title: Charsets and wildcards in content types
   version: 1.0.0
 servers:
   - url: /
 paths:
-  /charset/withoutwhitespace:
+  /response/charset/withoutwhitespace:
     get:
       summary: Charset directive with no whitespace
       responses:
@@ -18,7 +18,7 @@ paths:
             application/json;charset=utf-16:
               schema:
                 type: string
-  /wildcard/subtype:
+  /response/wildcard/subtype:
     get:
       summary: Mediatype with wildcards in the subtype
       responses:
@@ -30,5 +30,75 @@ paths:
                 type: integer
             image/*:
               schema:
-                type: string
-                format: binary
+                $ref: '#/components/schemas/Anything'
+  /request/nonwildcard/single:
+    post:
+      summary: Single valid mediatype
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnyObject'
+      responses:
+        '201':
+          description: OK
+  /request/nonwildcard/multiple:
+    post:
+      summary: Multiple valid mediatypes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnyObject'
+          text/plain:
+            schema:
+              $ref: '#/components/schemas/AnyString'
+      responses:
+        '201':
+          description: OK
+  /request/wildcard/subtype:
+    post:
+      summary: Mediatype with wildcards in the subtype
+      requestBody:
+        content:
+          image/*:
+            schema:
+              $ref: '#/components/schemas/Anything'
+      responses:
+        '201':
+          description: OK
+  /request/wildcard/global:
+    post:
+      summary: Mediatype with the global wildcard
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              $ref: '#/components/schemas/Anything'
+      responses:
+        '201':
+          description: OK
+  /request/mixed:
+    post:
+      summary: Multiple mediatypes including wildcards
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnyObject'
+          image/*:
+            schema:
+              $ref: '#/components/schemas/Anything'
+      responses:
+        '201':
+          description: OK
+components:
+  schemas:
+    Anything:
+      type: string
+      format: binary
+    AnyString:
+      type: string
+    AnyObject:
+      type: object
+      additionalProperties: true

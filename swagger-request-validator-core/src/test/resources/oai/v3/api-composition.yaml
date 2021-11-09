@@ -1,0 +1,55 @@
+openapi: 3.0.0
+info:
+  title: Test title.
+  description: >-
+    Test description.
+  version: 1.0.0
+servers:
+  - url: 'http://test.com'
+    description: staging
+paths:
+  /user:
+    post:
+      summary: placeholder summary
+      description: >-
+        Placeholder description
+      parameters:
+        - name: id
+          in: query
+          description: Placeholder description
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+components:
+  schemas:
+    Name:
+      type: object
+      required:
+      - firstname
+      - lastname
+      properties:
+        firstname:
+          type: string
+        lastname:
+          type: string
+    User:
+      allOf:
+        - $ref: '#/components/schemas/Name'
+        - type: object
+          properties:
+            city:
+              type: string
+            country:
+              type: string

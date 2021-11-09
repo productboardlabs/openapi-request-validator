@@ -1,0 +1,30 @@
+openapi: "3.0.2"
+info:
+  description: This is a sample with examples included
+  title: Including examples
+  version: "1.0.0"
+paths:
+  /test:
+    post:
+      description: Test Request
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TestObject'
+      responses:
+        '204':
+          description: OK
+components:
+  schemas:
+    TestObject:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: "1937-01-01T12:00:27.87+00:20"
+        uri:
+          type: string
+          format: uri
+          example: "http://example.com"
