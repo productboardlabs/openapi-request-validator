@@ -65,6 +65,35 @@ public class ResettableRequestServletWrapperTest {
         testingPartialReadingAndResettingInputStream(28019, 25897);
     }
 
+    @Test // fix for: https://bitbucket.org/atlassian/swagger-request-validator/issues/367
+    public void resetInputStream_binaryBody_read() throws IOException {
+        final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
+        final ResettableRequestServletWrapper classUnderTest = new ResettableRequestServletWrapper(servletRequest);
+
+        final byte[] bytes = new byte[]{-6, -5, -4, -3, -2};
+
+        final ServletInputStream servletInputStream = new ServletInputStreamMock(bytes);
+        when(servletRequest.getInputStream()).thenReturn(servletInputStream);
+
+        // Test: initial read the complete stream
+        assertThat(classUnderTest.getInputStream().read(), is(250));
+        assertThat(classUnderTest.getInputStream().read(), is(251));
+        assertThat(classUnderTest.getInputStream().read(), is(252));
+        assertThat(classUnderTest.getInputStream().read(), is(253));
+        assertThat(classUnderTest.getInputStream().read(), is(254));
+        assertThat(classUnderTest.getInputStream().read(), is(-1));
+
+        // Test: re-read the complete stream
+        classUnderTest.resetInputStream();
+
+        assertThat(classUnderTest.getInputStream().read(), is(250));
+        assertThat(classUnderTest.getInputStream().read(), is(251));
+        assertThat(classUnderTest.getInputStream().read(), is(252));
+        assertThat(classUnderTest.getInputStream().read(), is(253));
+        assertThat(classUnderTest.getInputStream().read(), is(254));
+        assertThat(classUnderTest.getInputStream().read(), is(-1));
+    }
+
     @Test
     public void resetInputStream_before_getInputStream_hasNoEffect() throws IOException {
         final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
