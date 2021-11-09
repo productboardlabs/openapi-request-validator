@@ -20,6 +20,7 @@ import static com.atlassian.oai.validator.util.ParameterGenerator.uriParam;
 import static com.atlassian.oai.validator.util.ParameterGenerator.uuidParam;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
+import static java.lang.Integer.MAX_VALUE;
 
 public class StringParameterValidationTest {
 
@@ -34,6 +35,34 @@ public class StringParameterValidationTest {
     @Test
     public void validate_withEmptyValue_shouldPass_whenNotRequired() {
         assertPass(classUnderTest.validate("", stringParam(false)));
+    }
+
+    @Test
+    public void validate_withEmptyValue_shouldPass_whenPatternAllows() {
+        assertPass(classUnderTest.validate("", patternStringParam("^.*$", false)));
+    }
+
+    @Test
+    public void validate_withEmptyValue_shouldFail_whenPatternDoesNotAllow() {
+        assertFail(classUnderTest.validate("", patternStringParam("^.+$", false)),
+                "validation.request.parameter.schema.pattern");
+    }
+
+    @Test
+    public void validate_withEmptyValue_shouldPass_whenMinLengthMet() {
+        assertPass(classUnderTest.validate("", stringParam(0, MAX_VALUE, false)));
+    }
+
+    @Test
+    public void validate_withEmptyValue_shouldFail_whenMinLengthNotMet() {
+        assertFail(classUnderTest.validate("", stringParam(1, MAX_VALUE, false)),
+                "validation.request.parameter.schema.minLength");
+    }
+
+    @Test
+    public void validate_withEmptyValue_shouldFail_whenEnum() {
+        assertFail(classUnderTest.validate("", enumeratedStringParam(false, "VALID")),
+                "validation.request.parameter.schema.enum");
     }
 
     @Test
