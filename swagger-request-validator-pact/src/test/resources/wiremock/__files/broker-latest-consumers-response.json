@@ -1,6 +1,6 @@
 {
   "_links": {
-    "pacts": [
+    "pb:pacts": [
       {
         "href": "http://{{request.headers.Host}}/pacts/provider/Provider/consumer/Consumer1/version/166",
         "name": "Consumer1",

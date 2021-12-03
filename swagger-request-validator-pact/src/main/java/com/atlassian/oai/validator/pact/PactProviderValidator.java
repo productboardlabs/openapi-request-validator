@@ -1,14 +1,15 @@
 package com.atlassian.oai.validator.pact;
 
-import au.com.dius.pact.model.BrokerUrlSource;
-import au.com.dius.pact.model.FileSource;
-import au.com.dius.pact.model.Pact;
-import au.com.dius.pact.model.PactReader;
-import au.com.dius.pact.model.RequestResponseInteraction;
-import au.com.dius.pact.model.UrlSource;
-import au.com.dius.pact.pactbroker.PactBrokerConsumer;
+import au.com.dius.pact.core.model.BrokerUrlSource;
+import au.com.dius.pact.core.model.DefaultPactReader;
+import au.com.dius.pact.core.model.FileSource;
+import au.com.dius.pact.core.model.Pact;
+import au.com.dius.pact.core.model.RequestResponseInteraction;
+import au.com.dius.pact.core.model.UrlSource;
+import au.com.dius.pact.core.pactbroker.PactBrokerClient;
+import au.com.dius.pact.core.pactbroker.PactBrokerClientConfig;
+import au.com.dius.pact.core.pactbroker.PactBrokerResult;
 import au.com.dius.pact.provider.ConsumerInfo;
-import au.com.dius.pact.provider.broker.PactBrokerClient;
 import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.google.common.annotations.VisibleForTesting;
@@ -81,6 +82,7 @@ public class PactProviderValidator {
      * Supports both JSON and YAML formats.
      *
      * @param specUrlOrPayload The URL of the OpenAPI / Swagger specification to use, or an inline specification
+     *
      * @return A builder that can create configured {@link PactProviderValidator} instances.
      */
     public static Builder createFor(@Nonnull final String specUrlOrPayload) {
@@ -91,6 +93,7 @@ public class PactProviderValidator {
      * Create a new {@link PactProviderValidator} that validates Consumers against the given OpenAPI / Swagger specification.
      *
      * @param validator The pre-configured validator instance to use
+     *
      * @return A builder that can create configured {@link PactProviderValidator} instances.
      */
     public static Builder createFor(@Nonnull final OpenApiInteractionValidator validator) {
@@ -120,19 +123,18 @@ public class PactProviderValidator {
     }
 
     private PactProviderValidationResults.ConsumerResult doValidate(@Nonnull final ConsumerInfo consumer) {
-
         log.debug("Validating consumer '{}' against API spec", consumer.getName());
 
         final PactProviderValidationResults.ConsumerResult result =
                 new PactProviderValidationResults.ConsumerResult(consumer.getName(), getPactSourceLocation(consumer));
 
         final Map<String, Object> options = new HashMap<>();
-        final List authOptions = consumer.getPactFileAuthentication();
+        final List<Object> authOptions = consumer.getPactFileAuthentication();
         if (authOptions != null && !authOptions.isEmpty()) {
             options.put("authentication", authOptions);
         }
 
-        final Pact<?> pact = PactReader.loadPact(options, consumer.getPactSource());
+        final Pact<?> pact = DefaultPactReader.INSTANCE.loadPact(consumer.getPactSource(), options);
 
         pact.getInteractions().forEach(i -> {
             final RequestResponseInteraction interaction = (RequestResponseInteraction) i;
@@ -170,7 +172,6 @@ public class PactProviderValidator {
      * @see PactProviderValidator#createFor(String)
      */
     public static class Builder {
-
         private String specUrlOrPayload;
         private OpenApiInteractionValidator validator;
         private final List<ConsumerInfo> consumers = new ArrayList<>();
@@ -208,6 +209,7 @@ public class PactProviderValidator {
          * </pre>
          *
          * @param specUrlOrPayload The location of the Swagger JSON specification to use in the validator.
+         *
          * @return this builder instance.
          */
         public Builder withApiSpecification(final String specUrlOrPayload) {
@@ -221,6 +223,7 @@ public class PactProviderValidator {
          * If provided, will ignore any provided spec URL / payloads.
          *
          * @param validator The underlying validator to use
+         *
          * @return this builder instance
          */
         public Builder withValidator(final OpenApiInteractionValidator validator) {
@@ -234,6 +237,7 @@ public class PactProviderValidator {
          * Note that each supplied consumer must have a <code>name</code> and <code>pactFile</code> configured.
          *
          * @param consumers The consumers to include
+         *
          * @return this builder instance.
          */
         public Builder withConsumers(final ConsumerInfo... consumers) {
@@ -244,8 +248,9 @@ public class PactProviderValidator {
         /**
          * Add a Consumer that will be included in the validation.
          *
-         * @param consumerName     The name of the Consumer
+         * @param consumerName The name of the Consumer
          * @param pactFileLocation The location of the Consumer Pact file to validate against
+         *
          * @return this builder instance.
          */
         @SuppressWarnings("rawtypes")
@@ -260,7 +265,8 @@ public class PactProviderValidator {
          * Add a Consumer that will be included in the validation.
          *
          * @param consumerName The name of the Consumer
-         * @param pactFileUrl  The location of the Consumer Pact file to validate against
+         * @param pactFileUrl The location of the Consumer Pact file to validate against
+         *
          * @return this builder instance.
          */
         @SuppressWarnings("rawtypes")
@@ -275,11 +281,13 @@ public class PactProviderValidator {
          * Configure the validator to validate against all Consumer Pacts retrieved from the given
          * broker for the given Provider.
          *
-         * @param brokerUrl    The URL of the Pact Broker to retrieve Consumer Pacts from
+         * @param brokerUrl The URL of the Pact Broker to retrieve Consumer Pacts from
          * @param providerName The ID of the Provider to retrieve Pacts for
+         *
          * @return this builder instance.
          */
-        public Builder withPactsFrom(final String brokerUrl, final String providerName) {
+        public Builder withPactsFrom(final String brokerUrl,
+                                     final String providerName) {
             this.brokerUrl = brokerUrl;
             this.providerName = providerName;
             return this;
@@ -289,13 +297,16 @@ public class PactProviderValidator {
          * Configure the validator to validate against all Consumer Pacts retrieved from the given
          * secure broker for the given Provider.
          *
-         * @param brokerUrl    The URL of the Pact Broker to retrieve Consumer Pacts from
-         * @param username     The username for the broker
-         * @param password     The password for the broker
+         * @param brokerUrl The URL of the Pact Broker to retrieve Consumer Pacts from
+         * @param username The username for the broker
+         * @param password The password for the broker
          * @param providerName The ID of the Provider to retrieve Pacts for
+         *
          * @return this builder instance.
          */
-        public Builder withPactsFrom(final String brokerUrl, final String username, final String password,
+        public Builder withPactsFrom(final String brokerUrl,
+                                     final String username,
+                                     final String password,
                                      final String providerName) {
             withPactsFrom(brokerUrl, providerName);
             brokerOptions.clear();
@@ -324,14 +335,11 @@ public class PactProviderValidator {
         }
 
         @Nonnull
-        @SuppressWarnings("unchecked")
         private Collection<ConsumerInfo> retrieveConsumers() {
-
             log.debug("Retrieving consumers from broker '{}' for provider '{}'", brokerUrl, providerName);
-
             try {
                 final Collection<ConsumerInfo> consumersInfo = retrievePactBrokerConsumers().stream()
-                        .map(ConsumerInfo::from)
+                        .map(ConsumerInfo.Companion::from)
                         .collect(toList());
                 if (consumersInfo.isEmpty()) {
                     log.info("No consumers found for provider '{}' on broker '{}'", providerName, brokerUrl);
@@ -342,13 +350,10 @@ public class PactProviderValidator {
                         providerName, brokerUrl), e);
                 return emptyList();
             }
-
         }
 
-        private Collection<PactBrokerConsumer> retrievePactBrokerConsumers() {
-            return new PactBrokerClient(brokerUrl, brokerOptions).fetchConsumers(providerName);
+        private Collection<PactBrokerResult> retrievePactBrokerConsumers() {
+            return new PactBrokerClient(brokerUrl, brokerOptions, new PactBrokerClientConfig()).fetchConsumers(providerName);
         }
-
     }
-
 }

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -27,8 +28,8 @@
             <artifactId>swagger-request-validator-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>au.com.dius</groupId>
-            <artifactId>pact-jvm-model</artifactId>
+            <groupId>au.com.dius.pact.core</groupId>
+            <artifactId>model</artifactId>
         </dependency>
 
         <!-- Pin the version of Jackson so we don't have classpath problems -->
@@ -52,15 +53,15 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>au.com.dius</groupId>
-            <artifactId>pact-jvm-consumer-junit_2.12</artifactId>
+            <groupId>au.com.dius.pact.consumer</groupId>
+            <artifactId>junit</artifactId>
             <optional>true</optional>
         </dependency>
 
         <!-- Optional Pact Provider dependencies needed to use the PactProviderValidator -->
         <dependency>
-            <groupId>au.com.dius</groupId>
-            <artifactId>pact-jvm-provider_2.12</artifactId>
+            <groupId>au.com.dius.pact</groupId>
+            <artifactId>provider</artifactId>
             <optional>true</optional>
         </dependency>
 

@@ -15,10 +15,10 @@ public class PactRequest implements Request {
     private final Request delegate;
 
     /**
-     * @deprecated Use: {@link PactRequest#of(au.com.dius.pact.model.Request)}
+     * @deprecated Use: {@link PactRequest#of(au.com.dius.pact.core.model.Request)}
      */
     @Deprecated
-    public PactRequest(@Nonnull final au.com.dius.pact.model.Request originalRequest) {
+    public PactRequest(@Nonnull final au.com.dius.pact.core.model.Request originalRequest) {
         delegate = PactRequest.of(originalRequest);
     }
 
@@ -66,12 +66,12 @@ public class PactRequest implements Request {
 
     /**
      * Builds a {@link Request} for the OpenAPI validator out of the
-     * original {@link au.com.dius.pact.model.Request}.
+     * original {@link au.com.dius.pact.core.model.Request}.
      *
-     * @param originalRequest the original {@link au.com.dius.pact.model.Request}
+     * @param originalRequest the original {@link au.com.dius.pact.core.model.Request}
      */
     @Nonnull
-    public static Request of(@Nonnull final au.com.dius.pact.model.Request originalRequest) {
+    public static Request of(@Nonnull final au.com.dius.pact.core.model.Request originalRequest) {
         requireNonNull(originalRequest, "An original request is required");
         final SimpleRequest.Builder builder =
                 new SimpleRequest.Builder(originalRequest.getMethod(), originalRequest.getPath());
