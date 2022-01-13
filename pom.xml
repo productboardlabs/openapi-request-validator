@@ -76,7 +76,7 @@
 
         <!-- Overrides for transitive dependencies to address vulnerabilities -->
         <jetty.version>9.4.44.v20210927</jetty.version>
-        <netty.version>4.1.70.Final</netty.version>
+        <netty.version>4.1.73.Final</netty.version>
         <rhino.version>1.7.12</rhino.version>
 
         <!-- Plugin versions -->
