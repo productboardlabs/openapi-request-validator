@@ -30,25 +30,25 @@ public class ValidatedWireMockRuleTest {
     @Test
     public void shouldPass_withValidInteraction_whenSwaggerv2() throws Throwable {
         classUnderTest = new ValidatedWireMockRule("api-swagger2.json", options().dynamicPort());
-        classUnderTest.apply(getValidInteractionTestMethod(), null, null).evaluate();
+        classUnderTest.apply(getValidInteractionTestMethod(), null).evaluate();
     }
 
     @Test(expected = OpenApiValidationListener.OpenApiValidationException.class)
     public void shouldFail_withInvalidInteraction_whenSwaggerv2() throws Throwable {
         classUnderTest = new ValidatedWireMockRule("api-swagger2.json", options().dynamicPort());
-        classUnderTest.apply(getInvalidInteractionTestMethod(), null, null).evaluate();
+        classUnderTest.apply(getInvalidInteractionTestMethod(), null).evaluate();
     }
 
     @Test
     public void shouldPass_withValidInteraction_whenOpenApi3() throws Throwable {
         classUnderTest = new ValidatedWireMockRule("api-oai3.yaml", options().dynamicPort());
-        classUnderTest.apply(getValidInteractionTestMethod(), null, null).evaluate();
+        classUnderTest.apply(getValidInteractionTestMethod(), null).evaluate();
     }
 
     @Test(expected = OpenApiValidationListener.OpenApiValidationException.class)
     public void shouldFail_withInvalidInteraction_whenOpenApi3() throws Throwable {
         classUnderTest = new ValidatedWireMockRule("api-oai3.yaml", options().dynamicPort());
-        classUnderTest.apply(getInvalidInteractionTestMethod(), null, null).evaluate();
+        classUnderTest.apply(getInvalidInteractionTestMethod(), null).evaluate();
     }
 
     public void validInteractionTestMethod() {
