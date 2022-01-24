@@ -11,5 +11,13 @@
   "dependencyDashboard": true,
   "prBodyNotes": [
     "Have a look at your [dependency dashboard](https://statlas.prod.atl-paas.net/renovate-dashboards/{{repository}}.html)"
+  ],
+  "packageRules": [
+    {
+      "matchPackagePrefixes": [
+        "au.com.dius.pact"
+      ],
+      "allowedVersions": "<4.2"
+    }
   ]
 }
