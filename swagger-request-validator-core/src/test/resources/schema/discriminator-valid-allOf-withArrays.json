@@ -33,9 +33,6 @@
                   },
                   {
                     "$ref": "#/components/schemas/Plane"
-                  },
-                  {
-                    "$ref": "#/components/schemas/Train"
                   }
                 ]
               }
@@ -54,7 +51,8 @@
                 "make": {
                   "type": "string"
                 }
-              }
+              },
+              "required": ["make"]
             }
           ]
         },
@@ -70,24 +68,8 @@
                 "manufacturer": {
                   "type": "string"
                 }
-              }
-            }
-          ]
-        },
-        "Train": {
-          "type": "object",
-          "allOf": [
-            {
-              "$ref": "#/components/schemas/Vehicle"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "cars": {
-                  "type": "integer",
-                  "format": "int32"
-                }
-              }
+              },
+              "required": ["manufacturer"]
             }
           ]
         },
@@ -109,8 +91,7 @@
             "propertyName": "type",
             "mapping": {
               "Car": "#/components/schemas/Car",
-              "Plane": "#/components/schemas/Plane",
-              "Train": "#/components/schemas/Train"
+              "Plane": "#/components/schemas/Plane"
             }
           }
         }
