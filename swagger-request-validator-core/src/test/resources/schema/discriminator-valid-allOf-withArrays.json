@@ -1,0 +1,101 @@
+{
+  "keyword": "discriminator",
+  "description": "A valid schema using the allOf keyword and discriminator with arrays. Exposes potential validation loops.",
+  "tests": [
+    {
+      "description": "A valid example",
+      "shouldPass": true,
+      "example": {
+        "vehicles": [
+          {
+            "type": "Car",
+            "power": 100,
+            "make": "mitsubishi"
+          }
+        ]
+      }
+    }
+  ],
+  "schema": {
+    "$schema": "https://openapis.org/specification/versions/2.0#",
+    "$ref": "#/components/schemas/Data",
+    "components": {
+      "schemas": {
+        "Data": {
+          "type": "object",
+          "properties": {
+            "vehicles": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Car"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Plane"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "Car": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Vehicle"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "make": {
+                  "type": "string"
+                }
+              },
+              "required": ["make"]
+            }
+          ]
+        },
+        "Plane": {
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Vehicle"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "manufacturer": {
+                  "type": "string"
+                }
+              },
+              "required": ["manufacturer"]
+            }
+          ]
+        },
+        "Vehicle": {
+          "required": [
+            "type"
+          ],
+          "type": "object",
+          "properties": {
+            "power": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "type": {
+              "type": "string"
+            }
+          },
+          "discriminator": {
+            "propertyName": "type",
+            "mapping": {
+              "Car": "#/components/schemas/Car",
+              "Plane": "#/components/schemas/Plane"
+            }
+          }
+        }
+      }
+    }
+  }
+}

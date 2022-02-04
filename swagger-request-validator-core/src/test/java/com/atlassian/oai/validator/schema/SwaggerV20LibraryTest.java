@@ -111,6 +111,7 @@ public class SwaggerV20LibraryTest {
         private static final String[] TEST_CASE_FILES = {
                 "discriminator-valid-allOf",
                 "discriminator-valid-allOf-withAllOfComposition",
+                "discriminator-valid-allOf-withArrays",
                 "discriminator-valid-oneOf",
                 // TODO: #289 - Use the discriminator to select between overlapping options
                 // "discriminator-valid-oneOf-withOverlappingSchema",

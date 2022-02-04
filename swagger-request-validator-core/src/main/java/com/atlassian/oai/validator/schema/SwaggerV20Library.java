@@ -53,18 +53,7 @@ public class SwaggerV20Library {
      * for use in validating OpenAPI / Swagger documents
      */
     public static JsonSchemaFactory schemaFactory() {
-        return JsonSchemaFactory
-                .newBuilder()
-                .setValidationConfiguration(
-                        ValidationConfiguration.newBuilder()
-                                .setDefaultLibrary(OAI_V2_METASCHEMA_URI, SwaggerV20Library.get())
-                                .setSyntaxMessages(getBundle(SwaggerV20Library.SyntaxBundle.class))
-                                .setValidationMessages(getBundle(SwaggerV20Library.ValidationBundle.class))
-                                .freeze())
-                .setReportProvider(
-                        // Only emit ERROR and above from the JSON schema validation
-                        new ListReportProvider(LogLevel.ERROR, LogLevel.FATAL))
-                .freeze();
+        return schemaFactory(LogLevel.ERROR, LogLevel.FATAL);
     }
 
     /**

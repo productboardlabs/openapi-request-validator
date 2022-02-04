@@ -1,6 +1,7 @@
 package com.atlassian.oai.validator.schema.keyword;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.jackson.jsonpointer.JsonPointer;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.processing.Processor;
@@ -39,6 +40,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
 
     private static final Logger log = getLogger(DiscriminatorKeywordValidator.class);
+    private static final String VALIDATION_PROPERTY_NAME = "_discriminatorValidation";
 
     private final ThreadLocal<Set<VisitedInfo>> visitedNodes = ThreadLocal.withInitial(HashSet::new);
 
@@ -168,8 +170,31 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
             return;
         }
 
+        /*
+         * See https://bitbucket.org/atlassian/swagger-request-validator/issues/269/validation-loop-error-occurred-when-allof
+         * We can have a validation loop by saying "A Car must be a Vehicle. A Vehicle must be EITHER a Car or a Plane".
+         * This causes this code to get called to check that a Vehicle is a Car - BUT we've already visited the Vehicle
+         * schema for the same object, so we can't do so a second time on the same parser stack.
+         *
+         * To prevent a validation loop from occurring in that situation, we need a "different" schema for Car. The way
+         * we make one is by attaching a #/definitions/Car/_discriminatorValidation JSON node with a complete copy of
+         * the Car schema, and using THAT to do the child schema validation here.
+         *
+         * This can't produce an infinite loop because we still won't go back through the "parent" Vehicle schema more
+         * than once; we only create one additional copy of the Car schema. In effect, we allow visiting the Car schema
+         * exactly twice: once for core properties validation, and once in the context of checking the discriminator.
+         */
+        final ObjectNode childSchemaAsObject = (ObjectNode) childSchemaTree.getNode();
+        if (!childSchemaAsObject.has(VALIDATION_PROPERTY_NAME)) {
+            childSchemaAsObject.set(VALIDATION_PROPERTY_NAME, childSchemaTree.getNode().deepCopy());
+        }
+
+        final SchemaTree childSchemaTreeWithRewrittenPointer = childSchemaTree.setPointer(
+                ptrToChildSchema.append(VALIDATION_PROPERTY_NAME)
+        );
+
         // Validate against the selected child schema
-        final FullData newData = data.withSchema(childSchemaTree);
+        final FullData newData = data.withSchema(childSchemaTreeWithRewrittenPointer);
         processor.process(subReport, newData);
 
         if (!subReport.isSuccess()) {
