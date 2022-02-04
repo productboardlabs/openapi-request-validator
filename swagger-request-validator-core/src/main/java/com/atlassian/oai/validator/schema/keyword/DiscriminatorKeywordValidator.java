@@ -184,7 +184,7 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
          * than once; we only create one additional copy of the Car schema. In effect, we allow visiting the Car schema
          * exactly twice: once for core properties validation, and once in the context of checking the discriminator.
          */
-        final ObjectNode childSchemaAsObject = ((ObjectNode) childSchemaTree.getNode());
+        final ObjectNode childSchemaAsObject = (ObjectNode) childSchemaTree.getNode();
         childSchemaAsObject.set(VALIDATION_PROPERTY_NAME, childSchemaTree.getNode().deepCopy());
 
         final SchemaTree childSchemaTreeWithRewrittenPointer = childSchemaTree.setPointer(
