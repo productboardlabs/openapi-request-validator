@@ -240,7 +240,6 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
         return ret;
     }
 
-
     /**
      * Walk a JSON object representing a report and replace all instances of the search string
      * in schema pointers or report paths with the given replacement value
