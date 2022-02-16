@@ -552,6 +552,23 @@ public class OpenApiInteractionValidator {
         }
 
         /**
+         * Sets the {@code resolve} and {@code resolveFully} flags on the {@link ParseOptions} supplied to the underlying {@link io.swagger.parser.OpenAPIParser}.
+         * Useful if you need to control whether the parser resolves refs prior to validation. Default is {@code true}.
+         * <p>
+         * If additional parse options are needed use {@link #withParseOptions(ParseOptions)} to supply a fully-constructed
+         * instance.
+         *
+         * @return this builder instance
+         *
+         * @see #withParseOptions(ParseOptions)
+         */
+        public Builder withResolveRefs(final boolean resolveRefs) {
+            parseOptions.setResolve(resolveRefs);
+            parseOptions.setResolveFully(resolveRefs);
+            return this;
+        }
+
+        /**
          * Sets the {@code resolveCombinators} flag on the {@link ParseOptions} supplied to the underlying {@link io.swagger.parser.OpenAPIParser}.
          * Useful when using {@code allOf} composition to avoid the problems with {@code additionalProperties}.
          * <p>
