@@ -175,8 +175,7 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
 
         final ObjectNode childSchemaAsObject = (ObjectNode) childSchemaTree.getNode();
         if (!childSchemaAsObject.has(VALIDATION_PROPERTY_NAME)) {
-            final JsonNode emptyJsonObject = childSchemaAsObject.deepCopy().removeAll();
-            childSchemaAsObject.set(VALIDATION_PROPERTY_NAME, emptyJsonObject);
+            childSchemaAsObject.set(VALIDATION_PROPERTY_NAME, childSchemaAsObject.objectNode());
         }
 
         final ObjectNode validationPropertyNode = (ObjectNode) childSchemaAsObject.get(VALIDATION_PROPERTY_NAME);
