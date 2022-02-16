@@ -1,5 +1,6 @@
 package com.atlassian.oai.validator.schema.keyword;
 
+import com.atlassian.oai.validator.util.ValidationReportUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.jackson.jsonpointer.JsonPointer;
@@ -16,8 +17,6 @@ import com.github.fge.jsonschema.processors.data.FullData;
 import com.github.fge.msgsimple.bundle.MessageBundle;
 import org.slf4j.Logger;
 
-import javax.annotation.concurrent.NotThreadSafe;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -37,7 +36,6 @@ import static org.slf4j.LoggerFactory.getLogger;
  *
  * @see <a href="http://swagger.io/specification/#composition-and-inheritance--polymorphism--83">Swagger specification</a>
  */
-@NotThreadSafe
 public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
 
     private static final Logger log = getLogger(DiscriminatorKeywordValidator.class);
@@ -169,39 +167,59 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
          * the Car schema, and using THAT to do the child schema validation here.
          *
          * We avoid allowing this to produce an infinite loop by checking if the JSON node for this combination of
-         * subschema and document instance. If it exists, we have already validated the discriminator, and we can bail
+         * subschema and document instance exists. If it does, we have already validated the discriminator, and we can bail
          * out early.
          */
 
         final ObjectNode childSchemaAsObject = (ObjectNode) childSchemaTree.getNode();
         if (!childSchemaAsObject.has(VALIDATION_PROPERTY_NAME)) {
-            childSchemaAsObject.set(VALIDATION_PROPERTY_NAME, childSchemaAsObject.objectNode());
+            synchronized (childSchemaAsObject) {
+                childSchemaAsObject.set(VALIDATION_PROPERTY_NAME, childSchemaAsObject.objectNode());
+            }
         }
 
         final ObjectNode validationPropertyNode = (ObjectNode) childSchemaAsObject.get(VALIDATION_PROPERTY_NAME);
 
         final String discriminatorValidationContextString = new VisitedInfo(
                 data.getInstance().getPointer(),
-                data.getSchema().getPointer()
+                data.getSchema().getPointer(),
+                // We include our thread ID in the node name so that concurrent validations using the same schema
+                // against different data objects will not conflict with each other
+                Thread.currentThread().getId()
         ).toString();
 
         if (validationPropertyNode.has(discriminatorValidationContextString)) {
-            // We have been here before for this exact instance object. Nothing more to do.
+            // We have been here before (in this thread!) for this exact instance object. Nothing more to do.
             return;
         }
 
-        validationPropertyNode.set(discriminatorValidationContextString, childSchemaAsObject.deepCopy());
+        boolean setValidationPropertiesNode = false;
 
-        final SchemaTree childSchemaTreeWithRewrittenPointer = childSchemaTree.setPointer(
-                ptrToChildSchema.append(VALIDATION_PROPERTY_NAME).append(discriminatorValidationContextString)
-        );
-
-        // Validate against the selected child schema
         try {
+            synchronized (validationPropertyNode) {
+                if (validationPropertyNode.has(discriminatorValidationContextString)) {
+                    // The validation property node appeared while we were blocked; this shouldn't happen,
+                    // as it includes our thread ID, but let's exit regardless to be safe. We're going to remove
+                    // the node again, so we should make sure we create it!
+                    return;
+                }
+                validationPropertyNode.set(discriminatorValidationContextString, childSchemaAsObject.deepCopy());
+                setValidationPropertiesNode = true;
+            }
+
+            final SchemaTree childSchemaTreeWithRewrittenPointer = childSchemaTree.setPointer(
+                    ptrToChildSchema.append(VALIDATION_PROPERTY_NAME).append(discriminatorValidationContextString)
+            );
+
+            // Validate against the selected child schema
             final FullData newData = data.withSchema(childSchemaTreeWithRewrittenPointer);
             processor.process(subReport, newData);
         } finally {
-            validationPropertyNode.remove(discriminatorValidationContextString);
+            if (setValidationPropertiesNode) {
+                synchronized (validationPropertyNode) {
+                    validationPropertyNode.remove(discriminatorValidationContextString);
+                }
+            }
         }
 
         if (!subReport.isSuccess()) {
@@ -210,7 +228,7 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
 
             final JsonNode reportAsJson = subReport.asJson();
 
-            replaceReportOutput(reportAsJson, stringToReplace, "");
+            ValidationReportUtils.replaceReportOutput(reportAsJson, stringToReplace, "");
 
             report.error(msg(data, bundle, "err.swaggerv2.discriminator.fail")
                     .putArgument("schema", ptrToChildSchema.toString())
@@ -237,57 +255,6 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
             }
         }
         return ret;
-    }
-
-    /**
-     * Walk a JSON object representing a report and replace all instances of the search string
-     * in schema pointers or report paths with the given replacement value
-     */
-    private void replaceReportOutput(
-            final JsonNode reportInput,
-            final String searchString,
-            final String replaceString
-    ) {
-        if (reportInput.isArray()) {
-            reportInput.forEach(it -> {
-                replaceReportOutput(it, searchString, replaceString);
-            });
-            return;
-        }
-        if (!reportInput.isObject()) {
-            return;
-        }
-        if (reportInput.has("reports")) {
-            if (reportInput.get("reports").isObject()) {
-                final ObjectNode reportsAsJson = (ObjectNode) reportInput.get("reports");
-
-                final ArrayList<String> propertiesToModify = new ArrayList<>();
-                reportsAsJson.fields().forEachRemaining(it -> {
-                    final String reportFieldName = it.getKey();
-                    final JsonNode reportValue = it.getValue();
-                    replaceReportOutput(reportValue, searchString, replaceString);
-
-                    if (reportFieldName.contains(searchString)) {
-                        propertiesToModify.add(reportFieldName);
-                    }
-
-                });
-
-                propertiesToModify.forEach(reportFieldName -> {
-                    final String replacementFieldName = reportFieldName.replaceAll(searchString, replaceString);
-                    reportsAsJson.set(replacementFieldName, reportsAsJson.get(reportFieldName));
-                    reportsAsJson.remove(reportFieldName);
-                });
-            }
-        }
-        if (reportInput.has("schema")) {
-            if (reportInput.get("schema").isObject()) {
-                final ObjectNode schemaObject = (ObjectNode) reportInput.get("schema");
-                if (schemaObject.has("pointer")) {
-                    schemaObject.put("pointer", schemaObject.get("pointer").textValue().replaceAll(searchString, replaceString));
-                }
-            }
-        }
     }
 
     private JsonNode mappedDiscriminatorNode(final JsonNode originalDiscriminatorNode,
@@ -373,10 +340,12 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
     private static class VisitedInfo {
         private final JsonPointer instancePointer;
         private final JsonPointer schemaPointer;
+        private final Long contextId;
 
-        public VisitedInfo(final JsonPointer instancePointer, final JsonPointer schemaPointer) {
+        public VisitedInfo(final JsonPointer instancePointer, final JsonPointer schemaPointer, final Long contextId) {
             this.instancePointer = instancePointer;
             this.schemaPointer = schemaPointer;
+            this.contextId = contextId;
         }
 
         @Override
@@ -389,17 +358,18 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
             }
             final VisitedInfo that = (VisitedInfo) o;
             return Objects.equals(instancePointer, that.instancePointer) &&
-                    Objects.equals(schemaPointer, that.schemaPointer);
+                    Objects.equals(schemaPointer, that.schemaPointer) &&
+                    Objects.equals(contextId, that.contextId);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(instancePointer, schemaPointer);
+            return Objects.hash(instancePointer, schemaPointer, contextId);
         }
 
         @Override
         public String toString() {
-            return schemaPointer.toString() + "//" + instancePointer.toString();
+            return schemaPointer.toString() + "//" + instancePointer.toString() + "//" + contextId;
         }
     }
 

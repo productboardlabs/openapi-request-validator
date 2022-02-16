@@ -146,20 +146,31 @@ public class SwaggerV20LibraryTest {
         @Parameterized.Parameter(5)
         public TestDetails testDetails;
 
+        private static Object[] buildCaseFromTest(final TestDetails t, final TestCase testCase,
+                                                  final JsonSchema schema, final String nameSuffix) {
+            return new Object[]{
+                    testCase.keyword,
+                    testCase.description,
+                    t.description,
+                    (t.shouldPass ? "pass" : "fail") + nameSuffix,
+                    schema,
+                    t
+            };
+        }
+
         private static Stream<Object[]> loadTests(final String testCaseFile) {
             try {
                 final TestCase testCase = Json.mapper().treeToValue(loadTestCase(testCaseFile), TestCase.class);
                 final JsonSchema schema = FACTORY.getJsonSchema(testCase.schema);
-                return testCase.tests
-                        .stream()
-                        .map(t -> new Object[]{
-                                testCase.keyword,
-                                testCase.description,
-                                t.description,
-                                t.shouldPass ? "pass" : "fail",
-                                schema,
-                                t
-                        });
+                // Run each test two times, with the same schema, to ensure that the schema itself isn't mangled
+                return Stream.concat(
+                        testCase.tests
+                                .stream()
+                                .map(t -> buildCaseFromTest(t, testCase, schema, "")),
+                        testCase.tests
+                                .stream()
+                                .map(t -> buildCaseFromTest(t, testCase, schema, " again"))
+                );
             } catch (final Exception e) {
                 fail(e.getMessage());
             }
