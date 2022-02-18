@@ -22,7 +22,7 @@ public class ResettableRequestServletWrapper extends HttpServletRequestWrapper {
     private BufferedReader reader;
     private Long contentLengthLong;
 
-    ResettableRequestServletWrapper(final HttpServletRequest request) {
+    public ResettableRequestServletWrapper(final HttpServletRequest request) {
         super(request);
     }
 
