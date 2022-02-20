@@ -325,6 +325,18 @@ public class SimpleRequest implements Request {
         }
 
         /**
+         * Adds a request {@link Body} to this builder.
+         *
+         * @param content the request {@link Body}
+         *
+         * @return this builder
+         */
+        public Builder withBody(final Body content) {
+            this.body = content;
+            return this;
+        }
+
+        /**
          * Adds a request header to this builder. If there was already a header with this
          * name the values will be added.
          * <p>

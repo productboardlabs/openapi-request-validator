@@ -13,6 +13,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -32,32 +33,29 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 import org.springframework.web.util.UrlPathHelper;
 
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.StringReader;
 import java.lang.reflect.Field;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
@@ -128,43 +126,46 @@ public class OpenApiValidationServiceTest {
 
     @Test
     public void buildRequest_failsWithoutRequiredRequest() {
+        final Supplier<Body> bodySupplier = mock(Supplier.class);
         assertThrows(NullPointerException.class,
-                () -> classUnderTest.buildRequest(null));
+                () -> classUnderTest.buildRequest(null, bodySupplier));
     }
 
     @Test
-    public void buildRequest_withoutBodyHeaderAndQueryString() throws IOException {
+    public void buildRequest_failsWithoutRequiredBodySupplier() {
+        final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
+        assertThrows(NullPointerException.class,
+                () -> classUnderTest.buildRequest(servletRequest, null));
+    }
+
+    @Test
+    public void buildRequest_withoutHeaderAndQueryString() {
         final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
         when(servletRequest.getMethod()).thenReturn("GET");
         when(servletRequest.getQueryString()).thenReturn("");
-        when(urlPathHelper.getPathWithinApplication(servletRequest)).thenReturn("/swagger-request-validator");
-        final String content = "hello";
-        final ServletInputStream inputStream = new ServletInputStreamMock(content.getBytes(StandardCharsets.UTF_8));
-        when(servletRequest.getInputStream()).thenReturn(inputStream);
         when(servletRequest.getParameterNames()).thenReturn(asEnumeration("not-a-query-parameter"));
         when(servletRequest.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
+        when(urlPathHelper.getPathWithinApplication(servletRequest)).thenReturn("/swagger-request-validator");
+        final Body body = mock(Body.class);
+        final Supplier<Body> bodySupplier = mock(Supplier.class);
+        when(bodySupplier.get()).thenReturn(body);
 
-        final Request result = classUnderTest.buildRequest(servletRequest);
+        final Request result = classUnderTest.buildRequest(servletRequest, bodySupplier);
 
         assertThat(result.getPath(), equalTo("/swagger-request-validator"));
         assertThat(result.getMethod(), equalTo(Request.Method.GET));
-        final Body body = result.getRequestBody().get();
-        assertThat(body, instanceOf(InputStreamBody.class));
-        assertThat(body.toString(StandardCharsets.UTF_8), equalTo(content));
+        assertThat(result.getRequestBody().get(), is(body));
         assertThat(result.getHeaders().size(), equalTo(0));
         assertThat(result.getQueryParameters().size(), equalTo(0));
     }
 
     @Test
-    public void buildRequest_withBodyHeaderAndQueryString() throws IOException {
+    public void buildRequest_withHeaderAndQueryString() {
         final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
         when(servletRequest.getMethod()).thenReturn("POST");
         when(servletRequest.getQueryString())
                 .thenReturn("query1=QUERY_ONE&&query2=query_two&query2=QUERY_TWO&");
         when(urlPathHelper.getPathWithinApplication(servletRequest)).thenReturn("/swagger-request-validator");
-        final String content = "hello";
-        final ServletInputStream inputStream = new ServletInputStreamMock(content.getBytes(StandardCharsets.UTF_8));
-        when(servletRequest.getInputStream()).thenReturn(inputStream);
         when(servletRequest.getParameterNames())
                 .thenReturn(asEnumeration("query1", "query2", "query3"));
         when(servletRequest.getParameterValues("query1"))
@@ -177,14 +178,15 @@ public class OpenApiValidationServiceTest {
                 .thenReturn(Collections.enumeration(asList("HEADER_ONE")));
         when(servletRequest.getHeaders("header2"))
                 .thenReturn(Collections.enumeration(asList("header_two", "HEADER_TWO")));
+        final Body body = mock(Body.class);
+        final Supplier<Body> bodySupplier = mock(Supplier.class);
+        when(bodySupplier.get()).thenReturn(body);
 
-        final Request result = classUnderTest.buildRequest(servletRequest);
+        final Request result = classUnderTest.buildRequest(servletRequest, bodySupplier);
 
         assertThat(result.getPath(), equalTo("/swagger-request-validator"));
         assertThat(result.getMethod(), equalTo(Request.Method.POST));
-        final Body body = result.getRequestBody().get();
-        assertThat(body, instanceOf(InputStreamBody.class));
-        assertThat(body.toString(StandardCharsets.UTF_8), equalTo(content));
+        assertThat(result.getRequestBody().get(), is(body));
         assertThat(result.getHeaders().size(), equalTo(2));
         assertThat(result.getHeaderValues("header1"),
                 equalTo(asList("HEADER_ONE")));
@@ -198,27 +200,48 @@ public class OpenApiValidationServiceTest {
     }
 
     @Test
-    public void buildRequest_withContentCachingRequestWrapper() throws IOException {
+    public void buildRequest_queryParametersAreResolvedBeforeTheBody() {
         // given:
-        final ContentCachingRequestWrapper servletRequest = mock(ContentCachingRequestWrapper.class);
+        final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
+        final Supplier<Body> bodySupplier = mock(Supplier.class);
+        final Body body = mock(Body.class);
+        final InOrder ensureOrder = inOrder(servletRequest, bodySupplier);
 
         // and:
         when(servletRequest.getMethod()).thenReturn("POST");
+        when(servletRequest.getQueryString())
+                .thenReturn("query1=QUERY_ONE&&query2=query_two&query2=QUERY_TWO&");
         when(urlPathHelper.getPathWithinApplication(servletRequest)).thenReturn("/swagger-request-validator");
-        when(servletRequest.getParameterNames()).thenReturn(asEnumeration());
+        when(servletRequest.getParameterNames())
+                .thenReturn(asEnumeration("query1", "query2", "query3"));
+        when(servletRequest.getParameterValues("query1"))
+                .thenReturn(new String[]{"QUERY_1"});
+        when(servletRequest.getParameterValues("query2"))
+                .thenReturn(new String[]{"query_2", "QUERY_2"});
         when(servletRequest.getHeaderNames()).thenReturn(asEnumeration());
-        when(servletRequest.getContentAsByteArray()).thenReturn("Content".getBytes(StandardCharsets.ISO_8859_1));
-        when(servletRequest.getCharacterEncoding()).thenReturn(StandardCharsets.ISO_8859_1.name());
+        when(bodySupplier.get()).thenReturn(body);
 
         // when:
-        final Request result = classUnderTest.buildRequest(servletRequest);
+        final Request result = classUnderTest.buildRequest(servletRequest, bodySupplier);
 
         // then:
+        // for ContentCachingRequestWrapper it is important that the query parameters are read before (!!) the body
+        ensureOrder.verify(servletRequest).getParameterNames();
+        ensureOrder.verify(servletRequest).getQueryString();
+        ensureOrder.verify(bodySupplier).get();
+        ensureOrder.verify(servletRequest).getParameterValues("query1");
+        ensureOrder.verify(servletRequest).getParameterValues("query2");
+
+        // and:
         assertThat(result.getPath(), equalTo("/swagger-request-validator"));
         assertThat(result.getMethod(), equalTo(Request.Method.POST));
-        assertThat(result.getRequestBody().get().toString(StandardCharsets.UTF_8), equalTo("Content"));
+        assertThat(result.getRequestBody().get(), is(body));
         assertThat(result.getHeaders().size(), equalTo(0));
-        assertThat(result.getQueryParameters().size(), equalTo(0));
+        assertThat(result.getQueryParameters().size(), equalTo(2));
+        assertThat(result.getQueryParameterValues("query1"),
+                equalTo(asList("QUERY_1")));
+        assertThat(result.getQueryParameterValues("query2"),
+                equalTo(asList("query_2", "QUERY_2")));
     }
 
     @Test
@@ -336,7 +359,7 @@ public class OpenApiValidationServiceTest {
     }
 
     @Test
-    public void buildRequest_withUTF8EncodedQueryString() throws IOException {
+    public void buildRequest_withUTF8EncodedQueryString() {
         final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
 
         when(servletRequest.getMethod()).thenReturn("GET");
@@ -346,15 +369,17 @@ public class OpenApiValidationServiceTest {
         when(servletRequest.getParameterValues("name=a")).thenReturn(new String[]{"value=a"});
         when(servletRequest.getParameterValues("q[name]")).thenReturn(new String[]{"q{value}", "q[value]"});
         when(urlPathHelper.getPathWithinApplication(servletRequest)).thenReturn("/swagger-request-validator");
-        final BufferedReader reader = new BufferedReader(new StringReader(""));
-        when(servletRequest.getReader()).thenReturn(reader);
         when(servletRequest.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
 
-        final Request result = classUnderTest.buildRequest(servletRequest);
+        final Body body = mock(Body.class);
+        final Supplier<Body> bodySupplier = mock(Supplier.class);
+        when(bodySupplier.get()).thenReturn(body);
+
+        final Request result = classUnderTest.buildRequest(servletRequest, bodySupplier);
 
         assertThat(result.getPath(), equalTo("/swagger-request-validator"));
         assertThat(result.getMethod(), equalTo(Request.Method.GET));
-        assertThat(result.getRequestBody().isPresent(), equalTo(false));
+        assertThat(result.getRequestBody().get(), is(body));
         assertThat(result.getHeaders().size(), equalTo(0));
         assertThat(result.getQueryParameters().size(), equalTo(2));
         assertThat(result.getQueryParameterValues("name=a"), equalTo(Arrays.asList("value=a")));
@@ -362,7 +387,7 @@ public class OpenApiValidationServiceTest {
     }
 
     @Test
-    public void buildRequest_withNotUTF8EncodedQueryString() throws IOException {
+    public void buildRequest_withNotUTF8EncodedQueryString() {
         final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
 
         when(servletRequest.getMethod()).thenReturn("GET");
@@ -372,15 +397,17 @@ public class OpenApiValidationServiceTest {
         when(servletRequest.getParameterValues("name=a")).thenReturn(new String[]{"value=a"});
         when(servletRequest.getParameterValues("q[name]")).thenReturn(new String[]{"q{value}", "q[value]"});
         when(urlPathHelper.getPathWithinApplication(servletRequest)).thenReturn("/swagger-request-validator");
-        final BufferedReader reader = new BufferedReader(new StringReader(""));
-        when(servletRequest.getReader()).thenReturn(reader);
         when(servletRequest.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
 
-        final Request result = classUnderTest.buildRequest(servletRequest);
+        final Body body = mock(Body.class);
+        final Supplier<Body> bodySupplier = mock(Supplier.class);
+        when(bodySupplier.get()).thenReturn(body);
+
+        final Request result = classUnderTest.buildRequest(servletRequest, bodySupplier);
 
         assertThat(result.getPath(), equalTo("/swagger-request-validator"));
         assertThat(result.getMethod(), equalTo(Request.Method.GET));
-        assertThat(result.getRequestBody().isPresent(), equalTo(false));
+        assertThat(result.getRequestBody().get(), is(body));
         assertThat(result.getHeaders().size(), equalTo(0));
         assertThat(result.getQueryParameters().size(), equalTo(2));
         assertThat(result.getQueryParameterValues("name=a"), equalTo(Arrays.asList("value=a")));
@@ -401,7 +428,8 @@ public class OpenApiValidationServiceTest {
                        @RequestHeader("headerValue") final String headerValue, final HttpServletRequest servletRequest) throws IOException {
             final OpenApiValidationService openApiValidationService = new OpenApiValidationService(Mockito.mock(OpenApiInteractionValidator.class),
                     new UrlPathHelper());
-            final Request request = openApiValidationService.buildRequest(servletRequest);
+            final ServletInputStream inputStream = servletRequest.getInputStream();
+            final Request request = openApiValidationService.buildRequest(servletRequest, () -> new InputStreamBody(inputStream));
             return new ImmutableMap.Builder()
                     .put("springRequest",
                             new ImmutableMap.Builder()

@@ -1,6 +1,8 @@
 package com.atlassian.oai.validator.springmvc;
 
 import com.atlassian.oai.validator.OpenApiInteractionValidator;
+import com.atlassian.oai.validator.model.Body;
+import com.atlassian.oai.validator.model.ByteArrayBody;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.report.ValidationReport;
@@ -17,6 +19,8 @@ import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.function.Supplier;
 
 import static com.atlassian.oai.validator.springmvc.OpenApiValidationFilter.ATTRIBUTE_REQUEST_VALIDATION;
 import static com.atlassian.oai.validator.springmvc.OpenApiValidationFilter.ATTRIBUTE_RESPONSE_VALIDATION;
@@ -62,18 +66,38 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
         this.validationReportHandler = validationReportHandler;
     }
 
-    private static boolean doValidationStep(final HttpServletRequest servletRequest, final String attributeName) {
-        return Boolean.TRUE.equals(servletRequest.getAttribute(attributeName));
+    private static boolean skipValidationStep(final HttpServletRequest servletRequest, final String attributeName) {
+        return !Boolean.TRUE.equals(servletRequest.getAttribute(attributeName));
     }
 
-    private static boolean doRequestValidationStep(final HttpServletRequest servletRequest) {
-        return (servletRequest instanceof ContentCachingRequestWrapper || servletRequest instanceof ResettableRequestServletWrapper) &&
-                doValidationStep(servletRequest, ATTRIBUTE_REQUEST_VALIDATION);
+    private static String buildRequestLoggingKey(final HttpServletRequest servletRequest) {
+        return servletRequest.getMethod() + "#" + servletRequest.getRequestURI();
     }
 
-    private static boolean doResponseValidationStep(final HttpServletRequest servletRequest, final HttpServletResponse servletResponse) {
-        return  doValidationStep(servletRequest, ATTRIBUTE_RESPONSE_VALIDATION) &&
-                getCachingResponse(servletResponse) != null;
+    private void validateRequest(final HttpServletRequest servletRequest, final Supplier<Body> bodySupplier) {
+        final String requestLoggingKey = buildRequestLoggingKey(servletRequest);
+        LOG.debug("OpenAPI request validation: {}", requestLoggingKey);
+
+        final Request request = openApiValidationService.buildRequest(servletRequest, bodySupplier);
+        final ValidationReport validationReport = openApiValidationService.validateRequest(request);
+
+        validationReportHandler.handleRequestReport(requestLoggingKey, validationReport);
+    }
+
+    private void validateResponse(final HttpServletRequest servletRequest, final ContentCachingResponseWrapper cachedResponse) {
+        final String requestLoggingKey = buildRequestLoggingKey(servletRequest);
+        LOG.debug("OpenAPI response validation: {}", requestLoggingKey);
+
+        final Response response = openApiValidationService.buildResponse(cachedResponse);
+        final ValidationReport validationReport = openApiValidationService.validateResponse(servletRequest, response);
+
+        try {
+            validationReportHandler.handleResponseReport(requestLoggingKey, validationReport);
+        } catch (final InvalidResponseException e) {
+            // as an exception will rewrite the current, cached response it has to be reset
+            cachedResponse.reset();
+            throw e;
+        }
     }
 
     /**
@@ -97,23 +121,19 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
     public boolean preHandle(final HttpServletRequest servletRequest,
                              final HttpServletResponse servletResponse,
                              final Object handler) throws Exception {
-        if (!doRequestValidationStep(servletRequest)) {
-            LOG.debug("OpenAPI request validation skipped");
-            return true;
-        }
-
-        // validate the request
-        final String requestLoggingKey = servletRequest.getMethod() + "#" + servletRequest.getRequestURI();
-        LOG.debug("OpenAPI request validation: {}", requestLoggingKey);
-
-        final Request request = openApiValidationService.buildRequest(servletRequest);
-        final ValidationReport validationReport = openApiValidationService.validateRequest(request);
-
-        validationReportHandler.handleRequestReport(requestLoggingKey, validationReport);
-
-        // reset the requests servlet input stream after reading it on former step
-        if (servletRequest instanceof ResettableRequestServletWrapper) {
+        if (skipValidationStep(servletRequest, ATTRIBUTE_REQUEST_VALIDATION)) {
+            LOG.debug("OpenAPI request validation skipped for this request");
+        } else if (servletRequest instanceof ResettableRequestServletWrapper) {
+            final InputStream inputStream = servletRequest.getInputStream();
+            final Supplier<Body> bodySupplier = () -> new ResettableInputStreamBody((ResettableRequestServletWrapper.CachingServletInputStream) inputStream);
+            validateRequest(servletRequest, bodySupplier);
+            // reset the request's servlet input stream after reading it on validation
             ((ResettableRequestServletWrapper) servletRequest).resetInputStream();
+        } else if (servletRequest instanceof ContentCachingRequestWrapper) {
+            final Supplier<Body> bodySupplier = () -> new ByteArrayBody(((ContentCachingRequestWrapper) servletRequest).getContentAsByteArray());
+            validateRequest(servletRequest, bodySupplier);
+        } else {
+            LOG.debug("OpenAPI request validation skipped: unsupported HttpServletRequest type");
         }
         return true;
     }
@@ -136,24 +156,15 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
                            final HttpServletResponse servletResponse,
                            final Object handler,
                            final ModelAndView modelAndView) {
-        if (!doResponseValidationStep(servletRequest, servletResponse)) {
-            LOG.debug("OpenAPI response validation skipped");
-            return;
-        }
-        // validate the response
-        final ContentCachingResponseWrapper cachedResponse = getCachingResponse(servletResponse);
-        final String requestLoggingKey = servletRequest.getMethod() + "#" + servletRequest.getRequestURI();
-        LOG.debug("OpenAPI response validation: {}", requestLoggingKey);
-
-        final Response response = openApiValidationService.buildResponse(cachedResponse);
-        final ValidationReport validationReport = openApiValidationService.validateResponse(servletRequest, response);
-
-        try {
-            validationReportHandler.handleResponseReport(requestLoggingKey, validationReport);
-        } catch (final InvalidResponseException e) {
-            // as an exception will rewrite the current, cached response it has to be reset
-            cachedResponse.reset();
-            throw e;
+        if (skipValidationStep(servletRequest, ATTRIBUTE_RESPONSE_VALIDATION)) {
+            LOG.debug("OpenAPI response validation skipped for this request");
+        } else {
+            final ContentCachingResponseWrapper cachedResponse = getCachingResponse(servletResponse);
+            if (cachedResponse != null) {
+                validateResponse(servletRequest, cachedResponse);
+            } else {
+                LOG.debug("OpenAPI response validation skipped: unsupported HttpServletResponse type");
+            }
         }
     }
 }
