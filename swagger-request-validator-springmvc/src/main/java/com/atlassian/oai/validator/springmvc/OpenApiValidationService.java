@@ -101,8 +101,6 @@ public class OpenApiValidationService {
      * @param servletResponse the {@link javax.servlet.http.HttpServletResponse} whose body is cached
      *
      * @return the build {@link Response} created out of given {@link ContentCachingResponseWrapper}
-     *
-     * @throws IOException if the cached response body can't be read
      */
     public Response buildResponse(final ContentCachingResponseWrapper servletResponse) {
         final int statusCode = servletResponse.getStatusCode();
@@ -133,7 +131,7 @@ public class OpenApiValidationService {
      * @return the {@link ValidationReport} for the validated {@link Request}
      */
     public ValidationReport validateResponse(final HttpServletRequest servletRequest,
-                                      final Response response) {
+                                             final Response response) {
         final Request.Method method = Request.Method.valueOf(servletRequest.getMethod());
         final String path = resolveServletPath(servletRequest);
         return validator.validateResponse(path, method, response);
