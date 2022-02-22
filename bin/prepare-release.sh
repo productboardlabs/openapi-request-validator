@@ -86,7 +86,7 @@ pushd "$(dirname ${BASH_SOURCE[0]})/.." > /dev/null
 
 previousReleaseTag="$(currentReleaseTag)"
 
-mvn build-helper:parse-version release:prepare -B -P${profile}
+mvn build-helper:parse-version release:prepare -B -P${profile} --settings ./bin/settings.xml
 scmTag="$(prop 'scm.tag')"
 git tag -f "latest-release" "${scmTag}"
 git push "origin" "${scmTag}" "latest-release" -f
