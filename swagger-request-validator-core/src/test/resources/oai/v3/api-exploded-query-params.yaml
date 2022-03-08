@@ -34,6 +34,59 @@ paths:
       operationId: GetBuilds
       responses:
         '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Builds'
+  /api/more-builds:
+    parameters:
+      - in: query
+        name: MoreBuildsQuery
+        explode: true
+        schema:
+          type: object
+          required:
+            - since
+            - maxBuilds
+          properties:
+            since:
+              type: string
+              format: date
+              minimum: 0
+            sinceBuild:
+              type: string
+            maxBuilds:
+              type: integer
+              minimum: 0
+              maximum: 1000
+              default: 100
+            maxWaitSecs:
+              type: integer
+              minimum: 1
+              maximum: 20
+              default: 3
+    get:
+      operationId: GetMoreBuilds
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Builds'
+  /api/builds-with-ref:
+    parameters:
+      - in: query
+        name: MoreBuildsQuery
+        explode: true
+        schema:
+          $ref: '#/components/schemas/RefBuildsQuery'
+    get:
+      operationId: RefBuildsQuery
+      responses:
+        '200':
+          description: Ok
           content:
             application/json:
               schema:
@@ -64,3 +117,25 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/Build'
+    RefBuildsQuery:
+      type: object
+      required:
+        - since
+        - maxBuilds
+      properties:
+        since:
+          type: string
+          format: date
+          minimum: 0
+        sinceBuild:
+          type: string
+        maxBuilds:
+          type: integer
+          minimum: 0
+          maximum: 1000
+          default: 100
+        maxWaitSecs:
+          type: integer
+          minimum: 1
+          maximum: 20
+          default: 3

@@ -266,8 +266,7 @@ public class RequestValidator {
 
         return defaultIfNull(apiOperation.getOperation().getParameters(), Collections.<Parameter>emptyList())
                 .stream()
-                .filter(p -> isQueryParam(p) && !isDeepObjectParam(p) && isExplodedParamWithProperties(p)
-                        && p.getExplode() && p.getSchema() != null && p.getSchema().getProperties() != null)
+                .filter(p -> isQueryParam(p) && !isDeepObjectParam(p) && isExplodedParamWithProperties(p))
                 .flatMap(p -> ((Set<Map.Entry<String, Schema<?>>>) p.getSchema().getProperties().entrySet())
                         .stream()
                         .map(e -> {
@@ -276,7 +275,7 @@ public class RequestValidator {
                             parameter.set$ref(schema.get$ref());
                             parameter.name(e.getKey());
                             parameter.setDescription(schema.getDescription());
-                            parameter.setRequired(p.getRequired());
+                            parameter.setRequired(isRequired(p, e.getKey()));
                             parameter.setSchema(schema);
                             parameter.setIn(p.getIn());
                             parameter.setExample(schema.getExample());
@@ -294,6 +293,13 @@ public class RequestValidator {
                         request.getQueryParameterValues(p.getName()),
                         "validation.request.parameter.query.missing"))
                 .reduce(empty(), ValidationReport::merge);
+    }
+
+    private boolean isRequired(Parameter parameter, String propertyName) {
+        return Optional.ofNullable(parameter.getSchema())
+                .map(Schema::getRequired)
+                .map(required -> required.contains(propertyName))
+                .orElse(false);
     }
 
     @Nonnull
