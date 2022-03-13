@@ -295,7 +295,7 @@ public class RequestValidator {
                 .reduce(empty(), ValidationReport::merge);
     }
 
-    private boolean isRequired(Parameter parameter, String propertyName) {
+    private boolean isRequired(final Parameter parameter, final String propertyName) {
         return Optional.ofNullable(parameter.getSchema())
                 .map(Schema::getRequired)
                 .map(required -> required.contains(propertyName))
