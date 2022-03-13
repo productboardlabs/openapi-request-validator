@@ -14,8 +14,10 @@ import com.google.common.net.MediaType;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.parameters.Parameter.StyleEnum;
+import io.swagger.v3.oas.models.parameters.QueryParameter;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.slf4j.Logger;
 
@@ -110,6 +112,7 @@ public class RequestValidator {
                 .merge(validatePathParameters(apiOperation))
                 .merge(requestBodyValidator.validateRequestBody(request, apiOperation.getOperation().getRequestBody()))
                 .merge(validateQueryParameters(request, apiOperation))
+                .merge(validateExplodedQueryParameters(request, apiOperation))
                 .merge(validateDeepObjectQueryParameters(request, apiOperation))
                 .merge(validateUnexpectedQueryParameters(request, apiOperation))
                 .merge(validateCookieParameters(request, apiOperation))
@@ -245,14 +248,58 @@ public class RequestValidator {
     @Nonnull
     private ValidationReport validateQueryParameters(final Request request,
                                                      final ApiOperation apiOperation) {
+
         return defaultIfNull(apiOperation.getOperation().getParameters(), Collections.<Parameter>emptyList())
                 .stream()
-                .filter(p -> isQueryParam(p) && !isDeepObjectParam(p))
+                .filter(p -> isQueryParam(p) && !isDeepObjectParam(p) && !isExplodedParamWithProperties(p))
                 .map(p -> validateParameter(
-                        apiOperation, p,
+                        apiOperation,
+                        p,
                         request.getQueryParameterValues(p.getName()),
                         "validation.request.parameter.query.missing"))
                 .reduce(empty(), ValidationReport::merge);
+    }
+
+    @Nonnull
+    private ValidationReport validateExplodedQueryParameters(final Request request,
+                                                             final ApiOperation apiOperation) {
+
+        return defaultIfNull(apiOperation.getOperation().getParameters(), Collections.<Parameter>emptyList())
+                .stream()
+                .filter(p -> isQueryParam(p) && !isDeepObjectParam(p) && isExplodedParamWithProperties(p))
+                .flatMap(p -> ((Set<Map.Entry<String, Schema<?>>>) p.getSchema().getProperties().entrySet())
+                        .stream()
+                        .map(e -> {
+                            final Schema<?> schema = e.getValue();
+                            final QueryParameter parameter = new QueryParameter();
+                            parameter.set$ref(schema.get$ref());
+                            parameter.name(e.getKey());
+                            parameter.setDescription(schema.getDescription());
+                            parameter.setRequired(isRequired(p, e.getKey()));
+                            parameter.setSchema(schema);
+                            parameter.setIn(p.getIn());
+                            parameter.setExample(schema.getExample());
+                            parameter.setDeprecated(schema.getDeprecated());
+                            parameter.setStyle(p.getStyle());
+                            parameter.setExplode(false);
+                            parameter.setExtensions(schema.getExtensions());
+
+                            return parameter;
+                        })
+                )
+                .map(p -> validateParameter(
+                        apiOperation,
+                        p,
+                        request.getQueryParameterValues(p.getName()),
+                        "validation.request.parameter.query.missing"))
+                .reduce(empty(), ValidationReport::merge);
+    }
+
+    private boolean isRequired(final Parameter parameter, final String propertyName) {
+        return Optional.ofNullable(parameter.getSchema())
+                .map(Schema::getRequired)
+                .map(required -> required.contains(propertyName))
+                .orElse(false);
     }
 
     @Nonnull
@@ -312,20 +359,31 @@ public class RequestValidator {
                                                                final ApiOperation apiOperation) {
 
         final Set<String> allowedQueryParams =
-                Stream.concat(defaultIfNull(apiOperation.getOperation().getParameters(),
-                        Collections.<Parameter>emptyList())
-                                .stream()
-                                .filter(p -> isQueryParam(p))
-                                .map(Parameter::getName),
-                        defaultIfNull(components.getSecuritySchemes(),
-                                Collections.<String, SecurityScheme>emptyMap()).values().stream()
-                                .filter(sc -> sc.getIn() != null && sc.getIn() == SecurityScheme.In.QUERY)
-                                .map(SecurityScheme::getName)
-                ).collect(Collectors.toSet());
+                Stream.of(defaultIfNull(apiOperation.getOperation().getParameters(),
+                                        Collections.<Parameter>emptyList())
+                                        .stream()
+                                        .filter(p -> isQueryParam(p) && (isDeepObjectParam(p) || !isExplodedParamWithProperties(p)))
+                                        .map(Parameter::getName),
+                                (Stream<String>) defaultIfNull(apiOperation.getOperation().getParameters(),
+                                        Collections.<Parameter>emptyList())
+                                        .stream()
+                                        .filter(p -> isQueryParam(p) && !isDeepObjectParam(p) && isExplodedParamWithProperties(p))
+                                        .flatMap(p -> p.getSchema().getProperties().keySet().stream()),
+                                defaultIfNull(components.getSecuritySchemes(),
+                                        Collections.<String, SecurityScheme>emptyMap()).values().stream()
+                                        .filter(sc -> sc.getIn() != null && sc.getIn() == SecurityScheme.In.QUERY)
+                                        .map(SecurityScheme::getName)
+                        ).flatMap(s -> s)
+                        .collect(Collectors.toSet());
 
         return request.getQueryParameters().stream()
                 .map(queryParam -> validateUnexpectedQueryParameter(allowedQueryParams, queryParam, apiOperation))
                 .reduce(empty(), ValidationReport::merge);
+    }
+
+    private Boolean isExplodedParamWithProperties(final Parameter parameter) {
+        return parameter.getExplode() != null && parameter.getExplode() && parameter.getSchema() != null
+                && parameter.getSchema().getProperties() != null && !parameter.getSchema().getProperties().isEmpty();
     }
 
     @Nonnull
