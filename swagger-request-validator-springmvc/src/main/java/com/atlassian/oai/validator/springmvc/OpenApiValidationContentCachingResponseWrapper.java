@@ -9,7 +9,7 @@ import javax.servlet.http.HttpServletResponse;
  * With async processing (and not only that) our ContentCachingResponseWrapper does not have
  * to be on the top of the ResponseWrapper chain.
  */
-class OpenApiValidationContentCachingResponseWrapper extends ContentCachingResponseWrapper {
+public class OpenApiValidationContentCachingResponseWrapper extends ContentCachingResponseWrapper {
     public OpenApiValidationContentCachingResponseWrapper(final HttpServletResponse response) {
         super(response);
     }

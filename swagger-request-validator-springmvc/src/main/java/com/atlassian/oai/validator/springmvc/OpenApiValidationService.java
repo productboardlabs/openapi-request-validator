@@ -28,20 +28,20 @@ import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
 
-class OpenApiValidationService {
+public class OpenApiValidationService {
 
     private static final List<String> URI_CHARSETS = resolveAvailableCharsets();
     private final OpenApiInteractionValidator validator;
     private final UrlPathHelper urlPathHelper;
 
-    OpenApiValidationService(final EncodedResource specAsResource, final UrlPathHelper urlPathHelper) throws IOException {
+    public OpenApiValidationService(final EncodedResource specAsResource, final UrlPathHelper urlPathHelper) throws IOException {
         this(OpenApiInteractionValidator
                 .createForInlineApiSpecification(IOUtils.toString(specAsResource.getReader()))
                 .withLevelResolver(SpringMVCLevelResolverFactory.create())
                 .build(), urlPathHelper);
     }
 
-    OpenApiValidationService(final OpenApiInteractionValidator validator, final UrlPathHelper urlPathHelper) {
+    public OpenApiValidationService(final OpenApiInteractionValidator validator, final UrlPathHelper urlPathHelper) {
         requireNonNull(validator, "An OpenAPI validator is required.");
         this.validator = validator;
         this.urlPathHelper = urlPathHelper;
@@ -70,7 +70,7 @@ class OpenApiValidationService {
      *
      * @throws IOException if the request body can't be read
      */
-    Request buildRequest(final HttpServletRequest servletRequest) throws IOException {
+    public Request buildRequest(final HttpServletRequest servletRequest) throws IOException {
         requireNonNull(servletRequest, "A request is required.");
 
         final Request.Method method = Request.Method.valueOf(servletRequest.getMethod());
@@ -101,10 +101,8 @@ class OpenApiValidationService {
      * @param servletResponse the {@link javax.servlet.http.HttpServletResponse} whose body is cached
      *
      * @return the build {@link Response} created out of given {@link ContentCachingResponseWrapper}
-     *
-     * @throws IOException if the cached response body can't be read
      */
-    Response buildResponse(final ContentCachingResponseWrapper servletResponse) {
+    public Response buildResponse(final ContentCachingResponseWrapper servletResponse) {
         final int statusCode = servletResponse.getStatusCode();
         final SimpleResponse.Builder builder =
                 new SimpleResponse.Builder(statusCode)
@@ -122,7 +120,7 @@ class OpenApiValidationService {
      *
      * @return the {@link ValidationReport} for the validated {@link Request}
      */
-    ValidationReport validateRequest(final Request request) {
+    public ValidationReport validateRequest(final Request request) {
         return validator.validateRequest(request);
     }
 
@@ -132,8 +130,8 @@ class OpenApiValidationService {
      *
      * @return the {@link ValidationReport} for the validated {@link Request}
      */
-    ValidationReport validateResponse(final HttpServletRequest servletRequest,
-                                      final Response response) {
+    public ValidationReport validateResponse(final HttpServletRequest servletRequest,
+                                             final Response response) {
         final Request.Method method = Request.Method.valueOf(servletRequest.getMethod());
         final String path = resolveServletPath(servletRequest);
         return validator.validateResponse(path, method, response);
