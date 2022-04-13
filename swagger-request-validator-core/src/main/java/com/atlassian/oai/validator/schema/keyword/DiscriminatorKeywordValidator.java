@@ -163,12 +163,12 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
          * schema for the same object, so we can't do so a second time on the same parser stack.
          *
          * To prevent a validation loop from occurring in that situation, we need a "different" schema for Car. The way
-         * we make one is by attaching a #/definitions/Car/_discriminatorValidation/Vehicle~1myCar JSON node with a complete copy of
+         * we make one is by attaching a #/definitions/Car/_discriminatorValidation/Vehicle~1myCar/car JSON node with a complete copy of
          * the Car schema, and using THAT to do the child schema validation here.
          *
          * We avoid allowing this to produce an infinite loop by checking if the JSON node for this combination of
-         * subschema and document instance exists. If it does, we have already validated the discriminator, and we can bail
-         * out early.
+         * subschema and document instance was used for the current thread ID. If it does, we have already validated the
+         * discriminator, and we can bail out early.
          */
 
         final ObjectNode childSchemaAsObject = (ObjectNode) childSchemaTree.getNode();
@@ -183,28 +183,35 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
         final String discriminatorValidationContextString = new VisitedInfo(
                 data.getInstance().getPointer(),
                 data.getSchema().getPointer(),
-                // We include our thread ID in the node name so that concurrent validations using the same schema
-                // against different data objects will not conflict with each other
-                Thread.currentThread().getId()
+                // We include the VALUE of the discriminator property in the string so that we get a distinct
+                // path for each "way" an object can be validated
+                discriminatorPropertyValue
         ).toString();
 
-        if (validationPropertyNode.has(discriminatorValidationContextString)) {
+        final String threadIdAndDiscriminatorCombo = Thread.currentThread().getId() + "-" + discriminatorValidationContextString;
+
+        if (validationPropertyNode.has(threadIdAndDiscriminatorCombo)) {
             // We have been here before (in this thread!) for this exact instance object. Nothing more to do.
             return;
         }
 
-        boolean setValidationPropertiesNode = false;
+        boolean setThreadMarkerOnValidationPropertiesNode = false;
 
         try {
             synchronized (validationPropertyNode) {
-                if (validationPropertyNode.has(discriminatorValidationContextString)) {
+                if (validationPropertyNode.has(threadIdAndDiscriminatorCombo)) {
                     // The validation property node appeared while we were blocked; this shouldn't happen,
-                    // as it includes our thread ID, but let's exit regardless to be safe. We're going to remove
+                    // as it's our thread ID, but let's exit regardless to be safe. We're going to remove
                     // the node again, so we should make sure we create it!
                     return;
                 }
-                validationPropertyNode.set(discriminatorValidationContextString, childSchemaAsObject.deepCopy());
-                setValidationPropertiesNode = true;
+
+                validationPropertyNode.set(threadIdAndDiscriminatorCombo, childSchemaAsObject.booleanNode(true));
+                setThreadMarkerOnValidationPropertiesNode = true;
+
+                if (!validationPropertyNode.has(discriminatorValidationContextString)) {
+                    validationPropertyNode.set(discriminatorValidationContextString, childSchemaAsObject.deepCopy());
+                }
             }
 
             final SchemaTree childSchemaTreeWithRewrittenPointer = childSchemaTree.setPointer(
@@ -215,9 +222,9 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
             final FullData newData = data.withSchema(childSchemaTreeWithRewrittenPointer);
             processor.process(subReport, newData);
         } finally {
-            if (setValidationPropertiesNode) {
+            if (setThreadMarkerOnValidationPropertiesNode) {
                 synchronized (validationPropertyNode) {
-                    validationPropertyNode.remove(discriminatorValidationContextString);
+                    validationPropertyNode.remove(threadIdAndDiscriminatorCombo);
                 }
             }
         }
@@ -340,9 +347,9 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
     private static class VisitedInfo {
         private final JsonPointer instancePointer;
         private final JsonPointer schemaPointer;
-        private final Long contextId;
+        private final String contextId;
 
-        public VisitedInfo(final JsonPointer instancePointer, final JsonPointer schemaPointer, final Long contextId) {
+        public VisitedInfo(final JsonPointer instancePointer, final JsonPointer schemaPointer, final String contextId) {
             this.instancePointer = instancePointer;
             this.schemaPointer = schemaPointer;
             this.contextId = contextId;
