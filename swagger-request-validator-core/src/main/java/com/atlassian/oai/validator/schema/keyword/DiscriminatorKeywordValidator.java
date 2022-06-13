@@ -212,7 +212,7 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
                 setThreadMarkerOnValidationPropertiesNode = true;
 
                 if (!validationPropertyNode.has(discriminatorValidationContextString)) {
-                    validationPropertyNode.set(discriminatorValidationContextString, childSchemaAsObject.deepCopy());
+                    validationPropertyNode.set(discriminatorValidationContextString, childSchemaAsObject);
                 }
             }
 
