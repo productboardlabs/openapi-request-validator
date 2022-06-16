@@ -30,7 +30,7 @@ public class OpenApiValidatorPactConsumerTestExample {
 
     public static final String PROVIDER_ID = "Petstore";
     public static final String CONSUMER_ID = "ExampleConsumer";
-    public static final String SWAGGER_JSON_URL = "http://petstore.swagger.io/v2/swagger.json";
+    public static final String SWAGGER_JSON_URL = "https://petstore.swagger.io/v2/swagger.json";
 
     /**
      * Validated Pact provider rule - adds OAI validation to the standard {@link PactProviderRule}
