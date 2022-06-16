@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.atlassian.pom</groupId>
@@ -80,6 +81,7 @@
         <rhino.version>1.7.12</rhino.version>
         <xerces.version>2.12.2</xerces.version>
         <jackson-databind.version>2.13.3</jackson-databind.version>
+        <org-json.version>20180130</org-json.version>
 
         <!-- Plugin versions -->
         <checkstyle.version>9.3</checkstyle.version>
@@ -246,6 +248,14 @@
                 <artifactId>consumer</artifactId>
                 <version>${pact-jvm.version}</version>
             </dependency>
+            <!-- Transitive version overrides to address open vulns -->
+            <dependency>
+                <groupId>org.json</groupId>
+                <artifactId>json</artifactId>
+                <version>${org-json.version}</version>
+            </dependency>
+            <!-- -->
+
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
