@@ -353,7 +353,7 @@ public class SimpleRequest implements Request {
          * @return this builder
          */
         public Builder withHeader(final String name, final String... values) {
-            return withHeader(name, asList(values));
+            return withHeader(name, values == null ? null : asList(values));
         }
 
         /**
