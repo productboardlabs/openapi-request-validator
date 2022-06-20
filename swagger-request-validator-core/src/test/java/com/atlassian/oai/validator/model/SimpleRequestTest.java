@@ -176,6 +176,16 @@ public class SimpleRequestTest {
     }
 
     @Test
+    public void queryParameter_valuesCanBeNull() {
+        final Request request = SimpleRequest.Builder.get("/path")
+                .withQueryParam("foo", (String[]) null)
+                .build();
+
+        assertThat(request.getQueryParameters(), containsInAnyOrder("foo"));
+        assertThat(request.getQueryParameterValues("foo"), empty());
+    }
+
+    @Test
     public void queryParameter_valuesCanHaveOneValue() {
         final Request request = SimpleRequest.Builder.get("/path")
                 .withQueryParam("foo", "bar")
