@@ -80,9 +80,7 @@ public class SimpleRequestTest {
         assertThat(request.getHeaderValues("foo"), containsInAnyOrder(""));
         assertThat(request.getHeaderValue("foo").get(), isEmptyString());
     }
-
-
-
+    
     @Test
     public void header_valuesCanHaveOneValue() {
         final Request request = SimpleRequest.Builder.get("/path")
