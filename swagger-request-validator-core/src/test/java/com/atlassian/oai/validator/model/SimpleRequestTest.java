@@ -70,6 +70,20 @@ public class SimpleRequestTest {
     }
 
     @Test
+    public void header_valuesCanBeNull() {
+        final Request request = SimpleRequest.Builder.get("/path")
+                .withHeader("foo", (String[]) null)
+                .build();
+
+        assertThat(request.getHeaders().keySet(), containsInAnyOrder("foo"));
+        assertThat(request.getHeaders().get("foo"), containsInAnyOrder(""));
+        assertThat(request.getHeaderValues("foo"), containsInAnyOrder(""));
+        assertThat(request.getHeaderValue("foo").get(), isEmptyString());
+    }
+
+
+
+    @Test
     public void header_valuesCanHaveOneValue() {
         final Request request = SimpleRequest.Builder.get("/path")
                 .withHeader("foo", "bar")
@@ -173,6 +187,16 @@ public class SimpleRequestTest {
 
         assertThat(request.getQueryParameters(), containsInAnyOrder("foo"));
         assertThat(request.getQueryParameterValues("foo"), containsInAnyOrder(""));
+    }
+
+    @Test
+    public void queryParameter_valuesCanBeNull() {
+        final Request request = SimpleRequest.Builder.get("/path")
+                .withQueryParam("foo", (String[]) null)
+                .build();
+
+        assertThat(request.getQueryParameters(), containsInAnyOrder("foo"));
+        assertThat(request.getQueryParameterValues("foo"), empty());
     }
 
     @Test
