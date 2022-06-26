@@ -1,3 +1,8 @@
+# v2.28.2
+
+* Fix NPE when no query params in request
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/340)
+
 # v2.28.1
 
 * Bump `org.json:json` transitive dependency to address CVE
