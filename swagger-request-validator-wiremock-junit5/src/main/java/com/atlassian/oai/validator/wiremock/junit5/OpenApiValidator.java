@@ -108,6 +108,10 @@ public class OpenApiValidator extends PostServeAction {
 
     @Override
     public void doAction(ServeEvent serveEvent, Admin admin, Parameters parameters) {
+        if (isGlobal()) {
+            return;
+        }
+
         OasUrlParameter parameter = parameters.as(OasUrlParameter.class);
 
         validator = OpenApiInteractionValidator.createFor(parameter.getOasUrl()).build();
