@@ -111,6 +111,16 @@ public class SimpleResponse implements Response {
 
         /**
          * A convenience method for creating a {@link SimpleResponse.Builder} with
+         * the HTTP status code 401.
+         *
+         * @return a prepared {@link SimpleResponse.Builder}
+         */
+        public static Builder unauthorized() {
+            return new Builder(401);
+        }
+
+        /**
+         * A convenience method for creating a {@link SimpleResponse.Builder} with
          * the HTTP status code 404.
          *
          * @return a prepared {@link SimpleResponse.Builder}

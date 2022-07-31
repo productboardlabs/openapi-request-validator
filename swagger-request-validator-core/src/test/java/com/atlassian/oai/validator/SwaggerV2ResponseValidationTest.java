@@ -79,7 +79,38 @@ public class SwaggerV2ResponseValidationTest {
     }
 
     @Test
+    public void validate_withResponseUnexpectedBody_shouldFail() {
+        final Response response = SimpleResponse.Builder
+                .unauthorized()
+                .withHeader("Content-Type", "application/json;charset=UTF-8")
+                .withBody(loadJsonResponse("users-valid"))
+                .build();
+
+        final SimpleRequest getUsersRequest = SimpleRequest.Builder
+                .get("/users")
+                .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
+                .build();
+
+        assertFail(classUnderTest.validate(getUsersRequest, response),
+                "validation.response.body.unexpected");
+        assertFail(classUnderTest.validateResponse("/users", Request.Method.GET, response),
+                "validation.response.body.unexpected");
+    }
+
+    @Test
     public void validate_withResponseMissingRequiredBody_shouldFail() {
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .build();
+
+        assertFail(classUnderTest.validate(getUserRequest, response),
+                "validation.response.body.missing");
+        assertFail(classUnderTest.validateResponse("/users/1", Request.Method.GET, response),
+                "validation.response.body.missing");
+    }
+
+    @Test
+    public void validate_withResponseContentTypeButMissingRequiredBody_shouldFail() {
         final Response response = SimpleResponse.Builder
                 .ok()
                 .withContentType("application/json")

@@ -38,7 +38,29 @@ public class OpenAPIV3ResponseValidationTest {
     }
 
     @Test
+    public void validate_withUnexpectedResponseBody_shouldFail() {
+        final Response response = SimpleResponse.Builder
+                .unauthorized()
+                .withContentType("application/json")
+                .withBody(loadJsonResponse("users-valid"))
+                .build();
+
+        assertFail(classUnderTest.validateResponse("/users", GET, response),
+                "validation.response.body.unexpected");
+    }
+
+    @Test
     public void validate_withMissingResponseBody_shouldFail() {
+        final Response response = SimpleResponse.Builder
+                .ok()
+                .build();
+
+        assertFail(classUnderTest.validateResponse("/users", GET, response),
+                "validation.response.body.missing");
+    }
+
+    @Test
+    public void validate_withContentTypeButMissingResponseBody_shouldFail() {
         final Response response = SimpleResponse.Builder
                 .ok()
                 .withContentType("application/json")
