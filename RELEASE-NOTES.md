@@ -1,3 +1,12 @@
+# v2.29.0
+
+* Fail validation if a response body is found but not expected OR if one is expected but not provided
+  [[#246]](https://bitbucket.org/atlassian/swagger-request-validator/issues/246)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/341)
+
+Note: This version includes a change to validation behavior. See the FAQ for how to disable specific validations if
+needed.
+
 # v2.28.2
 
 * Fix NPE when no query params in request
@@ -44,7 +53,7 @@
 # v2.27.0
 
 * Add support for exploded form params as per OpenAPI spec
-  [[#376]](https://bitbucket.org/atlassian/swagger-request-validator/issues/282)
+  [[#376]](https://bitbucket.org/atlassian/swagger-request-validator/issues/376)
   [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/307)
 * Version bumps:
   * `mockito`: 4.2.0 -> 4.4.0
