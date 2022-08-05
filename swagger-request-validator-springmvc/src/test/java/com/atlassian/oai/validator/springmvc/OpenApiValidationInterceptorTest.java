@@ -15,9 +15,12 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.List;
+import java.util.Map;
 
 import static com.atlassian.oai.validator.springmvc.OpenApiValidationFilter.ATTRIBUTE_REQUEST_VALIDATION;
 import static com.atlassian.oai.validator.springmvc.OpenApiValidationFilter.ATTRIBUTE_RESPONSE_VALIDATION;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -140,6 +143,25 @@ public class OpenApiValidationInterceptorTest {
         // then:
         assertThat(result, equalTo(true));
         verify(servletRequest).getAttribute(ATTRIBUTE_REQUEST_VALIDATION);
+    }
+
+    @Test
+    public void preHandle_noRequestValidationButPreparationForResponseValidationNecessary() throws Exception {
+        // given:
+        final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
+        final OpenApiValidationContentCachingResponseWrapper servletResponse = mock(OpenApiValidationContentCachingResponseWrapper.class);
+        final Map<String, List<String>> headers = mock(Map.class);
+
+        // and:
+        when(servletRequest.getAttribute(ATTRIBUTE_RESPONSE_VALIDATION)).thenReturn(Boolean.TRUE);
+        when(openApiValidationService.resolveHeadersOnResponse(servletResponse)).thenReturn(headers);
+
+        // when:
+        final boolean result = classUnderTest.preHandle(servletRequest, servletResponse, null);
+
+        // then:
+        assertThat(result, equalTo(true));
+        verify(servletRequest).setAttribute("com.atlassian.oai.validator.springmvc.alreadySetHeaders", headers);
     }
 
     @Test
@@ -326,19 +348,26 @@ public class OpenApiValidationInterceptorTest {
         final ContentCachingResponseWrapper servletResponse = mockResponseWrapper();
         final Response response = mock(Response.class);
         final ValidationReport validationReport = mock(ValidationReport.class);
+        final Map<String, List<String>> headers = mock(Map.class);
+        final InvalidResponseException exception = new InvalidResponseException(validationReport);
 
         // and:
         when(servletRequest.getAttribute(ATTRIBUTE_RESPONSE_VALIDATION)).thenReturn(Boolean.TRUE);
         when(servletRequest.getMethod()).thenReturn("METHOD");
         when(servletRequest.getRequestURI()).thenReturn("/request/uri");
+        when(servletRequest.getAttribute("com.atlassian.oai.validator.springmvc.alreadySetHeaders")).thenReturn(headers);
         when(openApiValidationService.buildResponse(servletResponse)).thenReturn(response);
         when(openApiValidationService.validateResponse(servletRequest, response)).thenReturn(validationReport);
-        doThrow(new InvalidResponseException(validationReport)).when(validationReportHandler)
+        doThrow(exception).when(validationReportHandler)
                 .handleResponseReport("METHOD#/request/uri", validationReport);
 
-        // expect:
-        assertThrows(InvalidResponseException.class,
-                () -> classUnderTest.postHandle(servletRequest, servletResponse, null, null));
+        // when:
+        assertThatThrownBy(() -> classUnderTest.postHandle(servletRequest, servletResponse, null, null))
+                .isEqualTo(exception);
+
+        // then:
+        verify(servletResponse).reset();
+        verify(openApiValidationService).addHeadersToResponse(servletResponse, headers);
     }
 
     private OpenApiValidationContentCachingResponseWrapper mockResponseWrapper() {

@@ -17,11 +17,14 @@ import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 import static com.atlassian.oai.validator.springmvc.OpenApiValidationFilter.ATTRIBUTE_REQUEST_VALIDATION;
 import static com.atlassian.oai.validator.springmvc.OpenApiValidationFilter.ATTRIBUTE_RESPONSE_VALIDATION;
 import static com.atlassian.oai.validator.springmvc.ResponseUtils.getCachingResponse;
 import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.ClassUtils.getPackageName;
 
 /**
  * An Interceptor which validates incoming requests against the defined OpenAPI / Swagger specification.
@@ -32,6 +35,7 @@ import static java.util.Objects.requireNonNull;
  */
 public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
     private static final Logger LOG = LoggerFactory.getLogger(OpenApiValidationInterceptor.class);
+    private static final String ATTRIBUTE_ALREADY_SET_HEADERS = getPackageName(OpenApiValidationInterceptor.class) + ".alreadySetHeaders";
 
     protected final OpenApiValidationService openApiValidationService;
     private final ValidationReportHandler validationReportHandler;
@@ -97,6 +101,11 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
     public boolean preHandle(final HttpServletRequest servletRequest,
                              final HttpServletResponse servletResponse,
                              final Object handler) throws Exception {
+        if (doResponseValidationStep(servletRequest, servletResponse)) {
+            // save already set headers for the upcoming response validation
+            final Map<String, List<String>> alreadySetHeaders = openApiValidationService.resolveHeadersOnResponse(servletResponse);
+            servletRequest.setAttribute(ATTRIBUTE_ALREADY_SET_HEADERS, alreadySetHeaders);
+        }
         if (!doRequestValidationStep(servletRequest)) {
             LOG.debug("OpenAPI request validation skipped");
             return true;
@@ -153,6 +162,14 @@ public class OpenApiValidationInterceptor extends HandlerInterceptorAdapter {
         } catch (final InvalidResponseException e) {
             // as an exception will rewrite the current, cached response it has to be reset
             cachedResponse.reset();
+
+            // Add all headers back to the response, which were already present at the response before the request has
+            // been processed.
+            // These headers are considered as meta-data that were not added as part of the actual request-process,
+            // e.g. CORS or security headers.
+            final Map<String, List<String>> alreadySetHeaders = (Map<String, List<String>>) servletRequest.getAttribute(ATTRIBUTE_ALREADY_SET_HEADERS);
+            openApiValidationService.addHeadersToResponse(servletResponse, alreadySetHeaders);
+
             throw e;
         }
     }
