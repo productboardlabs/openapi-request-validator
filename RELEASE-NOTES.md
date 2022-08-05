@@ -1,3 +1,10 @@
+# v2.30.0
+
+* Add a new module `swagger-request-validator-wiremock-junit5` for use with Wiremock in JUnit 5.
+  See the README for more information.
+  [[#386]](https://bitbucket.org/atlassian/swagger-request-validator/issues/386)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/342)
+
 # v2.29.0
 
 * Fail validation if a response body is found but not expected OR if one is expected but not provided
