@@ -9,13 +9,11 @@ import com.github.tomakehurst.wiremock.http.QueryParameter;
 
 import javax.annotation.Nonnull;
 import java.net.URI;
-import java.util.Collection;
 import java.util.Map;
-import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
 
-public class WireMockRequestResponseUtil {
+public final class WireMockRequestResponseUtil {
 
     /**
      * Builds a {@link Request} for the OpenAPI validator out of the
@@ -51,5 +49,8 @@ public class WireMockRequestResponseUtil {
                 .withBody(loggedResponse.getBody());
         loggedResponse.getHeaders().all().forEach(header -> builder.withHeader(header.key(), header.values()));
         return builder.build();
+    }
+
+    private WireMockRequestResponseUtil() {
     }
 }

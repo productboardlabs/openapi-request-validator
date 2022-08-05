@@ -63,7 +63,7 @@ public class OpenApiValidatorTest {
 
     @Test
     void shouldDetectInvalidRequestInCaseOfOas3() {
-        List<ValidationReport.Message> actualMessages = testValidationException(OAS3_FILE, INVALID_API_PATH, VALID_RESPONSE_BODY);
+        final List<ValidationReport.Message> actualMessages = testValidationException(OAS3_FILE, INVALID_API_PATH, VALID_RESPONSE_BODY);
 
         assertThat(actualMessages, hasSize(1));
         assertThat(actualMessages.get(0).getKey(), is("validation.request.path.missing"));
@@ -73,7 +73,7 @@ public class OpenApiValidatorTest {
 
     @Test
     void shouldDetectInvalidRequestInCaseOfOas2() {
-        List<ValidationReport.Message> actualMessages = testValidationException(OAS2_FILE, INVALID_API_PATH, VALID_RESPONSE_BODY);
+        final List<ValidationReport.Message> actualMessages = testValidationException(OAS2_FILE, INVALID_API_PATH, VALID_RESPONSE_BODY);
 
         assertThat(actualMessages, hasSize(1));
         assertThat(actualMessages.get(0).getKey(), is("validation.request.path.missing"));
@@ -83,7 +83,7 @@ public class OpenApiValidatorTest {
 
     @Test
     void shouldDetectInvalidResponseInCaseOfOas3() {
-        List<ValidationReport.Message> actualMessages = testValidationException(OAS3_FILE, VALID_PATH, INVALID_RESPONSE_BODY);
+        final List<ValidationReport.Message> actualMessages = testValidationException(OAS3_FILE, VALID_PATH, INVALID_RESPONSE_BODY);
 
         assertThat(actualMessages, hasSize(2));
         assertThat(actualMessages.get(0).getKey(), is("validation.response.body.schema.additionalProperties"));
@@ -96,7 +96,7 @@ public class OpenApiValidatorTest {
 
     @Test
     void shouldDetectInvalidResponseInCaseOfOas2() {
-        List<ValidationReport.Message> actualMessages = testValidationException(OAS2_FILE, VALID_PATH, INVALID_RESPONSE_BODY);
+        final List<ValidationReport.Message> actualMessages = testValidationException(OAS2_FILE, VALID_PATH, INVALID_RESPONSE_BODY);
 
         assertThat(actualMessages, hasSize(2));
         assertThat(actualMessages.get(0).getKey(), is("validation.response.body.schema.additionalProperties"));
@@ -107,19 +107,19 @@ public class OpenApiValidatorTest {
         assertThat(actualMessages.get(1).getMessage(), is("Object has missing required properties ([\"message\"])"));
     }
 
-    private List<ValidationReport.Message> testValidationException(String specFile, String requestPath, String responseBody) {
+    private List<ValidationReport.Message> testValidationException(final String specFile, final String requestPath, final String responseBody) {
         testEndpoint(specFile, requestPath, responseBody);
 
         await().pollDelay(Duration.ofMillis(100))
                 .until(() -> !OPEN_API_VALIDATOR.getReport().getMessages().isEmpty());
 
-        OpenApiValidationException openApiValidationException = assertThrows(OpenApiValidationException.class,
+        final OpenApiValidationException openApiValidationException = assertThrows(OpenApiValidationException.class,
                 OPEN_API_VALIDATOR::assertValidationPassed);
 
         return openApiValidationException.getValidationReport().getMessages();
     }
 
-    private void testEndpoint(String specFile, String requestPath, String responseBody) {
+    private void testEndpoint(final String specFile, final String requestPath, final String responseBody) {
         createStub(specFile, requestPath, responseBody);
         given().log().all()
                 .port(WIREMOCK.getPort())

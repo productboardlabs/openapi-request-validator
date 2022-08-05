@@ -107,20 +107,21 @@ public class OpenApiValidator extends PostServeAction {
     }
 
     @Override
-    public void doAction(ServeEvent serveEvent, Admin admin, Parameters parameters) {
+    public void doAction(final ServeEvent serveEvent,
+                         final Admin admin,
+                         final Parameters parameters) {
         if (isGlobal()) {
             return;
         }
 
-        OasUrlParameter parameter = parameters.as(OasUrlParameter.class);
-
+        final OasUrlParameter parameter = parameters.as(OasUrlParameter.class);
         validator = OpenApiInteractionValidator.createFor(parameter.getOasUrl()).build();
 
         validateRequestResponse(serveEvent.getRequest(), serveEvent.getResponse());
     }
 
     @Override
-    public void doGlobalAction(ServeEvent serveEvent, Admin admin) {
+    public void doGlobalAction(final ServeEvent serveEvent, final Admin admin) {
         if (!isGlobal()) {
             return;
         }
@@ -167,8 +168,8 @@ public class OpenApiValidator extends PostServeAction {
         }
     }
 
-    private void validateRequestResponse(com.github.tomakehurst.wiremock.verification.LoggedRequest loggedRequest,
-                                         com.github.tomakehurst.wiremock.http.LoggedResponse loggedResponse) {
+    private void validateRequestResponse(final com.github.tomakehurst.wiremock.verification.LoggedRequest loggedRequest,
+                                         final com.github.tomakehurst.wiremock.http.LoggedResponse loggedResponse) {
         try {
             report = report.merge(validator.validate(toRequest(loggedRequest), toResponse(loggedResponse)));
         } catch (final Exception e) {
@@ -195,7 +196,7 @@ public class OpenApiValidator extends PostServeAction {
 
         private String oasUrl;
 
-        public OasUrlParameter(@JsonProperty String oasUrl) {
+        public OasUrlParameter(@JsonProperty final String oasUrl) {
             this.oasUrl = oasUrl;
         }
 
