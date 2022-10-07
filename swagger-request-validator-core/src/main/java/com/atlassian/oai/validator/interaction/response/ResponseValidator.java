@@ -119,8 +119,26 @@ public class ResponseValidator {
     private ValidationReport validateResponseBody(final Response response,
                                                   final ApiResponse apiResponse,
                                                   final ApiOperation apiOperation) {
-        if (apiResponse.getContent() == null) {
+        final Optional<Body> responseBody = response.getResponseBody();
+        final boolean hasBody = responseBody.map(Body::hasBody).orElse(false);
+        // Content field is null in OpenAPI v3 and initialized but empty in Swagger v2 when no response body is defined
+        final boolean noBodyDefinedInSpecification = apiResponse.getContent() == null || apiResponse.getContent().isEmpty();
+
+        if (noBodyDefinedInSpecification && hasBody) {
+            // A response body exists, but no response body is defined in the spec
+            return ValidationReport.singleton(messages.get("validation.response.body.unexpected"));
+        }
+
+        if (noBodyDefinedInSpecification) {
+            // No response body is defined in the spec and none was provided -> Nothing to do
             return ValidationReport.empty();
+        }
+
+        if (!hasBody) {
+            // No response body exists, but a response body was defined in the spec
+            return ValidationReport.singleton(
+                    messages.get("validation.response.body.missing",
+                            apiOperation.getMethod(), apiOperation.getApiPath().original()));
         }
 
         final Optional<String> mostSpecificMatch = findMostSpecificMatch(response, apiResponse.getContent().keySet());
@@ -133,16 +151,6 @@ public class ResponseValidator {
         final MediaType apiMediaType = apiResponse.getContent().get(mostSpecificMatch.get());
         if (apiMediaType.getSchema() == null) {
             return ValidationReport.empty();
-        }
-
-        final Optional<Body> responseBody = response.getResponseBody();
-        final boolean hasBody = responseBody.map(Body::hasBody).orElse(false);
-
-        if (!hasBody) {
-            return ValidationReport.singleton(
-                    messages.get("validation.response.body.missing",
-                            apiOperation.getMethod(), apiOperation.getApiPath().original())
-            );
         }
 
         if (isJsonContentType(response)) {

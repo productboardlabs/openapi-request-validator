@@ -683,7 +683,7 @@ public class SwaggerV2RequestValidationTest {
                 .withHeader("X-Max-Timeout", "30")
                 .build();
 
-        assertPass(classUnderTest.validate(request, validUserResponse));
+        assertPass(classUnderTest.validate(request, SimpleResponse.Builder.ok().build()));
         assertPass(classUnderTest.validateRequest(request));
     }
 

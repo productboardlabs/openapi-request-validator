@@ -1,0 +1,46 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Hello world service",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/hello/{name}": {
+      "get": {
+        "summary": "Say hello",
+        "operationId": "say hello",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [{
+          "name": "name",
+          "in": "path",
+          "description": "Person to say hello to",
+          "required": true,
+          "type": "string"
+        }],
+        "responses": {
+          "200": {
+            "description": "Hello response",
+            "schema": {
+              "$ref": "#/definitions/Message"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Message": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ]
+    }
+  }
+}
