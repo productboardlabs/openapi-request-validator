@@ -63,7 +63,7 @@
         <jsr305.version>3.0.2</jsr305.version>
         <junit.version>4.13.2</junit.version>
         <logback.version>1.2.11</logback.version>
-        <mockito.version>4.4.0</mockito.version>
+        <mockito.version>4.8.0</mockito.version>
         <pact-jvm.version>4.1.39</pact-jvm.version>
         <rest-assured.version>5.1.1</rest-assured.version>
         <servlet.api.version>4.0.1</servlet.api.version>
@@ -76,7 +76,7 @@
 
         <!-- Overrides for transitive dependencies to address vulnerabilities -->
         <jetty.version>9.4.46.v20220331</jetty.version>
-        <netty.version>4.1.75.Final</netty.version>
+        <netty.version>4.1.82.Final</netty.version>
         <rhino.version>1.7.12</rhino.version>
         <xerces.version>2.12.2</xerces.version>
         <jackson-databind.version>2.13.4</jackson-databind.version>
