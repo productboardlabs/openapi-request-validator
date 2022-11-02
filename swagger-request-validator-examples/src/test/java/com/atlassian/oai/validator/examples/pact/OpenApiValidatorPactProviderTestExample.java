@@ -13,7 +13,7 @@ import static org.junit.Assert.fail;
  */
 public class OpenApiValidatorPactProviderTestExample {
 
-    public static final String SWAGGER_JSON_URL = "http://petstore.swagger.io/v2/swagger.json";
+    public static final String SWAGGER_JSON_URL = "https://petstore.swagger.io/v2/swagger.json";
 
     /**
      * This test simulates running against a Consumer where all interactions in the Pact spec are valid according
