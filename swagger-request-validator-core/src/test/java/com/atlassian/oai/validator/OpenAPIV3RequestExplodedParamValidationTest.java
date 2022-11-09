@@ -75,6 +75,15 @@ public class OpenAPIV3RequestExplodedParamValidationTest {
             .build();
     }
 
+    private static SimpleRequest buildInvalidRequestWithArrayQueryParams() {
+        return SimpleRequest.Builder
+            .get("/api/data")
+            .withQueryParam("id", "1")
+            .withQueryParam("outcomes", "SUCCESS", "FAILURE", "SKIPPED", "INVALID-OUTCOME")
+            .withContentType("application/json")
+            .build();
+    }
+
     @Test
     public void valid_OpenApi3() {
         // given:
@@ -101,7 +110,18 @@ public class OpenAPIV3RequestExplodedParamValidationTest {
         assertTrue(result.getMessages().isEmpty());
     }
 
+    @Test
+    public void invalid_arrayQueryParam_OpenApi3() {
+        // given:
+        final Request request = buildInvalidRequestWithArrayQueryParams();
 
+        // when:
+        final ValidationReport result = openApi3Validator.validateRequest(request);
+
+        // then:
+        assertFail(result, "validation.request.parameter.schema.enum");
+    }
+    
     @Test
     public void invalid_OpenApi3() {
         // given:
