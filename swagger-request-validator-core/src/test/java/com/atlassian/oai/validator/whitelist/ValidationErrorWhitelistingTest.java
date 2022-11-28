@@ -21,6 +21,8 @@ public class ValidationErrorWhitelistingTest {
     public void whitelistedRequestFailuresShouldBeIgnored() {
         final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
                 .createForSpecificationUrl("/oai/v2/api-users.json")
+                // The "entityIs" rule uses the ref - make sure we don't resolve them away
+                .withResolveRefs(false)
                 .withWhitelist(ValidationErrorsWhitelist.create()
                         .withRule("Ignore paths", WhitelistRules.messageContains("No API path"))
                         .withRule("Ignore NewUser entity errors", WhitelistRules.entityIs("NewUser")))
@@ -29,7 +31,13 @@ public class ValidationErrorWhitelistingTest {
         final ValidationReport report = classUnderTest.validateRequest(SimpleRequest.Builder.get("/non-existent-path").build());
         assertThat(report.getMessages(), hasItem(whitelisted("No API path found that matches request", "Ignore paths")));
 
-        final ValidationReport report2 = classUnderTest.validateRequest(SimpleRequest.Builder.post("/users").withBody("{}").withContentType("application/json").build());
+        final SimpleRequest usersRequest = SimpleRequest.Builder
+                .post("/users")
+                .withBody("{}")
+                .withAuthorization("Basic foo")
+                .withContentType("application/json")
+                .build();
+        final ValidationReport report2 = classUnderTest.validateRequest(usersRequest);
         assertThat(report2.getMessages(), hasItem(whitelisted("Object has missing required properties", "Ignore NewUser entity errors")));
     }
 
