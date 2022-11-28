@@ -1,3 +1,18 @@
+# v2.31.0
+
+* Bump dependencies:
+  * `swagger-parser`: 2.0.28 -> 2.1.9
+  * `guava`: 30.1.1 -> 31.1
+  * `jackson`: 2.13.3 -> 2.14.1
+  * `mockito`: 4.4.0 -> 4.8.0
+  * `pact-jvm`: 4.1.38 -> 4.1.40
+  * `wiremock`: 2.32.0 -> 2.35.0
+  * `jmh-core`: 1.34 -> 1.36
+  * `jsonassert`: 1.5.0 -> 1.5.1
+
+Note: The change the `swagger-parser:2.1.9` brings in `swagger-models:2.2` which is a breaking
+change compared to `swagger-models:2.1`.
+
 # v2.30.0
 
 * Add a new module `swagger-request-validator-wiremock-junit5` for use with Wiremock in JUnit 5.
