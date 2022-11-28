@@ -55,7 +55,7 @@
         <jdk.version>1.8</jdk.version>
 
         <!-- Direct dependency versions -->
-        <guava.version>30.1.1-jre</guava.version>
+        <guava.version>31.1-jre</guava.version>
         <hamcrest.version>2.2</hamcrest.version>
         <hamcrest-optional.version>1.2.0</hamcrest-optional.version>
         <jackson.version>2.13.3</jackson.version>
@@ -63,24 +63,26 @@
         <jsr305.version>3.0.2</jsr305.version>
         <junit.version>4.13.2</junit.version>
         <logback.version>1.2.11</logback.version>
-        <mockito.version>4.4.0</mockito.version>
-        <pact-jvm.version>4.1.38</pact-jvm.version>
+        <mockito.version>4.8.0</mockito.version>
+        <pact-jvm.version>4.1.39</pact-jvm.version>
         <rest-assured.version>5.1.1</rest-assured.version>
         <servlet.api.version>4.0.1</servlet.api.version>
         <slf4j.version>1.7.36</slf4j.version>
         <spring.version>5.3.20</spring.version>
         <swagger-parser.version>2.1.1</swagger-parser.version>
-        <wiremock.version>2.32.0</wiremock.version>
+        <wiremock.version>2.34.0</wiremock.version>
         <jmh-core.version>1.34</jmh-core.version>
-        <jsonassert.version>1.5.0</jsonassert.version>
+        <jsonassert.version>1.5.1</jsonassert.version>
 
         <!-- Overrides for transitive dependencies to address vulnerabilities -->
         <jetty.version>9.4.46.v20220331</jetty.version>
-        <netty.version>4.1.75.Final</netty.version>
+        <netty.version>4.1.82.Final</netty.version>
         <rhino.version>1.7.12</rhino.version>
         <xerces.version>2.12.2</xerces.version>
-        <jackson-databind.version>2.13.3</jackson-databind.version>
+        <jackson-databind.version>2.13.4</jackson-databind.version>
+        <jackson-dataformat-yaml.version>2.13.4</jackson-dataformat-yaml.version>
         <org-json.version>20180130</org-json.version>
+        <scala-library.version>2.13.9</scala-library.version>
 
         <!-- Plugin versions -->
         <checkstyle.version>9.3</checkstyle.version>
@@ -184,6 +186,14 @@
                 <artifactId>swagger-parser</artifactId>
                 <version>${swagger-parser.version}</version>
             </dependency>
+            <!-- Transitive version overrides to address open vulns -->
+             <dependency>
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-yaml</artifactId>
+                <version>${jackson-dataformat-yaml.version}</version>
+            </dependency>
+            <!-- -->
+
             <dependency>
                 <groupId>com.github.java-json-tools</groupId>
                 <artifactId>json-schema-validator</artifactId>
@@ -270,6 +280,11 @@
                 <groupId>org.json</groupId>
                 <artifactId>json</artifactId>
                 <version>${org-json.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.scala-lang</groupId>
+                <artifactId>scala-library</artifactId>
+                <version>${scala-library.version}</version>
             </dependency>
             <!-- -->
 
