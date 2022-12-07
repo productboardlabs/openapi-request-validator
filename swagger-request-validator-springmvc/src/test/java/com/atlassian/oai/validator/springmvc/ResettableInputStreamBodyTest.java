@@ -3,9 +3,13 @@ package com.atlassian.oai.validator.springmvc;
 import com.atlassian.oai.validator.model.Body;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 
+import javax.servlet.ServletInputStream;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -95,5 +99,34 @@ public class ResettableInputStreamBodyTest {
         // then:
         verify(cachingServletInputStream).reset();
         assertThat(result).isEqualTo("{}");
+    }
+
+    @ParameterizedTest
+    @CsvSource({"'',false,false", "'{\"key\": \"value\"}',true,true", "'body',true,false"})
+    public void testingWithRealCachingServletInputStream(final String body, final boolean hasBody, final boolean bodyIsJson) throws Exception {
+        // given:
+        final Constructor<ResettableRequestServletWrapper.CachingServletInputStream> constructor =
+                ResettableRequestServletWrapper.CachingServletInputStream.class.getDeclaredConstructor(ServletInputStream.class);
+        constructor.setAccessible(true);
+        final ServletInputStream servletInputStream = new ServletInputStreamMock(body.getBytes(UTF_8));
+        final ResettableRequestServletWrapper.CachingServletInputStream realCachingServletInputStream = constructor.newInstance(servletInputStream);
+
+        // and:
+        final Body testedBody = new ResettableInputStreamBody(realCachingServletInputStream);
+
+        // expect:
+        assertThat(testedBody.hasBody()).isEqualTo(hasBody);
+
+        // and: 'the body can be read multiple times'
+        assertThat(testedBody.toString(UTF_8)).isEqualTo(body);
+        assertThat(testedBody.toString(UTF_8)).isEqualTo(body);
+        assertThat(testedBody.toString(UTF_8)).isEqualTo(body);
+
+        // and: 'JSON bodies can be read multiple times, too'
+        if (bodyIsJson) {
+            assertThat(testedBody.toJsonNode()).isNotNull();
+            assertThat(testedBody.toJsonNode()).isNotNull();
+            assertThat(testedBody.toJsonNode()).isNotNull();
+        }
     }
 }
