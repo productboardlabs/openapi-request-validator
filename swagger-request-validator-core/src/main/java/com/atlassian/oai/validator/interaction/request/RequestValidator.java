@@ -281,7 +281,7 @@ public class RequestValidator {
                             parameter.setExample(schema.getExample());
                             parameter.setDeprecated(schema.getDeprecated());
                             parameter.setStyle(p.getStyle());
-                            parameter.setExplode(false);
+                            parameter.setExplode("array".equals(schema.getType()));
                             parameter.setExtensions(schema.getExtensions());
 
                             return parameter;
