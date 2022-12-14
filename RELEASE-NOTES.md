@@ -1,3 +1,8 @@
+# v2.31.1
+
+* Fix behavior of arrays for "exploded" params
+* [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/352)
+
 # v2.31.0
 
 * Bump dependencies:
