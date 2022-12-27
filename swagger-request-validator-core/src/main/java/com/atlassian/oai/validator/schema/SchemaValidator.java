@@ -101,6 +101,7 @@ public class SchemaValidator {
                 .map(Components::getSchemas)
                 .map(schemas -> Json.mapper().convertValue(schemas, JsonNode.class))
                 .orElseGet(() -> Json.mapper().createObjectNode());
+        final JsonSchemaFactory schemaFactory = requireNonNull(schemaFactorySupplier.get(), "A JsonSchemaFactory is required");
         this.jsonSchemaCache = CacheBuilder.newBuilder()
                 .maximumSize(100)
                 .build(new CacheLoader<JsonSchemaKey, JsonSchema>() {
@@ -108,7 +109,7 @@ public class SchemaValidator {
                     public JsonSchema load(final JsonSchemaKey key) throws ProcessingException {
                         final JsonNode schemaObject = readAndTransformSchemaObject(key.schema,
                                 key.forRequest, key.forResponse, definitions);
-                        return schemaFactorySupplier.get().getJsonSchema(schemaObject);
+                        return schemaFactory.getJsonSchema(schemaObject);
                     }
                 });
         this.messageConverter = new ProcessingMessageConverter(messages);

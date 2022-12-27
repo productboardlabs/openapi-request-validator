@@ -614,6 +614,16 @@ public class OpenApiInteractionValidator {
             return this;
         }
 
+        /**
+         * Optionally supply a function that returns a {@link com.github.fge.jsonschema.main.JsonSchemaFactory} to use.
+         * <p>
+         * Defaults to {@link SwaggerV20Library}'s `schemaFactory`, but this can be useful if you have additional
+         * extensions to add to {@link com.github.fge.jsonschema.library.Library}.
+         *
+         * @param schemaFactorySupplier A supplier function that returns a JsonSchemaFactory.
+         *
+         * @return this builder instance
+         */
         public Builder withSchemaFactorySupplier(final Supplier<JsonSchemaFactory> schemaFactorySupplier) {
             requireNonNull(schemaFactorySupplier, "JsonSchemaFactory supplier is required");
             this.schemaFactorySupplier = schemaFactorySupplier;
