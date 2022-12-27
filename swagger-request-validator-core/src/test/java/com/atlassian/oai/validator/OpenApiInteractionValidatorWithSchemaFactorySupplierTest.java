@@ -63,7 +63,7 @@ public class OpenApiInteractionValidatorWithSchemaFactorySupplierTest {
                 return;
             }
 
-            // The "day", "month", and "year" fields must be required.
+            // The "foo" field must be required.
             final JsonNode requiredNode = schemaTree.getNode().get("required");
             final String errorMessage = "The \"required\" field must be present and contain \"foo\" for isFoo schema objects.";
 
@@ -103,10 +103,10 @@ public class OpenApiInteractionValidatorWithSchemaFactorySupplierTest {
                 return;
             }
 
-            final List<String> validFoo = Arrays.asList("foo", "bar", "baz");
+            final List<String> validFooValues = Arrays.asList("foo", "bar", "baz");
             final JsonNode fooObj = fullData.getInstance().getNode();
 
-            if (!validFoo.contains(fooObj.get("foo").textValue())) {
+            if (!validFooValues.contains(fooObj.get("foo").textValue())) {
                 processingReport.error(
                         new ProcessingMessage()
                             .put("domain", "validation")
