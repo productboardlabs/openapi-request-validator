@@ -171,7 +171,7 @@ public class OpenApiInteractionValidatorWithSchemaFactorySupplierTest {
     }
 
     @Test
-    public void validate_withInvalidRequest_shouldSucceed() {
+    public void validate_withInvalidRequest_shouldFail() {
         final Request request = SimpleRequest.Builder
                 .post("/foo")
                 .withContentType("application/json")
