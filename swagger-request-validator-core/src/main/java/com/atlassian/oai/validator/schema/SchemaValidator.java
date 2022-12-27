@@ -91,6 +91,7 @@ public class SchemaValidator {
      *
      * @param api The API to build the validator for.
      * @param messages The message resolver to use.
+     * @param schemaFactorySupplier A supplier function to get JsonSchemaFactory.
      */
     public SchemaValidator(final OpenAPI api,
                            @Nonnull final MessageResolver messages,
