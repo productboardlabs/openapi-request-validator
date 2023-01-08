@@ -1,3 +1,9 @@
+# v2.32.0
+
+* Add support for specifying a different / custom JsonSchemaFactory impl
+  [[#306]](https://bitbucket.org/atlassian/swagger-request-validator/issues/306)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/369)
+
 # v2.31.1
 
 * Fix behavior of arrays for "exploded" params
