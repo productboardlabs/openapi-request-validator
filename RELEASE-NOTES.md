@@ -1,3 +1,10 @@
+# v2.32.1
+
+* Fixed a problem in the Spring WebMVC module where headers are removed during request validation and 
+  not made available to later filters (e.g. CORS headers).
+  [[#310]](https://bitbucket.org/atlassian/swagger-request-validator/issues/310)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/213)
+
 # v2.32.0
 
 * Add support for specifying a different / custom JsonSchemaFactory impl
