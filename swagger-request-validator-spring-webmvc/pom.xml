@@ -17,6 +17,8 @@
     </description>
 
     <properties>
+        <maven.compiler.release>17</maven.compiler.release>
+
         <!-- Spring Boot is only used for testing -->
         <spring-boot.version>3.0.0</spring-boot.version>
 
