@@ -38,8 +38,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
 
-import static com.atlassian.oai.validator.schema.SwaggerV20Library.schemaFactory;
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.StreamSupport.stream;
@@ -83,13 +83,26 @@ public class SchemaValidator {
      */
     public SchemaValidator(final OpenAPI api,
                            @Nonnull final MessageResolver messages) {
+        this(api, messages, SwaggerV20Library::schemaFactory);
+    }
+
+    /**
+     * Build a new validator for the given API specification.
+     *
+     * @param api The API to build the validator for.
+     * @param messages The message resolver to use.
+     * @param schemaFactorySupplier A supplier function to get JsonSchemaFactory.
+     */
+    public SchemaValidator(final OpenAPI api,
+                           @Nonnull final MessageResolver messages,
+                           @Nonnull final Supplier<JsonSchemaFactory> schemaFactorySupplier) {
         this.messages = requireNonNull(messages, "A message resolver is required");
 
         final JsonNode definitions = Optional.ofNullable(api.getComponents())
                 .map(Components::getSchemas)
                 .map(schemas -> Json.mapper().convertValue(schemas, JsonNode.class))
                 .orElseGet(() -> Json.mapper().createObjectNode());
-        final JsonSchemaFactory schemaFactory = schemaFactory();
+        final JsonSchemaFactory schemaFactory = requireNonNull(schemaFactorySupplier.get(), "A JsonSchemaFactory is required");
         this.jsonSchemaCache = CacheBuilder.newBuilder()
                 .maximumSize(100)
                 .build(new CacheLoader<JsonSchemaKey, JsonSchema>() {

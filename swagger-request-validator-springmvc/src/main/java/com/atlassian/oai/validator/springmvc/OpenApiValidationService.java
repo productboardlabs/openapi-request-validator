@@ -6,7 +6,6 @@ import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.ValidationReport;
-import com.google.common.collect.Lists;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.support.EncodedResource;
@@ -15,17 +14,22 @@ import org.springframework.web.util.ContentCachingResponseWrapper;
 import org.springframework.web.util.UrlPathHelper;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Objects.requireNonNull;
 
 public class OpenApiValidationService {
@@ -109,7 +113,7 @@ public class OpenApiValidationService {
                         .withBody(servletResponse.getContentAsByteArray())
                         .withContentType(servletResponse.getContentType());
         for (final String headerName : servletResponse.getHeaderNames()) {
-            builder.withHeader(headerName, Lists.newArrayList(servletResponse.getHeaders(headerName)));
+            builder.withHeader(headerName, newArrayList(servletResponse.getHeaders(headerName)));
         }
 
         return builder.build();
@@ -135,6 +139,39 @@ public class OpenApiValidationService {
         final Request.Method method = Request.Method.valueOf(servletRequest.getMethod());
         final String path = resolveServletPath(servletRequest);
         return validator.validateResponse(path, method, response);
+    }
+
+    /**
+     * @param servletResponse the {@link HttpServletResponse}
+     *
+     * @return a map of the headers that are currently set on the response
+     */
+    Map<String, List<String>> resolveHeadersOnResponse(final HttpServletResponse servletResponse) {
+        final Map<String, List<String>> headers = new HashMap<>();
+        final Collection<String> headerNames = servletResponse.getHeaderNames();
+        if (headerNames != null) {
+            for (final String headerName : headerNames) {
+                headers.put(headerName, newArrayList(servletResponse.getHeaders(headerName)));
+            }
+        }
+        return Collections.unmodifiableMap(headers);
+    }
+
+    /**
+     * Will set the given headers on the given response.
+     *
+     * @param servletResponse the {@link HttpServletResponse}
+     * @param headers the headers to add to the response
+     */
+    void addHeadersToResponse(final HttpServletResponse servletResponse, final Map<String, List<String>> headers) {
+        if (headers != null) {
+            for (final Map.Entry<String, List<String>> header : headers.entrySet()) {
+                final String name = header.getKey();
+                for (final String value : header.getValue()) {
+                    servletResponse.addHeader(name, value);
+                }
+            }
+        }
     }
 
     private static Set<String> getQueryParameterNames(final HttpServletRequest servletRequest) {
