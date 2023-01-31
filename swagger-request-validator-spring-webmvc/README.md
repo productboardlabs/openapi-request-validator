@@ -1,16 +1,20 @@
-# Swagger Request Validator - Spring MVC 6 #
+# Swagger Request Validator - Spring Web MVC 6+ #
 
-[![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-springmvc6/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-springmvc6)
+[![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-spring-webvmvc/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-spring-webmvc)
 
 Integrations between the Swagger Request Validator and the 
 [Spring Web MVC framework](https://docs.spring.io/spring/docs/current/spring-framework-reference/html/mvc.html).
 
 This module includes an `OpenApiValidationFilter` and an `OpenApiValidationInterceptor` that can be used to add request
-and / or response validation to a REST web service utilizing Spring MVC v4.2.0 or later, including Spring Boot Starter 
-applications utilizing Spring MVC with said version, e.g. `spring-boot-starter-web-services` or `spring-boot-starter-web`.
+and / or response validation to a REST web service utilizing Spring WebMVC 6 or later, including Spring Boot Starter 
+applications utilizing Spring MVC (e.g. `spring-boot-starter-web-services` or `spring-boot-starter-web`).
 
 In case of invalid requests against the REST web service an `InvalidRequestException` is thrown containing the `ValidationReport`.  
-In case of invalid responses coming from the REST web service an `InvalidResponseException` is thrown containing the `ValidationReport`.
+In case of invalid responses coming from the REST web service an `InvalidResponseException` is thrown containing 
+the `ValidationReport`.
+
+This module is compatible with Spring 6+, Spring Boot 3+ and the Jakarta namespace. For use with older versions of 
+Spring see [swagger-request-validator-springmvc](../swagger-request-validator-springmvc/README.md). 
 
 ## Usage ##
 
@@ -30,13 +34,14 @@ e.g. for Maven in your pom.xml:
 
 ### Configuration ###
 
-As of Spring Boot v2.3.0 setting an additional property is necessary to receive the error message in case of validation errors:
+The following property is necessary to receive the error message in case of validation errors:
 
 ```properties
 server.error.include-message=always
 ```
 
-If this property is not set the client will receive an `InvalidRequestException` or `InvalidResponseException` without knowing what is wrong with request / response as the `message` field will be missing.
+If this property is not set the client will receive an `InvalidRequestException` or `InvalidResponseException` without 
+knowing what is wrong with the request / response as the `message` field will be missing.
 
 ### Adding filter and interceptor ###
 
