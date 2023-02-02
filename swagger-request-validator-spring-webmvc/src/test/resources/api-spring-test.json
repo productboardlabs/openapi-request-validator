@@ -1,0 +1,264 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Spring request validation test service",
+    "version": "1.0.1"
+  },
+  "paths": {
+    "/spring": {
+      "post": {
+        "summary": "Spring POST",
+        "operationId": "spring#POST",
+        "produces": [
+          "application/json"
+        ],
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PostRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Spring POST response",
+            "schema": {
+              "$ref": "#/definitions/PostResponse"
+            }
+          }
+        }
+      }
+    },
+    "/spring/post/blob": {
+      "post": {
+        "summary": "Spring POST Blob",
+        "operationId": "springPostBlob#POST",
+        "produces": [
+          "application/json"
+        ],
+        "consumes": [
+          "application/octet-stream"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Spring POST response",
+            "schema": {
+              "$ref": "#/definitions/PostBlobResponse"
+            }
+          }
+        }
+      }
+    },
+    "/spring/{pathVariable}": {
+      "get": {
+        "summary": "Spring GET",
+        "operationId": "spring#GET",
+        "produces": [
+          "application/json"
+        ],
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "pathVariable",
+            "in": "path",
+            "description": "Path variable",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "headerValue",
+            "in": "header",
+            "description": "Header value",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "requestParam",
+            "in": "query",
+            "description": "Request param",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Spring GET response",
+            "schema": {
+              "$ref": "#/definitions/GetResponse"
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Spring PUT",
+        "operationId": "spring#PUT",
+        "produces": [
+          "application/json"
+        ],
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "pathVariable",
+            "in": "path",
+            "description": "Path variable",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PutRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Spring PUT response",
+            "schema": {
+              "$ref": "#/definitions/PutResponse"
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Spring DELETE",
+        "operationId": "spring#DELETE",
+        "parameters": [
+          {
+            "name": "pathVariable",
+            "in": "path",
+            "description": "Path variable",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Spring DELETE response"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "PostRequest": {
+      "type": "object",
+      "required": [
+        "string",
+        "object"
+      ],
+      "properties": {
+        "string": {
+          "type": "string"
+        },
+        "integer": {
+          "type": "integer"
+        },
+        "object": {
+          "type": "object",
+          "properties": {
+            "boolean": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "PostResponse": {
+      "type": "object",
+      "required": [
+        "string",
+        "integer",
+        "object"
+      ],
+      "properties": {
+        "string": {
+          "type": "string"
+        },
+        "integer": {
+          "type": "integer"
+        },
+        "object": {
+          "type": "object",
+          "properties": {
+            "boolean": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "PostBlobResponse": {
+      "type": "object",
+      "required": [
+        "size"
+      ],
+      "properties": {
+        "size": {
+          "type": "integer"
+        }
+      }
+    },
+    "GetResponse": {
+      "type": "object",
+      "required": [
+        "headerValue",
+        "pathVariable",
+        "requestParam"
+      ],
+      "properties": {
+        "headerValue": {
+          "type": "string"
+        },
+        "pathVariable": {
+          "type": "string"
+        },
+        "requestParam": {
+          "type": "string"
+        }
+      }
+    },
+    "PutRequest": {
+      "type": "object",
+      "properties": {
+        "putValue": {
+          "type": "string"
+        }
+      }
+    },
+    "PutResponse": {
+      "type": "object",
+      "required": [
+        "putValue",
+        "pathVariable"
+      ],
+      "properties": {
+        "putValue": {
+          "type": "string"
+        },
+        "pathVariable": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
