@@ -1,3 +1,20 @@
+# v2.33.1
+
+* Add a new module `swagger-request-validator-spring-webmvc` that supports Spring 6 and Spring Boot 3 (with the Jakarta namespace).
+  [[#399]](https://bitbucket.org/atlassian/swagger-request-validator/issues/399)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/374)
+
+Note: The (now legacy) existing module `swagger-request-validator-springmvc` continues to support Spring 5.x and 
+Spring Boot 2.x. It will be dropped in the next major version.
+
+Note: As of this release the project builds with JDK17 but continues to maintain support for 
+JDK8 for all modules *except* the new `swagger-request-validator-spring-webmvc` module that requires JDK17.
+Support for JDK8 will be dropped in the next major version.
+
+# v2.33.0
+
+Version burned (failed deployment pipeline)
+
 # v2.32.1
 
 * Fixed a problem in the Spring WebMVC module where headers are removed during request validation and 
