@@ -1,11 +1,14 @@
 package com.atlassian.oai.validator.springmvc;
 
 import com.atlassian.oai.validator.OpenApiInteractionValidator;
+import com.atlassian.oai.validator.model.Body;
+import com.atlassian.oai.validator.model.ByteArrayBody;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.report.ValidationReport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
@@ -15,14 +18,20 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletResponseWrapper;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
 
 import static com.atlassian.oai.validator.springmvc.OpenApiValidationFilter.ATTRIBUTE_REQUEST_VALIDATION;
 import static com.atlassian.oai.validator.springmvc.OpenApiValidationFilter.ATTRIBUTE_RESPONSE_VALIDATION;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -84,14 +93,15 @@ public class OpenApiValidationInterceptorTest {
         final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
 
         // and:
-        when(servletRequest.getAttribute(ATTRIBUTE_REQUEST_VALIDATION)).thenReturn(null);
+        when(servletRequest.getAttribute(ATTRIBUTE_REQUEST_VALIDATION)).thenReturn(true);
 
         // when:
         final boolean result = classUnderTest.preHandle(servletRequest, null, null);
 
         // then:
         assertThat(result, equalTo(true));
-        verify(servletRequest, never()).getAttribute(ATTRIBUTE_REQUEST_VALIDATION);
+        verify(servletRequest).getAttribute(ATTRIBUTE_REQUEST_VALIDATION);
+        verify(openApiValidationService, never()).validateRequest(any());
     }
 
     @Test
@@ -108,6 +118,7 @@ public class OpenApiValidationInterceptorTest {
         // then:
         assertThat(result, equalTo(true));
         verify(servletRequest).getAttribute(ATTRIBUTE_REQUEST_VALIDATION);
+        verify(openApiValidationService, never()).validateRequest(any(Request.class));
     }
 
     @Test
@@ -124,6 +135,7 @@ public class OpenApiValidationInterceptorTest {
         // then:
         assertThat(result, equalTo(true));
         verify(servletRequest).getAttribute(ATTRIBUTE_REQUEST_VALIDATION);
+        verify(openApiValidationService, never()).validateRequest(any(Request.class));
     }
 
     @Test
@@ -140,10 +152,30 @@ public class OpenApiValidationInterceptorTest {
         // then:
         assertThat(result, equalTo(true));
         verify(servletRequest).getAttribute(ATTRIBUTE_REQUEST_VALIDATION);
+        verify(openApiValidationService, never()).validateRequest(any(Request.class));
     }
 
     @Test
-    public void preHandle_theRequestIsValid() throws Exception {
+    public void preHandle_noRequestValidationButPreparationForResponseValidationNecessary() throws Exception {
+        // given:
+        final HttpServletRequest servletRequest = mock(HttpServletRequest.class);
+        final OpenApiValidationContentCachingResponseWrapper servletResponse = mock(OpenApiValidationContentCachingResponseWrapper.class);
+        final Map<String, List<String>> headers = mock(Map.class);
+
+        // and:
+        when(servletRequest.getAttribute(ATTRIBUTE_RESPONSE_VALIDATION)).thenReturn(Boolean.TRUE);
+        when(openApiValidationService.resolveHeadersOnResponse(servletResponse)).thenReturn(headers);
+
+        // when:
+        final boolean result = classUnderTest.preHandle(servletRequest, servletResponse, null);
+
+        // then:
+        assertThat(result, equalTo(true));
+        verify(servletRequest).setAttribute("com.atlassian.oai.validator.springmvc.alreadySetHeaders", headers);
+    }
+
+    @Test
+    public void preHandle_theRequestIsValid_ContentCachingRequestWrapper() throws Exception {
         // given:
         final ContentCachingRequestWrapper servletRequest = mock(ContentCachingRequestWrapper.class);
         final Request request = mock(Request.class);
@@ -154,7 +186,8 @@ public class OpenApiValidationInterceptorTest {
         when(servletRequest.getMethod()).thenReturn("METHOD");
         when(servletRequest.getRequestURI()).thenReturn("/request/uri");
 
-        when(openApiValidationService.buildRequest(servletRequest)).thenReturn(request);
+        final ArgumentCaptor<Supplier<Body>> bodySupplierArgument = ArgumentCaptor.forClass(Supplier.class);
+        when(openApiValidationService.buildRequest(eq(servletRequest), bodySupplierArgument.capture())).thenReturn(request);
         when(openApiValidationService.validateRequest(request)).thenReturn(validationReport);
 
         // when:
@@ -163,12 +196,23 @@ public class OpenApiValidationInterceptorTest {
         // then:
         assertThat(result, equalTo(true));
         verify(validationReportHandler).handleRequestReport("METHOD#/request/uri", validationReport);
+        verify(servletRequest, never()).getContentAsByteArray(); // the body has not been read, yet
+
+        // when: 'the body is not read until the supplier is called'
+        final Supplier<Body> bodySupplier = bodySupplierArgument.getValue();
+        final Body body = bodySupplier.get();
+
+        // then:
+        assertThat(body, instanceOf(ByteArrayBody.class));
+        verify(servletRequest).getContentAsByteArray();
     }
 
     @Test
-    public void preHandle_aResettableRequestServletWrapperWillBeResetAfterValidating() throws Exception {
+    public void preHandle_theRequestIsValid_ResettableRequestServletWrapper() throws Exception {
         // given:
         final ResettableRequestServletWrapper servletRequest = mock(ResettableRequestServletWrapper.class);
+        final ResettableRequestServletWrapper.CachingServletInputStream cachingServletInputStream =
+                mock(ResettableRequestServletWrapper.CachingServletInputStream.class);
         final Request request = mock(Request.class);
         final ValidationReport validationReport = mock(ValidationReport.class);
 
@@ -176,7 +220,10 @@ public class OpenApiValidationInterceptorTest {
         when(servletRequest.getAttribute(ATTRIBUTE_REQUEST_VALIDATION)).thenReturn(Boolean.TRUE);
         when(servletRequest.getMethod()).thenReturn("METHOD");
         when(servletRequest.getRequestURI()).thenReturn("/request/uri");
-        when(openApiValidationService.buildRequest(servletRequest)).thenReturn(request);
+        when(servletRequest.getInputStream()).thenReturn(cachingServletInputStream);
+
+        final ArgumentCaptor<Supplier<Body>> bodySupplierArgument = ArgumentCaptor.forClass(Supplier.class);
+        when(openApiValidationService.buildRequest(eq(servletRequest), bodySupplierArgument.capture())).thenReturn(request);
         when(openApiValidationService.validateRequest(request)).thenReturn(validationReport);
 
         // when:
@@ -184,13 +231,24 @@ public class OpenApiValidationInterceptorTest {
 
         // then:
         assertThat(result, equalTo(true));
+
+        // and: 'the InputStream on a ResettableRequestServletWrapper is reset after validation, so it can be read again'
         verify(servletRequest).resetInputStream();
+
+        // when: 'the body is not read until the supplier is called'
+        final Supplier<Body> bodySupplier = bodySupplierArgument.getValue();
+        final Body body = bodySupplier.get();
+
+        // then:
+        assertThat(body, instanceOf(ResettableInputStreamBody.class));
     }
 
     @Test
     public void preHandle_theRequestIsInvalid() throws Exception {
         // given:
         final HttpServletRequest servletRequest = mock(ResettableRequestServletWrapper.class);
+        final ResettableRequestServletWrapper.CachingServletInputStream cachingServletInputStream =
+                mock(ResettableRequestServletWrapper.CachingServletInputStream.class);
         final Request request = mock(Request.class);
         final ValidationReport validationReport = mock(ValidationReport.class);
 
@@ -198,8 +256,9 @@ public class OpenApiValidationInterceptorTest {
         when(servletRequest.getAttribute(ATTRIBUTE_REQUEST_VALIDATION)).thenReturn(Boolean.TRUE);
         when(servletRequest.getMethod()).thenReturn("METHOD");
         when(servletRequest.getRequestURI()).thenReturn("/request/uri");
+        when(servletRequest.getInputStream()).thenReturn(cachingServletInputStream);
 
-        when(openApiValidationService.buildRequest(servletRequest)).thenReturn(request);
+        when(openApiValidationService.buildRequest(eq(servletRequest), any(Supplier.class))).thenReturn(request);
         when(openApiValidationService.validateRequest(request)).thenReturn(validationReport);
         doThrow(new InvalidRequestException(validationReport)).when(validationReportHandler)
                 .handleRequestReport("METHOD#/request/uri", validationReport);
@@ -239,6 +298,7 @@ public class OpenApiValidationInterceptorTest {
 
         // then:
         verify(servletRequest).getAttribute(ATTRIBUTE_RESPONSE_VALIDATION);
+        verify(openApiValidationService, never()).validateResponse(any(), any());
     }
 
     @Test
@@ -255,6 +315,7 @@ public class OpenApiValidationInterceptorTest {
 
         // then:
         verify(servletRequest).getAttribute(ATTRIBUTE_RESPONSE_VALIDATION);
+        verify(openApiValidationService, never()).validateResponse(any(), any());
     }
 
     @Test
@@ -271,6 +332,7 @@ public class OpenApiValidationInterceptorTest {
 
         // then:
         verify(servletRequest).getAttribute(ATTRIBUTE_RESPONSE_VALIDATION);
+        verify(openApiValidationService, never()).validateResponse(any(), any());
     }
 
     @Test
@@ -326,19 +388,26 @@ public class OpenApiValidationInterceptorTest {
         final ContentCachingResponseWrapper servletResponse = mockResponseWrapper();
         final Response response = mock(Response.class);
         final ValidationReport validationReport = mock(ValidationReport.class);
+        final Map<String, List<String>> headers = mock(Map.class);
+        final InvalidResponseException exception = new InvalidResponseException(validationReport);
 
         // and:
         when(servletRequest.getAttribute(ATTRIBUTE_RESPONSE_VALIDATION)).thenReturn(Boolean.TRUE);
         when(servletRequest.getMethod()).thenReturn("METHOD");
         when(servletRequest.getRequestURI()).thenReturn("/request/uri");
+        when(servletRequest.getAttribute("com.atlassian.oai.validator.springmvc.alreadySetHeaders")).thenReturn(headers);
         when(openApiValidationService.buildResponse(servletResponse)).thenReturn(response);
         when(openApiValidationService.validateResponse(servletRequest, response)).thenReturn(validationReport);
-        doThrow(new InvalidResponseException(validationReport)).when(validationReportHandler)
+        doThrow(exception).when(validationReportHandler)
                 .handleResponseReport("METHOD#/request/uri", validationReport);
 
-        // expect:
-        assertThrows(InvalidResponseException.class,
-                () -> classUnderTest.postHandle(servletRequest, servletResponse, null, null));
+        // when:
+        assertThatThrownBy(() -> classUnderTest.postHandle(servletRequest, servletResponse, null, null))
+                .isEqualTo(exception);
+
+        // then:
+        verify(servletResponse).reset();
+        verify(openApiValidationService).addHeadersToResponse(servletResponse, headers);
     }
 
     private OpenApiValidationContentCachingResponseWrapper mockResponseWrapper() {
