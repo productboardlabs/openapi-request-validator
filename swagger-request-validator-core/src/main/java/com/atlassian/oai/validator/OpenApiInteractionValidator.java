@@ -14,8 +14,10 @@ import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
 import com.atlassian.oai.validator.schema.SchemaValidator;
+import com.atlassian.oai.validator.schema.SwaggerV20Library;
 import com.atlassian.oai.validator.util.OpenApiLoader;
 import com.atlassian.oai.validator.whitelist.ValidationErrorsWhitelist;
+import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.parser.core.models.AuthorizationValue;
 import io.swagger.v3.parser.core.models.ParseOptions;
@@ -27,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
@@ -147,11 +150,12 @@ public class OpenApiInteractionValidator {
                                         @Nullable final String basePathOverride,
                                         @Nonnull final MessageResolver messages,
                                         @Nonnull final ValidationErrorsWhitelist whitelist,
+                                        @Nonnull final Supplier<JsonSchemaFactory> schemaFactorySupplier,
                                         @Nonnull final List<CustomRequestValidator> customRequestValidators,
                                         @Nonnull final List<CustomResponseValidator> customResponseValidators) {
         this.messages = messages;
         apiOperationResolver = new ApiOperationResolver(api, basePathOverride);
-        final SchemaValidator schemaValidator = new SchemaValidator(api, messages);
+        final SchemaValidator schemaValidator = new SchemaValidator(api, messages, schemaFactorySupplier);
         requestValidator = new RequestValidator(schemaValidator, messages, api, customRequestValidators);
         responseValidator = new ResponseValidator(schemaValidator, messages, api, customResponseValidators);
         this.whitelist = whitelist;
@@ -346,6 +350,7 @@ public class OpenApiInteractionValidator {
         private final List<CustomRequestValidator> customRequestValidators = new ArrayList<>();
         private final List<CustomResponseValidator> customResponseValidators = new ArrayList<>();
         private OpenAPI api;
+        private Supplier<JsonSchemaFactory> schemaFactorySupplier = SwaggerV20Library::schemaFactory;
 
         /**
          * The location of the OpenAPI / Swagger specification to use in the validator, or the inline specification to use.
@@ -610,6 +615,22 @@ public class OpenApiInteractionValidator {
         }
 
         /**
+         * Optionally supply a function that returns a {@link com.github.fge.jsonschema.main.JsonSchemaFactory} to use.
+         * <p>
+         * Defaults to {@link SwaggerV20Library}'s `schemaFactory`, but this can be useful if you have additional
+         * extensions to add to {@link com.github.fge.jsonschema.library.Library}.
+         *
+         * @param schemaFactorySupplier A supplier function that returns a JsonSchemaFactory.
+         *
+         * @return this builder instance
+         */
+        public Builder withSchemaFactorySupplier(final Supplier<JsonSchemaFactory> schemaFactorySupplier) {
+            requireNonNull(schemaFactorySupplier, "JsonSchemaFactory supplier is required");
+            this.schemaFactorySupplier = schemaFactorySupplier;
+            return this;
+        }
+
+        /**
          * Build a configured {@link OpenApiInteractionValidator} instance with the values collected in this builder.
          *
          * @return The configured {@link OpenApiInteractionValidator} instance.
@@ -626,6 +647,7 @@ public class OpenApiInteractionValidator {
                     basePathOverride,
                     new MessageResolver(levelResolver),
                     whitelist,
+                    schemaFactorySupplier,
                     customRequestValidators,
                     customResponseValidators);
         }

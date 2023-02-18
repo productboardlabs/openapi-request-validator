@@ -1,0 +1,47 @@
+openapi: 3.0.0
+info:
+  title: Tests for custom JsonSchema keyword 'x-isFoo' support.
+  version: 1.0.0
+servers:
+  - url: /
+paths:
+  /foo:
+    post:
+      tags:
+        - foo
+      summary: Create a foo
+      operationId: create new foo
+      responses:
+        '200':
+          description: Foo response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Foo'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewFoo'
+        description: The new user details to create
+        required: true
+components:
+  schemas:
+    Foo:
+      type: object
+      properties:
+        id:
+          type: string
+        foo:
+          type: string
+      required:
+        - id
+        - foo
+    NewFoo:
+      type: object
+      properties:
+        foo:
+          type: string
+      required:
+        - foo
+      x-isFoo: true

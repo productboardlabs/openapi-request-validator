@@ -10,7 +10,7 @@
 
     <groupId>com.atlassian.oai</groupId>
     <artifactId>swagger-request-validator</artifactId>
-    <version>2.31.1-SNAPSHOT</version>
+    <version>2.33.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Swagger Request Validator</name>
@@ -52,7 +52,7 @@
 
     <properties>
         <source.encoding>UTF-8</source.encoding>
-        <jdk.version>1.8</jdk.version>
+        <maven.compiler.release>8</maven.compiler.release>
 
         <!-- Direct dependency versions -->
         <guava.version>31.1-jre</guava.version>
@@ -91,6 +91,7 @@
         <build-helper-maven-plugin.version>3.3.0</build-helper-maven-plugin.version>
         <awaitility.version>4.2.0</awaitility.version>
         <junit-jupiter.version>5.8.2</junit-jupiter.version>
+        <maven.javadoc.plugin.version>3.4.1</maven.javadoc.plugin.version>
     </properties>
 
     <modules>
@@ -102,6 +103,7 @@
         <module>swagger-request-validator-mockmvc</module>
         <module>swagger-request-validator-mockmvc-legacy</module>
         <module>swagger-request-validator-springmvc</module>
+        <module>swagger-request-validator-spring-webmvc</module>
         <module>swagger-request-validator-spring-web-client</module>
         <module>swagger-request-validator-examples</module>
     </modules>

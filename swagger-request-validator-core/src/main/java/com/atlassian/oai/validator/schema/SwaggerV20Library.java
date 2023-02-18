@@ -33,7 +33,7 @@ public class SwaggerV20Library {
 
     public static final String OAI_V2_METASCHEMA_URI = "https://openapis.org/specification/versions/2.0#";
 
-    static Library get() {
+    public static Library get() {
         // The discriminator validator holds state that may persist in the event of a runtime exception etc.
         // Re-create the library to ensure this state doesn't persist between validations.
         return DraftV4Library.get().thaw()

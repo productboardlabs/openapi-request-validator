@@ -38,6 +38,7 @@ import org.springframework.web.util.UrlPathHelper;
 
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
@@ -45,19 +46,29 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
+import static java.util.Collections.singletonList;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.inOrder;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.collection.IsMapWithSize.aMapWithSize;
+import static org.hamcrest.collection.IsMapWithSize.anEmptyMap;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -306,7 +317,7 @@ public class OpenApiValidationServiceTest {
 
         final ValidationReport result = classUnderTest.validateRequest(request);
 
-        Mockito.verify(requestValidator, times(1)).validateRequest(request);
+        verify(requestValidator, times(1)).validateRequest(request);
         assertThat(result, is(validationReport));
     }
 
@@ -328,9 +339,82 @@ public class OpenApiValidationServiceTest {
         final ValidationReport result = classUnderTest.validateResponse(servletRequest, response);
 
         // then:
-        Mockito.verify(requestValidator, times(1))
+        verify(requestValidator, times(1))
                 .validateResponse("/swagger-request-validator", Request.Method.POST, response);
         assertThat(result, is(validationReport));
+    }
+
+    @Test
+    public void resolveHeadersOnResponse_noHeaderOnResponse() {
+        // given:
+        final HttpServletResponse servletResponse = mock(HttpServletResponse.class);
+
+        // expect:
+        when(servletResponse.getHeaderNames()).thenReturn(null);
+        assertThat(classUnderTest.resolveHeadersOnResponse(servletResponse), anEmptyMap());
+
+        // and:
+        when(servletResponse.getHeaderNames()).thenReturn(emptyList());
+        assertThat(classUnderTest.resolveHeadersOnResponse(servletResponse), anEmptyMap());
+    }
+
+    @Test
+    public void resolveHeadersOnResponse_saveHeadersCurrentlyOnResponse() {
+        // given:
+        final HttpServletResponse servletResponse = mock(HttpServletResponse.class);
+
+        // and:
+        when(servletResponse.getHeaderNames()).thenReturn(asList("Header 1", "Header 2", "Header 3"));
+        when(servletResponse.getHeaders("Header 1")).thenReturn(asList("Header 1: Value 1"));
+        when(servletResponse.getHeaders("Header 2")).thenReturn(asList("Header 2: Value 1", "Header 2: Value 2"));
+        when(servletResponse.getHeaders("Header 3")).thenReturn(asList(""));
+        when(servletResponse.getHeaders("Header 1")).thenReturn(asList("Header 1: New value 1"));
+
+        // when:
+        final Map<String, List<String>> result = classUnderTest.resolveHeadersOnResponse(servletResponse);
+
+        // then:
+        assertThat(result, aMapWithSize(3));
+        assertThat(result, hasEntry("Header 1", singletonList("Header 1: New value 1")));
+        assertThat(result, hasEntry("Header 2", asList("Header 2: Value 1", "Header 2: Value 2")));
+        assertThat(result, hasEntry("Header 3", singletonList("")));
+    }
+
+    @Test
+    public void addHeadersToResponse_noHeadersToAdd() {
+        // given:
+        final HttpServletResponse servletResponse = mock(HttpServletResponse.class);
+
+        // when:
+        classUnderTest.addHeadersToResponse(servletResponse, null);
+
+        // then:
+        verifyNoInteractions(servletResponse);
+
+        // when:
+        classUnderTest.addHeadersToResponse(servletResponse, emptyMap());
+
+        // then:
+        verifyNoInteractions(servletResponse);
+    }
+
+    @Test
+    public void addHeadersToResponse_addEachHeaderValue() {
+        // given:
+        final HttpServletResponse servletResponse = mock(HttpServletResponse.class);
+        final Map<String, List<String>> headers = new HashMap<>();
+        headers.put("Header 1", asList("Header 1: Value 1"));
+        headers.put("Header 2", asList("Header 2: Value 1", "Header 2: Value 2"));
+        headers.put("Header 3", asList(""));
+
+        // when:
+        classUnderTest.addHeadersToResponse(servletResponse, headers);
+
+        // then:
+        verify(servletResponse).addHeader("Header 1", "Header 1: Value 1");
+        verify(servletResponse).addHeader("Header 2", "Header 2: Value 2");
+        verify(servletResponse).addHeader("Header 2", "Header 2: Value 2");
+        verify(servletResponse).addHeader("Header 3", "");
     }
 
     @Test

@@ -91,6 +91,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Builds'
+  /api/data:
+    description: Data Lorem ipsum
+    get:
+      summary: Get data
+      operationId: getData
+      parameters:
+        - name: query
+          in: query
+          description: The query object
+          required: true
+          explode: true
+          schema:
+            $ref: '#/components/schemas/Query'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Data'
 components:
   schemas:
     Build:
@@ -139,3 +159,32 @@ components:
           minimum: 1
           maximum: 20
           default: 3
+    Data:
+      type: object
+      properties:
+        data:
+          type: string
+          description: Data
+          example: "data"
+          pattern: '^[-\w]+$'
+        date:
+          type: string
+          format: date-time
+          description: A date
+    Query:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          description: Query
+          format: int64
+        outcomes:
+          type: array
+          items:
+            type: string
+            enum:
+              - SUCCESS
+              - FAILURE
+              - SKIPPED
