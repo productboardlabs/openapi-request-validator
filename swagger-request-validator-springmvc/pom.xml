@@ -22,6 +22,7 @@
 
         <!-- Version overrides for transitive deps -->
         <snakeyaml.version>1.33</snakeyaml.version>
+        <spring.version>5.3.20</spring.version>
     </properties>
 
     <dependencies>
