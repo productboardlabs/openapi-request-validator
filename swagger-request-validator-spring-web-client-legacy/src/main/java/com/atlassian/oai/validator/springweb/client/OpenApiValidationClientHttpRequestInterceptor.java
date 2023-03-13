@@ -10,7 +10,7 @@ import com.atlassian.oai.validator.report.ValidationReport;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpRequest;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.http.client.AbstractClientHttpResponse;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
@@ -127,7 +127,7 @@ public class OpenApiValidationClientHttpRequestInterceptor implements ClientHttp
      * This is similar to {@code org.springframework.http.client.BufferingClientHttpRequestWrapper} but
      * isn't package-private and doesn't require the consumer to configure a custom request factory
      */
-    private static class BufferingClientHttpResponse implements ClientHttpResponse {
+    private static class BufferingClientHttpResponse extends AbstractClientHttpResponse {
 
         private final ClientHttpResponse delegate;
         @Nullable
@@ -138,12 +138,6 @@ public class OpenApiValidationClientHttpRequestInterceptor implements ClientHttp
         }
 
         @Override
-        public HttpStatusCode getStatusCode() throws IOException {
-            return delegate.getStatusCode();
-        }
-
-        @Override
-        @Deprecated
         public int getRawStatusCode() throws IOException {
             return delegate.getRawStatusCode();
         }

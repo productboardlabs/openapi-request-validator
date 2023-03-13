@@ -81,7 +81,7 @@ public class ResettableRequestServletWrapper extends HttpServletRequestWrapper {
     /**
      * A {@link ServletInputStream} wrapping the original request and saving all read bytes.
      */
-    private static class CachingServletInputStream extends ServletInputStream {
+    static class CachingServletInputStream extends ServletInputStream {
         private static final int CHUNK_SIZE = 8192;
 
         private final ServletInputStream originalServletInputStream;

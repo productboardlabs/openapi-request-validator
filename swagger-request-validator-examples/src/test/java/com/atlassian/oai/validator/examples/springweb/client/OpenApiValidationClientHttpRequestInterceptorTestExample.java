@@ -12,7 +12,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.DefaultUriTemplateHandler;
+import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import java.util.Collections;
 import java.util.Map;
@@ -76,8 +76,7 @@ public class OpenApiValidationClientHttpRequestInterceptorTestExample {
     public void setupRestTemplate() {
         restTemplate = new RestTemplate();
         restTemplate.setInterceptors(Collections.singletonList(validationInterceptor));
-        final DefaultUriTemplateHandler handler = new DefaultUriTemplateHandler();
-        handler.setBaseUrl("http://localhost:" + PORT);
+        final DefaultUriBuilderFactory handler = new DefaultUriBuilderFactory("http://localhost:" + PORT);
         restTemplate.setUriTemplateHandler(handler);
     }
 

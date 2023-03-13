@@ -16,6 +16,7 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.text.IsEmptyString.isEmptyString;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
 
 public class SimpleRequestTest {
 
@@ -271,6 +272,15 @@ public class SimpleRequestTest {
     }
 
     @Test
+    public void bodyBody_isNotMandatory_andCanBeSetAsNull() {
+        final Request request = SimpleRequest.Builder.get("/path")
+                .withBody((Body) null)
+                .build();
+
+        assertThat(request.getRequestBody().isPresent(), is(false));
+    }
+
+    @Test
     public void body_canBeSetAsString() {
         final Request request = SimpleRequest.Builder.get("/path")
                 .withBody("")
@@ -326,6 +336,16 @@ public class SimpleRequestTest {
                 .build();
 
         assertThat(request.getRequestBody().get(), instanceOf(InputStreamBody.class));
+    }
+
+    @Test
+    public void body_canBeSetAsBody() {
+        final Body body = mock(Body.class);
+        final Request request = SimpleRequest.Builder.get("/path")
+                .withBody(body)
+                .build();
+
+        assertThat(request.getRequestBody().get(), is(body));
     }
 
     @Test(expected = NullPointerException.class)

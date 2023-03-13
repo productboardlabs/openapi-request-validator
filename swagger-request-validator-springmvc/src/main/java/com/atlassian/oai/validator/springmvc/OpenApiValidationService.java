@@ -1,6 +1,7 @@
 package com.atlassian.oai.validator.springmvc;
 
 import com.atlassian.oai.validator.OpenApiInteractionValidator;
+import com.atlassian.oai.validator.model.Body;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleRequest;
@@ -9,7 +10,6 @@ import com.atlassian.oai.validator.report.ValidationReport;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.support.EncodedResource;
-import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 import org.springframework.web.util.UrlPathHelper;
 
@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -69,29 +70,24 @@ public class OpenApiValidationService {
 
     /**
      * @param servletRequest the {@link HttpServletRequest}
+     * @param bodySupplier the {@link Supplier} of a {@link Body} for the request validation
      *
      * @return the build {@link Request} created out of given {@link HttpServletRequest}
      *
      * @throws IOException if the request body can't be read
      */
-    public Request buildRequest(final HttpServletRequest servletRequest) throws IOException {
+    public Request buildRequest(final HttpServletRequest servletRequest, final Supplier<Body> bodySupplier) {
         requireNonNull(servletRequest, "A request is required.");
+        requireNonNull(bodySupplier, "A body supplier is required.");
 
         final Request.Method method = Request.Method.valueOf(servletRequest.getMethod());
         final String path = resolveServletPath(servletRequest);
         final SimpleRequest.Builder builder = new SimpleRequest.Builder(method, path);
-        final Set<String> queryParameterNames;
-        if (servletRequest instanceof ContentCachingRequestWrapper) {
-            // In case of form data - wrapped in a ContentCachingRequestWrapper - the parameters have to be
-            // read before (!!) the body. The RequestFacade parses the parameters from the bodies input stream.
-            final ContentCachingRequestWrapper wrappedRequest = (ContentCachingRequestWrapper) servletRequest;
-            queryParameterNames = getQueryParameterNames(servletRequest);
-            builder.withBody(wrappedRequest.getContentAsByteArray());
-        } else {
-            // In all other cases the parameters have to be read after (!!) the body.
-            builder.withBody(servletRequest.getInputStream());
-            queryParameterNames = getQueryParameterNames(servletRequest);
-        }
+        // As a precaution read the query parameters before (!!) the body. The ContentCachingRequestWrapper,
+        // used for form data validation, parses the parameters from the bodies input stream. They would be
+        // indistinguishable from the form data.
+        final Set<String> queryParameterNames = getQueryParameterNames(servletRequest);
+        builder.withBody(bodySupplier.get());
         for (final String queryParameterName : queryParameterNames) {
             builder.withQueryParam(queryParameterName, servletRequest.getParameterValues(queryParameterName));
         }

@@ -68,7 +68,7 @@
         <rest-assured.version>5.1.1</rest-assured.version>
         <servlet.api.version>4.0.1</servlet.api.version>
         <slf4j.version>1.7.36</slf4j.version>
-        <spring.version>5.3.20</spring.version>
+        <spring.version>6.0.2</spring.version>
         <swagger-parser.version>2.1.9</swagger-parser.version>
         <wiremock.version>2.35.0</wiremock.version>
         <jmh-core.version>1.36</jmh-core.version>
@@ -105,6 +105,7 @@
         <module>swagger-request-validator-springmvc</module>
         <module>swagger-request-validator-spring-webmvc</module>
         <module>swagger-request-validator-spring-web-client</module>
+        <module>swagger-request-validator-spring-web-client-legacy</module>
         <module>swagger-request-validator-examples</module>
     </modules>
 
