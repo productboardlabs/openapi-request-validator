@@ -1,3 +1,16 @@
+# 2.34.0
+
+* Changed `swagger-request-validator-spring-web-client` to support Spring 6+ and added a new module
+  `swagger-request-validator-spring-web-client-legacy` for continued Spring 5 support
+  [[#404]](https://bitbucket.org/atlassian/swagger-request-validator/issues/404)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/376)
+* Support resetting the Spring request body so that it can be accessed multiple times during validation
+  [[#374]](https://bitbucket.org/atlassian/swagger-request-validator/issues/374)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/302)
+
+Note: Users of Spring 5.x with the `swagger-request-validator-spring-web-client` will need to change their artifact ID to
+`swagger-request-validator-spring-web-client-legacy` as part of this change. The legacy support will be dropped in the next major version.
+
 # v2.33.1
 
 * Add a new module `swagger-request-validator-spring-webmvc` that supports Spring 6 and Spring Boot 3 (with the Jakarta namespace).
