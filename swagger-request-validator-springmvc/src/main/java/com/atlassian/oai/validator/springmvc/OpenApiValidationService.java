@@ -73,8 +73,6 @@ public class OpenApiValidationService {
      * @param bodySupplier the {@link Supplier} of a {@link Body} for the request validation
      *
      * @return the build {@link Request} created out of given {@link HttpServletRequest}
-     *
-     * @throws IOException if the request body can't be read
      */
     public Request buildRequest(final HttpServletRequest servletRequest, final Supplier<Body> bodySupplier) {
         requireNonNull(servletRequest, "A request is required.");
