@@ -75,7 +75,7 @@
         <jsonassert.version>1.5.1</jsonassert.version>
 
         <!-- Overrides for transitive dependencies to address vulnerabilities -->
-        <jetty.version>9.4.49.v20220914</jetty.version>
+        <jetty.version>9.4.51.v20230217</jetty.version>
         <netty.version>4.1.85.Final</netty.version>
         <rhino.version>1.7.12</rhino.version>
         <xerces.version>2.12.2</xerces.version>
