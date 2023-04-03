@@ -1,3 +1,8 @@
+# 2.34.1
+
+* Bumped Spring 5.x dependency to 5.3.26 to address open CVE
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/378)
+
 # 2.34.0
 
 * Changed `swagger-request-validator-spring-web-client` to support Spring 6+ and added a new module
