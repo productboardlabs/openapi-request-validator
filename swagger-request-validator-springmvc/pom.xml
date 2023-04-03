@@ -13,7 +13,7 @@
     <artifactId>swagger-request-validator-springmvc</artifactId>
 
     <description>
-        OpenAPI / Swagger validation for Spring MVC.
+        (Legacy) OpenAPI / Swagger validation for Spring MVC - Compatible with Spring 5.x and Spring Boot 2.x
     </description>
 
     <properties>
@@ -22,7 +22,7 @@
 
         <!-- Version overrides for transitive deps -->
         <snakeyaml.version>1.33</snakeyaml.version>
-        <spring.version>5.3.20</spring.version>
+        <spring.version>5.3.26</spring.version>
     </properties>
 
     <dependencies>
