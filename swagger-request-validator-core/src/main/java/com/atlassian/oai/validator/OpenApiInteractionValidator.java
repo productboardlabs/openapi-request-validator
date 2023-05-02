@@ -299,15 +299,15 @@ public class OpenApiInteractionValidator {
             UNKNOWN
         }
 
-        private static SpecSource unknown(final String specUrlOrPayload) {
+        public static SpecSource unknown(final String specUrlOrPayload) {
             return new SpecSource(specUrlOrPayload, Type.UNKNOWN);
         }
 
-        private static SpecSource inline(final String inlineApiSpec) {
+        public static SpecSource inline(final String inlineApiSpec) {
             return new SpecSource(inlineApiSpec, Type.INLINE_SPEC);
         }
 
-        private static SpecSource specUrl(final String specUrl) {
+        public static SpecSource specUrl(final String specUrl) {
             return new SpecSource(specUrl, Type.SPEC_URL);
         }
 
