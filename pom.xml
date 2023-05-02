@@ -5,12 +5,12 @@
     <parent>
         <groupId>com.atlassian.pom</groupId>
         <artifactId>central-pom</artifactId>
-        <version>6.2.2</version>
+        <version>6.2.5</version>
     </parent>
 
     <groupId>com.atlassian.oai</groupId>
     <artifactId>swagger-request-validator</artifactId>
-    <version>2.34.1-SNAPSHOT</version>
+    <version>2.35.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Swagger Request Validator</name>
@@ -68,26 +68,26 @@
         <rest-assured.version>5.1.1</rest-assured.version>
         <servlet.api.version>4.0.1</servlet.api.version>
         <slf4j.version>1.7.36</slf4j.version>
-        <spring.version>6.0.2</spring.version>
+        <spring.version>6.0.8</spring.version>
         <swagger-parser.version>2.1.13</swagger-parser.version>
         <wiremock.version>2.35.0</wiremock.version>
         <jmh-core.version>1.36</jmh-core.version>
         <jsonassert.version>1.5.1</jsonassert.version>
 
         <!-- Overrides for transitive dependencies to address vulnerabilities -->
-        <jetty.version>9.4.49.v20220914</jetty.version>
-        <netty.version>4.1.85.Final</netty.version>
-        <rhino.version>1.7.12</rhino.version>
+        <jetty.version>9.4.51.v20230217</jetty.version>
+        <netty.version>4.1.92.Final</netty.version>
+        <rhino.version>1.7.14</rhino.version>
         <xerces.version>2.12.2</xerces.version>
         <org-json.version>20180130</org-json.version>
         <scala-library.version>2.13.9</scala-library.version>
-        <tika.version>1.28.4</tika.version>
+        <tika.version>1.28.5</tika.version>
         <commons-codec.version>1.13</commons-codec.version>
 
         <!-- Plugin versions -->
         <checkstyle.version>9.3</checkstyle.version>
         <license-maven-plugin.version>2.0.0</license-maven-plugin.version>
-        <maven-checkstyle-plugin.version>3.1.2</maven-checkstyle-plugin.version>
+        <maven-checkstyle-plugin.version>3.2.2</maven-checkstyle-plugin.version>
         <build-helper-maven-plugin.version>3.3.0</build-helper-maven-plugin.version>
         <awaitility.version>4.2.0</awaitility.version>
         <junit-jupiter.version>5.8.2</junit-jupiter.version>
