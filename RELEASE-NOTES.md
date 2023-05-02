@@ -1,3 +1,14 @@
+# 2.35.0
+
+* Bump dependencies:
+  * `maven`: 3.8.7 -> 3.9.1
+  * `snakeyaml`: 1.33 -> 2.0
+  * `spring`: 6.0.2 -> 6.0.8
+  * `netty`: 4.1.85.Final -> 4.1.92.Final
+  * `jetty`: 9.4.49.v20220914 -> 9.4.51.v20230217
+  * `rhino`: 1.7.12 -> 1.7.14
+  * `tika`: 1.28.4 -> 1.28.5
+
 # 2.34.1
 
 * Bumped Spring 5.x dependency to 5.3.26 to address open CVE
