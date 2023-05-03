@@ -1,3 +1,7 @@
+# 2.35.1
+
+* Bump `swagger-parser` 2.1.9 -> 2.1.13
+
 # 2.35.0
 
 * Bump dependencies:
