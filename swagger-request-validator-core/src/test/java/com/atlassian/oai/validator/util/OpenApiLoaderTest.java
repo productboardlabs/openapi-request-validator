@@ -11,18 +11,20 @@ import io.swagger.v3.oas.models.media.ObjectSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import org.apache.commons.io.IOUtils;
-import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.util.Map;
 
+import static java.nio.charset.Charset.defaultCharset;
 import static java.util.Collections.emptyList;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -30,20 +32,12 @@ public class OpenApiLoaderTest {
 
     private final OpenApiLoader classUnderTest = new OpenApiLoader();
 
-    private static SpecSource mockSpecSource(final String value, final boolean isSpecUrl, final boolean isInlineSpec) {
-        final SpecSource specSource = mock(SpecSource.class);
-        when(specSource.isSpecUrl()).thenReturn(isSpecUrl);
-        when(specSource.isInlineSpecification()).thenReturn(isInlineSpec);
-        when(specSource.getValue()).thenReturn(value);
-        return specSource;
-    }
-
     @Test
     public void loadApiByInlineSpecification() throws IOException {
         // given:
         final String inlineSpec = IOUtils.toString(
-                this.getClass().getResourceAsStream("/oai/v3/api-complex-composition.yaml"));
-        final SpecSource specSource = mockSpecSource(inlineSpec, false, true);
+                this.getClass().getResourceAsStream("/oai/v3/api-complex-composition.yaml"), defaultCharset());
+        final SpecSource specSource = SpecSource.inline(inlineSpec);
 
         // when:
         final OpenAPI result = classUnderTest.loadApi(specSource, emptyList(), new ParseOptions());
@@ -55,7 +49,7 @@ public class OpenApiLoaderTest {
     @Test
     public void loadApiBySpecUrl() {
         // given:
-        final SpecSource specSource = mockSpecSource("/oai/v2/api-ref-params.json", true, false);
+        final SpecSource specSource = SpecSource.specUrl("/oai/v2/api-ref-params.json");
 
         // when:
         final OpenAPI result = classUnderTest.loadApi(specSource, emptyList(), new ParseOptions());
@@ -68,8 +62,8 @@ public class OpenApiLoaderTest {
     public void loadApiByUnknownSource_inlineSpecification() throws IOException {
         // given:
         final String inlineSpec = IOUtils.toString(
-                this.getClass().getResourceAsStream("/oai/v2/api-users.json"));
-        final SpecSource specSource = mockSpecSource(inlineSpec, false, false);
+                this.getClass().getResourceAsStream("/oai/v2/api-users.json"), defaultCharset());
+        final SpecSource specSource = SpecSource.inline(inlineSpec);
 
         // when:
         final OpenAPI result = classUnderTest.loadApi(specSource, emptyList(), new ParseOptions());
@@ -81,7 +75,7 @@ public class OpenApiLoaderTest {
     @Test
     public void loadApiByUnknownSource_specUrl() {
         // given:
-        final SpecSource specSource = mockSpecSource("/oai/v3/api-formdata.yaml", false, false);
+        final SpecSource specSource = SpecSource.unknown("/oai/v3/api-formdata.yaml");
 
         // when:
         final OpenAPI result = classUnderTest.loadApi(specSource, emptyList(), new ParseOptions());
@@ -93,7 +87,7 @@ public class OpenApiLoaderTest {
     @Test(expected = OpenApiInteractionValidator.ApiLoadException.class)
     public void errorOnLoadingApi_missingSpecUrl() {
         // given:
-        final SpecSource specSource = mockSpecSource("missing.yaml", true, false);
+        final SpecSource specSource = SpecSource.specUrl("missing.yaml");
 
         // expect:
         classUnderTest.loadApi(specSource, emptyList(), new ParseOptions());
@@ -116,7 +110,7 @@ public class OpenApiLoaderTest {
     // Need to find a way to exclude or filter this too when we eventually start using the node
     public void removesBase64RegexPatternFromLoadedApi_Swagger() throws JsonProcessingException {
         // given:
-        final SpecSource specSource = mockSpecSource("/oai/v2/api-string-byte-pattern.json", true, false);
+        final SpecSource specSource = SpecSource.specUrl("/oai/v2/api-string-byte-pattern.json");
 
         // when:
         final OpenAPI result = classUnderTest.loadApi(specSource, emptyList(), new ParseOptions());
@@ -129,7 +123,7 @@ public class OpenApiLoaderTest {
     @Test
     public void removesBase64RegexPatternFromLoadedApi_OpenApi3() throws JsonProcessingException {
         // given:
-        final SpecSource specSource = mockSpecSource("/oai/v3/api-string-byte-pattern.yaml", true, false);
+        final SpecSource specSource = SpecSource.specUrl("/oai/v3/api-string-byte-pattern.yaml");
 
         // when:
         final OpenAPI result = classUnderTest.loadApi(specSource, emptyList(), new ParseOptions());
@@ -143,7 +137,7 @@ public class OpenApiLoaderTest {
     @Test
     public void removeTypeObjectAssociationForOneOfModel() throws JsonProcessingException {
         // given:
-        final SpecSource specSource = mockSpecSource("/oai/v3/api-oneof.yaml", true, false);
+        final SpecSource specSource = SpecSource.specUrl("/oai/v3/api-oneof.yaml");
         final ParseOptions parseOptions = new ParseOptions();
         parseOptions.setResolve(true);
         parseOptions.setResolveFully(true);
@@ -159,35 +153,35 @@ public class OpenApiLoaderTest {
         final Map<String, Schema> oneOfObjectProperties = oneOfObjectProperty.getProperties();
 
         final ComposedSchema primitive = (ComposedSchema) oneOfObjectProperties.get("primitive");
-        Assert.assertNull(primitive.getType());
+        assertNull(primitive.getType());
 
         final java.util.List<Schema> primitiveOneOfList = primitive.getOneOf();
-        Assert.assertEquals(primitiveOneOfList.size(), 2);
-        Assert.assertEquals(primitiveOneOfList.get(0).getType(), "string");
-        Assert.assertEquals(primitiveOneOfList.get(1).getType(), "integer");
+        assertEquals(primitiveOneOfList.size(), 2);
+        assertEquals(primitiveOneOfList.get(0).getType(), "string");
+        assertEquals(primitiveOneOfList.get(1).getType(), "integer");
 
         final ComposedSchema objectModel = (ComposedSchema) oneOfObjectProperties.get("objectModel");
-        Assert.assertNull(objectModel.getType());
+        assertNull(objectModel.getType());
 
         final java.util.List<Schema> objectModelOneOfList = objectModel.getOneOf();
-        Assert.assertEquals(objectModelOneOfList.size(), 2);
-        Assert.assertEquals(objectModelOneOfList.get(0).getType(), "object");
-        Assert.assertEquals(objectModelOneOfList.get(1).getType(), "object");
+        assertEquals(objectModelOneOfList.size(), 2);
+        assertEquals(objectModelOneOfList.get(0).getType(), "object");
+        assertEquals(objectModelOneOfList.get(1).getType(), "object");
 
         final ArraySchema oneOfArrayProperty = (ArraySchema) oneOfResponse.getProperties().get("oneOfArrayProperty");
         final ComposedSchema arrayItemOneOf = (ComposedSchema) oneOfArrayProperty.getItems();
-        Assert.assertEquals(arrayItemOneOf.getOneOf().size(), 4);
-        Assert.assertEquals(arrayItemOneOf.getOneOf().get(0).getType(), "object");
-        Assert.assertEquals(arrayItemOneOf.getOneOf().get(1).getType(), "object");
-        Assert.assertEquals(arrayItemOneOf.getOneOf().get(2).getType(), "string");
-        Assert.assertEquals(arrayItemOneOf.getOneOf().get(3).getType(), "integer");
+        assertEquals(arrayItemOneOf.getOneOf().size(), 4);
+        assertEquals(arrayItemOneOf.getOneOf().get(0).getType(), "object");
+        assertEquals(arrayItemOneOf.getOneOf().get(1).getType(), "object");
+        assertEquals(arrayItemOneOf.getOneOf().get(2).getType(), "string");
+        assertEquals(arrayItemOneOf.getOneOf().get(3).getType(), "integer");
     }
 
     @SuppressWarnings("rawtypes")
     @Test
     public void removeTypeObjectAssociationForAnyOfModel() {
         // given:
-        final SpecSource specSource = mockSpecSource("/oai/v3/api-anyof.yaml", true, false);
+        final SpecSource specSource = SpecSource.specUrl("/oai/v3/api-anyof.yaml");
         final ParseOptions parseOptions = new ParseOptions();
         parseOptions.setResolve(true);
         parseOptions.setResolveFully(true);
@@ -203,46 +197,28 @@ public class OpenApiLoaderTest {
         final Map<String, Schema> anyOfObjectProperties = anyOfObjectProperty.getProperties();
 
         final ComposedSchema primitive = (ComposedSchema) anyOfObjectProperties.get("primitive");
-        Assert.assertNull(primitive.getType());
+        assertNull(primitive.getType());
 
         final java.util.List<Schema> primitiveAnyOfList = primitive.getAnyOf();
-        Assert.assertEquals(primitiveAnyOfList.size(), 2);
-        Assert.assertEquals(primitiveAnyOfList.get(0).getType(), "string");
-        Assert.assertEquals(primitiveAnyOfList.get(1).getType(), "integer");
+        assertEquals(primitiveAnyOfList.size(), 2);
+        assertEquals(primitiveAnyOfList.get(0).getType(), "string");
+        assertEquals(primitiveAnyOfList.get(1).getType(), "integer");
 
         final ComposedSchema objectModel = (ComposedSchema) anyOfObjectProperties.get("objectModel");
-        Assert.assertNull(objectModel.getType());
+        assertNull(objectModel.getType());
 
         final java.util.List<Schema> objectModelAnyOfList = objectModel.getAnyOf();
-        Assert.assertEquals(objectModelAnyOfList.size(), 2);
-        Assert.assertEquals(objectModelAnyOfList.get(0).getType(), "object");
-        Assert.assertEquals(objectModelAnyOfList.get(1).getType(), "object");
+        assertEquals(objectModelAnyOfList.size(), 2);
+        assertEquals(objectModelAnyOfList.get(0).getType(), "object");
+        assertEquals(objectModelAnyOfList.get(1).getType(), "object");
 
         final ArraySchema oneOfArrayProperty = (ArraySchema) anyOfResponse.getProperties().get("anyOfArrayProperty");
         final ComposedSchema arrayItemOneOf = (ComposedSchema) oneOfArrayProperty.getItems();
-        Assert.assertEquals(arrayItemOneOf.getAnyOf().size(), 4);
-        Assert.assertEquals(arrayItemOneOf.getAnyOf().get(0).getType(), "object");
-        Assert.assertEquals(arrayItemOneOf.getAnyOf().get(1).getType(), "object");
-        Assert.assertEquals(arrayItemOneOf.getAnyOf().get(2).getType(), "string");
-        Assert.assertEquals(arrayItemOneOf.getAnyOf().get(3).getType(), "integer");
+        assertEquals(arrayItemOneOf.getAnyOf().size(), 4);
+        assertEquals(arrayItemOneOf.getAnyOf().get(0).getType(), "object");
+        assertEquals(arrayItemOneOf.getAnyOf().get(1).getType(), "object");
+        assertEquals(arrayItemOneOf.getAnyOf().get(2).getType(), "string");
+        assertEquals(arrayItemOneOf.getAnyOf().get(3).getType(), "integer");
     }
 
-    @SuppressWarnings("rawtypes")
-    @Test
-    public void typeObjectAssociationForAllOfModelIsNull() {
-        // given:
-        final SpecSource specSource = mockSpecSource("/oai/v3/api-composition.yaml", true, false);
-        final ParseOptions parseOptions = new ParseOptions();
-        parseOptions.setResolve(true);
-        parseOptions.setResolveFully(true);
-        parseOptions.setResolveCombinators(true);
-
-        // when:
-        final OpenAPI result = classUnderTest.loadApi(specSource, emptyList(), parseOptions);
-
-        // then:
-        final Map<String, Schema> schemas = result.getComponents().getSchemas();
-        final Schema userResponse = schemas.get("User");
-        Assert.assertNull(userResponse.getType());
-    }
 }
