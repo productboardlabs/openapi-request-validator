@@ -82,7 +82,7 @@
         <org-json.version>20180130</org-json.version>
         <scala-library.version>2.13.9</scala-library.version>
         <tika.version>1.28.5</tika.version>
-        <commons-codec.version>1.13</commons-codec.version>
+        <commons-codec.version>1.16.0</commons-codec.version>
 
         <!-- Plugin versions -->
         <checkstyle.version>9.3</checkstyle.version>
