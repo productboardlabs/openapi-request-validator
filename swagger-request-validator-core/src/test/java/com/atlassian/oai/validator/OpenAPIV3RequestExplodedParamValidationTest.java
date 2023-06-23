@@ -108,7 +108,6 @@ public class OpenAPIV3RequestExplodedParamValidationTest {
                 .build();
     }
 
-
     private static SimpleRequest buildInvalidBuildsWithRefRequest() {
         return SimpleRequest.Builder
                 .get("/api/builds-with-ref")

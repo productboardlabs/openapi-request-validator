@@ -268,8 +268,8 @@ public class RequestValidator {
                 .stream()
                 .filter(p -> isQueryParam(p) && !isDeepObjectParam(p) && isExplodedParamWithProperties(p))
                 .flatMap(p -> {
-                    Map<String, Schema<?>> properties = p.getSchema().getProperties();
-                    List<QueryParameter> explodedQueryParameters = properties.entrySet()
+                    final Map<String, Schema<?>> properties = p.getSchema().getProperties();
+                    final List<QueryParameter> explodedQueryParameters = properties.entrySet()
                             .stream()
                             .map(e -> {
                                 final Schema<?> schema = e.getValue();
@@ -304,7 +304,7 @@ public class RequestValidator {
                 .reduce(empty(), ValidationReport::merge);
     }
 
-    private boolean isNoExplodedQueryParameterProvided(Request request, List<QueryParameter> explodedQueryParameters) {
+    private boolean isNoExplodedQueryParameterProvided(final Request request, final List<QueryParameter> explodedQueryParameters) {
         return explodedQueryParameters.stream()
                 .allMatch(queryParameter -> request.getQueryParameterValues(queryParameter.getName()).isEmpty());
     }
