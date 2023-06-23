@@ -136,7 +136,6 @@ paths:
         - name: FromToQueryParameter
           in: query
           description: The query object
-          required: false
           explode: true
           schema:
             $ref: '#/components/schemas/FromToQueryParameter'
