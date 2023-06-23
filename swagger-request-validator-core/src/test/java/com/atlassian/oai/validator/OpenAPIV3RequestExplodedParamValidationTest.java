@@ -95,8 +95,6 @@ public class OpenAPIV3RequestExplodedParamValidationTest {
         return SimpleRequest.Builder
                 .get("/api/query-parameter-required-false")
                 .withContentType("application/json")
-                .withQueryParam("from", "2021-01-01")
-                .withQueryParam("to", "2021-01-02")
                 .build();
     }
 
