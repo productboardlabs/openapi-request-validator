@@ -21,6 +21,9 @@
       },
       "response": {
         "status": 200,
+        "headers": {
+          "Content-Type": "application/json; charset=UTF-8"
+        },
         "body": {
           "content": {
             "name": "Alice",

@@ -6,6 +6,7 @@ import au.com.dius.pact.core.model.FileSource;
 import au.com.dius.pact.core.model.Pact;
 import au.com.dius.pact.core.model.RequestResponseInteraction;
 import au.com.dius.pact.core.model.UrlSource;
+import au.com.dius.pact.core.model.V4Pact;
 import au.com.dius.pact.core.pactbroker.PactBrokerClient;
 import au.com.dius.pact.core.pactbroker.PactBrokerClientConfig;
 import au.com.dius.pact.core.pactbroker.PactBrokerResult;
@@ -135,8 +136,7 @@ public class PactProviderValidator {
         }
 
         final Pact pact = DefaultPactReader.INSTANCE.loadPact(consumer.getPactSource(), options);
-
-        pact.getInteractions().forEach(i -> {
+        ((pact instanceof V4Pact) ? ((V4Pact) pact).asRequestResponsePact().get() : pact).getInteractions().forEach(i -> {
             final RequestResponseInteraction interaction = (RequestResponseInteraction) i;
             final ValidationReport report = validator.validate(
                     PactRequest.of(interaction.getRequest()),
