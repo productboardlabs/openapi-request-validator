@@ -58,12 +58,44 @@ public class PactProviderValidatorTest {
     }
 
     @Test
+    public void validate_withValidConsumer_returnsMapWithNoValidationErrors_v4() {
+
+        final PactProviderValidationResults results =
+                PactProviderValidator
+                        .createFor("/oai/api-users.json")
+                        .withConsumer("ExampleConsumer", pactUrl("valid-v4.json"))
+                        .build()
+                        .validate();
+
+        assertThat(results.hasErrors(), is(false));
+        assertThat(results.getConsumerResults().size(), is(1));
+        assertThat(results.getConsumerResult("ExampleConsumer").isPresent(), is(true));
+        assertThat(results.getConsumerResult("ExampleConsumer").get().hasErrors(), is(false));
+    }
+
+    @Test
     public void validate_withInvalidConsumer_returnsMapWithValidationErrors() {
 
         final PactProviderValidationResults results =
                 PactProviderValidator
                         .createFor("/oai/api-users.json")
                         .withConsumer("ExampleConsumer", pactUrl("invalid.json"))
+                        .build()
+                        .validate();
+
+        assertThat(results.hasErrors(), is(true));
+        assertThat(results.getConsumerResults().size(), is(1));
+        assertThat(results.getConsumerResult("ExampleConsumer").isPresent(), is(true));
+        assertThat(results.getConsumerResult("ExampleConsumer").get().hasErrors(), is(true));
+    }
+
+    @Test
+    public void validate_withInvalidConsumer_returnsMapWithValidationErrors_v4() {
+
+        final PactProviderValidationResults results =
+                PactProviderValidator
+                        .createFor("/oai/api-users.json")
+                        .withConsumer("ExampleConsumer", pactUrl("invalid-v4.json"))
                         .build()
                         .validate();
 
@@ -126,6 +158,26 @@ public class PactProviderValidatorTest {
                                 .build()
                         )
                         .withConsumer("ExampleConsumer", pactUrl("valid.json"))
+                        .build()
+                        .validate();
+
+        assertThat(results.hasErrors(), is(false));
+        assertThat(results.getConsumerResults().size(), is(1));
+        assertThat(results.getConsumerResult("ExampleConsumer").isPresent(), is(true));
+        assertThat(results.getConsumerResult("ExampleConsumer").get().hasErrors(), is(false));
+    }
+
+    @Test
+    public void validator_usesConfiguredInteractionValidatorIfSupplied_V4() {
+
+        final PactProviderValidationResults results =
+                PactProviderValidator
+                        .createFor(OpenApiInteractionValidator
+                                .createForSpecificationUrl("/oai/api-users.json")
+                                .withLevelResolver(PactLevelResolverFactory.create())
+                                .build()
+                        )
+                        .withConsumer("ExampleConsumer", pactUrl("valid-v4.json"))
                         .build()
                         .validate();
 
