@@ -45,7 +45,7 @@ public class PactResponse implements Response {
      * @param originalResponse the original {@link au.com.dius.pact.core.model.Response}
      */
     @Nonnull
-    public static Response of(@Nonnull final au.com.dius.pact.core.model.Response originalResponse) {
+    public static Response of(@Nonnull final au.com.dius.pact.core.model.IResponse originalResponse) {
         requireNonNull(originalResponse, "An original response is required");
         final SimpleResponse.Builder builder = new SimpleResponse.Builder(originalResponse.getStatus());
         if (originalResponse.getBody() != null && originalResponse.getBody().isPresent()) {

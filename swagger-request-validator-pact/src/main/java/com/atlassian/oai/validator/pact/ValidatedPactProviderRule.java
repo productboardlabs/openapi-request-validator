@@ -6,6 +6,7 @@ import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
 import au.com.dius.pact.consumer.junit.PactProviderRule;
 import au.com.dius.pact.consumer.junit.PactVerification;
 import au.com.dius.pact.consumer.model.MockProviderConfig;
+import au.com.dius.pact.core.model.Interaction;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
 import com.atlassian.oai.validator.OpenApiInteractionValidator;
@@ -118,6 +119,7 @@ public class ValidatedPactProviderRule implements TestRule {
         final ValidationReport report = requestResponsePact.get()
                 .getInteractions()
                 .stream()
+                .map(Interaction::asSynchronousRequestResponse)
                 .map(i -> validator.validate(PactRequest.of(i.getRequest()), PactResponse.of(i.getResponse())))
                 .reduce(ValidationReport.empty(), ValidationReport::merge);
 
