@@ -7,6 +7,7 @@ import java.util.List;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.StringUtils.appendIfMissing;
 import static org.apache.commons.lang3.StringUtils.prependIfMissing;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
@@ -54,6 +55,9 @@ public class NormalisedPathImpl implements NormalisedPath {
 
     private static String trimPrefix(@Nullable final String apiPrefix, @Nonnull final String requestPath) {
         if (apiPrefix == null || !requestPath.startsWith(apiPrefix)) {
+            return requestPath;
+        }
+        if (requestPath.length() != apiPrefix.length() && !requestPath.startsWith(appendIfMissing(apiPrefix, "/"))) {
             return requestPath;
         }
         return requestPath.substring(apiPrefix.length());
