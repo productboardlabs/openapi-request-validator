@@ -58,6 +58,54 @@ public class OpenAPIV3RequestExplodedParamValidationTest {
                 .build();
     }
 
+    private static SimpleRequest buildValidQueryParameterRequiredTrue() {
+        return SimpleRequest.Builder
+                .get("/api/query-parameter-required-true")
+                .withContentType("application/json")
+                .withQueryParam("from", "2021-01-01")
+                .withQueryParam("to", "2021-01-02")
+                .build();
+    }
+
+    private static SimpleRequest buildInvalidValidQueryParameterRequiredTrueBothMissing() {
+        return SimpleRequest.Builder
+                .get("/api/query-parameter-required-true")
+                .withContentType("application/json")
+                .build();
+    }
+
+    private static SimpleRequest buildInvalidValidQueryParameterRequiredTrueOneMissing() {
+        return SimpleRequest.Builder
+                .get("/api/query-parameter-required-true")
+                .withContentType("application/json")
+                .withQueryParam("from", "2021-01-01")
+                .build();
+    }
+
+    private static SimpleRequest buildValidQueryParameterRequiredFalseBothProvided() {
+        return SimpleRequest.Builder
+                .get("/api/query-parameter-required-false")
+                .withContentType("application/json")
+                .withQueryParam("from", "2021-01-01")
+                .withQueryParam("to", "2021-01-02")
+                .build();
+    }
+
+    private static SimpleRequest buildValidQueryParameterRequiredFalseBothMissing() {
+        return SimpleRequest.Builder
+                .get("/api/query-parameter-required-false")
+                .withContentType("application/json")
+                .build();
+    }
+
+    private static SimpleRequest buildInvalidQueryParameterRequiredFalse() {
+        return SimpleRequest.Builder
+                .get("/api/query-parameter-required-false")
+                .withContentType("application/json")
+                .withQueryParam("from", "2021-01-01")
+                .build();
+    }
+
     private static SimpleRequest buildInvalidBuildsWithRefRequest() {
         return SimpleRequest.Builder
                 .get("/api/builds-with-ref")
@@ -176,6 +224,81 @@ public class OpenAPIV3RequestExplodedParamValidationTest {
     public void invalid_with_ref_OpenApi3() {
         // given:
         final Request request = buildInvalidBuildsWithRefRequest();
+
+        // when:
+        final ValidationReport result = openApi3Validator.validateRequest(request);
+
+        // then:
+        assertFail(result, "validation.request.parameter.query.missing");
+    }
+
+    @Test
+    public void valid_query_parameter_required_true_OpenApi3() {
+        // given:
+        final Request request = buildValidQueryParameterRequiredTrue();
+
+        // when:
+        final ValidationReport result = openApi3Validator.validateRequest(request);
+
+        // then:
+        assertPass(result);
+        assertTrue(result.getMessages().isEmpty());
+    }
+
+    @Test
+    public void invalid_query_parameter_required_true_both_missing_OpenApi3() {
+        // given:
+        final Request request = buildInvalidValidQueryParameterRequiredTrueBothMissing();
+
+        // when:
+        final ValidationReport result = openApi3Validator.validateRequest(request);
+
+        // then:
+        assertFail(result, "validation.request.parameter.query.missing");
+    }
+
+    @Test
+    public void invalid_query_parameter_required_true_one_missing_OpenApi3() {
+        // given:
+        final Request request = buildInvalidValidQueryParameterRequiredTrueOneMissing();
+
+        // when:
+        final ValidationReport result = openApi3Validator.validateRequest(request);
+
+        // then:
+        assertFail(result, "validation.request.parameter.query.missing");
+    }
+
+    @Test
+    public void valid_query_parameter_required_false_both_provided_OpenApi3() {
+        // given:
+        final Request request = buildValidQueryParameterRequiredFalseBothProvided();
+
+        // when:
+        final ValidationReport result = openApi3Validator.validateRequest(request);
+
+        // then:
+        assertPass(result);
+        assertTrue(result.getMessages().isEmpty());
+    }
+
+    @Test
+    public void valid_query_parameter_required_false_both_missing_OpenApi3() {
+        // given:
+        final Request request = buildValidQueryParameterRequiredFalseBothMissing();
+
+        // when:
+        final ValidationReport result = openApi3Validator.validateRequest(request);
+
+        // then:
+        assertPass(result);
+        assertTrue(result.getMessages().isEmpty());
+    }
+
+    @Test
+    public void invalid_query_parameter_required_false_one_missing_OpenApi3() {
+        // given:
+        final Request request = buildInvalidQueryParameterRequiredFalse();
 
         // when:
         final ValidationReport result = openApi3Validator.validateRequest(request);
