@@ -63,6 +63,12 @@ public class SchemaValidator {
     private final LoadingCache<JsonSchemaKey, JsonSchema> jsonSchemaCache;
     private final ProcessingMessageConverter messageConverter;
 
+    private final ValidationConfiguration validationConfiguration;
+
+    private final JsonNode definitions;
+
+    private final JsonSchemaFactory schemaFactory;
+
     /**
      * Transformations applied to the schema before validation.
      * <p>
@@ -83,7 +89,20 @@ public class SchemaValidator {
      */
     public SchemaValidator(final OpenAPI api,
                            @Nonnull final MessageResolver messages) {
-        this(api, messages, SwaggerV20Library::schemaFactory);
+        this(api, messages, SwaggerV20Library::schemaFactory, new ValidationConfiguration());
+    }
+
+    /**
+     * Build a new validator for the given API specification.
+     *
+     * @param api The API to build the validator for.
+     * @param messages The message resolver to use.
+     * @param schemaFactorySupplier A supplier function to get JsonSchemaFactory.
+     */
+    public SchemaValidator(final OpenAPI api,
+        @Nonnull final MessageResolver messages,
+        @Nonnull final Supplier<JsonSchemaFactory> schemaFactorySupplier) {
+        this(api, messages, schemaFactorySupplier, new ValidationConfiguration());
     }
 
     /**
@@ -95,24 +114,30 @@ public class SchemaValidator {
      */
     public SchemaValidator(final OpenAPI api,
                            @Nonnull final MessageResolver messages,
-                           @Nonnull final Supplier<JsonSchemaFactory> schemaFactorySupplier) {
+                           @Nonnull final Supplier<JsonSchemaFactory> schemaFactorySupplier,
+                           @Nonnull final ValidationConfiguration validationConfiguration) {
         this.messages = requireNonNull(messages, "A message resolver is required");
+        this.validationConfiguration = validationConfiguration;
 
-        final JsonNode definitions = Optional.ofNullable(api.getComponents())
+        definitions = Optional.ofNullable(api.getComponents())
                 .map(Components::getSchemas)
                 .map(schemas -> Json.mapper().convertValue(schemas, JsonNode.class))
                 .orElseGet(() -> Json.mapper().createObjectNode());
-        final JsonSchemaFactory schemaFactory = requireNonNull(schemaFactorySupplier.get(), "A JsonSchemaFactory is required");
-        this.jsonSchemaCache = CacheBuilder.newBuilder()
-                .maximumSize(100)
+        schemaFactory = requireNonNull(schemaFactorySupplier.get(), "A JsonSchemaFactory is required");
+        if (validationConfiguration.isCacheEnabled()) {
+            this.jsonSchemaCache = CacheBuilder.newBuilder()
+                .maximumSize(validationConfiguration.getMaxCacheSize())
                 .build(new CacheLoader<JsonSchemaKey, JsonSchema>() {
                     @Override
                     public JsonSchema load(final JsonSchemaKey key) throws ProcessingException {
                         final JsonNode schemaObject = readAndTransformSchemaObject(key.schema,
-                                key.forRequest, key.forResponse, definitions);
+                            key.forRequest, key.forResponse, definitions);
                         return schemaFactory.getJsonSchema(schemaObject);
                     }
                 });
+        } else {
+            this.jsonSchemaCache = null;
+        }
         this.messageConverter = new ProcessingMessageConverter(messages);
     }
 
@@ -193,7 +218,11 @@ public class SchemaValidator {
         final boolean forResponse = "response.body".equalsIgnoreCase(keyPrefix);
         final JsonSchemaKey jsonSchemaKey = new JsonSchemaKey(schema, forRequest, forResponse);
         try {
-            return jsonSchemaCache.get(jsonSchemaKey);
+            if (validationConfiguration.isCacheEnabled()) {
+                return jsonSchemaCache.get(jsonSchemaKey);
+            }
+            final JsonNode schemaObject = readAndTransformSchemaObject(schema, forRequest, forResponse, definitions);
+            return schemaFactory.getJsonSchema(schemaObject);
         } catch (final ExecutionException e) {
             final List<Throwable> causalChain = Throwables.getCausalChain(e);
             throw (ProcessingException) causalChain.stream()
