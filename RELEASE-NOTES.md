@@ -1,3 +1,12 @@
+# 2.35.2
+
+* Fix problem with path normalization when server base path overlaps with request path
+  [[#129]](https://bitbucket.org/atlassian/swagger-request-validator/issues/129)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/390)
+* Fix behavior with exploded query params that are optional but include required properties
+  [[#770]](https://bitbucket.org/atlassian/swagger-request-validator/issues/770)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/391)
+
 # 2.35.1
 
 * Bump `swagger-parser` 2.1.9 -> 2.1.13
