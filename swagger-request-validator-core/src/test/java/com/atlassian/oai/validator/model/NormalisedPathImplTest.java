@@ -61,4 +61,9 @@ public class NormalisedPathImplTest {
         assertThat(normalisedPath.normalised(), is("/foo/bar"));
     }
 
+    @Test
+    public void normalises_withPathOnlyStartingWithPrefix() {
+        final NormalisedPathImpl normalisedPath = new NormalisedPathImpl("/foo123", "/foo");
+        assertThat(normalisedPath.normalised(), is("/foo123"));
+    }
 }

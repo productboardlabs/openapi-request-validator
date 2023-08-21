@@ -111,6 +111,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Data'
+  /api/query-parameter-required-true:
+    description: Data Lorem ipsum
+    get:
+      summary: Get with query parameter required true
+      operationId: getWithQueryParameterRequiredTrue
+      parameters:
+        - name: FromToQueryParameter
+          in: query
+          description: The query object
+          required: true
+          explode: true
+          schema:
+            $ref: '#/components/schemas/FromToQueryParameter'
+      responses:
+        '204':
+          description: OK
+  /api/query-parameter-required-false:
+    description: Data Lorem ipsum
+    get:
+      summary: Get with query parameter required false
+      operationId: getWithQueryParameterRequiredFalse
+      parameters:
+        - name: FromToQueryParameter
+          in: query
+          description: The query object
+          explode: true
+          schema:
+            $ref: '#/components/schemas/FromToQueryParameter'
+      responses:
+        '204':
+          description: OK
 components:
   schemas:
     Build:
@@ -188,3 +219,13 @@ components:
               - SUCCESS
               - FAILURE
               - SKIPPED
+    FromToQueryParameter:
+      type: object
+      required:
+        - from
+        - to
+      properties:
+        from:
+          type: string
+        to:
+          type: string
