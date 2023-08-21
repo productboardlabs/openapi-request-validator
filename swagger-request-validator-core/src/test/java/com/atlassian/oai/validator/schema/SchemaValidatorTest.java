@@ -7,6 +7,7 @@ import com.atlassian.oai.validator.report.SimpleValidationReportFormat;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import io.swagger.parser.OpenAPIParser;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -22,6 +23,7 @@ import io.swagger.v3.oas.models.media.UUIDSchema;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import org.junit.Test;
 
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -33,6 +35,9 @@ import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.iterableWithSize;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -900,6 +905,50 @@ public class SchemaValidatorTest {
         assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
 
+    @Test
+    public void validateDisableJsonSchemaCache() throws NoSuchFieldException, IllegalAccessException {
+        final String value = "{\"requiredField\":\"foo\"}";
+        final Schema schema = new ObjectSchema()
+            .addProperties("requiredField", new StringSchema().minLength(1))
+            .addProperties("nonRequiredField", new StringSchema().minLength(3))
+            .addRequiredItem("requiredField");
+        final SchemaValidator tester = validatorWithCacheSize("/oai/v2/api-users.json", 0);
+        final Field jsonSchemaField = SchemaValidator.class.getDeclaredField("jsonSchemaCache");
+        jsonSchemaField.setAccessible(true);
+
+        assertPass(tester.validate(value, schema, "prefix"));
+        final LoadingCache jsonSchemaCache = (LoadingCache) jsonSchemaField.get(tester);
+        assertNull(jsonSchemaCache);
+
+    }
+
+    @Test
+    public void validateEnableJsonSchemaCache() throws NoSuchFieldException, IllegalAccessException {
+        final String value = "{\"requiredField\":\"foo\"}";
+        final Schema schema = new ObjectSchema()
+            .addProperties("requiredField", new StringSchema().minLength(1))
+            .addProperties("nonRequiredField", new StringSchema().minLength(3))
+            .addRequiredItem("requiredField");
+
+        final SchemaValidator tester = validatorWithCacheSize("/oai/v2/api-users.json", 3);
+        final Field jsonSchemaField = SchemaValidator.class.getDeclaredField("jsonSchemaCache");
+        jsonSchemaField.setAccessible(true);
+
+        assertPass(tester.validate(value, schema, "prefix"));
+        final LoadingCache jsonSchemaCache1 = (LoadingCache) jsonSchemaField.get(tester);
+        assertNotNull(jsonSchemaCache1);
+        assertEquals(jsonSchemaCache1.size(), 1);
+
+        final String value1 = "{\"foo\":\"bar\"}";
+        final Schema schema1 = new ObjectSchema()
+            .addProperties("foo", new StringSchema())
+            .required(singletonList("foo"));
+        assertPass(tester.validate(value1, schema1, "prefix"));
+        final LoadingCache jsonSchemaCache2 = (LoadingCache) jsonSchemaField.get(tester);
+        assertNotNull(jsonSchemaCache2);
+        assertEquals(jsonSchemaCache2.size(), 2);
+    }
+
     private Map<String, Schema> getSchemasFrom(final String api) {
         final ParseOptions parseOptions = new ParseOptions();
         parseOptions.setResolveFully(true);
@@ -923,6 +972,15 @@ public class SchemaValidatorTest {
         final ParseOptions parseOptions = new ParseOptions();
         parseOptions.setResolve(true);
         return new SchemaValidator(new OpenAPIParser().readLocation(api, null, parseOptions).getOpenAPI(), new MessageResolver());
+    }
+
+    private SchemaValidator validatorWithCacheSize(final String api, final int cacheSize) {
+        final ParseOptions parseOptions = new ParseOptions();
+        parseOptions.setResolve(true);
+        final ValidationConfiguration validationConfiguration = new ValidationConfiguration();
+        validationConfiguration.setMaxCacheSize(cacheSize);
+        return new SchemaValidator(new OpenAPIParser().readLocation(api, null, parseOptions).getOpenAPI(), new MessageResolver(),
+            SwaggerV20Library::schemaFactory, validationConfiguration);
     }
 
     private SchemaValidator validatorWithResolveCombinators(final String api) {

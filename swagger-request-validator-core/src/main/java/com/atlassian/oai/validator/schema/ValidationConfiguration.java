@@ -14,6 +14,10 @@ public class ValidationConfiguration {
     private static final int DEFAULT_MAX_CACHE_SIZE = 100;
     private int maxCacheSize = DEFAULT_MAX_CACHE_SIZE;
 
+    /**
+     * Specifies the maximum number of JsonSchema entries the cache in {@link com.atlassian.oai.validator.schema.SchemaValidator} may contain.
+     * @return the maximum number of the cache.
+     */
     public int getMaxCacheSize() {
         return maxCacheSize;
     }
@@ -24,7 +28,7 @@ public class ValidationConfiguration {
     }
 
     /**
-     * If the maxCacheSize is less than or equal to 0, then disable JsonSchema cache in {@link com.atlassian.oai.validator.schema.SchemaValidator}.
+     * If the maxCacheSize is less than or equal to 0, then disable jsonSchemaCache in {@link com.atlassian.oai.validator.schema.SchemaValidator}.
      * @return boolean
      */
     public boolean isCacheEnabled() {
