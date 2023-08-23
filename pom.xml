@@ -80,7 +80,7 @@
         <rhino.version>1.7.14</rhino.version>
         <xerces.version>2.12.2</xerces.version>
         <org-json.version>20180130</org-json.version>
-        <scala-library.version>2.13.9</scala-library.version>
+        <scala-library.version>2.13.11</scala-library.version>
         <tika.version>1.28.5</tika.version>
         <commons-codec.version>1.16.0</commons-codec.version>
 
