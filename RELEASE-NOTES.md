@@ -1,3 +1,13 @@
+# 2.36.0
+
+* Bump dependencies:
+  * `scala-library`: 2.13.9 -> 2.13.11
+  * `jackson`: 2.14.1 -> 2.15.2
+  * `hamcrest-optional`: 1.2.0 -> 1.3.2
+  * `mockito`: 4.8.0 -> 4.11.0
+  * `commons-codec`: 1.13 -> 1.16.0
+  * `junit-jupiter`: 5.8.2 -> 5.10.0
+
 # 2.35.2
 
 * Fix problem with path normalization when server base path overlaps with request path
