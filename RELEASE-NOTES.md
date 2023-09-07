@@ -1,3 +1,22 @@
+# 2.36.0
+
+* Bump dependencies:
+  * `scala-library`: 2.13.9 -> 2.13.11
+  * `jackson`: 2.14.1 -> 2.15.2
+  * `hamcrest-optional`: 1.2.0 -> 1.3.2
+  * `mockito`: 4.8.0 -> 4.11.0
+  * `commons-codec`: 1.13 -> 1.16.0
+  * `junit-jupiter`: 5.8.2 -> 5.10.0
+
+# 2.35.2
+
+* Fix problem with path normalization when server base path overlaps with request path
+  [[#129]](https://bitbucket.org/atlassian/swagger-request-validator/issues/129)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/390)
+* Fix behavior with exploded query params that are optional but include required properties
+  [[#770]](https://bitbucket.org/atlassian/swagger-request-validator/issues/770)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/391)
+
 # 2.35.1
 
 * Bump `swagger-parser` 2.1.9 -> 2.1.13

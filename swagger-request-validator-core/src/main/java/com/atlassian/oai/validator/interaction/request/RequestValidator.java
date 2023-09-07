@@ -267,32 +267,46 @@ public class RequestValidator {
         return defaultIfNull(apiOperation.getOperation().getParameters(), Collections.<Parameter>emptyList())
                 .stream()
                 .filter(p -> isQueryParam(p) && !isDeepObjectParam(p) && isExplodedParamWithProperties(p))
-                .flatMap(p -> ((Set<Map.Entry<String, Schema<?>>>) p.getSchema().getProperties().entrySet())
-                        .stream()
-                        .map(e -> {
-                            final Schema<?> schema = e.getValue();
-                            final QueryParameter parameter = new QueryParameter();
-                            parameter.set$ref(schema.get$ref());
-                            parameter.name(e.getKey());
-                            parameter.setDescription(schema.getDescription());
-                            parameter.setRequired(isRequired(p, e.getKey()));
-                            parameter.setSchema(schema);
-                            parameter.setIn(p.getIn());
-                            parameter.setExample(schema.getExample());
-                            parameter.setDeprecated(schema.getDeprecated());
-                            parameter.setStyle(p.getStyle());
-                            parameter.setExplode("array".equals(schema.getType()));
-                            parameter.setExtensions(schema.getExtensions());
+                .flatMap(p -> {
+                    final Map<String, Schema<?>> properties = p.getSchema().getProperties();
+                    final List<QueryParameter> explodedQueryParameters = properties.entrySet()
+                            .stream()
+                            .map(e -> {
+                                final Schema<?> schema = e.getValue();
+                                final QueryParameter parameter = new QueryParameter();
+                                parameter.set$ref(schema.get$ref());
+                                parameter.name(e.getKey());
+                                parameter.setDescription(schema.getDescription());
+                                parameter.setRequired(isRequired(p, e.getKey()));
+                                parameter.setSchema(schema);
+                                parameter.setIn(p.getIn());
+                                parameter.setExample(schema.getExample());
+                                parameter.setDeprecated(schema.getDeprecated());
+                                parameter.setStyle(p.getStyle());
+                                parameter.setExplode("array".equals(schema.getType()));
+                                parameter.setExtensions(schema.getExtensions());
 
-                            return parameter;
-                        })
-                )
+                                return parameter;
+                            })
+                            .collect(toList());
+
+                    if (!TRUE.equals(p.getRequired()) && isNoExplodedQueryParameterProvided(request, explodedQueryParameters)) {
+                        return Stream.empty();
+                    }
+
+                    return explodedQueryParameters.stream();
+                })
                 .map(p -> validateParameter(
                         apiOperation,
                         p,
                         request.getQueryParameterValues(p.getName()),
                         "validation.request.parameter.query.missing"))
                 .reduce(empty(), ValidationReport::merge);
+    }
+
+    private boolean isNoExplodedQueryParameterProvided(final Request request, final List<QueryParameter> explodedQueryParameters) {
+        return explodedQueryParameters.stream()
+                .allMatch(queryParameter -> request.getQueryParameterValues(queryParameter.getName()).isEmpty());
     }
 
     private boolean isRequired(final Parameter parameter, final String propertyName) {
