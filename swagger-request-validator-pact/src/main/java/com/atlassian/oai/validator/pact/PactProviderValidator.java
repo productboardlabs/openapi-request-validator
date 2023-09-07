@@ -134,7 +134,7 @@ public class PactProviderValidator {
             options.put("authentication", authOptions);
         }
 
-        final Pact<?> pact = DefaultPactReader.INSTANCE.loadPact(consumer.getPactSource(), options);
+        final Pact pact = DefaultPactReader.INSTANCE.loadPact(consumer.getPactSource(), options);
 
         pact.getInteractions().forEach(i -> {
             final RequestResponseInteraction interaction = (RequestResponseInteraction) i;
@@ -152,9 +152,9 @@ public class PactProviderValidator {
         if (pactSource instanceof BrokerUrlSource) {
             return ((BrokerUrlSource) pactSource).getUrl();
         } else if (pactSource instanceof UrlSource) {
-            return ((UrlSource<?>) pactSource).getUrl();
+            return ((UrlSource) pactSource).getUrl();
         } else if (pactSource instanceof FileSource) {
-            return ((FileSource<?>) pactSource).getFile().getAbsolutePath();
+            return ((FileSource) pactSource).getFile().getAbsolutePath();
         }
         throw new IllegalStateException("Pact Source Not Valid.");
     }

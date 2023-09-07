@@ -71,7 +71,7 @@ public class PactRequest implements Request {
      * @param originalRequest the original {@link au.com.dius.pact.core.model.Request}
      */
     @Nonnull
-    public static Request of(@Nonnull final au.com.dius.pact.core.model.Request originalRequest) {
+    public static Request of(@Nonnull final au.com.dius.pact.core.model.IRequest originalRequest) {
         requireNonNull(originalRequest, "An original request is required");
         final SimpleRequest.Builder builder =
                 new SimpleRequest.Builder(originalRequest.getMethod(), originalRequest.getPath());
