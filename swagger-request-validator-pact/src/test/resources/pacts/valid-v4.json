@@ -1,0 +1,51 @@
+{
+  "provider": {
+    "name": "UserService"
+  },
+  "consumer": {
+    "name": "ExampleConsumer"
+  },
+  "interactions": [
+    {
+      "comments": {
+        "text": [
+
+        ]
+      },
+      "providerState": null,
+      "description": "GET user",
+      "request": {
+        "method": "GET",
+        "path": "/users/2",
+        "headers": {
+          "Authorization": "Basic EncryptedUsernameAndPassword"
+        },
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json; charset=UTF-8"
+        },
+        "body": {
+          "content": {
+            "name": "Alice",
+            "email": "alice@example.com"
+          },
+          "contentType": "application/json; charset=UTF-8",
+          "encoded": false
+        }
+      },
+      "transport": "https",
+      "type": "Synchronous/HTTP"
+    }
+  ],
+  "metadata": {
+    "pactSpecification": {
+      "version": "4.0"
+    },
+    "pact-jvm": {
+      "version": "4.6.0"
+    }
+  }
+}
