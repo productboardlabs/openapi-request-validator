@@ -1,3 +1,11 @@
+# 2.37.0
+* Bump version of `pact` to `4.6.0`
+  [[#772]](https://bitbucket.org/atlassian/swagger-request-validator/issues/772)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/392)
+* Add support for pact v4 specs
+  [[#773]](https://bitbucket.org/atlassian/swagger-request-validator/issues/773)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/393)
+
 # 2.36.0
 
 * Bump dependencies:
