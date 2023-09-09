@@ -71,7 +71,7 @@
         <slf4j.version>1.7.36</slf4j.version>
         <spring.version>6.0.8</spring.version>
         <swagger-parser.version>2.1.13</swagger-parser.version>
-        <wiremock.version>2.35.0</wiremock.version>
+        <wiremock.version>2.35.1</wiremock.version>
         <jmh-core.version>1.36</jmh-core.version>
         <jsonassert.version>1.5.1</jsonassert.version>
 
