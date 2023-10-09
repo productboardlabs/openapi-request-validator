@@ -15,6 +15,7 @@ import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
 import com.atlassian.oai.validator.schema.SchemaValidator;
 import com.atlassian.oai.validator.schema.SwaggerV20Library;
+import com.atlassian.oai.validator.schema.ValidationConfiguration;
 import com.atlassian.oai.validator.util.OpenApiLoader;
 import com.atlassian.oai.validator.whitelist.ValidationErrorsWhitelist;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
@@ -152,10 +153,11 @@ public class OpenApiInteractionValidator {
                                         @Nonnull final ValidationErrorsWhitelist whitelist,
                                         @Nonnull final Supplier<JsonSchemaFactory> schemaFactorySupplier,
                                         @Nonnull final List<CustomRequestValidator> customRequestValidators,
-                                        @Nonnull final List<CustomResponseValidator> customResponseValidators) {
+                                        @Nonnull final List<CustomResponseValidator> customResponseValidators,
+                                        @Nonnull final ValidationConfiguration validationConfiguration) {
         this.messages = messages;
         apiOperationResolver = new ApiOperationResolver(api, basePathOverride);
-        final SchemaValidator schemaValidator = new SchemaValidator(api, messages, schemaFactorySupplier);
+        final SchemaValidator schemaValidator = new SchemaValidator(api, messages, schemaFactorySupplier, validationConfiguration);
         requestValidator = new RequestValidator(schemaValidator, messages, api, customRequestValidators);
         responseValidator = new ResponseValidator(schemaValidator, messages, api, customResponseValidators);
         this.whitelist = whitelist;
@@ -351,6 +353,8 @@ public class OpenApiInteractionValidator {
         private final List<CustomResponseValidator> customResponseValidators = new ArrayList<>();
         private OpenAPI api;
         private Supplier<JsonSchemaFactory> schemaFactorySupplier = SwaggerV20Library::schemaFactory;
+
+        private ValidationConfiguration validationConfiguration = new ValidationConfiguration();
 
         /**
          * The location of the OpenAPI / Swagger specification to use in the validator, or the inline specification to use.
@@ -631,6 +635,20 @@ public class OpenApiInteractionValidator {
         }
 
         /**
+         * Optionally supply a configuration to configure the following aspects of validation:
+         * <ul>
+         *     <li>The cache size of {@link com.github.fge.jsonschema.main.JsonSchema} in {@link com.atlassian.oai.validator.schema.SchemaValidator} </li>
+         * </ul>
+         * @param validationConfiguration The configuration for OpenApi validation.
+         * @return this builder instance
+         */
+        public Builder withSchemaValidationConfiguration(final ValidationConfiguration validationConfiguration) {
+            requireNonNull(validationConfiguration, "ValidationConfiguration is required");
+            this.validationConfiguration = validationConfiguration;
+            return this;
+        }
+
+        /**
          * Build a configured {@link OpenApiInteractionValidator} instance with the values collected in this builder.
          *
          * @return The configured {@link OpenApiInteractionValidator} instance.
@@ -649,7 +667,8 @@ public class OpenApiInteractionValidator {
                     whitelist,
                     schemaFactorySupplier,
                     customRequestValidators,
-                    customResponseValidators);
+                    customResponseValidators,
+                    validationConfiguration);
         }
 
         private static ParseOptions defaultParseOptions() {
