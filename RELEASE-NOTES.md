@@ -1,3 +1,8 @@
+# 2.38.0
+* Support configuring the schema validation cache size. Allows consumers to limit the size to avoid OOME.
+  [[#774]](https://bitbucket.org/atlassian/swagger-request-validator/issues/774)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/395)
+
 # 2.37.0
 * Bump version of `pact` to `4.6.0`
   [[#772]](https://bitbucket.org/atlassian/swagger-request-validator/issues/772)
