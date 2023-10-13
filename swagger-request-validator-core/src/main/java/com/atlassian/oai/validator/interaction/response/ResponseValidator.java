@@ -12,6 +12,7 @@ import io.swagger.v3.oas.models.headers.Header;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.responses.ApiResponse;
+import io.swagger.v3.oas.models.responses.ApiResponses;
 import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
@@ -107,12 +108,17 @@ public class ResponseValidator {
     @Nullable
     private ApiResponse getApiResponse(final Response response,
                                        final ApiOperation apiOperation) {
-        final ApiResponse apiResponse =
-                apiOperation.getOperation().getResponses().get(Integer.toString(response.getStatus()));
-        if (apiResponse == null) {
-            return apiOperation.getOperation().getResponses().get("default"); // try the default response
+        final ApiResponses responses = apiOperation.getOperation().getResponses();
+        final ApiResponse apiResponse = responses.get(Integer.toString(response.getStatus()));
+        if (apiResponse != null) {
+            return apiResponse;
         }
-        return apiResponse;
+        final ApiResponse apiRangeResponse = responses.get(Integer.toString(response.getStatus() / 100) + "XX");
+        if (apiRangeResponse != null) {
+            return apiRangeResponse;
+        }
+
+        return responses.get("default"); // try the default response
     }
 
     @Nonnull

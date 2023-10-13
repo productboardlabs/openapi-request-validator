@@ -40,6 +40,13 @@ public class OpenAPIV4ResponseCodeRangeValidationTest {
     }
 
     @Test
+    public void response_499_matching4XX_shouldPass() {
+        final Response response = SimpleResponse.Builder.status(499).withBody("\"response\"").build();
+
+        assertPass(classUnderTest.validateResponse("/", Request.Method.GET, response));
+    }
+
+    @Test
     public void response_503_matching5XX_shouldPass() {
         final Response response = SimpleResponse.Builder.status(503).withBody("true").build();
 
