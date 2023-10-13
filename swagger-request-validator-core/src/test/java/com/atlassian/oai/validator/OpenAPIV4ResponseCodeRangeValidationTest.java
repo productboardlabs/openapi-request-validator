@@ -8,7 +8,7 @@ import org.junit.Test;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 
 /**
- * See https://swagger.io/specification/#parameter-object
+ * See https://swagger.io/specification/#responses-object
  */
 public class OpenAPIV4ResponseCodeRangeValidationTest {
 
@@ -41,7 +41,7 @@ public class OpenAPIV4ResponseCodeRangeValidationTest {
 
     @Test
     public void response_499_matching4XX_shouldPass() {
-        final Response response = SimpleResponse.Builder.status(499).withBody("\"response\"").build();
+        final Response response = SimpleResponse.Builder.status(499Z).withBody("\"response\"").build();
 
         assertPass(classUnderTest.validateResponse("/", Request.Method.GET, response));
     }
