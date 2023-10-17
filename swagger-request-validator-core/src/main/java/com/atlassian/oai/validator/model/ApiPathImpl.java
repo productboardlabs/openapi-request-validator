@@ -38,6 +38,9 @@ public class ApiPathImpl extends NormalisedPathImpl implements ApiPath {
         if (this.numberOfParts() != requestPath.numberOfParts()) {
             return false;
         }
+        if (this.original().endsWith("/") != requestPath.original().endsWith("/")) {
+            return false;
+        }
         for (int i = 0; i < this.numberOfParts(); i++) {
             if (!this.partMatches(i, requestPath.part(i))) {
                 return false;
