@@ -10,7 +10,7 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 /**
  * See https://swagger.io/specification/#responses-object
  */
-public class OpenAPIV4ResponseCodeRangeValidationTest {
+public class OpenAPIV3ResponseCodeRangeValidationTest {
 
     // Note: Arrays used in this test deliberately have numeric items so that they will
     // fail if parsing is done incorrectly (as they will become String valued)
@@ -41,7 +41,7 @@ public class OpenAPIV4ResponseCodeRangeValidationTest {
 
     @Test
     public void response_499_matching4XX_shouldPass() {
-        final Response response = SimpleResponse.Builder.status(499Z).withBody("\"response\"").build();
+        final Response response = SimpleResponse.Builder.status(499).withBody("\"response\"").build();
 
         assertPass(classUnderTest.validateResponse("/", Request.Method.GET, response));
     }
