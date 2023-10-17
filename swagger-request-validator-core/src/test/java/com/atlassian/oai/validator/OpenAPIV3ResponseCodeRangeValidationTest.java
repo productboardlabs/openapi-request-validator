@@ -12,9 +12,6 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
  */
 public class OpenAPIV3ResponseCodeRangeValidationTest {
 
-    // Note: Arrays used in this test deliberately have numeric items so that they will
-    // fail if parsing is done incorrectly (as they will become String valued)
-
     private final OpenApiInteractionValidator classUnderTest =
             OpenApiInteractionValidator.createForSpecificationUrl("/oai/v3/api-with-response-code-range.yaml").build();
 
