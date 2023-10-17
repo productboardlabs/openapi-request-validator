@@ -69,6 +69,8 @@ public class ApiOperationResolverTest {
 
                 {"doesNotMatch_whenNoPathMatches", GET, "/not/a/match", missingPath()},
                 {"doesNotMatch_whenNoPathMatches_whenSimilarToActualPath", POST, "/updates/{id}/{action}", missingPath()},
+                {"doesNotMatch_whenTrailingSlashOnRequest", GET, "/path/without/trailing/slash/", missingPath()},
+                {"doesNotMatch_whenTrailingSlashMissingOnRequest", GET, "/path/with/trailing/slash", missingPath()},
 
                 {"doesNotMatch_whenMethodNotAllowed", DELETE, "/id", operationNotAllowed()},
                 {"doesNotMatch_whenMethodNotAllowed_multiplePathParams", GET, "/update/id/action", operationNotAllowed()},

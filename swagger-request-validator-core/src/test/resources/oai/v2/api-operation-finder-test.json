@@ -254,6 +254,26 @@
           }
         }
       }
+    },
+    "/path/with/trailing/slash/": {
+      "get": {
+        "description": "GET:/path/with/trailing/slash/",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/path/without/trailing/slash": {
+      "get": {
+        "description": "GET:/path/without/trailing/slash",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
     }
   }
 }
