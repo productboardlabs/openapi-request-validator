@@ -52,15 +52,16 @@ public class ApiOperationResolver {
      *
      * @param api the OpenAPI definition
      * @param basePathOverride (Optional) override for the base path defined in the OpenAPI specification.
+     * @param strictPathMatching Enable strict path matching. If enabled, a trailing slash indicates a different path than without.
      */
-    public ApiOperationResolver(final OpenAPI api, @Nullable final String basePathOverride) {
+    public ApiOperationResolver(final OpenAPI api, @Nullable final String basePathOverride, boolean strictPathMatching) {
 
         apiPrefix = ofNullable(basePathOverride).orElse(getBasePathFrom(api.getServers()));
         final Paths apiPaths = ofNullable(api.getPaths()).orElse(new Paths());
 
         // normalise all API paths and group them by their number of parts
         apiPathsGroupedByNumberOfParts = apiPaths.keySet().stream()
-                .map(p -> new ApiPathImpl(p, apiPrefix))
+                .map(p -> new ApiPathImpl(p, apiPrefix, strictPathMatching))
                 .collect(groupingBy(NormalisedPath::numberOfParts));
 
         // create a operation mapping for the API path and HTTP method

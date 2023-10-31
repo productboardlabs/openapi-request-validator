@@ -42,7 +42,7 @@ public class ApiOperationResolverTest {
 
         final SwaggerParseResult swaggerParseResult = new OpenAPIParser().readLocation(FILENAME_API_WITH_POST, null, parseOptions);
         final OpenAPI api = swaggerParseResult.getOpenAPI();
-        classUnderTest = new ApiOperationResolver(api, null);
+        classUnderTest = new ApiOperationResolver(api, null, true);
     }
 
     @Parameters(name = "{0}")

@@ -182,6 +182,21 @@ public class ApiPathImplTest {
     }
 
     @Test
+    public void matches_matches_whenTrailingSlashDifferent() {
+        assertThat(matches("/p1", "/p1/"), is(true));
+    }
+
+    @Test
+    public void matches_matches_whenTrailingSlashSameWithStrict() {
+        assertThat(matchesStrict("/p1/", "/p1/"), is(true));
+    }
+
+    @Test
+    public void matches_doesNotMatches_whenTrailingSlashDifferentWithStrict() {
+        assertThat(matchesStrict("/p1", "/p1/"), is(false));
+    }
+
+    @Test
     public void matches_doesNotMatches_whenBadLiteralMatch() {
         assertThat(matches("/p1/p2/p3", "/p1/p2/floop"), is(false));
     }
@@ -202,5 +217,9 @@ public class ApiPathImplTest {
 
     private static boolean matches(final String expression, final String path) {
         return new ApiPathImpl(expression, null).matches(new NormalisedPathImpl(path, null));
+    }
+
+    private static boolean matchesStrict(final String expression, final String path) {
+        return new ApiPathImpl(expression, null, true).matches(new NormalisedPathImpl(path, null));
     }
 }
