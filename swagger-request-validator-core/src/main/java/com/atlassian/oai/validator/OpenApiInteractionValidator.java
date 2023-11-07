@@ -154,9 +154,10 @@ public class OpenApiInteractionValidator {
                                         @Nonnull final Supplier<JsonSchemaFactory> schemaFactorySupplier,
                                         @Nonnull final List<CustomRequestValidator> customRequestValidators,
                                         @Nonnull final List<CustomResponseValidator> customResponseValidators,
-                                        @Nonnull final ValidationConfiguration validationConfiguration) {
+                                        @Nonnull final ValidationConfiguration validationConfiguration,
+                                        final boolean strictOperationPathMatching) {
         this.messages = messages;
-        apiOperationResolver = new ApiOperationResolver(api, basePathOverride);
+        apiOperationResolver = new ApiOperationResolver(api, basePathOverride, strictOperationPathMatching);
         final SchemaValidator schemaValidator = new SchemaValidator(api, messages, schemaFactorySupplier, validationConfiguration);
         requestValidator = new RequestValidator(schemaValidator, messages, api, customRequestValidators);
         responseValidator = new ResponseValidator(schemaValidator, messages, api, customResponseValidators);
@@ -355,6 +356,7 @@ public class OpenApiInteractionValidator {
         private Supplier<JsonSchemaFactory> schemaFactorySupplier = SwaggerV20Library::schemaFactory;
 
         private ValidationConfiguration validationConfiguration = new ValidationConfiguration();
+        private boolean strictOperationPathMatching = false;
 
         /**
          * The location of the OpenAPI / Swagger specification to use in the validator, or the inline specification to use.
@@ -649,6 +651,15 @@ public class OpenApiInteractionValidator {
         }
 
         /**
+         * Optionally enable strict operation path matching. If enabled, a trailing slash indicates a different path than without. Defaults to false.
+         * @return this builder instance
+         */
+        public Builder withStrictOperationPathMatching() {
+            this.strictOperationPathMatching = true;
+            return this;
+        }
+
+        /**
          * Build a configured {@link OpenApiInteractionValidator} instance with the values collected in this builder.
          *
          * @return The configured {@link OpenApiInteractionValidator} instance.
@@ -668,7 +679,8 @@ public class OpenApiInteractionValidator {
                     schemaFactorySupplier,
                     customRequestValidators,
                     customResponseValidators,
-                    validationConfiguration);
+                    validationConfiguration,
+                    strictOperationPathMatching);
         }
 
         private static ParseOptions defaultParseOptions() {

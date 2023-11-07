@@ -29,13 +29,26 @@ public class ApiPathImpl extends NormalisedPathImpl implements ApiPath {
     private static final char PARAM_START = '{';
     private static final char PARAM_END = '}';
 
+    private final boolean strictPathMatching;
+
     public ApiPathImpl(@Nonnull final String path, @Nullable final String apiPrefix) {
+        this(path, apiPrefix, false);
+    }
+
+    /**
+     * @param strictPathMatching If true, a trailing slash indicates a different path than without.
+     */
+    public ApiPathImpl(@Nonnull final String path, @Nullable final String apiPrefix, boolean strictPathMatching) {
         super(path, apiPrefix);
+        this.strictPathMatching = strictPathMatching;
     }
 
     @Override
     public boolean matches(final NormalisedPath requestPath) {
         if (this.numberOfParts() != requestPath.numberOfParts()) {
+            return false;
+        }
+        if (this.strictPathMatching && this.original().endsWith("/") != requestPath.original().endsWith("/")) {
             return false;
         }
         for (int i = 0; i < this.numberOfParts(); i++) {

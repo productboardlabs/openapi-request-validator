@@ -66,4 +66,10 @@ public class NormalisedPathImplTest {
         final NormalisedPathImpl normalisedPath = new NormalisedPathImpl("/foo123", "/foo");
         assertThat(normalisedPath.normalised(), is("/foo123"));
     }
+
+    @Test
+    public void normalises_withTrailingSlash() {
+        final NormalisedPathImpl normalisedPath = new NormalisedPathImpl("/foo/bar/", null);
+        assertThat(normalisedPath.normalised(), is("/foo/bar/"));
+    }
 }
