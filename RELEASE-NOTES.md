@@ -1,3 +1,7 @@
+# 2.39.0
+* Support for "strict" operation matching that strictly matches trailing slashes on a path
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/405)
+
 # 2.38.1
 * Support operation response code ranges
   [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/404)
