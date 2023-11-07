@@ -54,7 +54,9 @@ public class ApiOperationResolver {
      * @param basePathOverride (Optional) override for the base path defined in the OpenAPI specification.
      * @param strictPathMatching Enable strict path matching. If enabled, a trailing slash indicates a different path than without.
      */
-    public ApiOperationResolver(final OpenAPI api, @Nullable final String basePathOverride, boolean strictPathMatching) {
+    public ApiOperationResolver(final OpenAPI api,
+                                @Nullable final String basePathOverride,
+                                final boolean strictPathMatching) {
 
         apiPrefix = ofNullable(basePathOverride).orElse(getBasePathFrom(api.getServers()));
         final Paths apiPaths = ofNullable(api.getPaths()).orElse(new Paths());

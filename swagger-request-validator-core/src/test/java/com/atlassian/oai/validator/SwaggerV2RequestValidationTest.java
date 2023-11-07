@@ -94,7 +94,7 @@ public class SwaggerV2RequestValidationTest {
 
     @Test
     public void validate_withUnknownPathDueToEndingSlashWithStrictOperationPathMatching_shouldFail() {
-        OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
                 .createForSpecificationUrl("/oai/v2/api-users.json")
                 .withStrictOperationPathMatching()
                 .build();
