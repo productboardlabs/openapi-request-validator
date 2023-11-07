@@ -38,7 +38,9 @@ public class ApiPathImpl extends NormalisedPathImpl implements ApiPath {
     /**
      * @param strictPathMatching If true, a trailing slash indicates a different path than without.
      */
-    public ApiPathImpl(@Nonnull final String path, @Nullable final String apiPrefix, boolean strictPathMatching) {
+    public ApiPathImpl(@Nonnull final String path,
+                       @Nullable final String apiPrefix,
+                       final boolean strictPathMatching) {
         super(path, apiPrefix);
         this.strictPathMatching = strictPathMatching;
     }
