@@ -1,3 +1,12 @@
+# 2.40.0
+* Bump dependencies:
+  * `guava`:  31.1-jre -> 33.0.0-jre
+  * `wiremock`: 2.35.0 -> 2.35.1
+  * `spring`: 6.0.8 -> 6.1.3
+  * `jetty`: 9.4.51.v20230217 -> v9.4.53.v20231009
+  * `netty`: 4.1.92.Final -> v4.1.106.Final
+  * `swagger-parser`: 2.1.13 -> 2.1.20
+
 # 2.39.0
 * Support for "strict" operation matching that strictly matches trailing slashes on a path
   [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/405)
