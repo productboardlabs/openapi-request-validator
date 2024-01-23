@@ -1,3 +1,11 @@
+# 2.39.0
+* Support for "strict" operation matching that strictly matches trailing slashes on a path
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/405)
+
+# 2.38.1
+* Support operation response code ranges
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/404)
+
 # 2.38.0
 * Support configuring the schema validation cache size. Allows consumers to limit the size to avoid OOME.
   [[#774]](https://bitbucket.org/atlassian/swagger-request-validator/issues/774)

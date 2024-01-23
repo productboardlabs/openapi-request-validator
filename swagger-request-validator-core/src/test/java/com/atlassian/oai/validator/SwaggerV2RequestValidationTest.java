@@ -93,6 +93,30 @@ public class SwaggerV2RequestValidationTest {
     }
 
     @Test
+    public void validate_withUnknownPathDueToEndingSlashWithStrictOperationPathMatching_shouldFail() {
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v2/api-users.json")
+                .withStrictOperationPathMatching()
+                .build();
+        final Request request = SimpleRequest.Builder.get("/users/1/")
+            .withAuthorization("Basic EncryptedUsernameAndPassword")
+            .build();
+
+        assertFail(classUnderTest.validate(request, okResponse), "validation.request.path.missing");
+        assertFail(classUnderTest.validateRequest(request), "validation.request.path.missing");
+    }
+
+    @Test
+    public void validate_withOperationPathTrailingSlashDifference_shouldSucceed() {
+        final Request request = SimpleRequest.Builder.get("/users/1/")
+            .withAuthorization("Basic EncryptedUsernameAndPassword")
+            .build();
+
+        assertPass(classUnderTest.validate(request, validUserResponse));
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
     public void validate_withInvalidRequestMethod_shouldFail() {
         final Request request = SimpleRequest.Builder.patch("/users/1").build();
 
