@@ -500,6 +500,40 @@ public class OpenAPIV3RequestValidationTest {
     }
 
     @Test
+    public void validate_withOneOfDiscriminators_shouldFail_whenUnknownDiscriminator() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-discriminator.yaml")
+                        .withLevelResolver(withAdditionalPropertiesIgnored())
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/oneOf")
+                .withContentType("application/json")
+                .withBody("{ \"type\": \"Item4\", \"intField\": 1 }")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withOneOfDiscriminators_shouldFail_whenMismatchingDiscriminator() {
+        final OpenApiInteractionValidator classUnderTest =
+                OpenApiInteractionValidator
+                        .createFor("/oai/v3/api-discriminator.yaml")
+                        .withLevelResolver(withAdditionalPropertiesIgnored())
+                        .build();
+
+        final Request request = SimpleRequest.Builder
+                .post("/oneOf")
+                .withContentType("application/json")
+                .withBody("{ \"type\": \"Item1\", \"boolField\": true }")
+                .build();
+
+        assertFail(classUnderTest.validateRequest(request));
+    }
+
+    @Test
     public void validate_withOneOfDiscriminatorsWithMapping_shouldPass_whenValid() {
         final OpenApiInteractionValidator classUnderTest =
                 OpenApiInteractionValidator
