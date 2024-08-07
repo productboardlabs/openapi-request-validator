@@ -1,3 +1,10 @@
+# 2.40.1
+* Bump dependencies:
+  * `maven`: 3.9.1 -> 3.9.7
+  * `scala-library`: 2.13.11 -> 2.13.14
+  * `wiremock`: 2.35.1 -> 2.35.2
+  * `swagger-parser`: 2.1.20 -> 2.1.22
+
 # 2.40.0
 * Bump dependencies:
   * `guava`:  31.1-jre -> 33.0.0-jre
