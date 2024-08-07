@@ -93,9 +93,9 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
 
         final JsonNode currentSchemaNode = data.getSchema().getNode();
         if (currentSchemaNode.has("anyOf")) {
-            validateOneOfComposition(processor, report, bundle, data, discriminatorNode, currentSchemaNode.get("anyOf"));
+            validateOneOfAnyOfComposition(processor, report, bundle, data, discriminatorNode, currentSchemaNode.get("anyOf"));
         } else if (currentSchemaNode.has("oneOf")) {
-            validateOneOfComposition(processor, report, bundle, data, discriminatorNode, currentSchemaNode.get("oneOf"));
+            validateOneOfAnyOfComposition(processor, report, bundle, data, discriminatorNode, currentSchemaNode.get("oneOf"));
         } else {
             // Else go hunting for "allOf"-usages referring to this schemaNode
             validateAllOfComposition(processor, report, bundle, data, discriminatorNode);
@@ -103,8 +103,8 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
     }
 
     /**
-     * In <code>oneOf</code> composition we are starting at the "parent" schema and selecting the
-     * "child" schema by using the discriminator.
+     * In <code>oneOf</code> and <code>anyOf</code>composition we are starting at the "parent" schema and
+     * selecting the "child" schema by using the discriminator.
      * <p>
      * The "child" schema references need not reference the "parent" schema.
      * <p>
@@ -120,7 +120,7 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
      *     </li>
      * </ol>
      */
-    private void validateOneOfComposition(final Processor<FullData, FullData> processor,
+    private void validateOneOfAnyOfComposition(final Processor<FullData, FullData> processor,
                                           final ProcessingReport report,
                                           final MessageBundle bundle,
                                           final FullData data,
@@ -173,9 +173,14 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
         validateDiscriminatedComposition(processor, report, bundle, data, discriminatorNode, validDiscriminatorValues, discriminatorPropertyValue, schemaTree);
     }
 
-    private void validateDiscriminatedComposition(final Processor<FullData, FullData> processor, final ProcessingReport report, final MessageBundle bundle,
-            final FullData data, final JsonNode discriminatorNode, final Map<String, JsonNode> validDiscriminatorValues, final String discriminatorPropertyValue,
-            final SchemaTree schemaTree) throws ProcessingException {
+    private void validateDiscriminatedComposition(final Processor<FullData, FullData> processor,
+                                                  final ProcessingReport report,
+                                                  final MessageBundle bundle,
+                                                  final FullData data,
+                                                  final JsonNode discriminatorNode,
+                                                  final Map<String, JsonNode> validDiscriminatorValues,
+                                                  final String discriminatorPropertyValue,
+                                                  final SchemaTree schemaTree) throws ProcessingException {
         if (!validDiscriminatorValues.containsKey(discriminatorPropertyValue)) {
             report.error(
                     msg(data, bundle, "err.swaggerv2.discriminator.invalid")
