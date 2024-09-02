@@ -1,4 +1,9 @@
-# 2.40.1
+# 2.42.0
+* Support for discriminator validation of `oneOf` and `anyOf` composition
+  [[#771]](https://bitbucket.org/atlassian/swagger-request-validator/issues/771)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/418) 
+
+# 2.41.0
 * Bump dependencies:
   * `maven`: 3.9.1 -> 3.9.7
   * `scala-library`: 2.13.11 -> 2.13.14
