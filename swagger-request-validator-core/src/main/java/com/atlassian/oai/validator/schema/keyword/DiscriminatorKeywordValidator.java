@@ -91,14 +91,51 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
             return;
         }
 
-        // TODO: `oneOf` and `anyOf` composition validation logic
         final JsonNode currentSchemaNode = data.getSchema().getNode();
-        if (currentSchemaNode.has("oneOf") || currentSchemaNode.has("anyOf")) {
-            log.debug("Support for discriminators with oneOf/anyOf not implemented yet. Validation may be inaccurate.");
-            return;
+        if (currentSchemaNode.has("anyOf")) {
+            validateOneOfAnyOfComposition(processor, report, bundle, data, discriminatorNode, currentSchemaNode.get("anyOf"));
+        } else if (currentSchemaNode.has("oneOf")) {
+            validateOneOfAnyOfComposition(processor, report, bundle, data, discriminatorNode, currentSchemaNode.get("oneOf"));
+        } else {
+            // Else go hunting for "allOf"-usages referring to this schemaNode
+            validateAllOfComposition(processor, report, bundle, data, discriminatorNode);
         }
+    }
 
-        validateAllOfComposition(processor, report, bundle, data, discriminatorNode);
+    /**
+     * In <code>oneOf</code> and <code>anyOf</code>composition we are starting at the "parent" schema and
+     * selecting the "child" schema by using the discriminator.
+     * <p>
+     * The "child" schema references need not reference the "parent" schema.
+     * <p>
+     * Selection of a "child" schema is as follows:
+     * <ol>
+     *     <li>
+     *         If no <code>mapping</code> is defined, the discriminator value is used as a "shortname" to match with
+     *         e.g. "Dog" -> "#/components/schemas/Dog"
+     *     </li>
+     *     <li>
+     *         If a <code>mapping</code> is defined, the discriminator value is used to lookup the appropriate schema.
+     *         This could be a "shortname", a relative ref, or an external ref.
+     *     </li>
+     * </ol>
+     */
+    private void validateOneOfAnyOfComposition(final Processor<FullData, FullData> processor,
+                                          final ProcessingReport report,
+                                          final MessageBundle bundle,
+                                          final FullData data,
+                                          final JsonNode discriminatorNode,
+                                          final JsonNode compositionNode) throws ProcessingException {
+        final SchemaTree schemaTree = data.getSchema();
+
+        final String discriminatorPropertyValue = discriminatorNode.textValue();
+
+        final String nodes = filterDiscriminatorValidationNodes(schemaTree.getPointer()).toString();
+
+        // The given discriminator value must either match a mapping OR a valid child schema
+        final Map<String, JsonNode> validDiscriminatorValues = findValidDirectDiscriminatorValues(data, compositionNode);
+
+        validateDiscriminatedComposition(processor, report, bundle, data, discriminatorNode, validDiscriminatorValues, discriminatorPropertyValue, schemaTree);
     }
 
     /**
@@ -133,6 +170,17 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
         final Map<String, JsonNode> validDiscriminatorValues = findValidDiscriminatorValues(data,
                 "#" + filterDiscriminatorValidationNodes(schemaTree.getPointer()).toString()
         );
+        validateDiscriminatedComposition(processor, report, bundle, data, discriminatorNode, validDiscriminatorValues, discriminatorPropertyValue, schemaTree);
+    }
+
+    private void validateDiscriminatedComposition(final Processor<FullData, FullData> processor,
+                                                  final ProcessingReport report,
+                                                  final MessageBundle bundle,
+                                                  final FullData data,
+                                                  final JsonNode discriminatorNode,
+                                                  final Map<String, JsonNode> validDiscriminatorValues,
+                                                  final String discriminatorPropertyValue,
+                                                  final SchemaTree schemaTree) throws ProcessingException {
         if (!validDiscriminatorValues.containsKey(discriminatorPropertyValue)) {
             report.error(
                     msg(data, bundle, "err.swaggerv2.discriminator.invalid")
@@ -272,6 +320,51 @@ public class DiscriminatorKeywordValidator extends AbstractKeywordValidator {
             return mappingNode.get(discriminatorPropertyValue);
         }
         return originalDiscriminatorNode;
+    }
+
+    /**
+     * Find the valid values for the 'discriminator' property for a oneOf/anyOf composition.
+     * <p>
+     * These will be the union of:
+     * <ol>
+     *     <li>The type names of the mapping node (if it exists)</li>
+     *     <li>The type names of the 'oneOf' or 'anyOf' composition</li>
+     * </ol>
+     * The returned map will be keyed by the short name of the schema (e.g. un-qualified name).
+     *
+     * @return A mapping between schema name and schema object for candidate schemas
+     */
+    private Map<String, JsonNode> findValidDirectDiscriminatorValues(final FullData data, final JsonNode compositionNode) {
+        final Map<String, JsonNode> validDiscriminatorValues = new HashMap<>();
+
+        // Find definitions that the composition types refer to
+        compositionNode.forEach(alternative -> {
+            // Check if alternative has a $ref
+            if (alternative.has("$ref")) {
+                final String reference = alternative.get("$ref").textValue();
+                validDiscriminatorValues.put(normalizeDiscriminatorNode(reference), alternative);
+            } else {
+                // At this point, the refs under oneOf or manyOf have been resolved to the actual schema by io.swagger.v3.parser.util.OpenAPIDeserializer,
+                // with no trace of the original $ref-reference.
+                // To infer this, one approach is to enumerate all the local schemas and test for equality. This may not work in the general case.
+    
+                // Loop over all the relevant schemas
+                definitionsNode(data).fields().forEachRemaining(e -> {
+                    final JsonNode def = e.getValue();
+                    // This test is brittle. It may match too many schemas, if they are accidentally identical, or it may match too few,
+                    // if further processing was done on one but not the other
+                    if (alternative.equals(def)) {
+                        validDiscriminatorValues.put(e.getKey(), def);
+                    }
+                });
+            }
+        });
+
+        if (mappingNode != null) {
+            // TODO: These may be fully-qualified refs here
+            mappingNode.fields().forEachRemaining(e -> validDiscriminatorValues.put(e.getKey(), e.getValue()));
+        }
+        return validDiscriminatorValues;
     }
 
     /**
