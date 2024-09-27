@@ -1,3 +1,11 @@
+# 2.43.0
+* Bump dependencies:
+  * `spring`: 6.1.3 -> 6.1.13
+  * `guava`: 33.0.0-jre -> 33.3.1-jre
+  * `jetty`: 9.4.53.v20231009 -> 9.4.56.v20240826
+  * `netty`: 4.1.106.Final -> 4.1.113.Final
+  * `junit`: 5.10.0 -> 5.11.1
+
 # 2.42.0
 * Support for discriminator validation of `oneOf` and `anyOf` composition
   [[#771]](https://bitbucket.org/atlassian/swagger-request-validator/issues/771)
