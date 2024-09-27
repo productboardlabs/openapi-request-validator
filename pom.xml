@@ -77,7 +77,7 @@
 
         <!-- Overrides for transitive dependencies to address vulnerabilities -->
         <jetty.version>9.4.56.v20240826</jetty.version>
-        <netty.version>4.1.106.Final</netty.version>
+        <netty.version>4.1.113.Final</netty.version>
         <rhino.version>1.7.14</rhino.version>
         <xerces.version>2.12.2</xerces.version>
         <org-json.version>20180130</org-json.version>
