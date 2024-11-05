@@ -4,6 +4,9 @@ import com.google.common.collect.ImmutableMap;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -101,7 +104,7 @@ public class ApiPathImpl extends NormalisedPathImpl implements ApiPath {
         if (paramNames.size() == 1
                 && template.indexOf(PARAM_START) == 0
                 && template.indexOf(PARAM_END) == template.length() - 1) {
-            return ImmutableMap.of(paramNames.get(0), of(requestPathPart));
+            return ImmutableMap.of(paramNames.get(0), of(decodePathParamValue(requestPathPart)));
         }
 
         // Using a scanning approach rather than regexes etc. because we want to get any matches
@@ -129,7 +132,7 @@ public class ApiPathImpl extends NormalisedPathImpl implements ApiPath {
                 }
                 if (templateScanner == template.length() - 1) {
                     // Close char is the last char - value goes to end of string
-                    result.put(paramNames.get(paramIndex++), Optional.of(requestPathPart.substring(paramValueStart)));
+                    result.put(paramNames.get(paramIndex++), Optional.of(decodePathParamValue(requestPathPart.substring(paramValueStart))));
                     break;
                 }
 
@@ -142,7 +145,7 @@ public class ApiPathImpl extends NormalisedPathImpl implements ApiPath {
                 }
                 if (toLowerCase(requestPathPart.charAt(requestScanner)) == terminal) {
                     // Found the terminal - construct the param value
-                    result.put(paramNames.get(paramIndex++), Optional.of(requestPathPart.substring(paramValueStart, requestScanner)));
+                    result.put(paramNames.get(paramIndex++), Optional.of(decodePathParamValue(requestPathPart.substring(paramValueStart, requestScanner))));
                 } else {
                     // Must have reached the end without finding a terminal - no match
                     break;
@@ -160,6 +163,19 @@ public class ApiPathImpl extends NormalisedPathImpl implements ApiPath {
             result.put(paramNames.get(paramIndex++), empty());
         }
         return result;
+    }
+
+    /**
+     * Reserved characters in path params should be percent-encoded as per RFC https://www.rfc-editor.org/rfc/rfc3986#section-2.2
+     * @param requestPart
+     * @return
+     */
+    private String decodePathParamValue(final String requestPart) {
+        try {
+            return URLDecoder.decode(requestPart, StandardCharsets.UTF_8.name());
+        } catch (final UnsupportedEncodingException e) {
+            return requestPart;
+        }
     }
 
 }

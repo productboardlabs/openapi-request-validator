@@ -1,0 +1,19 @@
+openapi: "3.0.2"
+info:
+  description: This is a sample for validating path params of type string with restrictions.
+  title: Validating patterns
+  version: "1.0.0"
+paths:
+  '/test/{param1}/foo':
+    get:
+      description: 'Path params with regex restriction'
+      parameters:
+        - name: param1
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^(?=.*\/)(?=.*\|).*
+      responses:
+        '201':
+          description: OK
