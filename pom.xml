@@ -73,7 +73,7 @@
         <swagger-parser.version>2.1.22</swagger-parser.version>
         <wiremock.version>2.35.2</wiremock.version>
         <jmh-core.version>1.36</jmh-core.version>
-        <jsonassert.version>1.5.1</jsonassert.version>
+        <jsonassert.version>1.5.3</jsonassert.version>
 
         <!-- Overrides for transitive dependencies to address vulnerabilities -->
         <jetty.version>9.4.56.v20240826</jetty.version>
