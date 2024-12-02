@@ -114,6 +114,12 @@ public class ApiPathImplTest {
     }
 
     @Test
+    public void paramValues_canExtractParamValues_fromParam_whenPartPathPart_reservedCharacters() {
+        final String[] expected = {":fo/op[", "bl arp+"};
+        testParamValueExtraction("{param1}-{param2}", "%3Afo%2Fop%5B-bl%20arp%2B", expected);
+    }
+
+    @Test
     public void paramValues_addsEmpty_whenMissingParamValues() {
         final String[] expected = {"foop", null};
         testParamValueExtraction("{param1}-{param2}", "foop-", expected);
