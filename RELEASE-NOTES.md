@@ -1,3 +1,14 @@
+# 2.44.1
+* Bump dependencies:
+  * `spring (legacy)`: 5.3.26 -> 5.3.39
+  * `netty`: 4.1.113.Final -> 4.1.115.Final
+  * `commons-codec`: 1.16.0 -> 1.17.1
+  * `awaitility`: 4.2.1 -> 4.2.2
+  * `maven-checkstyle-plugin`: 3.3.1 -> 3.6.0
+* Fix handling of encoded characters when validating path params
+    [[#328]](https://bitbucket.org/atlassian/swagger-request-validator/issues/328)
+    [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/436)
+
 # 2.43.0
 * Bump dependencies:
   * `spring`: 6.1.3 -> 6.1.13
