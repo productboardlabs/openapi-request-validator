@@ -252,14 +252,14 @@ public class SchemaValidator {
     }
 
     private static JsonNode readContent(@Nonnull final String value, @Nonnull final Schema schema) throws IOException {
+        if ("string".equalsIgnoreCase(schema.getType())) {
+            return createStringNode(value);
+        }
         if ("null".equalsIgnoreCase(value)) {
             return Json.mapper().readTree("null");
         }
         if (schema instanceof DateTimeSchema) {
             return createStringNode(normaliseDateTime(value));
-        }
-        if ("string".equalsIgnoreCase(schema.getType())) {
-            return createStringNode(value);
         }
         if ("number".equalsIgnoreCase(schema.getType()) ||
                 "integer".equalsIgnoreCase(schema.getType())) {

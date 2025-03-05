@@ -895,4 +895,18 @@ public class OpenAPIV3RequestValidationTest {
         assertFail(classUnderTest.validateRequest(request),
                 "validation.request.parameter.query.unexpected");
     }
+
+    @Test
+    public void validate_withNullStringValue_shouldPass() {
+        final OpenApiInteractionValidator classUnderTest =
+            OpenApiInteractionValidator.createForSpecificationUrl("/oai/v3/api-non-nullable-string.yaml")
+                .withLevelResolver(LevelResolver.create()
+                    .withLevel("validation.request.parameter.schema.type", ValidationReport.Level.ERROR)
+                    .build()).build();
+
+        final Request request = SimpleRequest.Builder.get("/foo")
+            .withQueryParam("search", "null").build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
 }
