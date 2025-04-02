@@ -1,4 +1,4 @@
-image: maven:3.9.7-amazoncorretto-17
+image: maven:3.9.9-amazoncorretto-17-alpine
 
 pipelines:
   default:
@@ -16,7 +16,10 @@ pipelines:
       - step:
           name: Perform release
           script:
-            - pipe: atlassian/artifactory-sidekick:v1
-            - source .artifactory/activate.sh
+            - mvn --version
+            # Annoyingly there are no supported maven base images with JDK 17 and Git
+            # Resorting to installing git here
+            - apk add git
+            - git --version
             - mvn -B release:prepare -DreleaseVersion=${releaseVersion} -DdevelopmentVersion=${nextDevVersion} -DscmCommentPrefix="[skip ci]"
             # - mvn -B release:perform -DscmCommentPrefix="[skip ci]"
