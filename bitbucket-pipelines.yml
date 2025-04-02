@@ -8,3 +8,15 @@ pipelines:
         script:
           - mvn --version
           - mvn clean verify javadoc:jar --settings ./bin/settings.xml
+  custom:
+    perform-release:
+      - variables:
+          - name: releaseVersion
+          - name: nextDevVersion
+      - step:
+          name: Perform release
+          script:
+            - pipe: atlassian/artifactory-sidekick:v1
+            - source .artifactory/activate.sh
+            - mvn -B release:prepare -DreleaseVersion=${releaseVersion} -DdevelopmentVersion=${nextDevVersion} -DscmCommentPrefix="[skip ci]"
+            # - mvn -B release:perform -DscmCommentPrefix="[skip ci]"
