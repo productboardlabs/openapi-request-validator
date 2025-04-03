@@ -24,4 +24,4 @@ pipelines:
             - apk add gpg
             - gpg --version
             - mvn -B release:prepare -DreleaseVersion=${releaseVersion} -DdevelopmentVersion=${nextDevVersion} -DscmCommentPrefix="[skip ci]"
-            - mvn -B release:perform -DscmCommentPrefix="[skip ci]"
+            - MAVEN_GPG_KEY=$GPG_KEY MAVEN_GPG_PASSPHRASE=$GPG_PASSPHRASE mvn -B release:perform -DscmCommentPrefix="[skip ci]" -Dgpg.signer=bc
