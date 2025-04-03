@@ -21,5 +21,7 @@ pipelines:
             # Resorting to installing git here
             - apk add git
             - git --version
+            - apk add gpg
+            - gpg --version
             - mvn -B release:prepare -DreleaseVersion=${releaseVersion} -DdevelopmentVersion=${nextDevVersion} -DscmCommentPrefix="[skip ci]"
             - mvn -B release:perform -DscmCommentPrefix="[skip ci]"
