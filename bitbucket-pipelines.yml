@@ -13,7 +13,8 @@ pipelines:
       - step:
           name: Sign artifact
           script:
-            - MAVEN_GPG_PASSPHRASE=$GPG_PASSPHRASE MAVEN_GPG_KEY=$GPG_KEY mvn -B package gpg:sign
+            - echo $GPG_KEY_B64 | base64 -d > /tmp/private.key
+            - mvn -B package gpg:sign -Dgpg.signer=bc -Dgpg.useagent=false -Dgpg.keyFilePath=/tmp/private.key -DskipTests
 
     perform-release:
       - variables:
@@ -27,5 +28,6 @@ pipelines:
             # Resorting to installing git here
             - apk add git
             - git --version
+            - echo $GPG_KEY_B64 | base64 -d > /tmp/private.key
             - mvn -B release:prepare -DreleaseVersion=${releaseVersion} -DdevelopmentVersion=${nextDevVersion} -DscmCommentPrefix="[skip ci]"
-            - mvn -B release:perform -DscmCommentPrefix="[skip ci]" -Dgpg.signer=bc -Dgpg.keyFilePath=./gpg-key.tsk
+            - mvn -B release:perform -DscmCommentPrefix="[skip ci]" -Dgpg.signer=bc -Dgpg.useagent=false -Dgpg.keyFilePath=/tmp/private.key
