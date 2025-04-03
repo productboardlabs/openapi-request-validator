@@ -93,6 +93,7 @@
         <awaitility.version>4.2.2</awaitility.version>
         <junit-jupiter.version>5.11.1</junit-jupiter.version>
         <maven.javadoc.plugin.version>3.4.1</maven.javadoc.plugin.version>
+        <maven.gpg.plugin.version>3.2.7</maven.gpg.plugin.version>
     </properties>
 
     <modules>
@@ -521,6 +522,17 @@
                 </executions>
             </plugin>
         </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <!-- Override the GPG version so we can use the BC signer -->
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>${maven.gpg.plugin.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
+
 
 </project>

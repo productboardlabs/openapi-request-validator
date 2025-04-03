@@ -9,6 +9,12 @@ pipelines:
           - mvn --version
           - mvn clean verify javadoc:jar --settings ./bin/settings.xml
   custom:
+    gpg-sign:
+      - step:
+          name: Sign artifact
+          script:
+            - MAVEN_GPG_PASSPHRASE=$GPG_PASSPHRASE MAVEN_GPG_KEY=$GPG_KEY mvn -B package gpg:sign
+
     perform-release:
       - variables:
           - name: releaseVersion
@@ -21,7 +27,5 @@ pipelines:
             # Resorting to installing git here
             - apk add git
             - git --version
-            - apk add gpg
-            - gpg --version
             - mvn -B release:prepare -DreleaseVersion=${releaseVersion} -DdevelopmentVersion=${nextDevVersion} -DscmCommentPrefix="[skip ci]"
-            - MAVEN_GPG_KEY=$GPG_KEY MAVEN_GPG_PASSPHRASE=$GPG_PASSPHRASE mvn -B release:perform -DscmCommentPrefix="[skip ci]" -Dgpg.signer=bc
+            - mvn -B release:perform -DscmCommentPrefix="[skip ci]" -Dgpg.signer=bc -Dgpg.keyFilePath=./gpg-key.tsk
