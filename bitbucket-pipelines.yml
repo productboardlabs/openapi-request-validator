@@ -22,4 +22,4 @@ pipelines:
             - apk add git
             - git --version
             - mvn -B release:prepare -DreleaseVersion=${releaseVersion} -DdevelopmentVersion=${nextDevVersion} -DscmCommentPrefix="[skip ci]"
-            # - mvn -B release:perform -DscmCommentPrefix="[skip ci]"
+            - mvn -B release:perform -DscmCommentPrefix="[skip ci]"
