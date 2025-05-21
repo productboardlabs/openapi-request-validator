@@ -1,3 +1,8 @@
+# 2.44.8
+* Fix handling of "null" literal for String params
+  [[#815]](https://bitbucket.org/atlassian/swagger-request-validator/issues/815)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/447)
+
 # 2.44.1
 * Bump dependencies:
   * `spring (legacy)`: 5.3.26 -> 5.3.39
