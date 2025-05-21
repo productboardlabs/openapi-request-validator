@@ -30,4 +30,5 @@ pipelines:
             - git --version
             - echo $GPG_KEY_B64 | base64 -d > /tmp/private.key
             - mvn -B release:prepare -DreleaseVersion=${releaseVersion} -DdevelopmentVersion=${nextDevVersion} -DscmCommentPrefix="[skip ci]"
-            - mvn -B release:perform -DscmCommentPrefix="[skip ci]" -Dgpg.signer=bc -Dgpg.useagent=false -Dgpg.keyFilePath=/tmp/private.key
+            # Important: -Darguments="..." needed to pass args to the release process
+            - mvn -B release:perform -DscmCommentPrefix="[skip ci]" -Darguments="-Dgpg.signer=bc -Dgpg.useagent=false -Dgpg.keyFilePath=/tmp/private.key"
