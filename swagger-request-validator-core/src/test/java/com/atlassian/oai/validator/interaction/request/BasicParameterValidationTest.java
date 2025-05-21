@@ -52,7 +52,8 @@ public class BasicParameterValidationTest {
                 {"empty optional param should pass when not conform schema but empty allowed", "", emptyAllowedNonConformQueryParam(false), assertPass()},
                 {"empty optional param should pass when conform schema and empty allowed but not query param", "", emptyAllowedHeaderParam(false), assertPass()},
                 {"empty optional param should fail when not conform schema and empty allowed but not query param", "", emptyAllowedNonConformHeaderParam(false),
-                        assertFail("validation.request.parameter.schema.pattern")}
+                        assertFail("validation.request.parameter.schema.pattern")},
+                {"the null string param should pass when null not allowed", "null", stringParam(), assertPass()},
         };
     }
 

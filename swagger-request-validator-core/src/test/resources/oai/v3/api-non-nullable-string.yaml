@@ -1,0 +1,24 @@
+openapi: 3.0.1
+info:
+  title: Tests for "null" String value.
+  version: 1.0.0
+servers:
+  - url: /
+paths:
+  /foo:
+    get:
+      tags:
+        - foo
+      summary: Get a foo
+      operationId: get foo
+      parameters:
+        - name: search
+          in: query
+          description: >-
+            Foo search
+          required: false
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No content
