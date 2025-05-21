@@ -22,9 +22,10 @@ pipelines:
           - name: nextDevVersion
       - step:
           name: Perform release
+          oidc: true
           script:
-            - pipe: atlassian/artifactory-sidekick:v1
-            - source .artifactory/activate.sh
+            - pipe: docker://atlassian/packages-oidc-pipe:latest
+            - source .envrc
             - mvn --version
             # Annoyingly there are no supported maven base images with JDK 17 and Git
             # Resorting to installing git here
