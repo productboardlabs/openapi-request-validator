@@ -142,7 +142,52 @@ public class SchemaValidator {
     }
 
     /**
+     * Checks whether the given schema defines multiple types without specifying a single type.
+     * This is used to determine if the schema should be validated as a multi-type schema.
+     *
+     * @param schema The schema to inspect
+     * @return {@code true} if the schema defines multiple types and does not specify a single type, {@code false} otherwise
+     */
+    private boolean hasMultipartTypeSchema(@Nullable final Schema schema){
+        return (schema != null && schema.getType() == null && schema.getTypes() != null && schema.getTypes().size() > 0) ;
+    }
+
+    /**
+     * Validates the given value against a schema that allows multiple possible types.
+     * Iterates through each type defined in the schema and returns the result of the first successful validation.
+     * If none of the types validate successfully, returns the validation report with errors from the last attempted type.
+     *
+     * @param value     The value to validate
+     * @param schema    The schema that defines multiple possible types
+     * @param keyPrefix A prefix to apply to validation messages emitted by the validator
+     *
+     * @return A validation report indicating success or detailing validation errors
+     *
+     * @throws NullPointerException if the schema is null
+     */
+    @Nonnull
+    public ValidationReport validateMultiTypeSchema(@Nonnull final String value,
+                                                    @Nullable final Schema schema,
+                                                    @Nullable final String keyPrefix) {
+        log.debug("Validating multi value type schema");
+        requireNonNull(schema, "A schema is required");
+        ValidationReport finalReport = ValidationReport.empty();
+        for (Object type : schema.getTypes()) {
+            ValidationReport report = validate(() -> readContent(value, schema, (String) type),
+                schema, keyPrefix);
+            if(!report.hasErrors()) {
+                return report; // found 1 matching and valid type in the schema
+            }
+            else {
+                finalReport = report;
+            }
+        }
+        return finalReport;
+    }
+
+    /**
      * Validate the given value against the given property schema. If the schema is null then any json is valid.
+     * If the schema is multipart type, check against all types.
      *
      * @param value The value to validate
      * @param schema The schema to validate the value against
@@ -155,7 +200,11 @@ public class SchemaValidator {
                                      @Nullable final Schema schema,
                                      @Nullable final String keyPrefix) {
         requireNonNull(value, "A value is required");
-        return validate(() -> readContent(value, schema), schema, keyPrefix);
+        if(hasMultipartTypeSchema(schema)){
+            return validateMultiTypeSchema(value, schema, keyPrefix);
+        }
+        String type = (schema == null)? null : schema.getType();
+        return validate(() -> readContent(value, schema, type), schema, keyPrefix);
     }
 
     /**
@@ -251,8 +300,9 @@ public class SchemaValidator {
         return schemaObject;
     }
 
-    private static JsonNode readContent(@Nonnull final String value, @Nonnull final Schema schema) throws IOException {
-        if ("string".equalsIgnoreCase(schema.getType())) {
+    private static JsonNode readContent(@Nonnull final String value, @Nonnull final Schema schema,
+                                        @Nonnull final String type) throws IOException {
+        if ("string".equalsIgnoreCase(type)) {
             return createStringNode(value);
         }
         if ("null".equalsIgnoreCase(value)) {
@@ -261,8 +311,8 @@ public class SchemaValidator {
         if (schema instanceof DateTimeSchema) {
             return createStringNode(normaliseDateTime(value));
         }
-        if ("number".equalsIgnoreCase(schema.getType()) ||
-                "integer".equalsIgnoreCase(schema.getType())) {
+        if ("number".equalsIgnoreCase(type) ||
+                "integer".equalsIgnoreCase(type)) {
             return createNumericNode(value);
         }
         return Json.mapper().readTree(value);
