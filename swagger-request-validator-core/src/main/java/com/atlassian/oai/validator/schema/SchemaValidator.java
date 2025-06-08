@@ -167,13 +167,13 @@ public class SchemaValidator {
      */
     @Nonnull
     public ValidationReport validateMultiTypeSchema(@Nonnull final String value,
-                                                    @Nullable final Schema schema,
+                                                    @Nonnull final Schema schema,
                                                     @Nullable final String keyPrefix) {
         log.debug("Validating multi value type schema");
         requireNonNull(schema, "A schema is required");
         ValidationReport finalReport = ValidationReport.empty();
         for (Object type : schema.getTypes()) {
-            ValidationReport report = validate(() -> readContent(value, schema, (String) type),
+            final ValidationReport report = validate(() -> readContent(value, schema, (String) type),
                 schema, keyPrefix);
             if(!report.hasErrors()) {
                 return report; // found 1 matching and valid type in the schema
@@ -312,7 +312,7 @@ public class SchemaValidator {
             return createStringNode(normaliseDateTime(value));
         }
         if ("number".equalsIgnoreCase(type) ||
-                "integer".equalsIgnoreCase(type)) {
+            "integer".equalsIgnoreCase(type)) {
             return createNumericNode(value);
         }
         return Json.mapper().readTree(value);
