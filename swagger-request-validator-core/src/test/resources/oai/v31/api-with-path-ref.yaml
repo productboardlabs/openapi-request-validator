@@ -1,0 +1,33 @@
+openapi: 3.1.0
+info:
+  title: Report API
+  version: 1.0.0
+paths:
+  /reports/{reportType}:
+    get:
+      parameters:
+      - name: reportType
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/ReportType"
+      responses:
+        "200":
+          description: Report details
+components:
+  schemas:
+    ReportType:
+      type: string
+      enum: [admin, customer, vendor, test]
+    Error:
+      type: object
+      required:
+      - title
+      - message
+      properties:
+        title:
+          type:
+          - string
+        message:
+          type:
+          - string
