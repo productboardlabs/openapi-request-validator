@@ -84,7 +84,7 @@ public class SchemaValidator {
     /**
      * Build a new validator for the given API specification.
      *
-     * @param api The API to build the validator for.
+     * @param api      The API to build the validator for.
      * @param messages The message resolver to use.
      */
     public SchemaValidator(final OpenAPI api,
@@ -95,21 +95,21 @@ public class SchemaValidator {
     /**
      * Build a new validator for the given API specification.
      *
-     * @param api The API to build the validator for.
-     * @param messages The message resolver to use.
+     * @param api                   The API to build the validator for.
+     * @param messages              The message resolver to use.
      * @param schemaFactorySupplier A supplier function to get JsonSchemaFactory.
      */
     public SchemaValidator(final OpenAPI api,
-        @Nonnull final MessageResolver messages,
-        @Nonnull final Supplier<JsonSchemaFactory> schemaFactorySupplier) {
+                           @Nonnull final MessageResolver messages,
+                           @Nonnull final Supplier<JsonSchemaFactory> schemaFactorySupplier) {
         this(api, messages, schemaFactorySupplier, new ValidationConfiguration());
     }
 
     /**
      * Build a new validator for the given API specification.
      *
-     * @param api The API to build the validator for.
-     * @param messages The message resolver to use.
+     * @param api                   The API to build the validator for.
+     * @param messages              The message resolver to use.
      * @param schemaFactorySupplier A supplier function to get JsonSchemaFactory.
      */
     public SchemaValidator(final OpenAPI api,
@@ -126,15 +126,15 @@ public class SchemaValidator {
         schemaFactory = requireNonNull(schemaFactorySupplier.get(), "A JsonSchemaFactory is required");
         if (validationConfiguration.isCacheEnabled()) {
             this.jsonSchemaCache = CacheBuilder.newBuilder()
-                .maximumSize(validationConfiguration.getMaxCacheSize())
-                .build(new CacheLoader<JsonSchemaKey, JsonSchema>() {
-                    @Override
-                    public JsonSchema load(final JsonSchemaKey key) throws ProcessingException {
-                        final JsonNode schemaObject = readAndTransformSchemaObject(key.schema,
-                            key.forRequest, key.forResponse, definitions);
-                        return schemaFactory.getJsonSchema(schemaObject);
-                    }
-                });
+                    .maximumSize(validationConfiguration.getMaxCacheSize())
+                    .build(new CacheLoader<JsonSchemaKey, JsonSchema>() {
+                        @Override
+                        public JsonSchema load(final JsonSchemaKey key) throws ProcessingException {
+                            final JsonNode schemaObject = readAndTransformSchemaObject(key.schema,
+                                    key.forRequest, key.forResponse, definitions);
+                            return schemaFactory.getJsonSchema(schemaObject);
+                        }
+                    });
         } else {
             this.jsonSchemaCache = null;
         }
@@ -148,8 +148,11 @@ public class SchemaValidator {
      * @param schema The schema to inspect
      * @return {@code true} if the schema defines multiple types and does not specify a single type, {@code false} otherwise
      */
-    private boolean hasMultipartTypeSchema(@Nullable final Schema schema){
-        return (schema != null && schema.getType() == null && schema.getTypes() != null && schema.getTypes().size() > 0) ;
+    private boolean hasMultipartTypeSchema(@Nullable final Schema schema) {
+        return schema != null
+                && schema.getType() == null
+                && schema.getTypes() != null
+                && schema.getTypes().size() > 0;
     }
 
     /**
@@ -160,9 +163,7 @@ public class SchemaValidator {
      * @param value     The value to validate
      * @param schema    The schema that defines multiple possible types
      * @param keyPrefix A prefix to apply to validation messages emitted by the validator
-     *
      * @return A validation report indicating success or detailing validation errors
-     *
      * @throws NullPointerException if the schema is null
      */
     @Nonnull
@@ -174,11 +175,10 @@ public class SchemaValidator {
         ValidationReport finalReport = ValidationReport.empty();
         for (Object type : schema.getTypes()) {
             final ValidationReport report = validate(() -> readContent(value, schema, (String) type),
-                schema, keyPrefix);
-            if(!report.hasErrors()) {
+                    schema, keyPrefix);
+            if (!report.hasErrors()) {
                 return report; // found 1 matching and valid type in the schema
-            }
-            else {
+            } else {
                 finalReport = report;
             }
         }
@@ -189,10 +189,9 @@ public class SchemaValidator {
      * Validate the given value against the given property schema. If the schema is null then any json is valid.
      * If the schema is multipart type, check against all types.
      *
-     * @param value The value to validate
-     * @param schema The schema to validate the value against
+     * @param value     The value to validate
+     * @param schema    The schema to validate the value against
      * @param keyPrefix A prefix to apply to validation messages emitted by the validator
-     *
      * @return A validation report containing accumulated validation errors
      */
     @Nonnull
@@ -200,20 +199,19 @@ public class SchemaValidator {
                                      @Nullable final Schema schema,
                                      @Nullable final String keyPrefix) {
         requireNonNull(value, "A value is required");
-        if(hasMultipartTypeSchema(schema)){
+        if (hasMultipartTypeSchema(schema)) {
             return validateMultiTypeSchema(value, schema, keyPrefix);
         }
-        String type = (schema == null)? null : schema.getType();
+        final String type = (schema == null) ? null : schema.getType();
         return validate(() -> readContent(value, schema, type), schema, keyPrefix);
     }
 
     /**
      * Validate the given value against the given property schema. If the schema is null then any json is valid.
      *
-     * @param supplier Supplies the JsonNode to validate
-     * @param schema The schema to validate the value against
+     * @param supplier  Supplies the JsonNode to validate
+     * @param schema    The schema to validate the value against
      * @param keyPrefix A prefix to apply to validation messages emitted by the validator
-     *
      * @return A validation report containing accumulated validation errors
      */
     @Nonnull
@@ -261,8 +259,8 @@ public class SchemaValidator {
         }
     }
 
-    private JsonSchema resolveJsonSchema(final Schema schema, @Nullable final String keyPrefix)
-            throws ProcessingException {
+    private JsonSchema resolveJsonSchema(final Schema schema,
+                                         @Nullable final String keyPrefix) throws ProcessingException {
         final boolean forRequest = "request.body".equalsIgnoreCase(keyPrefix);
         final boolean forResponse = "response.body".equalsIgnoreCase(keyPrefix);
         final JsonSchemaKey jsonSchemaKey = new JsonSchemaKey(schema, forRequest, forResponse);
@@ -281,8 +279,10 @@ public class SchemaValidator {
         }
     }
 
-    private JsonNode readAndTransformSchemaObject(final Schema schema, final boolean forRequest,
-                                                  final boolean forResponse, final JsonNode definitions) {
+    private JsonNode readAndTransformSchemaObject(final Schema schema,
+                                                  final boolean forRequest,
+                                                  final boolean forResponse,
+                                                  final JsonNode definitions) {
         final ObjectNode schemaObject = Json.mapper().convertValue(schema, ObjectNode.class);
         final SchemaTransformationContext transformationContext = SchemaTransformationContext.create()
                 .forRequest(forRequest)
@@ -300,7 +300,8 @@ public class SchemaValidator {
         return schemaObject;
     }
 
-    private static JsonNode readContent(@Nonnull final String value, @Nonnull final Schema schema,
+    private static JsonNode readContent(@Nonnull final String value,
+                                        @Nonnull final Schema schema,
                                         @Nonnull final String type) throws IOException {
         if ("string".equalsIgnoreCase(type)) {
             return createStringNode(value);
@@ -312,7 +313,7 @@ public class SchemaValidator {
             return createStringNode(normaliseDateTime(value));
         }
         if ("number".equalsIgnoreCase(type) ||
-            "integer".equalsIgnoreCase(type)) {
+                "integer".equalsIgnoreCase(type)) {
             return createNumericNode(value);
         }
         return Json.mapper().readTree(value);
@@ -368,7 +369,9 @@ public class SchemaValidator {
         private final boolean forRequest;
         private final boolean forResponse;
 
-        private JsonSchemaKey(final Schema schema, final boolean forRequest, final boolean forResponse) {
+        private JsonSchemaKey(final Schema schema,
+                              final boolean forRequest,
+                              final boolean forResponse) {
             this.schema = schema;
             this.forRequest = forRequest;
             this.forResponse = forResponse;

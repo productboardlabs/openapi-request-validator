@@ -20,16 +20,15 @@ public class SchemaValidatorV31Test {
     private final SchemaValidator schemaValidatorWithPathRef = validator(apiWithPathRef);
     private final SchemaValidator schemaValidatorWithMultiSchema = validator(apiWithMultiSchema);
 
-
     private OpenAPI parserWithPathRef;
     private OpenAPI parserWithMultiSchema;
 
     @Before
-    public void setup(){
-        ParseOptions parseOptions = new ParseOptions();
+    public void setup() {
+        final ParseOptions parseOptions = new ParseOptions();
         parseOptions.setResolve(true);
         parseOptions.setResolveFully(true);
-        parserWithPathRef =  new OpenAPIParser().readLocation(apiWithPathRef, null, parseOptions).getOpenAPI();
+        parserWithPathRef = new OpenAPIParser().readLocation(apiWithPathRef, null, parseOptions).getOpenAPI();
         parserWithMultiSchema = new OpenAPIParser().readLocation(apiWithMultiSchema, null, parseOptions).getOpenAPI();
     }
 
@@ -81,7 +80,6 @@ public class SchemaValidatorV31Test {
         assertPass(schemaValidatorWithMultiSchema.validate(detailedViewSchemaValue2, detailedViewSchema, "prefix"));
         assertPass(schemaValidatorWithMultiSchema.validate(detailedViewSchemaValue3, detailedViewSchema, "prefix"));
     }
-
 
     @Test
     public void validate_pathParameter_withMultiSchema_withRef_havingValidBoolValue_shouldPass() {
