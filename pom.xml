@@ -87,7 +87,7 @@
 
         <!-- Plugin versions -->
         <checkstyle.version>9.3</checkstyle.version>
-        <license-maven-plugin.version>2.4.0</license-maven-plugin.version>
+        <license-maven-plugin.version>2.6.0</license-maven-plugin.version>
         <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
         <build-helper-maven-plugin.version>3.6.1</build-helper-maven-plugin.version>
         <awaitility.version>4.2.2</awaitility.version>
