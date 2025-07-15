@@ -1,3 +1,14 @@
+# 2.45.0
+* Bump dependencies:
+  * `spring`: 6.1.13 -> 6.1.21
+  * `jackson`: 2.15.2 -> 2.19.0
+  * `mockito`: 4.8.0 -> 4.11.0
+  * `swagger-parser`: 2.1.22 -> 2.1.31
+  * `scala-library`: 2.13.14 -> 2.13.16
+  * `license-maven-plugin`: 2.4.0 -> 2.6.0
+  * `build-helper-maven-plugin`: 3.6.0 -> 3.6.1
+  * `snakeyaml`: 2.0 -> 2.4
+
 # 2.44.9
 * Fix handling of multi-type path params in OpenAPI 3.1
   [[#406]](https://bitbucket.org/atlassian/swagger-request-validator/issues/406)
