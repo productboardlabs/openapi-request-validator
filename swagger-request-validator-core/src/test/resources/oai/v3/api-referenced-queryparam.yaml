@@ -1,0 +1,38 @@
+openapi: 3.0.0
+info:
+  title: API with a query param that includes a ref.
+  description: >-
+    Test description.
+  version: 1.0.0
+servers:
+  - url: 'http://test.com'
+    description: staging
+paths:
+  /test:
+    get:
+      summary: placeholder summary
+      description: >-
+        Placeholder description
+      parameters:
+        - name: theTest
+          in: query
+          description: Has a ref'd param
+          required: true
+          schema:
+            $ref: '#/components/schemas/QueryParam'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result'
+components:
+  schemas:
+    QueryParam:
+      type: string
+    Result:
+      type: object
+      properties:
+        msg:
+          type: string
