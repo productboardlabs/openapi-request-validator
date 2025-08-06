@@ -317,13 +317,26 @@ public class SchemaValidator {
             return createNumericNode(value);
         }
         // If not all refs were resolved (ie resolveFully is set to false) then try and resolve it once
-        if (type == null && schema != null && schema.get$ref() != null) {
-            final JsonNode refSchema = definitions.get(schema.get$ref().replace("#/components/schemas/", ""));
-            if (refSchema != null && refSchema.get("type") != null) {
-                return readContent(value, null, refSchema.get("type").asText());
-            }
+        final Optional<String> referenceType = type == null ? resolveReferenceType(schema) : Optional.empty();
+        if (referenceType.isPresent()) {
+            // Only try to resolve the ref once, as to avoid stack overflow with recursive schemas
+            return readContent(value, null, referenceType.get());
         }
         return Json.mapper().readTree(value);
+    }
+
+    private Optional<String> resolveReferenceType(@Nullable final Schema schema) {
+        if (schema != null && schema.get$ref() != null) {
+            final JsonNode refSchemaV3 = definitions.get(schema.get$ref().replace("#/components/schemas/", ""));
+            if (refSchemaV3 != null) {
+                return Optional.ofNullable(refSchemaV3.get("type")).map(JsonNode::asText);
+            }
+            final JsonNode refSchemaV2 = definitions.get(schema.get$ref().replace("#/definitions/", ""));
+            if (refSchemaV2 != null) {
+                return Optional.ofNullable(refSchemaV2.get("type")).map(JsonNode::asText);
+            }
+        }
+        return Optional.empty();
     }
 
     private static JsonNode createStringNode(final String value) {
