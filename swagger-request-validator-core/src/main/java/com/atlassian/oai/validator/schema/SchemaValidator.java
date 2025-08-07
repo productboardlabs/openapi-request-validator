@@ -327,13 +327,10 @@ public class SchemaValidator {
 
     private Optional<String> resolveReferenceType(@Nullable final Schema schema) {
         if (schema != null && schema.get$ref() != null) {
-            final JsonNode refSchemaV3 = definitions.get(schema.get$ref().replace("#/components/schemas/", ""));
-            if (refSchemaV3 != null) {
-                return Optional.ofNullable(refSchemaV3.get("type")).map(JsonNode::asText);
-            }
-            final JsonNode refSchemaV2 = definitions.get(schema.get$ref().replace("#/definitions/", ""));
-            if (refSchemaV2 != null) {
-                return Optional.ofNullable(refSchemaV2.get("type")).map(JsonNode::asText);
+            final String definitionName = schema.get$ref().replace("#/components/schemas/", "").replace("#/definitions/", "");
+            final JsonNode refSchema = definitions.get(definitionName);
+            if (refSchema != null) {
+                return Optional.ofNullable(refSchema.get("type")).map(JsonNode::asText);
             }
         }
         return Optional.empty();
