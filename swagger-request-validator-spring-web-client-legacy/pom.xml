@@ -12,6 +12,7 @@
 
     <artifactId>swagger-request-validator-spring-web-client-legacy</artifactId>
 
+    <name>Swagger Request Validator - Spring Web Client (Legacy)</name>
     <description>
         OpenAPI / Swagger validation for Spring web client.
     </description>

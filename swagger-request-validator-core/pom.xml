@@ -12,6 +12,7 @@
 
     <artifactId>swagger-request-validator-core</artifactId>
 
+    <name>Swagger Request Validator - Core</name>
     <description>
         Core OpenAPI / Swagger validation logic.
     </description>

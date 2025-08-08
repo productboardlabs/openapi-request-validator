@@ -12,6 +12,7 @@
 
     <artifactId>swagger-request-validator-spring-webmvc</artifactId>
 
+    <name>Swagger Request Validator - Spring WebMVC</name>
     <description>
         OpenAPI / Swagger validation for Spring MVC - compatible with Spring 6 and Spring Boot 3.
     </description>

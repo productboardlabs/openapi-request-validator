@@ -12,6 +12,7 @@
 
     <artifactId>swagger-request-validator-restassured</artifactId>
 
+    <name>Swagger Request Validator - REST Assured</name>
     <description>
         OpenAPI / Swagger validation for REST Assured tests.
     </description>

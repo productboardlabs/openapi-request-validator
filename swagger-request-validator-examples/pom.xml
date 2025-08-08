@@ -12,6 +12,7 @@
 
     <artifactId>swagger-request-validator-examples</artifactId>
 
+    <name>Swagger Request Validator - Examples</name>
     <description>
         Example usages of the Swagger Request Validator and its various integrations and adapters.
     </description>

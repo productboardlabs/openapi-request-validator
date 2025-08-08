@@ -12,6 +12,7 @@
 
     <artifactId>swagger-request-validator-wiremock</artifactId>
 
+    <name>Swagger Request Validator - Wiremock</name>
     <description>
         OpenAPI / Swagger validation for WireMock HTTP mocks.
     </description>
