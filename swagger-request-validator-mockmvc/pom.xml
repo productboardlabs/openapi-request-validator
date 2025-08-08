@@ -12,6 +12,7 @@
 
     <artifactId>swagger-request-validator-mockmvc</artifactId>
 
+    <name>Swagger Request Validator - Spring Mock MVC</name>
     <description>
         OpenAPI / Swagger validation for Spring MVC REST tests.
     </description>

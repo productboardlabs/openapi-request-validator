@@ -12,6 +12,7 @@
 
     <artifactId>swagger-request-validator-pact</artifactId>
 
+    <name>Swagger Request Validator - Pact</name>
     <description>
         OpenAPI / Swagger validation for Pact mocks (Provider and Consumer).
     </description>

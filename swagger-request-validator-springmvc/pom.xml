@@ -12,6 +12,7 @@
 
     <artifactId>swagger-request-validator-springmvc</artifactId>
 
+    <name>Swagger Request Validator - Spring MVC (Legacy)</name>
     <description>
         (Legacy) OpenAPI / Swagger validation for Spring MVC - Compatible with Spring 5.x and Spring Boot 2.x
     </description>
