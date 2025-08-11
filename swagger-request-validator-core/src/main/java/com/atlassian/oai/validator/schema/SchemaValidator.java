@@ -300,9 +300,9 @@ public class SchemaValidator {
         return schemaObject;
     }
 
-    private static JsonNode readContent(@Nonnull final String value,
-                                        @Nonnull final Schema schema,
-                                        @Nonnull final String type) throws IOException {
+    private JsonNode readContent(@Nonnull final String value,
+                                 @Nullable final Schema schema,
+                                 @Nullable final String type) throws IOException {
         if ("string".equalsIgnoreCase(type)) {
             return createStringNode(value);
         }
@@ -316,7 +316,24 @@ public class SchemaValidator {
                 "integer".equalsIgnoreCase(type)) {
             return createNumericNode(value);
         }
+        // If not all refs were resolved (ie resolveFully is set to false) then try and resolve it once
+        final Optional<String> referenceType = type == null ? resolveReferenceType(schema) : Optional.empty();
+        if (referenceType.isPresent()) {
+            // Only try to resolve the ref once, as to avoid stack overflow with recursive schemas
+            return readContent(value, null, referenceType.get());
+        }
         return Json.mapper().readTree(value);
+    }
+
+    private Optional<String> resolveReferenceType(@Nullable final Schema schema) {
+        if (schema != null && schema.get$ref() != null) {
+            final String definitionName = schema.get$ref().replace("#/components/schemas/", "").replace("#/definitions/", "");
+            final JsonNode refSchema = definitions.get(definitionName);
+            if (refSchema != null) {
+                return Optional.ofNullable(refSchema.get("type")).map(JsonNode::asText);
+            }
+        }
+        return Optional.empty();
     }
 
     private static JsonNode createStringNode(final String value) {

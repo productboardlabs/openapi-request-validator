@@ -6,6 +6,7 @@ import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
+import io.swagger.v3.parser.core.models.ParseOptions;
 import org.junit.Test;
 
 import javax.annotation.Nonnull;
@@ -859,6 +860,25 @@ public class OpenAPIV3RequestValidationTest {
                         "timestamp", "1937-01-01T12:00:27.87+00:20",
                         "uri", "http://example.com"
                 )))
+                .build();
+
+        assertPass(classUnderTest.validateRequest(request));
+    }
+
+    @Test
+    public void validate_withReferencedParam_shouldPass_whenValid() {
+        final ParseOptions parseOptions = new ParseOptions();
+        parseOptions.setResolve(true);
+
+        final OpenApiInteractionValidator classUnderTest = OpenApiInteractionValidator
+                .createForSpecificationUrl("/oai/v3/api-referenced-queryparam.yaml")
+                .withParseOptions(parseOptions)
+                .build();
+
+        final Request request = SimpleRequest.Builder
+                .get("/test")
+                .withContentType("application/json")
+                .withQueryParam("theTest", "This is a valid value")
                 .build();
 
         assertPass(classUnderTest.validateRequest(request));
