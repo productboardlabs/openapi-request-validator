@@ -24,7 +24,7 @@
         <spring-boot.version>3.0.0</spring-boot.version>
 
         <!-- Version overrides for transitive deps -->
-        <snakeyaml.version>2.4</snakeyaml.version>
+        <snakeyaml.version>2.5</snakeyaml.version>
     </properties>
 
     <dependencies>
