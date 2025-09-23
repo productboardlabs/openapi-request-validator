@@ -1,3 +1,20 @@
+# 2.46.0
+* Bump dependencies:
+    * `spring`: 6.1.21 -> 6.2.11
+    * `spring (legacy)`: 5.3.26 -> 5.3.39
+    * `spring-boot`: 2.6.12 -> 2.6.15
+    * `jackson`: 2.19.0 -> 2.20.0
+    * `swagger-parser`: 2.1.31 -> 2.1.34
+    * `jetty`: 9.4.56.v20240826 -> 9.4.58.v20250814
+    * `commons-codec`: 1.17.1 -> 1.19.0
+    * `awaitility`: 4.2.2 -> 4.3.0
+    * `snakeyaml`: 2.4 -> 2.5
+
+# 2.45.1
+* Fix single level of ref resolution when `parseOptions.resolveFully` is disabled
+  [[#824]](https://bitbucket.org/atlassian/swagger-request-validator/issues/824)
+  [[Details]](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/462)
+
 # 2.45.0
 * Bump dependencies:
   * `spring`: 6.1.13 -> 6.1.21
