@@ -2,7 +2,6 @@ package com.atlassian.oai.validator.pact;
 
 import au.com.dius.pact.core.model.BrokerUrlSource;
 import com.atlassian.oai.validator.OpenApiInteractionValidator;
-import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -25,8 +24,7 @@ public class PactProviderValidatorTest {
     @Rule
     public final WireMockRule wireMock = new WireMockRule(options()
             .usingFilesUnderClasspath("wiremock")
-            .dynamicPort()
-            .extensions(new ResponseTemplateTransformer(false)));
+            .dynamicPort());
 
     @Test
     public void validate_withNoConsumers_returnsEmptyMap() {

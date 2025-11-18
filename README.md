@@ -113,10 +113,9 @@ Working code samples that demonstrate the features of the `swagger-request-valid
 
 ## Building and testing ##
 
-The project uses Maven 3.8+. We recommend using [mvnvm](http://mvnvm.org/) or similar.
+The project uses Maven 3.9+. We recommend using [mvnvm](http://mvnvm.org/) or similar.
 
-The project requires JDK17+ to build, but currently builds all but the `swagger-request-validator-spring-webmvc` module
-to be JDK8 compatible. We recommend using [sdkman](https://sdkman.io/) or similar to manage JDK versions.
+The project requires JDK21+ to build. We recommend using [sdkman](https://sdkman.io/) or similar to manage JDK versions.
 
 To build the project:
 
