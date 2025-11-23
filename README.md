@@ -86,18 +86,6 @@ allows you to assert your service implementation matches its API specification.
 
 Compatible with Spring 5+.
 
-### swagger-request-validator-mockmvc-legacy
-
-[![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-mockmvc-legacy/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-mockmvc-legacy)
-
-Adapters for validating interactions using the (legacy) [Spring 4.x MVC Test Framework](https://docs.spring.io/spring-framework/docs/4.3.x/spring-framework-reference/html/integration-testing.html#spring-mvc-test-framework)
-against an OpenAPI / Swagger specification.
-
-Includes a [ResultMatcher](http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/test/web/servlet/ResultMatcher.html) that
-allows you to assert your service implementation matches its API specification.
-
-Compatible with Spring 4.x.
-
 ### swagger-request-validator-spring-webmvc 
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-spring-webmvc/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-spring-mockmvc)
@@ -108,17 +96,6 @@ against an OpenAPI / Swagger specification during runtime in a production enviro
 Useful for ensuring that the incoming requests match your service's API specification.
 
 Compatible with Spring 6+, Spring Boot 3+ and the Jakarta namespace. Requires JDK17+.
-
-### swagger-request-validator-springmvc
-
-[![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-springmvc/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-springmvc)
-
-Adapter for validating interactions using the (legacy) [Spring 5.x Web MVC framework](https://docs.spring.io/spring-framework/docs/5.3.x/reference/html/web.html#mvc)
-against an OpenAPI / Swagger specification during runtime in a production environment.
-
-Useful for ensuring that the incoming requests match your service's API specification.
-
-Compatible with Spring 5.x and Spring Boot 2.x.
 
 ### swagger-request-validator-spring-web-client 
 
