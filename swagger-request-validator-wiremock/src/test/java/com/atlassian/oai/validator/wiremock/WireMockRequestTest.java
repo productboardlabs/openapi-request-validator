@@ -8,7 +8,10 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.util.Arrays;
+import java.util.Set;
 
+import static com.github.tomakehurst.wiremock.http.RequestMethod.ANY;
+import static com.github.tomakehurst.wiremock.http.RequestMethod.GET_OR_HEAD;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -36,9 +39,10 @@ public class WireMockRequestTest {
     @Test
     public void supportsAllRequestMethods() {
         Arrays.stream(RequestMethod.values()).forEach(m -> {
-            // Wiremock supports an "any" method for matching,
+            // Wiremock has a couple of "helper" methods
             // but will not be present in requests validated in the filter
-            if (m.getName().equalsIgnoreCase(RequestMethod.ANY.getName())) {
+            final var ignoredMethods = Set.of(ANY, GET_OR_HEAD);
+            if (ignoredMethods.contains(m)) {
                 return;
             }
 
