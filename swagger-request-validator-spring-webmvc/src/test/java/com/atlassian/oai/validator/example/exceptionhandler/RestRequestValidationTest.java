@@ -209,6 +209,7 @@ public class RestRequestValidationTest {
         assertThat(response.getStatusCode(), equalTo(HttpStatus.UNPROCESSABLE_ENTITY));
         final List<String> messageKeys = ((List<HashMap>) response.getBody().get("messages")).stream()
                 .map(map -> (String) map.get("key"))
+                .distinct()
                 .collect(Collectors.toList());
         assertThat(messageKeys, Matchers.containsInAnyOrder(expectedMessageKeys));
     }
@@ -217,6 +218,7 @@ public class RestRequestValidationTest {
         assertThat(response.getStatusCode(), equalTo(HttpStatus.INTERNAL_SERVER_ERROR));
         final List<String> messageKeys = ((List<HashMap>) response.getBody().get("messages")).stream()
                 .map(map -> (String) map.get("key"))
+                .distinct()
                 .collect(Collectors.toList());
         assertThat(messageKeys, Matchers.containsInAnyOrder(expectedMessageKeys));
     }

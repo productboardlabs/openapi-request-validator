@@ -60,6 +60,7 @@
         <hamcrest-optional.version>1.3.2</hamcrest-optional.version>
         <jackson.version>2.20.0</jackson.version>
         <json-schema-validator.version>2.2.14</json-schema-validator.version>
+        <networknt-validator.version>1.5.1</networknt-validator.version>
         <jsr305.version>3.0.2</jsr305.version>
         <junit.version>4.13.2</junit.version>
         <logback.version>1.2.11</logback.version>
@@ -185,6 +186,12 @@
                 <groupId>io.swagger.parser.v3</groupId>
                 <artifactId>swagger-parser</artifactId>
                 <version>${swagger-parser.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.networknt</groupId>
+                <artifactId>json-schema-validator</artifactId>
+                <version>${networknt-validator.version}</version>
             </dependency>
 
             <dependency>

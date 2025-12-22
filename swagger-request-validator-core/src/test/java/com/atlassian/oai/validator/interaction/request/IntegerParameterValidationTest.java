@@ -77,13 +77,13 @@ public class IntegerParameterValidationTest {
     @Test
     public void validate_withValueEqualToMax_shouldFail_ifExclusiveMaxSpecified() {
         assertFail(classUnderTest.validate("1", intParam(null, 1.0, null, true)),
-                "validation.request.parameter.schema.maximum");
+                "validation.request.parameter.schema.exclusiveMaximum");
     }
 
     @Test
     public void validate_withValueEqualToMin_shouldFail_ifExclusiveMinSpecified() {
         assertFail(classUnderTest.validate("1", intParam(1.0, null, true, null)),
-                "validation.request.parameter.schema.minimum");
+                "validation.request.parameter.schema.exclusiveMinimum");
     }
 
     @Test

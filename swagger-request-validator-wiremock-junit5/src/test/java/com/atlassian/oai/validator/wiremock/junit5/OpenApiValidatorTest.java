@@ -86,12 +86,12 @@ public class OpenApiValidatorTest {
         final List<ValidationReport.Message> actualMessages = testValidationException(OAS3_FILE, VALID_PATH, INVALID_RESPONSE_BODY);
 
         assertThat(actualMessages, hasSize(2));
-        assertThat(actualMessages.get(0).getKey(), is("validation.response.body.schema.additionalProperties"));
+        assertThat(actualMessages.get(0).getKey(), is("validation.response.body.schema.required"));
         assertThat(actualMessages.get(0).getLevel(), is(ValidationReport.Level.ERROR));
-        assertThat(actualMessages.get(0).getMessage(), is("Object instance has properties which are not allowed by the schema: [\"msg\"]"));
-        assertThat(actualMessages.get(1).getKey(), is("validation.response.body.schema.required"));
+        assertThat(actualMessages.get(0).getMessage(), is("required property 'message' not found"));
+        assertThat(actualMessages.get(1).getKey(), is("validation.response.body.schema.additionalProperties"));
         assertThat(actualMessages.get(1).getLevel(), is(ValidationReport.Level.ERROR));
-        assertThat(actualMessages.get(1).getMessage(), is("Object has missing required properties ([\"message\"])"));
+        assertThat(actualMessages.get(1).getMessage(), is("property 'msg' is not defined in the schema and the schema does not allow additional properties"));
     }
 
     @Test
@@ -99,12 +99,12 @@ public class OpenApiValidatorTest {
         final List<ValidationReport.Message> actualMessages = testValidationException(OAS2_FILE, VALID_PATH, INVALID_RESPONSE_BODY);
 
         assertThat(actualMessages, hasSize(2));
-        assertThat(actualMessages.get(0).getKey(), is("validation.response.body.schema.additionalProperties"));
+        assertThat(actualMessages.get(0).getKey(), is("validation.response.body.schema.required"));
         assertThat(actualMessages.get(0).getLevel(), is(ValidationReport.Level.ERROR));
-        assertThat(actualMessages.get(0).getMessage(), is("Object instance has properties which are not allowed by the schema: [\"msg\"]"));
-        assertThat(actualMessages.get(1).getKey(), is("validation.response.body.schema.required"));
+        assertThat(actualMessages.get(0).getMessage(), is("required property 'message' not found"));
+        assertThat(actualMessages.get(1).getKey(), is("validation.response.body.schema.additionalProperties"));
         assertThat(actualMessages.get(1).getLevel(), is(ValidationReport.Level.ERROR));
-        assertThat(actualMessages.get(1).getMessage(), is("Object has missing required properties ([\"message\"])"));
+        assertThat(actualMessages.get(1).getMessage(), is("property 'msg' is not defined in the schema and the schema does not allow additional properties"));
     }
 
     private List<ValidationReport.Message> testValidationException(final String specFile, final String requestPath, final String responseBody) {

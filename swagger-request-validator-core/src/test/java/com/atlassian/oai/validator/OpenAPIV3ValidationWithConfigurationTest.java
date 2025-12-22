@@ -1,19 +1,18 @@
 package com.atlassian.oai.validator;
 
-import com.atlassian.oai.validator.interaction.response.ResponseValidator;
-import com.atlassian.oai.validator.model.Response;
-import com.atlassian.oai.validator.model.SimpleResponse;
-import com.atlassian.oai.validator.schema.SchemaValidator;
-import com.atlassian.oai.validator.schema.ValidationConfiguration;
-import org.junit.Test;
-
-import java.lang.reflect.Field;
-
 import static com.atlassian.oai.validator.model.Request.Method.GET;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadJsonResponse;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+
+import com.atlassian.oai.validator.interaction.response.ResponseValidator;
+import com.atlassian.oai.validator.model.Response;
+import com.atlassian.oai.validator.model.SimpleResponse;
+import com.atlassian.oai.validator.schema.SchemaValidator;
+import com.atlassian.oai.validator.schema.ValidationConfiguration;
+import java.lang.reflect.Field;
+import org.junit.Test;
 
 public class OpenAPIV3ValidationWithConfigurationTest {
 

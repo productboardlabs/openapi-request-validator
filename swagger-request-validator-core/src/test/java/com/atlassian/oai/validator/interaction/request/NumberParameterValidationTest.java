@@ -1,10 +1,5 @@
 package com.atlassian.oai.validator.interaction.request;
 
-import com.atlassian.oai.validator.report.MessageResolver;
-import com.atlassian.oai.validator.schema.SchemaValidator;
-import io.swagger.v3.oas.models.OpenAPI;
-import org.junit.Test;
-
 import static com.atlassian.oai.validator.util.ParameterGenerator.enumeratedFloatParam;
 import static com.atlassian.oai.validator.util.ParameterGenerator.floatParam;
 import static com.atlassian.oai.validator.util.ParameterGenerator.floatParamFormat;
@@ -12,6 +7,11 @@ import static com.atlassian.oai.validator.util.ParameterGenerator.floatParamMult
 import static com.atlassian.oai.validator.util.ParameterGenerator.stringParam;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
+
+import com.atlassian.oai.validator.report.MessageResolver;
+import com.atlassian.oai.validator.schema.SchemaValidator;
+import io.swagger.v3.oas.models.OpenAPI;
+import org.junit.Test;
 
 public class NumberParameterValidationTest {
 
@@ -66,13 +66,13 @@ public class NumberParameterValidationTest {
     @Test
     public void validate_withValueEqualToMax_shouldFail_ifExclusiveMaxSpecified() {
         assertFail(classUnderTest.validate("1.0", floatParam(null, 1.0, null, true)),
-                "validation.request.parameter.schema.maximum");
+                "validation.request.parameter.schema.exclusiveMaximum");
     }
 
     @Test
     public void validate_withValueEqualToMin_shouldFail_ifExclusiveMinSpecified() {
         assertFail(classUnderTest.validate("1.0", floatParam(1.0, null, true, null)),
-                "validation.request.parameter.schema.minimum");
+                "validation.request.parameter.schema.exclusiveMinimum");
     }
 
     @Test
