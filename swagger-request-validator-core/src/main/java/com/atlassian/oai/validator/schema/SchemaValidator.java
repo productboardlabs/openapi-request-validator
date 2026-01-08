@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
+import com.atlassian.oai.validator.schema.format.Base64Format;
 import com.atlassian.oai.validator.schema.format.DoubleFormat;
 import com.atlassian.oai.validator.schema.format.FloatFormat;
 import com.atlassian.oai.validator.schema.format.Int32Format;
@@ -39,7 +40,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -109,6 +110,7 @@ public class SchemaValidator {
                     .format(new Int32Format())
                     .format(new DoubleFormat())
                     .format(new FloatFormat())
+                    .format(new Base64Format())
                     .build();
 
             builder
@@ -120,11 +122,11 @@ public class SchemaValidator {
                 .map(schemas -> Json.mapper().convertValue(schemas, JsonNode.class))
                 .orElseGet(() -> Json.mapper().createObjectNode());
 
-        final List<SchemaTransformer> transformers = new ArrayList<>();
-        transformers.add(SchemaDefinitionsInjectionTransformer.getInstance());
-        transformers.add(ExclusiveMinMaxTransformer.getInstance());
-        transformers.add(AdditionalPropertiesInjectionTransformer.getInstance());
-        transformers.add(RequiredFieldTransformer.getInstance());
+        final List<SchemaTransformer> transformers = Arrays.asList(
+            SchemaDefinitionsInjectionTransformer.getInstance(),
+            ExclusiveMinMaxTransformer.getInstance(),
+            AdditionalPropertiesInjectionTransformer.getInstance(),
+            RequiredFieldTransformer.getInstance());
         this.transformers = transformers;
 
         if (validationConfiguration.isCacheEnabled()) {

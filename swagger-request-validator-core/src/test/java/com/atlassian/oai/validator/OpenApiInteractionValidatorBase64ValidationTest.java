@@ -145,7 +145,31 @@ public class OpenApiInteractionValidatorBase64ValidationTest {
             "refPathPatternArray: does not match the regex pattern a+",
             "refQueryPattern: does not match the regex pattern a+",
             "refQueryPatternArray: does not match the regex pattern a+",
-            "refQueryPatternArray: does not match the regex pattern a+"
+            "refQueryPatternArray: does not match the regex pattern a+",
+            "headerByte: does not match the byte pattern ",
+            "headerByteArray: does not match the byte pattern ",
+            "headerByteArray: does not match the byte pattern ",
+            "refHeaderByte: does not match the byte pattern ",
+            "refHeaderByteArray: does not match the byte pattern ",
+            "refHeaderByteArray: does not match the byte pattern ",
+            "pathByte: does not match the byte pattern ",
+            "pathByteArray: does not match the byte pattern ",
+            "pathByteArray: does not match the byte pattern ",
+            "refPathByte: does not match the byte pattern ",
+            "refPathByteArray: does not match the byte pattern ",
+            "refPathByteArray: does not match the byte pattern ",
+            "does not match the byte pattern ",
+            "does not match the byte pattern ",
+            "does not match the byte pattern ",
+            "does not match the byte pattern ",
+            "does not match the byte pattern ",
+            "does not match the byte pattern ",
+            "queryByte: does not match the byte pattern ",
+            "queryByteArray: does not match the byte pattern ",
+            "queryByteArray: does not match the byte pattern ",
+            "refQueryByte: does not match the byte pattern ",
+            "refQueryByteArray: does not match the byte pattern ",
+            "refQueryByteArray: does not match the byte pattern "
         ));
     }
 
