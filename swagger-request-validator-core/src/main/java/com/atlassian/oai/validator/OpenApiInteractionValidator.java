@@ -158,7 +158,7 @@ public class OpenApiInteractionValidator {
                                         final boolean strictOperationPathMatching) {
         this.messages = messages;
         apiOperationResolver = new ApiOperationResolver(api, basePathOverride, strictOperationPathMatching);
-        final SchemaValidator schemaValidator = new SchemaValidator(api, messages, schemaFactorySupplier, validationConfiguration);
+        final SchemaValidator schemaValidator = new SchemaValidator(api, messages, validationConfiguration);
         requestValidator = new RequestValidator(schemaValidator, messages, api, customRequestValidators);
         responseValidator = new ResponseValidator(schemaValidator, messages, api, customResponseValidators);
         this.whitelist = whitelist;
@@ -639,7 +639,7 @@ public class OpenApiInteractionValidator {
         /**
          * Optionally supply a configuration to configure the following aspects of validation:
          * <ul>
-         *     <li>The cache size of {@link com.github.fge.jsonschema.main.JsonSchema} in {@link com.atlassian.oai.validator.schema.SchemaValidator} </li>
+         *     <li>The cache size of {@link com.github.fge.jsonschema.main.JsonSchema} in {@link SchemaValidator} </li>
          * </ul>
          * @param validationConfiguration The configuration for OpenApi validation.
          * @return this builder instance

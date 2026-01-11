@@ -71,7 +71,11 @@ public class RestRequestValidationTest {
 
         // then: 'invalid response, empty body'
         assertBadResponse(response,
-                "Object has missing required properties ([\\\"headerValue\\\",\\\"pathVariable\\\",\\\"requestParam\\\"])");
+                "required property 'headerValue' not found");
+        assertBadResponse(response,
+            "required property 'pathVariable' not found");
+        assertBadResponse(response,
+            "required property 'requestParam' not found");
     }
 
     @Test
@@ -93,7 +97,9 @@ public class RestRequestValidationTest {
 
         // then: 'invalid request, all required request fields are missing'
         assertBadRequest(response,
-                "Object has missing required properties ([\\\"object\\\",\\\"string\\\"])");
+                "required property 'object' not found");
+        assertBadRequest(response,
+            "required property 'string' not found");
     }
 
     @Test
@@ -105,7 +111,11 @@ public class RestRequestValidationTest {
 
         // then: 'invalid response, empty body'
         assertBadResponse(response,
-                "Object has missing required properties ([\\\"integer\\\",\\\"object\\\",\\\"string\\\"])");
+                "required property 'integer' not found");
+        assertBadResponse(response,
+            "required property 'object' not found");
+        assertBadResponse(response,
+            "required property 'string' not found");
     }
 
     @Test
@@ -146,7 +156,9 @@ public class RestRequestValidationTest {
 
         // then: 'invalid response, empty body'
         assertBadResponse(response,
-                "Object has missing required properties ([\\\"pathVariable\\\",\\\"putValue\\\"])");
+                "required property 'pathVariable' not found");
+        assertBadResponse(response,
+            "required property 'putValue' not found");
     }
 
     @Test
@@ -163,7 +175,7 @@ public class RestRequestValidationTest {
 
         // then: 'invalid request, the path variable is no integer'
         assertBadRequest(response,
-                "Instance type (string) does not match any allowed primitive type (allowed: [\\\"integer\\\"])");
+                "string found, integer expected");
     }
 
     @Test
