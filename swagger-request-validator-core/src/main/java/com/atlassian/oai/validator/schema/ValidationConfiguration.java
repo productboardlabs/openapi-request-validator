@@ -15,7 +15,7 @@ public class ValidationConfiguration {
     private int maxCacheSize = DEFAULT_MAX_CACHE_SIZE;
 
     /**
-     * Specifies the maximum number of JsonSchema entries the cache in {@link SchemaValidatorImpl} may contain.
+     * Specifies the maximum number of JsonSchema entries the cache in {@link SchemaValidator} may contain.
      * @return the maximum number of the cache.
      */
     public int getMaxCacheSize() {
@@ -28,7 +28,7 @@ public class ValidationConfiguration {
     }
 
     /**
-     * If the maxCacheSize is less than or equal to 0, then disable jsonSchemaCache in {@link SchemaValidatorImpl}.
+     * If the maxCacheSize is less than or equal to 0, then disable jsonSchemaCache in {@link SchemaValidator}.
      * @return boolean
      */
     public boolean isCacheEnabled() {
