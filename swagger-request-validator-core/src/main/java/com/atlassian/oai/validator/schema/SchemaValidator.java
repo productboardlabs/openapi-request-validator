@@ -32,6 +32,7 @@ import com.networknt.schema.ValidationMessage;
 import com.networknt.schema.oas.OpenApi30;
 import com.networknt.schema.oas.OpenApi31;
 import io.swagger.v3.core.util.Json;
+import io.swagger.v3.core.util.Json31;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.DateTimeSchema;
@@ -65,6 +66,21 @@ public class SchemaValidator {
     private final JsonNode definitions;
     private final ValidationConfiguration validationConfiguration;
     private final ValidationMessageConverter messageConverter;
+
+    /**
+     * Flag indicating whether the validator is operating in OpenAPI 3.0 mode.
+     * <p>
+     * This value is derived from the {@link OpenAPI#getSpecVersion()} of the provided API
+     * definition.
+     * <ul>
+     * <li>If {@code true}, the validator configures the underlying {@link JsonSchemaFactory} to use
+     * {@link SpecVersion.VersionFlag#V4} (JSON Schema Draft 4) and the {@link OpenApi30} meta-schema.
+     * It also utilizes the standard {@link Json#mapper()} for JSON processing.</li>
+     * <li>If {@code false}, it assumes OpenAPI 3.1 context, configuring the factory for
+     * {@link SpecVersion.VersionFlag#V202012} (JSON Schema 2020-12) and the {@link OpenApi31} meta-schema.
+     * In this mode, {@link Json31#mapper()} is used to support 3.1 specific features.</li>
+     * </ul>
+     */
     private final boolean isOpenApi30;
 
     /**
@@ -119,8 +135,10 @@ public class SchemaValidator {
         });
         this.definitions = Optional.ofNullable(api.getComponents())
                 .map(Components::getSchemas)
-                .map(schemas -> Json.mapper().convertValue(schemas, JsonNode.class))
-                .orElseGet(() -> Json.mapper().createObjectNode());
+            .map(schemas -> isOpenApi30 ? Json.mapper().convertValue(schemas, JsonNode.class)
+                : Json31.mapper().convertValue(schemas, JsonNode.class))
+            .orElseGet(() -> isOpenApi30 ? Json.mapper().createObjectNode()
+                : Json31.mapper().createObjectNode());
 
         final List<SchemaTransformer> transformers = Arrays.asList(
             SchemaDefinitionsInjectionTransformer.getInstance(),
@@ -268,7 +286,9 @@ public class SchemaValidator {
                                                   final boolean forRequest,
                                                   final boolean forResponse,
                                                   final JsonNode definitions) {
-        final ObjectNode schemaObject = Json.mapper().convertValue(schema, ObjectNode.class);
+        final ObjectNode schemaObject =
+            isOpenApi30 ? Json.mapper().convertValue(schema, ObjectNode.class)
+                : Json31.mapper().convertValue(schema, ObjectNode.class);
         final SchemaTransformationContext transformationContext = SchemaTransformationContext.create()
                 .forRequest(forRequest)
                 .forResponse(forResponse)
@@ -295,7 +315,7 @@ public class SchemaValidator {
             return createStringNode(value);
         }
         if ("null".equalsIgnoreCase(value)) {
-            return Json.mapper().readTree("null");
+            return isOpenApi30 ? Json.mapper().readTree("null") : Json31.mapper().readTree("null");
         }
         if (schema instanceof DateTimeSchema) {
             return createStringNode(normaliseDateTime(value));
@@ -310,7 +330,7 @@ public class SchemaValidator {
             // Only try to resolve the ref once, as to avoid stack overflow with recursive schemas
             return readContent(value, null, referenceType.get());
         }
-        return Json.mapper().readTree(value);
+        return isOpenApi30 ? Json.mapper().readTree(value) : Json31.mapper().readTree(value);
     }
 
     private Optional<String> resolveReferenceType(@Nullable final Schema schema) {
