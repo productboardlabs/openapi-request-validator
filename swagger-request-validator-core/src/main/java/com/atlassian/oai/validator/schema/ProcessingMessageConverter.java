@@ -3,7 +3,6 @@ package com.atlassian.oai.validator.schema;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.github.fge.jsonschema.core.report.ProcessingMessage;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -21,13 +20,6 @@ class ProcessingMessageConverter {
 
     public ProcessingMessageConverter(@Nonnull final MessageResolver messages) {
         this.messages = requireNonNull(messages);
-    }
-
-    ValidationReport toValidationReport(final ProcessingMessage pm,
-                                        final String keywordOverride,
-                                        final String keyPrefix) {
-
-        return ValidationReport.singleton(toValidationReportMessage(pm.asJson(), keywordOverride, keyPrefix));
     }
 
     ValidationReport.Message toValidationReportMessage(final JsonNode pm,

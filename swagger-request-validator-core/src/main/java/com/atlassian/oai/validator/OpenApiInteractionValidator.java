@@ -1,5 +1,10 @@
 package com.atlassian.oai.validator;
 
+import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
+import static java.util.Collections.emptyList;
+import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
+
 import com.atlassian.oai.validator.interaction.ApiOperationResolver;
 import com.atlassian.oai.validator.interaction.request.CustomRequestValidator;
 import com.atlassian.oai.validator.interaction.request.RequestValidator;
@@ -14,29 +19,20 @@ import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
 import com.atlassian.oai.validator.schema.SchemaValidator;
-import com.atlassian.oai.validator.schema.SwaggerV20Library;
 import com.atlassian.oai.validator.schema.ValidationConfiguration;
 import com.atlassian.oai.validator.util.OpenApiLoader;
 import com.atlassian.oai.validator.whitelist.ValidationErrorsWhitelist;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.parser.core.models.AuthorizationValue;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import static com.atlassian.oai.validator.util.StringUtils.requireNonEmpty;
-import static java.util.Collections.emptyList;
-import static java.util.Objects.requireNonNull;
-import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Validates a HTTP interaction (request/response pair) with a Swagger v2 / OpenAPI v3 specification.
@@ -151,7 +147,6 @@ public class OpenApiInteractionValidator {
                                         @Nullable final String basePathOverride,
                                         @Nonnull final MessageResolver messages,
                                         @Nonnull final ValidationErrorsWhitelist whitelist,
-                                        @Nonnull final Supplier<JsonSchemaFactory> schemaFactorySupplier,
                                         @Nonnull final List<CustomRequestValidator> customRequestValidators,
                                         @Nonnull final List<CustomResponseValidator> customResponseValidators,
                                         @Nonnull final ValidationConfiguration validationConfiguration,
@@ -353,7 +348,6 @@ public class OpenApiInteractionValidator {
         private final List<CustomRequestValidator> customRequestValidators = new ArrayList<>();
         private final List<CustomResponseValidator> customResponseValidators = new ArrayList<>();
         private OpenAPI api;
-        private Supplier<JsonSchemaFactory> schemaFactorySupplier = SwaggerV20Library::schemaFactory;
 
         private ValidationConfiguration validationConfiguration = new ValidationConfiguration();
         private boolean strictOperationPathMatching = false;
@@ -621,22 +615,6 @@ public class OpenApiInteractionValidator {
         }
 
         /**
-         * Optionally supply a function that returns a {@link com.github.fge.jsonschema.main.JsonSchemaFactory} to use.
-         * <p>
-         * Defaults to {@link SwaggerV20Library}'s `schemaFactory`, but this can be useful if you have additional
-         * extensions to add to {@link com.github.fge.jsonschema.library.Library}.
-         *
-         * @param schemaFactorySupplier A supplier function that returns a JsonSchemaFactory.
-         *
-         * @return this builder instance
-         */
-        public Builder withSchemaFactorySupplier(final Supplier<JsonSchemaFactory> schemaFactorySupplier) {
-            requireNonNull(schemaFactorySupplier, "JsonSchemaFactory supplier is required");
-            this.schemaFactorySupplier = schemaFactorySupplier;
-            return this;
-        }
-
-        /**
          * Optionally supply a configuration to configure the following aspects of validation:
          * <ul>
          *     <li>The cache size of {@link com.github.fge.jsonschema.main.JsonSchema} in {@link SchemaValidator} </li>
@@ -676,7 +654,6 @@ public class OpenApiInteractionValidator {
                     basePathOverride,
                     new MessageResolver(levelResolver),
                     whitelist,
-                    schemaFactorySupplier,
                     customRequestValidators,
                     customResponseValidators,
                     validationConfiguration,
