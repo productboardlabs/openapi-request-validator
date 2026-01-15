@@ -91,12 +91,28 @@ public abstract class SchemaTransformer {
         return type != null && type.textValue().equalsIgnoreCase(OBJECT_TYPE);
     }
 
+    /**
+     * Checks if the provided JSON node represents an array schema definition.
+     * <p>
+     * This method inspects the {@code type} property of the given JSON node to determine if it
+     * defines an array. It considers the node an array definition if the {@code type} field exists
+     * and either:
+     * <ul>
+     * <li>Is a JSON Array itself (handling multi-type definitions, e.g., {@code type: ["string", "null"]}).</li>
+     * <li>Is a textual value equal to "array" (case-insensitive) (e.g., {@code type: "array"}).</li>
+     * </ul>
+     *
+     * @param n The JSON node to inspect; may be {@code null}.
+     * @return {@code true} if the node defines an array type, {@code false} otherwise or if the input
+     *     node is {@code null}.
+     */
     protected static boolean isArrayDefinition(@Nullable final JsonNode n) {
         if (n == null) {
             return false;
         }
         final JsonNode type = n.get(TYPE_FIELD);
-        return type != null && type.textValue().equalsIgnoreCase(ARRAY_TYPE);
+        return type != null && (type.getNodeType() != null && type.getNodeType().name()
+            .equalsIgnoreCase(ARRAY_TYPE) || type.textValue().equalsIgnoreCase(ARRAY_TYPE));
     }
 
     protected static void disableAdditionalProperties(final ObjectNode n) {
