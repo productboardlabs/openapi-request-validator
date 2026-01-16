@@ -18,7 +18,6 @@ import com.atlassian.oai.validator.schema.transform.SchemaTransformer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -152,7 +151,7 @@ public class SchemaValidator {
                     .maximumSize(validationConfiguration.getMaxCacheSize())
                     .build(new CacheLoader<JsonSchemaKey, JsonSchema>() {
                         @Override
-                        public JsonSchema load(final JsonSchemaKey key) throws ProcessingException {
+                        public JsonSchema load(final JsonSchemaKey key) {
                             final JsonNode schemaObject = readAndTransformSchemaObject(
                                     key.schema,
                                     key.forRequest,

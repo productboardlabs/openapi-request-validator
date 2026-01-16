@@ -4,11 +4,9 @@ package com.atlassian.oai.validator.schema;
  * Validation configuration for Open API validation.
  *
  * <p>This allows you to configure the following aspects of validation:</p>
- *
  * <ul>
- *     <li>The cache size of {@link com.github.fge.jsonschema.main.JsonSchema} </li>
+ * <li>The maximum size of the JSON schema cache (see {@link #setMaxCacheSize(int)})</li>
  * </ul>
- *
  */
 public class ValidationConfiguration {
     private static final int DEFAULT_MAX_CACHE_SIZE = 100;
