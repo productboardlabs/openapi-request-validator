@@ -103,6 +103,7 @@
         <module>swagger-request-validator-mockmvc</module>
         <module>swagger-request-validator-spring-webmvc</module>
         <module>swagger-request-validator-spring-web-client</module>
+        <module>swagger-request-validator-ktor-client</module>
         <module>swagger-request-validator-examples</module>
     </modules>
 
