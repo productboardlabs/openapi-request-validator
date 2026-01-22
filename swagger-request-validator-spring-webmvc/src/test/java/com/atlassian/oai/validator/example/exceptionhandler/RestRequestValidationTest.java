@@ -4,8 +4,9 @@ import com.google.common.collect.ImmutableMap;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.resttestclient.TestRestTemplate;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -25,8 +26,9 @@ import static java.util.Collections.singletonList;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+@AutoConfigureTestRestTemplate
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = {"server.error.include-message=always"})
+        properties = {"spring.web.error.include-message=always"})
 public class RestRequestValidationTest {
 
     @Autowired
@@ -206,7 +208,7 @@ public class RestRequestValidationTest {
     }
 
     private void assertBadRequest(final ResponseEntity<HashMap> response, final String... expectedMessageKeys) {
-        assertThat(response.getStatusCode(), equalTo(HttpStatus.UNPROCESSABLE_ENTITY));
+        assertThat(response.getStatusCode(), equalTo(HttpStatus.UNPROCESSABLE_CONTENT));
         final List<String> messageKeys = ((List<HashMap>) response.getBody().get("messages")).stream()
                 .map(map -> (String) map.get("key"))
                 .distinct()

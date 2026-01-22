@@ -78,30 +78,30 @@ Useful for e.g. ensuring your service implementation matches its API specificati
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-mockmvc/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-mockmvc)
 
-Adapters for validating interactions using the [Spring 5+ MVC Test Framework](http://docs.spring.io/spring-framework/docs/current/spring-framework-reference/html/integration-testing.html#spring-mvc-test-framework)
+Adapters for validating interactions using the [Spring 7+ MVC Test Framework](http://docs.spring.io/spring-framework/docs/current/spring-framework-reference/html/integration-testing.html#spring-mvc-test-framework)
 against an OpenAPI / Swagger specification.
 
-Includes a [ResultMatcher](http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/test/web/servlet/ResultMatcher.html) that 
+Includes a [ResultMatcher](http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/test/web/servlet/ResultMatcher.html) that
 allows you to assert your service implementation matches its API specification.
 
-Compatible with Spring 5+.
+Compatible with Spring 7+.
 
 ### swagger-request-validator-spring-webmvc 
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-spring-webmvc/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-spring-mockmvc)
 
-Adapter for validating interactions using the [Spring 6+ Web MVC framework](https://docs.spring.io/spring/docs/current/spring-framework-reference/html/mvc.html)
+Adapter for validating interactions using the [Spring 7+ Web MVC framework](https://docs.spring.io/spring/docs/current/spring-framework-reference/html/mvc.html)
 against an OpenAPI / Swagger specification during runtime in a production environment.
 
 Useful for ensuring that the incoming requests match your service's API specification.
 
-Compatible with Spring 6+, Spring Boot 3+ and the Jakarta namespace. Requires JDK17+.
+Compatible with Spring 7+, Spring Boot 4+ and the Jakarta namespace. Requires JDK17+.
 
 ### swagger-request-validator-spring-web-client 
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-spring-web-client/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-spring-web-client)
 
-Adapter for adding OpenAPI / Swagger validation to the [Spring Web HTTP client](https://docs.spring.io/spring/docs/4.3.16.RELEASE/javadoc-api/org/springframework/http/client/package-summary.html).
+Adapter for adding OpenAPI / Swagger validation to the [Spring Web HTTP client](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/http/client/package-summary.html).
 
 Useful for ensuring that a service implementation matches its API specification.
 
