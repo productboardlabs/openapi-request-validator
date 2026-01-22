@@ -55,6 +55,7 @@
         <dependency>
             <groupId>au.com.dius.pact.consumer</groupId>
             <artifactId>junit</artifactId>
+            <version>${pact-jvm.version}</version>
             <optional>true</optional>
         </dependency>
 

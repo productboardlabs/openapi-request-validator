@@ -93,7 +93,7 @@ public class OpenApiValidationFilter extends OncePerRequestFilter {
         if (ContentTypeUtils.isFormDataContentType(servletRequest.getContentType())) {
             // do not re-wrap already wrapped requests
             return (servletRequest instanceof ContentCachingRequestWrapper) ? servletRequest
-                    : new ContentCachingRequestWrapper(servletRequest);
+                    : new ContentCachingRequestWrapper(servletRequest, 0);
         }
         return new ResettableRequestServletWrapper(servletRequest);
     }

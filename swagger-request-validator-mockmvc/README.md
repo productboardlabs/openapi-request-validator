@@ -2,7 +2,7 @@
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-mockmvc/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-mockmvc)
 
-Integrations between the Swagger Request Validator and version 5.1 onwards of [Spring MockMvc](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/test/web/servlet/MockMvc.html).
+Integrations between the Swagger Request Validator and version 7.x onwards of [Spring MockMvc](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/test/web/servlet/MockMvc.html).
 
 For integration with earlier versions of Spring MockMvc see [swagger-request-validator-mockmvc-legacy](../swagger-request-validator-mockmvc-legacy).
 

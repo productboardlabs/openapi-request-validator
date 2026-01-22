@@ -4,8 +4,9 @@ import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.resttestclient.TestRestTemplate;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -30,8 +31,9 @@ import static org.hamcrest.Matchers.containsString;
  *
  * @see RestRequestLoggingValidationConfig
  */
+@AutoConfigureTestRestTemplate
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = {"server.contextPath=/v1", "server.error.include-message=always"})
+        properties = {"server.contextPath=/v1", "spring.web.error.include-message=always"})
 public class RestRequestValidationTest {
 
     @Autowired
