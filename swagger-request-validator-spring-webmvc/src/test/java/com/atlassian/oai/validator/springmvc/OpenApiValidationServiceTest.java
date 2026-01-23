@@ -18,15 +18,11 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.resttestclient.TestRestTemplate;
-import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
+import org.springframework.test.web.servlet.client.RestTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.support.EncodedResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -72,13 +68,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-@AutoConfigureTestRestTemplate
+@AutoConfigureRestTestClient
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {"server.contextPath=/v1", "spring.web.error.include-message=always"})
 public class OpenApiValidationServiceTest {
 
     @Autowired
-    private TestRestTemplate restTemplate;
+    private RestTestClient restTestClient;
 
     private OpenApiValidationService classUnderTest;
 
@@ -421,24 +417,25 @@ public class OpenApiValidationServiceTest {
 
     @Test
     public void buildRequest_realServletRequestTest() {
-        // setup: prepare request
-        final HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-        headers.put("headerValue", Arrays.asList("header value"));
-        final HttpEntity<Object> entity = new HttpEntity<>(null, headers);
-
-        // when: send request
-        final ResponseEntity<Map> responseEntity = restTemplate
-                .exchange("/test controller/path variable?queryParam=query param", HttpMethod.GET, entity, Map.class);
+        // setup: prepare request and send
+        final Map responseBody = restTestClient
+                .get()
+                .uri("/test controller/path variable?queryParam=query param")
+                .accept(MediaType.APPLICATION_JSON)
+                .header("headerValue", "header value")
+                .exchange()
+                .expectBody(Map.class)
+                .returnResult()
+                .getResponseBody();
 
         // then: assert the values that spring has been set in the controller method
-        final Map springRequest = (Map) responseEntity.getBody().get("springRequest");
+        final Map springRequest = (Map) responseBody.get("springRequest");
         assertThat(springRequest.get("pathVariable"), is("path variable"));
         assertThat(springRequest.get("queryParam"), is("query param"));
         assertThat(springRequest.get("headerValue"), is("header value"));
 
         // and: assert the values that the validation service has been set from the servlet request
-        final Map validationRequest = (Map) responseEntity.getBody().get("validationRequest");
+        final Map validationRequest = (Map) responseBody.get("validationRequest");
         assertThat(validationRequest.get("path"), is("/test controller/path variable"));
         assertThat(validationRequest.get("queryParam"), is("query param"));
         assertThat(validationRequest.get("headerValue"), is("header value"));
