@@ -4,11 +4,10 @@ import com.google.common.collect.ImmutableMap;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.resttestclient.TestRestTemplate;
-import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
+import org.springframework.test.web.servlet.client.RestTestClient;
+import org.springframework.test.web.servlet.client.EntityExchangeResult;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -26,13 +25,13 @@ import static java.util.Collections.singletonList;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-@AutoConfigureTestRestTemplate
+@AutoConfigureRestTestClient
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {"spring.web.error.include-message=always"})
 public class RestRequestValidationTest {
 
     @Autowired
-    private TestRestTemplate restTemplate;
+    private RestTestClient restTestClient;
 
     @Test
     public void testGet_success() {
@@ -176,30 +175,43 @@ public class RestRequestValidationTest {
 
     private ResponseEntity<HashMap> restRequest(final String uri, final HttpMethod method, final Object body,
                                                 final Map<String, List<String>> additionalHeader) {
-        final HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(singletonList(MediaType.APPLICATION_JSON));
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.putAll(additionalHeader);
-        final HttpEntity<Object> entity = new HttpEntity<>(body, headers);
-        return restTemplate.exchange(uri, method, entity, HashMap.class);
+        final EntityExchangeResult<HashMap> result = restTestClient.method(method).uri(uri)
+                .accept(MediaType.APPLICATION_JSON)
+                .headers(headers -> {
+                    headers.setContentType(MediaType.APPLICATION_JSON);
+                    additionalHeader.forEach((key, values) -> headers.addAll(key, values));
+                })
+                .body(body != null ? body : "")
+                .exchange()
+                .expectBody(HashMap.class)
+                .returnResult();
+        return new ResponseEntity<>(result.getResponseBody(), result.getResponseHeaders(), result.getStatus());
     }
 
     private ResponseEntity<HashMap> requestWithInvalidResponse(final String uri, final HttpMethod method,
                                                                final Object body, final Map<String, List<String>> additionalHeader) {
-        final HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(singletonList(MediaType.APPLICATION_JSON));
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.putAll(additionalHeader);
-        headers.put("invalidResponse", singletonList("true"));
-        final HttpEntity<Object> entity = new HttpEntity<>(body, headers);
-        return restTemplate.exchange(uri, method, entity, HashMap.class);
+        final EntityExchangeResult<HashMap> result = restTestClient.method(method).uri(uri)
+                .accept(MediaType.APPLICATION_JSON)
+                .headers(headers -> {
+                    headers.setContentType(MediaType.APPLICATION_JSON);
+                    additionalHeader.forEach((key, values) -> headers.addAll(key, values));
+                    headers.add("invalidResponse", "true");
+                })
+                .body(body != null ? body : "")
+                .exchange()
+                .expectBody(HashMap.class)
+                .returnResult();
+        return new ResponseEntity<>(result.getResponseBody(), result.getResponseHeaders(), result.getStatus());
     }
 
     private ResponseEntity<HashMap> octetStreamRequest(final String uri, final HttpMethod method, final Object body) {
-        final HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(singletonList(MediaType.APPLICATION_JSON));
-        final HttpEntity<Object> entity = new HttpEntity<>(body, headers);
-        return restTemplate.exchange(uri, method, entity, HashMap.class);
+        final EntityExchangeResult<HashMap> result = ((RestTestClient.RequestBodySpec) restTestClient.method(method).uri(uri))
+                .accept(MediaType.APPLICATION_JSON)
+                .body(body)
+                .exchange()
+                .expectBody(HashMap.class)
+                .returnResult();
+        return new ResponseEntity<>(result.getResponseBody(), result.getResponseHeaders(), result.getStatus());
     }
 
     private void assertOkRequest(final ResponseEntity<HashMap> response, final Map<String, Object> body) {
