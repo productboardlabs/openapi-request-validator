@@ -1,8 +1,5 @@
 package com.atlassian.oai.validator.ktor.client
 
-import com.atlassian.oai.validator.OpenApiInteractionValidator
-import com.atlassian.oai.validator.report.SimpleValidationReportFormat
-import com.atlassian.oai.validator.report.ValidationReport
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
@@ -13,13 +10,21 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.OutgoingContent
 import io.ktor.http.headers
 import io.ktor.http.headersOf
+import io.ktor.utils.io.ByteChannel
+import io.ktor.utils.io.ByteWriteChannel
+import io.ktor.utils.io.readRemaining
+import io.ktor.utils.io.readText
+import io.ktor.utils.io.writeStringUtf8
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.assertThrows
 import kotlin.collections.emptyList
 import kotlin.test.Test
 
@@ -30,7 +35,7 @@ class OpenAPIValidationTest {
     @Test
     fun `validates successful request`() = runTest {
         val client = validatingHttpClient(stubJsonResponse(HttpStatusCode.Created, givenValidBody)) {
-            it.withInlineApiSpecification(testApiSpec)
+            validator { withInlineApiSpecification(testApiSpec) }
         }
 
         assertFailsWith {
@@ -44,7 +49,7 @@ class OpenAPIValidationTest {
     @Test
     fun `validates response status`() = runTest {
         val client = validatingHttpClient(stubJsonResponse(HttpStatusCode.InternalServerError, givenValidBody)) {
-            it.withInlineApiSpecification(testApiSpec)
+            validator { withInlineApiSpecification(testApiSpec) }
         }
 
         assertFailsWith("validation.response.status.unknown") {
@@ -58,7 +63,7 @@ class OpenAPIValidationTest {
     @Test
     fun `validates response body against schema`() = runTest {
         val client = validatingHttpClient(stubJsonResponse(HttpStatusCode.Created, itemJson("invalid"))) {
-            it.withInlineApiSpecification(testApiSpec)
+            validator { withInlineApiSpecification(testApiSpec) }
         }
 
         assertFailsWith("validation.response.body.schema.enum") {
@@ -72,7 +77,7 @@ class OpenAPIValidationTest {
     @Test
     fun `validates required request header`() = runTest {
         val client = validatingHttpClient(stubJsonResponse(body = givenValidBody, headers = givenValidHeaders)) {
-            it.withInlineApiSpecification(testApiSpec)
+            validator { withInlineApiSpecification(testApiSpec) }
         }
 
         assertFailsWith("validation.request.parameter.header.missing") {
@@ -88,7 +93,7 @@ class OpenAPIValidationTest {
     @Test
     fun `validates required query parameter`() = runTest {
         val client = validatingHttpClient(stubJsonResponse(givenValidBody, headers = givenValidHeaders)) {
-            it.withInlineApiSpecification(testApiSpec)
+            validator { withInlineApiSpecification(testApiSpec) }
         }
 
         assertFailsWith("validation.request.parameter.query.missing") {
@@ -102,7 +107,7 @@ class OpenAPIValidationTest {
     @Test
     fun `validates required response header`() = runTest {
         val client = validatingHttpClient(stubJsonResponse(body = givenValidBody)) {
-            it.withInlineApiSpecification(testApiSpec)
+            validator { withInlineApiSpecification(testApiSpec) }
         }
 
         assertFailsWith("validation.response.header.missing") {
@@ -118,7 +123,7 @@ class OpenAPIValidationTest {
     @Test
     fun `validates request content type`() = runTest {
         val client = validatingHttpClient(stubJsonResponse(HttpStatusCode.Created, givenValidBody)) {
-            it.withInlineApiSpecification(testApiSpec)
+            validator { withInlineApiSpecification(testApiSpec) }
         }
 
         assertFailsWith("validation.request.contentType.notAllowed") {
@@ -129,6 +134,61 @@ class OpenAPIValidationTest {
         }
     }
 
+    @Test
+    fun `supports validating read channel request bodies`() = runTest {
+        val client = validatingHttpClient(stubJsonResponse(HttpStatusCode.Created, givenValidBody)) {
+            validator { withInlineApiSpecification(testApiSpec) }
+        }
+
+        client.post("/items") {
+            header(HttpHeaders.ContentType, "application/json")
+            setBody(
+                ByteChannel(autoFlush = true).apply {
+                    writeStringUtf8(givenValidBody)
+                    close()
+                },
+            )
+        }
+    }
+
+    @Test
+    fun `supports validating write channel request bodies`() = runTest {
+        val client = validatingHttpClient(stubJsonResponse(HttpStatusCode.Created, givenValidBody)) {
+            validator { withInlineApiSpecification(testApiSpec) }
+        }
+
+        client.post("/items") {
+            setBody(object : OutgoingContent.WriteChannelContent() {
+                override val contentType: ContentType = ContentType.Application.Json
+                override suspend fun writeTo(channel: ByteWriteChannel) {
+                    channel.writeStringUtf8(givenValidBody)
+                    channel.flushAndClose()
+                }
+            })
+        }
+    }
+
+    @Test
+    fun `can disable supports content mapping for request bodies`() = runTest {
+        val client = validatingHttpClient(stubJsonResponse(HttpStatusCode.Created, givenValidBody)) {
+            validator { withInlineApiSpecification(testApiSpec) }
+            disableReplayableOutgoingContentMapping = true
+        }
+
+        val exception = assertThrows<IllegalStateException> {
+            client.post("/items") {
+                header(HttpHeaders.ContentType, "application/json")
+                setBody(
+                    ByteChannel(autoFlush = true).apply {
+                        writeStringUtf8(givenValidBody)
+                        close()
+                    },
+                )
+            }
+        }
+        assertEquals("OutgoingContent type is not supported: ReadChannelContent", exception.message)
+    }
+
     private fun itemJson(status: String) = """
         {
           "id": 123,
@@ -137,22 +197,12 @@ class OpenAPIValidationTest {
     """.trimIndent()
 
     private fun validatingHttpClient(
-        handler: MockRequestHandleScope.(HttpRequestData) -> HttpResponseData,
-        buildValidator: (OpenApiInteractionValidator.Builder) -> OpenApiInteractionValidator.Builder,
+        handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData,
+        configure: OpenApiValidationConfig.() -> Unit,
     ) = HttpClient(MockEngine(handler)) {
         install(OpenAPIValidation) {
-            validator(buildValidator)
+            configure()
         }
-    }
-
-    private fun assertValidationExceptionMatches(
-        expectedReport: ValidationReport,
-        exception: OpenApiValidationException,
-    ) {
-        assertEquals(
-            SimpleValidationReportFormat.getInstance().apply(expectedReport),
-            exception.message,
-        )
     }
 
     suspend fun assertFailsWith(vararg validationKeys: String, block: suspend () -> Unit) {
@@ -176,7 +226,18 @@ class OpenAPIValidationTest {
         statusCode: HttpStatusCode,
         body: String,
         headers: Headers = headersOf(),
-    ): MockRequestHandleScope.(HttpRequestData) -> HttpResponseData = { request ->
+    ): suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData = { request ->
+        suspend fun OutgoingContent.consume() {
+            when (this) {
+                is OutgoingContent.ReadChannelContent -> readFrom().readRemaining().readText()
+                is OutgoingContent.WriteChannelContent -> ByteChannel().also { writeTo(it) }.readRemaining().readText()
+                is OutgoingContent.ContentWrapper -> delegate().consume()
+                else -> Unit
+            }
+        }
+
+        request.body.consume()
+
         respond(
             content = body,
             status = statusCode,

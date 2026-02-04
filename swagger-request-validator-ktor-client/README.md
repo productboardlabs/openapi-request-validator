@@ -37,10 +37,11 @@ import io.ktor.client.engine.java.Java
 
 val client = HttpClient(Java) {
     install(OpenAPIValidation) {
-        reportFormat = SimpleValidationReportFormat.getInstance() // this is the default
-        validator { builder ->
-            builder.withApiSpecification("https://api.example.com/openapi.json")
+        validator {
+            withApiSpecification("https://api.example.com/openapi.json")
         }
+        reportFormat = SimpleValidationReportFormat.getInstance() // this is the default
+        disableReplayableOutgoingContentMapping = false
     }
 }
 ```
