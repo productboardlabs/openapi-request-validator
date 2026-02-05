@@ -24,6 +24,7 @@ import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.messageC
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.messageContainsSubstring;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.messageHasKey;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.methodIs;
+import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.missingRequestContentType;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.pathContains;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.pathContainsRegexp;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.pathContainsSubstring;
@@ -215,6 +216,16 @@ public class WhitelistRulesTest {
         assertThat(notJson, matches(response()));
         assertThat(notJson, matches(response().withResponseHeader("content-type", singletonList("multipart/form-data"))));
         assertThat(notJson, not(matches(response().withResponseHeader("content-type", singletonList("application/json")))));
+    }
+
+    @Test
+    public void testMissingRequestContentType() {
+        final WhitelistRule missingContentType = missingRequestContentType();
+        final Message notAllowedContentType = Message.create("validation.request.contentType.notAllowed", "Not allowed").build();
+
+        assertThat(missingContentType, matches(request().withMessage(notAllowedContentType)));
+        assertThat(missingContentType, not(matches(request())));
+        assertThat(missingContentType, not(matches(request().withMessage(notAllowedContentType).withRequestHeader("Content-Type", singletonList("application/json")))));
     }
 
     private Matcher<WhitelistRule> matches(final OperationForWhitelisting operation) {

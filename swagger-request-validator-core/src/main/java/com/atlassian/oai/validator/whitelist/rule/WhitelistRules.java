@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableList;
 import io.swagger.v3.oas.models.PathItem;
 
 import java.util.Collections;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
@@ -238,6 +239,22 @@ public final class WhitelistRules {
                                 .anyMatch(value -> stringContains(value, substring));
                     }
                 });
+    }
+
+    /**
+     * Before v3, requests with missing content types would not fail validation, this was fixed in v3. This whitelist
+     * rule maintains the pre-v3 logic.
+     */
+    public static WhitelistRule missingRequestContentType() {
+        return allOf(
+                messageHasKey("validation.request.contentType.notAllowed"),
+                new PrintableWhitelistRule(
+                        "Missing request Content-Type",
+                        (message, operation, request, response) -> Optional.ofNullable(request)
+                                .flatMap(Request::getContentType)
+                                .isEmpty()
+                )
+        );
     }
 
     private static boolean regexpContain(final String value, final String regexp) {
