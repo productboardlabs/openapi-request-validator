@@ -129,7 +129,8 @@ public class RequestValidator {
                 "validation.request.contentType.invalid",
                 "validation.request.contentType.notAllowed",
                 // For content types we expect the wildcards to appear in the spec and concrete types to appear on the request
-                (specType, contentType) -> contentType.withoutParameters().is(specType.withoutParameters()));
+                (specType, contentType) -> contentType.withoutParameters().is(specType.withoutParameters()),
+                false);
     }
 
     @Nonnull
@@ -141,7 +142,8 @@ public class RequestValidator {
                 "validation.request.accept.invalid",
                 "validation.request.accept.notAllowed",
                 // For accept types we expect the wildcards to appear in the accept header and concrete types to appear in the spec
-                (specType, acceptType) -> specType.withoutParameters().is(acceptType.withoutParameters()));
+                (specType, acceptType) -> specType.withoutParameters().is(acceptType.withoutParameters()),
+                true);
     }
 
     @Nonnull
@@ -150,7 +152,8 @@ public class RequestValidator {
                                                 final Collection<String> specMediaTypes,
                                                 final String invalidTypeKey,
                                                 final String notAllowedKey,
-                                                final BiPredicate<MediaType, MediaType> typeComparer) {
+                                                final BiPredicate<MediaType, MediaType> typeComparer,
+                                                final Boolean allowEmptyHeader) {
 
         // Handle the case where multiple media types are supplied in a single header
         final Collection<String> requestHeaderValues = request.getHeaderValues(headerName)
@@ -158,7 +161,7 @@ public class RequestValidator {
                 .flatMap(v -> splitAcceptHeader(v).stream())
                 .collect(toList());
 
-        if (requestHeaderValues.isEmpty()) {
+        if (allowEmptyHeader && requestHeaderValues.isEmpty()) {
             return empty();
         }
 

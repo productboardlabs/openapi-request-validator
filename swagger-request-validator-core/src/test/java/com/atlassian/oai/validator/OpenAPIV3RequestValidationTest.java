@@ -32,6 +32,7 @@ public class OpenAPIV3RequestValidationTest {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withAuthorization("Basic EncryptedUsernameAndPassword")
+                .withContentType("application/json")
                 .withBody(loadJsonRequest("newuser-valid"))
                 .build();
 
@@ -86,7 +87,7 @@ public class OpenAPIV3RequestValidationTest {
     }
 
     @Test
-    public void validate_withMissingContentType_shouldSucceed_withoutRequestBodyValidation() {
+    public void validate_withMissingContentType_shouldFail_withoutRequestBodyValidation() {
         // See https://tools.ietf.org/html/rfc7231#section-3.1.1.5
         final Request request = SimpleRequest.Builder
                 .post("/users")
@@ -94,7 +95,7 @@ public class OpenAPIV3RequestValidationTest {
                 .withBody("not-json")
                 .build();
 
-        assertPass(classUnderTest.validateRequest(request));
+        assertFail(classUnderTest.validateRequest(request), "validation.request.contentType.notAllowed");
     }
 
     @Test

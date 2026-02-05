@@ -1,3 +1,9 @@
+# 3.0 Next
+
+**Breaking Changes**
+- [https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/502](requests with no content type are now validated)
+  - use the `missingRequestContentType` whitelist rule if you want to maintain previous behavior.
+
 # 2.46.0
 * Bump dependencies:
     * `spring`: 6.1.21 -> 6.2.11

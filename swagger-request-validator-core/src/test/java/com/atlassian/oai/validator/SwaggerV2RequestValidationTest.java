@@ -488,15 +488,17 @@ public class SwaggerV2RequestValidationTest {
     }
 
     @Test
-    public void validate_withNoContentType_shouldPass() {
+    public void validate_withNoContentType_shouldFail() {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withBody(loadJsonRequest("newuser-valid"))
                 .withAuthorization("Basic EncryptedUsernameAndPassword")
                 .build();
 
-        assertPass(classUnderTest.validate(request, validUserResponse));
-        assertPass(classUnderTest.validateRequest(request));
+        assertFail(classUnderTest.validate(request, validUserResponse),
+                "validation.request.contentType.notAllowed");
+        assertFail(classUnderTest.validateRequest(request),
+                "validation.request.contentType.notAllowed");
     }
 
     @Test
@@ -557,6 +559,7 @@ public class SwaggerV2RequestValidationTest {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withBody(loadJsonRequest("newuser-valid"))
+                .withContentType("application/json")
                 .withAuthorization("Basic EncryptedUsernameAndPassword")
                 .withAccept("application/json;charset=UTF-8")
                 .build();
@@ -570,6 +573,7 @@ public class SwaggerV2RequestValidationTest {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withBody(loadJsonRequest("newuser-valid"))
+                .withContentType("application/json")
                 .withAccept("*/*")
                 .withAuthorization("Basic EncryptedUsernameAndPassword")
                 .build();
@@ -597,6 +601,7 @@ public class SwaggerV2RequestValidationTest {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withBody(loadJsonRequest("newuser-valid"))
+                .withContentType("application/json")
                 .withAuthorization("Basic EncryptedUsernameAndPassword")
                 .withAccept("text/html", "application/json;charset=UTF-8")
                 .build();
@@ -610,6 +615,7 @@ public class SwaggerV2RequestValidationTest {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withBody(loadJsonRequest("newuser-valid"))
+                .withContentType("application/json")
                 .withAuthorization("Basic EncryptedUsernameAndPassword")
                 .withAccept("text/html,application/xhtml+xml,application/xml,application/json;q=0.9,*/*;q=0.8")
                 .build();
@@ -623,6 +629,7 @@ public class SwaggerV2RequestValidationTest {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withBody(loadJsonRequest("newuser-valid"))
+                .withContentType("application/json")
                 .withAuthorization("Basic EncryptedUsernameAndPassword")
                 .withAccept("text/html, application/xhtml+xml, application/xml, application/json;q=0.9, */*;q=0.8")
                 .build();
@@ -636,6 +643,7 @@ public class SwaggerV2RequestValidationTest {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withBody(loadJsonRequest("newuser-valid"))
+                .withContentType("application/json")
                 .withAuthorization("Basic EncryptedUsernameAndPassword")
                 .withAccept("text/html ,application/xhtml+xml ,application/xml ,application/json;q=0.9 , */*;q=0.8")
                 .build();
@@ -649,6 +657,7 @@ public class SwaggerV2RequestValidationTest {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withBody(loadJsonRequest("newuser-valid"))
+                .withContentType("application/json")
                 .withHeader("Authorization", "Basic EncryptedUsernameAndPassword")
                 .withAccept("text/html ,application/xhtml+xml ,application/xml , application/json;q=0.9 , */*;q=0.8")
                 .build();
@@ -662,6 +671,7 @@ public class SwaggerV2RequestValidationTest {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withBody(loadJsonRequest("newuser-valid"))
+                .withContentType("application/json")
                 .withAccept("text/html")
                 .build();
 
@@ -676,6 +686,7 @@ public class SwaggerV2RequestValidationTest {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withBody(loadJsonRequest("newuser-valid"))
+                .withContentType("application/json")
                 .withAccept("text/html", "application/binary")
                 .build();
 
@@ -690,6 +701,7 @@ public class SwaggerV2RequestValidationTest {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withBody(loadJsonRequest("newuser-valid"))
+                .withContentType("application/json")
                 .withAccept("foop")
                 .build();
 

@@ -24,6 +24,7 @@ public class OpenAPIV3RequestContentTypeValidationTest {
         return new Object[][]{
                 {"singleContentType_validRequest", "/request/nonwildcard/single", "application/json", passes()},
                 {"singleContentType_invalidRequest", "/request/nonwildcard/single", "text/plain", fails()},
+                {"singleContentType_invalidRequest_emptyContentType", "/request/nonwildcard/single", "", fails()},
                 {"multipleContentType_validRequest", "/request/nonwildcard/multiple", "text/plain", passes()},
                 {"multipleContentType_invalidRequest", "/request/nonwildcard/multiple", "image/png", fails()},
                 {"globalWildcards_validRequest", "/request/wildcard/global", "image/jpeg", passes()},
