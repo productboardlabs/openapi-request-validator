@@ -45,6 +45,7 @@ public class ValidationControlExamplesTest {
                 validator.validate(
                         SimpleRequest.Builder
                                 .post("/test")
+                                .withContentType("application/json")
                                 .withBody(pretty(of(
                                         "msg", "Hello world"
                                 )))
