@@ -8,12 +8,12 @@ import io.swagger.v3.oas.models.media.IntegerSchema;
 import io.swagger.v3.oas.models.media.ObjectSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.Parameter;
-import org.junit.Test;
-import org.junit.experimental.runners.Enclosed;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.Collection;
+import java.util.stream.Stream;
 import java.util.function.Consumer;
 
 import static com.atlassian.oai.validator.util.ParameterGenerator.arrayParam;
@@ -29,149 +29,128 @@ import static io.swagger.v3.oas.models.parameters.Parameter.StyleEnum.SPACEDELIM
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
-@RunWith(Enclosed.class)
 public class ArrayParameterValidationTest {
 
-    @RunWith(Parameterized.class)
-    public static class ArrayAsStringTests {
+    @Nested
+    class ArrayAsStringTests {
         private final ParameterValidator classUnderTest = new ParameterValidator(
                 new SchemaValidator(new OpenAPI(), new MessageResolver()), new MessageResolver());
 
-        @Parameterized.Parameters(name = "{index}: {0}")
-        public static Object[][] params() {
+        static Stream<StringTestCase> params() {
             // CHECKSTYLE:OFF indentation
-            return new Object[][]{
-                    {"valid CSV format will pass",
+            return Stream.of(
+                    new StringTestCase("valid CSV format will pass",
                             "1,2,3", intArrayParam(SIMPLE),
-                            assertPass()},
-                    {"valid CSV format and no style specified will pass",
+                            assertPass()),
+                    new StringTestCase("valid CSV format and no style specified will pass",
                             "1,2,3", intArrayParam(null),
-                            assertPass()},
-                    {"valid pipe format will pass",
+                            assertPass()),
+                    new StringTestCase("valid pipe format will pass",
                             "1|2|3", intArrayParam(PIPEDELIMITED),
-                            assertPass()},
-                    {"valid SSV format will pass",
+                            assertPass()),
+                    new StringTestCase("valid SSV format will pass",
                             "1 2 3", intArrayParam(SPACEDELIMITED),
-                            assertPass()},
-                    {"trailing separator will pass",
+                            assertPass()),
+                    new StringTestCase("trailing separator will pass",
                             "1,2,3,", intArrayParam(SIMPLE),
-                            assertPass()},
-                    {"valid single value will pass",
+                            assertPass()),
+                    new StringTestCase("valid single value will pass",
                             "bob", stringArrayParam(SIMPLE),
-                            assertPass()},
-                    {"invalid array value will fail",
+                            assertPass()),
+                    new StringTestCase("invalid array value will fail",
                             "1,2.1,3", intArrayParam(SIMPLE),
-                            assertFail("validation.request.parameter.schema.type")},
-                    {"empty array will pass when required",
+                            assertFail("validation.request.parameter.schema.type")),
+                    new StringTestCase("empty array will pass when required",
                             "", intArrayParam(true, SIMPLE, false),
-                            assertPass()},
-                    {"empty array will fail when min length > 0",
+                            assertPass()),
+                    new StringTestCase("empty array will fail when min length > 0",
                             "", intArrayParamWithMinItems(1),
-                            assertFail("validation.request.parameter.collection.tooFewItems")},
-                    {"null array will fail when required",
+                            assertFail("validation.request.parameter.collection.tooFewItems")),
+                    new StringTestCase("null array will fail when required",
                             null, intArrayParam(true, SIMPLE, false),
-                            assertFail("validation.request.parameter.missing")},
-                    {"empty array will pass when not required",
+                            assertFail("validation.request.parameter.missing")),
+                    new StringTestCase("empty array will pass when not required",
                             "", intArrayParam(false, SIMPLE, false),
-                            assertPass()},
-                    {"null array will pass when not required",
+                            assertPass()),
+                    new StringTestCase("null array will pass when not required",
                             null, intArrayParam(false, SIMPLE, false),
-                            assertPass()},
-                    {"array with too few values will fail",
+                            assertPass()),
+                    new StringTestCase("array with too few values will fail",
                             "1,2,", intArrayParamWithMinItems(3),
-                            assertFail("validation.request.parameter.collection.tooFewItems")},
-                    {"array with too many values will fail",
+                            assertFail("validation.request.parameter.collection.tooFewItems")),
+                    new StringTestCase("array with too many values will fail",
                             "1,2,3,4,", intArrayParamWithMaxItems(3),
-                            assertFail("validation.request.parameter.collection.tooManyItems")},
-                    {"array with object schema with too many values will fail",
+                            assertFail("validation.request.parameter.collection.tooManyItems")),
+                    new StringTestCase("array with object schema with too many values will fail",
                             "{\"index\": 1},{\"index\": 2},{\"index\": 3}", objectArrayParamWithMaxItems(2),
-                            assertFail("validation.request.parameter.collection.tooManyItems")},
-                    {"array with non-unique items will fail when unique specified",
+                            assertFail("validation.request.parameter.collection.tooManyItems")),
+                    new StringTestCase("array with non-unique items will fail when unique specified",
                             "1,2,1", intArrayParamWithUniqueItems(true),
-                            assertFail("validation.request.parameter.collection.duplicateItems")},
-                    {"array with non-unique items will pass when unique not specified",
-                            "1,2,1", intArrayParamWithUniqueItems(false), assertPass()},
-                    {"array with object schema with non-unique items will fail when unique specified",
+                            assertFail("validation.request.parameter.collection.duplicateItems")),
+                    new StringTestCase("array with non-unique items will pass when unique not specified",
+                            "1,2,1", intArrayParamWithUniqueItems(false), assertPass()),
+                    new StringTestCase("array with object schema with non-unique items will fail when unique specified",
                             "{\"index\": 1},{\"index\": 2},{\"index\": 1}", objectArrayParamWithUniqueItems(true),
-                            assertFail("validation.request.parameter.collection.duplicateItems")},
-                    {"enum array will pass when all values are valid",
+                            assertFail("validation.request.parameter.collection.duplicateItems")),
+                    new StringTestCase("enum array will pass when all values are valid",
                             "a,b,b,c", enumArrayParamWithAllowedItems("a", "b", "c"),
-                            assertPass()},
-                    {"enum array will fail when values are invalid", "a,b,bob,c", enumArrayParamWithAllowedItems("a", "b", "c"),
-                            assertFail("validation.request.parameter.schema.enum")},
-            };
+                            assertPass()),
+                    new StringTestCase("enum array will fail when values are invalid", "a,b,bob,c", enumArrayParamWithAllowedItems("a", "b", "c"),
+                            assertFail("validation.request.parameter.schema.enum"))
+            );
             // CHECKSTYLE:ON indentation
         }
 
-        @Parameterized.Parameter(0)
-        public String name;
-
-        @Parameterized.Parameter(1)
-        public String value;
-
-        @Parameterized.Parameter(2)
-        public Parameter param;
-
-        @Parameterized.Parameter(3)
-        public Consumer<ValidationReport> assertion;
-
-        @Test
-        public void test() {
-            assertion.accept(classUnderTest.validate(value, param));
+        @ParameterizedTest(name = "{0}")
+        @MethodSource("params")
+        void test(final StringTestCase testCase) {
+            testCase.assertion().accept(classUnderTest.validate(testCase.value(), testCase.param()));
         }
     }
 
-    @RunWith(Parameterized.class)
-    public static class ArrayAsCollectionTests {
+    @Nested
+    class ArrayAsCollectionTests {
         private final ParameterValidator classUnderTest = new ParameterValidator(
                 new SchemaValidator(new OpenAPI(), new MessageResolver()), new MessageResolver());
 
-        @Parameterized.Parameters(name = "{index}: {0}")
-        public static Object[][] params() {
+        static Stream<CollectionTestCase> params() {
             // CHECKSTYLE:OFF indentation
-            return new Object[][]{
-                    {"should fail when not multi-value format",
+            return Stream.of(
+                    new CollectionTestCase("should fail when not multi-value format",
                             asList("1", "2", "3"), intArrayParam(SIMPLE),
-                            assertFail("validation.request.parameter.collection.invalidFormat")},
-                    {"should pass when multi-value format",
+                            assertFail("validation.request.parameter.collection.invalidFormat")),
+                    new CollectionTestCase("should pass when multi-value format",
                             asList("1", "2", "3"), intArrayParam(true, FORM, true),
-                            assertPass()},
-                    {"array with invalid value should fail",
+                            assertPass()),
+                    new CollectionTestCase("array with invalid value should fail",
                             asList("1", "2.1", "3"), intArrayParam(true, FORM, true),
-                            assertFail("validation.request.parameter.schema.type")},
-                    {"null array should fail when required",
+                            assertFail("validation.request.parameter.schema.type")),
+                    new CollectionTestCase("null array should fail when required",
                             null, intArrayParam(true, FORM, true),
-                            assertFail("validation.request.parameter.missing")},
-                    {"null array should pass when not required",
+                            assertFail("validation.request.parameter.missing")),
+                    new CollectionTestCase("null array should pass when not required",
                             null, intArrayParam(false, FORM, true),
-                            assertPass()},
-                    {"empty array should pass when required and min items not specified",
+                            assertPass()),
+                    new CollectionTestCase("empty array should pass when required and min items not specified",
                             emptyList(), intArrayParam(true, FORM, true),
-                            assertPass()},
-                    {"empty array should fail when min items > 0",
+                            assertPass()),
+                    new CollectionTestCase("empty array should fail when min items > 0",
                             emptyList(), arrayParam(true, FORM, true, 1, null, null, new IntegerSchema()),
-                            assertFail("validation.request.parameter.collection.tooFewItems")},
-            };
+                            assertFail("validation.request.parameter.collection.tooFewItems"))
+            );
             // CHECKSTYLE:ON indentation
         }
 
-        @Parameterized.Parameter(0)
-        public String name;
-
-        @Parameterized.Parameter(1)
-        public Collection<String> value;
-
-        @Parameterized.Parameter(2)
-        public Parameter param;
-
-        @Parameterized.Parameter(3)
-        public Consumer<ValidationReport> assertion;
-
-        @Test
-        public void test() {
-            assertion.accept(classUnderTest.validate(value, param));
+        @ParameterizedTest(name = "{0}")
+        @MethodSource("params")
+        void test(final CollectionTestCase testCase) {
+            testCase.assertion().accept(classUnderTest.validate(testCase.value(), testCase.param()));
         }
     }
+
+    record StringTestCase(String name, String value, Parameter param, Consumer<ValidationReport> assertion) {}
+
+    record CollectionTestCase(String name, Collection<String> value, Parameter param, Consumer<ValidationReport> assertion) {}
 
     private static Parameter intArrayParamWithMinItems(final int min) {
         return arrayParam(true, SIMPLE, false, min, null, null, new IntegerSchema());

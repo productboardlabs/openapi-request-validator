@@ -15,9 +15,9 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ValidatorTestUtil {
 
@@ -72,8 +72,11 @@ public class ValidatorTestUtil {
      */
     public static void assertPass(final ValidationReport report) {
         log.trace(JsonValidationReportFormat.getInstance().apply(report));
-        assertTrue("Expected no validation errors but found some. Enable trace logging for more details.", report.getMessages().isEmpty() ||
-                report.getMessages().stream().allMatch(m -> m.getLevel() == ValidationReport.Level.IGNORE));
+        assertTrue(
+                report.getMessages().isEmpty() ||
+                        report.getMessages().stream().allMatch(m -> m.getLevel() == ValidationReport.Level.IGNORE),
+                "Expected no validation errors but found some. Enable trace logging for more details."
+        );
     }
 
     public static Consumer<ValidationReport> assertPass() {

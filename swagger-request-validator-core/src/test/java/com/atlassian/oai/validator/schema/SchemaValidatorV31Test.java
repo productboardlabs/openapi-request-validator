@@ -5,8 +5,8 @@ import io.swagger.parser.OpenAPIParser;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.parser.core.models.ParseOptions;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFailWithoutContext;
@@ -23,7 +23,7 @@ public class SchemaValidatorV31Test {
     private OpenAPI parserWithPathRef;
     private OpenAPI parserWithMultiSchema;
 
-    @Before
+    @BeforeEach
     public void setup() {
         final ParseOptions parseOptions = new ParseOptions();
         parseOptions.setResolve(true);

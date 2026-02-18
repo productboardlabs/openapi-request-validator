@@ -9,11 +9,11 @@ import com.atlassian.oai.validator.whitelist.rule.WhitelistRules;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static com.atlassian.oai.validator.report.ValidationReport.Level.IGNORE;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
-import static org.junit.Assert.assertThat;
 
 public class ValidationErrorWhitelistingTest {
 

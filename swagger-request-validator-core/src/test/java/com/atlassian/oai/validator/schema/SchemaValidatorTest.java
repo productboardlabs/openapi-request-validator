@@ -19,8 +19,8 @@ import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.media.UUIDSchema;
 import io.swagger.v3.parser.core.models.ParseOptions;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -31,10 +31,11 @@ import static com.atlassian.oai.validator.schema.SchemaValidator.ADDITIONAL_PROP
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFailWithoutContext;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -42,12 +43,12 @@ public class SchemaValidatorTest {
 
     private final SchemaValidator classUnderTest = validator("/oai/v2/api-users.json");
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void validate_withNullValue_shouldThrowException() {
         final String value = null;
         final Schema schema = new Schema();
 
-        classUnderTest.validate(value, schema, "prefix");
+        assertThrows(NullPointerException.class, () -> classUnderTest.validate(value, schema, "prefix"));
     }
 
     @Test
@@ -280,11 +281,12 @@ public class SchemaValidatorTest {
                 "validation.prefix.schema.processingError");
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void validate_withOtherException_shouldFail() {
         final OpenAPI mockApi = mock(OpenAPI.class);
         when(mockApi.getComponents()).thenThrow(new IllegalStateException("Testing exception handling"));
-        new SchemaValidator(mockApi, new MessageResolver(), new ValidationConfiguration());
+        assertThrows(IllegalStateException.class, () -> new SchemaValidator(mockApi, new MessageResolver(),
+                new ValidationConfiguration()));
     }
 
     @Test
@@ -517,7 +519,7 @@ public class SchemaValidatorTest {
         assertPass(classUnderTest.validate(value, schema, "prefix"));
     }
 
-    @Ignore("Ignore this test because networknt does not support such discriminator validation")
+    @Disabled("Ignore this test because networknt does not support such discriminator validation")
     @Test
     public void validate_withDiscriminator_shouldFail_whenInvalid() {
 
@@ -529,7 +531,7 @@ public class SchemaValidatorTest {
                 "validation.prefix.schema.discriminator");
     }
 
-    @Ignore("Ignore this test because networknt does not support such discriminator validation")
+    @Disabled("Ignore this test because networknt does not support such discriminator validation")
     @Test
     public void validate_withDiscriminator_shouldFail_everyTime_whenInvokedMultipleTimes() {
 
