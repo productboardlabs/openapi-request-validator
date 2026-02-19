@@ -13,8 +13,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.Collection;
-import java.util.stream.Stream;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import static com.atlassian.oai.validator.util.ParameterGenerator.arrayParam;
 import static com.atlassian.oai.validator.util.ParameterGenerator.enumeratedArrayParam;
@@ -148,9 +148,19 @@ public class ArrayParameterValidationTest {
         }
     }
 
-    record StringTestCase(String name, String value, Parameter param, Consumer<ValidationReport> assertion) {}
+    record StringTestCase(String name, String value, Parameter param, Consumer<ValidationReport> assertion) {
+        @Override
+        public String toString() {
+            return name;
+        }
+    }
 
-    record CollectionTestCase(String name, Collection<String> value, Parameter param, Consumer<ValidationReport> assertion) {}
+    record CollectionTestCase(String name, Collection<String> value, Parameter param, Consumer<ValidationReport> assertion) {
+        @Override
+        public String toString() {
+            return name;
+        }
+    }
 
     private static Parameter intArrayParamWithMinItems(final int min) {
         return arrayParam(true, SIMPLE, false, min, null, null, new IntegerSchema());

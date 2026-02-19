@@ -81,7 +81,12 @@ public class ApiOperationResolverTest {
     }
 
     record TestCase(String testName, Request.Method requestMethod, String requestPath,
-                    BiConsumer<Request.Method, String> expectation) {}
+                    BiConsumer<Request.Method, String> expectation) {
+        @Override
+        public String toString() {
+            return testName;
+        }
+    }
 
     private static BiConsumer<Request.Method, String> matches(final String expectedMatch) {
         return (operation, path) -> assertApiOperationFound(path, operation, expectedMatch);

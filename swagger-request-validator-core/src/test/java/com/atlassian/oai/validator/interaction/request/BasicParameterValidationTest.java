@@ -8,8 +8,8 @@ import io.swagger.v3.oas.models.parameters.Parameter;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.util.stream.Stream;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import static com.atlassian.oai.validator.util.ParameterGenerator.boolParam;
 import static com.atlassian.oai.validator.util.ParameterGenerator.doubleParam;
@@ -62,6 +62,11 @@ public class BasicParameterValidationTest {
         testCase.assertion().accept(parameterValidator.validate(testCase.value(), testCase.param()));
     }
 
-    record TestCase(String description, String value, Parameter param, Consumer<ValidationReport> assertion) {}
+    record TestCase(String description, String value, Parameter param, Consumer<ValidationReport> assertion) {
+        @Override
+        public String toString() {
+            return description;
+        }
+    }
 
 }

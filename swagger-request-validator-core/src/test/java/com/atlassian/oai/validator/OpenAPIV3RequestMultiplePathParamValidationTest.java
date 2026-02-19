@@ -45,7 +45,12 @@ public class OpenAPIV3RequestMultiplePathParamValidationTest {
         testCase.assertion().accept(classUnderTest.validateRequest(request));
     }
 
-    record TestCase(String testName, String requestPath, Consumer<ValidationReport> assertion) {}
+    record TestCase(String testName, String requestPath, Consumer<ValidationReport> assertion) {
+        @Override
+        public String toString() {
+            return testName;
+        }
+    }
 
     private static Consumer<ValidationReport> passes() {
         return ValidatorTestUtil::assertPass;

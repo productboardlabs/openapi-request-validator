@@ -96,7 +96,7 @@ public class ContentTypeUtilsTest {
             );
         }
 
-        @ParameterizedTest(name = "isJsonContentType({0}) expects {1}")
+        @ParameterizedTest(name = "{0}")
         @MethodSource("params")
         void test(final IsJsonContentTypeTestCase testCase) {
             assertThat(isJsonContentType(testCase.contentType()), is(testCase.expectation()));
@@ -144,9 +144,24 @@ public class ContentTypeUtilsTest {
         }
     }
 
-    record FindMostSpecificMatchTestCase(String description, String candidate, Set<String> apiContentTypes, String expected) {}
+    record FindMostSpecificMatchTestCase(String description, String candidate, Set<String> apiContentTypes, String expected) {
+        @Override
+        public String toString() {
+            return description;
+        }
+    }
 
-    record MatchesAnyTestCase(String description, String candidate, Collection<String> apiContentTypes, boolean expected) {}
+    record MatchesAnyTestCase(String description, String candidate, Collection<String> apiContentTypes, boolean expected) {
+        @Override
+        public String toString() {
+            return description;
+        }
+    }
 
-    record IsJsonContentTypeTestCase(String contentType, boolean expectation) {}
+    record IsJsonContentTypeTestCase(String contentType, boolean expectation) {
+        @Override
+        public String toString() {
+            return contentType + " -> " + expectation;
+        }
+    }
 }

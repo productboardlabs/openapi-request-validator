@@ -3,6 +3,7 @@ package com.atlassian.oai.validator;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -14,7 +15,7 @@ public class OpenApiInteractionValidatorMalformedSpecTest {
         final var exception = assertThrows(IllegalArgumentException.class, () ->
             OpenApiInteractionValidator.createFor("").build()
         );
-        assert exception.getMessage().contains("A specification URL or payload is required");
+        assertThat(exception.getMessage(), containsString("A specification URL or payload is required"));
     }
 
     @Test
@@ -59,7 +60,7 @@ public class OpenApiInteractionValidatorMalformedSpecTest {
         final var exception = assertThrows(IllegalArgumentException.class, () ->
             OpenApiInteractionValidator.createForSpecificationUrl("").build()
         );
-        assert exception.getMessage().contains("A specification URL is required");
+        assertThat(exception.getMessage(), containsString("A specification URL is required"));
     }
 
     @Test
@@ -67,7 +68,7 @@ public class OpenApiInteractionValidatorMalformedSpecTest {
         final var exception = assertThrows(IllegalArgumentException.class, () ->
             OpenApiInteractionValidator.createForInlineApiSpecification("").build()
         );
-        assert exception.getMessage().contains("A specification payload is required");
+        assertThat(exception.getMessage(), containsString("A specification payload is required"));
     }
 
     @Test
