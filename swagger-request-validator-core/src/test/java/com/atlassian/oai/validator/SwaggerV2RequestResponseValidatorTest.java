@@ -5,10 +5,11 @@ import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.LevelResolver;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static com.atlassian.oai.validator.report.ValidationReport.Level.IGNORE;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * General behavioral tests for the {@link OpenApiInteractionValidator}.
@@ -21,20 +22,20 @@ public class SwaggerV2RequestResponseValidatorTest {
     private final OpenApiInteractionValidator classUnderTest =
             OpenApiInteractionValidator.createForSpecificationUrl("/oai/v2/api-users.json").build();
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void validate_withNullRequest_throwsNPE() {
         final Request request = null;
         final Response response = SimpleResponse.Builder.ok().build();
 
-        classUnderTest.validate(request, response);
+        assertThrows(NullPointerException.class, () -> classUnderTest.validate(request, response));
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void validate_withNullResponse_throwsNPE() {
         final Request request = SimpleRequest.Builder.get("/users").build();
         final Response response = null;
 
-        classUnderTest.validate(request, response);
+        assertThrows(NullPointerException.class, () -> classUnderTest.validate(request, response));
     }
 
     @Test
@@ -55,17 +56,17 @@ public class SwaggerV2RequestResponseValidatorTest {
         assertPass(classUnderTest.validate(request, response));
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public void create_withNeitherPathNorJson_throwsException() {
-        OpenApiInteractionValidator.createFor("<>").build();
+        assertThrows(Exception.class, () -> OpenApiInteractionValidator.createFor("<>").build());
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void create_withNullAuthHeaderKey_throwsNPE() throws Exception {
-        OpenApiInteractionValidator
+        assertThrows(NullPointerException.class, () -> OpenApiInteractionValidator
                 .createForSpecificationUrl("/oai/v2/api-users.json")
                 .withAuthHeaderData(null, null)
-                .build();
+                .build());
     }
 
     @Test

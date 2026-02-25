@@ -1,7 +1,7 @@
 package com.atlassian.oai.validator.report;
 
 import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
@@ -9,14 +9,15 @@ import static com.atlassian.oai.validator.report.ValidationReport.MessageContext
 import static com.atlassian.oai.validator.util.ParameterGenerator.stringParam;
 import static com.spotify.hamcrest.optional.OptionalMatchers.emptyOptional;
 import static com.spotify.hamcrest.optional.OptionalMatchers.optionalWithValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 public class MergedValidationReportTest {
@@ -63,14 +64,16 @@ public class MergedValidationReportTest {
         assertThat(messages, containsInAnyOrder(message1_1, message1_2, message2_1, message2_2, message2_3));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void getMessages_result_cantBeModified() {
         final MergedValidationReport classUnderTest = new MergedValidationReport(
                 ValidationReport.singleton(ERROR_MSG),
                 ValidationReport.singleton(NON_ERROR_MSG)
         );
 
-        classUnderTest.getMessages().add(mock(ValidationReport.Message.class));
+        assertThrows(UnsupportedOperationException.class, () ->
+                classUnderTest.getMessages().add(mock(ValidationReport.Message.class))
+        );
     }
 
     @Test

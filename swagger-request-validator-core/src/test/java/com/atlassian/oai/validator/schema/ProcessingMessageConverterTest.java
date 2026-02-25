@@ -6,39 +6,33 @@ import com.atlassian.oai.validator.report.ValidationReport.Message;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jackson.JsonLoader;
 import io.swagger.util.Json;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.skyscreamer.jsonassert.JSONAssert;
+
+import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
-@RunWith(Parameterized.class)
 public class ProcessingMessageConverterTest {
 
     private final ProcessingMessageConverter classUnderTest =
             new ProcessingMessageConverter(new MessageResolver());
 
-    @Parameterized.Parameters(name = "{index}: {0}")
-    public static Object[][] params() {
-        return new Object[][]{
-                {"Simple processing message", "simple-message"},
-                {"Processing message with a pointer", "message-with-pointer"},
-                {"Processing message with nested reports", "nested-reports"}
-        };
+    static Stream<TestData> params() {
+        return Stream.of(
+                new TestData("Simple processing message", "simple-message"),
+                new TestData("Processing message with a pointer", "message-with-pointer"),
+                new TestData("Processing message with nested reports", "nested-reports")
+        );
     }
 
-    @Parameterized.Parameter
-    public String name;
-
-    @Parameterized.Parameter(1)
-    public String testCaseFile;
-
-    @Test
-    public void run() throws Exception {
-        final TestCase testCase = load(testCaseFile);
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("params")
+    public void run(final TestData testData) throws Exception {
+        final TestCase testCase = load(testData.testCaseFile());
         final Message message = classUnderTest.toValidationReportMessage(testCase.input, null, "prefix");
 
         assertThat(message, is(notNullValue()));
@@ -52,6 +46,8 @@ public class ProcessingMessageConverterTest {
         final JsonNode testCase = JsonLoader.fromResource("/schema/messages/" + name + ".json");
         return Json.mapper().treeToValue(testCase, TestCase.class);
     }
+
+    record TestData(String name, String testCaseFile) {}
 
     private static class TestCase {
         public JsonNode input;

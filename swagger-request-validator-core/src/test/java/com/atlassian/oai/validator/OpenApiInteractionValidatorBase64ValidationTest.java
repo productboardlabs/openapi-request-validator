@@ -3,13 +3,13 @@ package com.atlassian.oai.validator;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.report.ValidationReport;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static java.util.stream.Collectors.toList;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 
 public class OpenApiInteractionValidatorBase64ValidationTest {
@@ -121,7 +121,7 @@ public class OpenApiInteractionValidatorBase64ValidationTest {
                                 .orElseGet(message::getMessage)
                 )
                 .collect(toList());
-        Assert.assertThat(list, containsInAnyOrder(
+        assertThat(list, containsInAnyOrder(
             "does not match the regex pattern a+",
             "does not match the regex pattern a+",
             "does not match the regex pattern a+",

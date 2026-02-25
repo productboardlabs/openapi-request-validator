@@ -1,7 +1,7 @@
 package com.atlassian.oai.validator.report;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -9,8 +9,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 
 public class LevelLoaderTest {
 
@@ -21,7 +21,7 @@ public class LevelLoaderTest {
     private static final String DEFAULT_LEVEL_KEY = "defaultLevel";
     private static final String SYSPROP_PREFIX = "swagger.";
 
-    @After
+    @AfterEach
     public void tearDown() {
         System.clearProperty(SYSPROP_PREFIX + ERROR_KEY);
         System.clearProperty(SYSPROP_PREFIX + WARN_KEY);

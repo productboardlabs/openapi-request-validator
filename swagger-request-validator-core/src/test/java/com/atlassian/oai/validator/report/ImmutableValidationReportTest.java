@@ -1,15 +1,16 @@
 package com.atlassian.oai.validator.report;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -19,7 +20,7 @@ public class ImmutableValidationReportTest {
 
     private ValidationReport.Message message;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         this.message = mock(ValidationReport.Message.class);
         this.classUnderTest = new ImmutableValidationReport(message);
@@ -41,9 +42,9 @@ public class ImmutableValidationReportTest {
         assertThat(messages, contains(message));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void test_getMessages_cantBeModified() {
-        classUnderTest.getMessages().add(mock(ValidationReport.Message.class));
+        assertThrows(UnsupportedOperationException.class, () -> classUnderTest.getMessages().add(mock(ValidationReport.Message.class)));
     }
 
     @Test
@@ -64,6 +65,6 @@ public class ImmutableValidationReportTest {
 
     private void assertHasErrors(final ValidationReport.Level level, final boolean expectedResult) {
         when(message.getLevel()).thenReturn(level);
-        Assert.assertEquals(expectedResult, classUnderTest.hasErrors());
+        assertEquals(expectedResult, classUnderTest.hasErrors());
     }
 }

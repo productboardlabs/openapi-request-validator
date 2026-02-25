@@ -7,8 +7,8 @@ import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import io.swagger.v3.parser.core.models.ParseOptions;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import javax.annotation.Nonnull;
 import java.util.Map;
@@ -486,7 +486,7 @@ public class OpenAPIV3RequestValidationTest {
                 "validation.request.body.schema.required");
     }
 
-    @Ignore("Ignore this test because networknt does not support oneOf with discriminator")
+    @Disabled("Ignore this test because networknt does not support oneOf with discriminator")
     @Test
     public void validate_withOneOfDiscriminators_shouldPass_whenValid() {
         final OpenApiInteractionValidator classUnderTest =
@@ -538,7 +538,7 @@ public class OpenAPIV3RequestValidationTest {
         assertFail(classUnderTest.validateRequest(request));
     }
 
-    @Ignore("Ignore this test because networknt does not support oneOf with discriminator")
+    @Disabled("Ignore this test because networknt does not support oneOf with discriminator")
     @Test
     public void validate_withOneOfDiscriminatorsWithMapping_shouldPass_whenValid() {
         final OpenApiInteractionValidator classUnderTest =

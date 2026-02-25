@@ -1,7 +1,7 @@
 package com.atlassian.oai.validator.report;
 
 import io.swagger.v3.oas.models.parameters.Parameter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.stream.Stream;
 
@@ -12,8 +12,8 @@ import static com.atlassian.oai.validator.report.ValidationReport.Level.INFO;
 import static com.atlassian.oai.validator.report.ValidationReport.Level.WARN;
 import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.REQUEST;
 import static com.atlassian.oai.validator.report.ValidationReport.MessageContext.Location.RESPONSE;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 
 public class JsonValidationReportFormatTest {
 

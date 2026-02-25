@@ -11,8 +11,8 @@ import io.swagger.v3.oas.models.media.ObjectSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import org.apache.commons.io.IOUtils;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.Map;
@@ -23,8 +23,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -84,16 +85,17 @@ public class OpenApiLoaderTest {
         assertThat(result, notNullValue());
     }
 
-    @Test(expected = OpenApiInteractionValidator.ApiLoadException.class)
+    @Test
     public void errorOnLoadingApi_missingSpecUrl() {
         // given:
         final SpecSource specSource = SpecSource.specUrl("missing.yaml");
 
         // expect:
-        classUnderTest.loadApi(specSource, emptyList(), new ParseOptions());
+        assertThrows(OpenApiInteractionValidator.ApiLoadException.class, () ->
+                classUnderTest.loadApi(specSource, emptyList(), new ParseOptions()));
     }
 
-    @Test(expected = OpenApiInteractionValidator.ApiLoadException.class)
+    @Test
     public void errorOnLoadingApi_exception() {
         // given:
         final SpecSource specSource = mock(SpecSource.class);
@@ -101,11 +103,12 @@ public class OpenApiLoaderTest {
         when(specSource.getValue()).thenReturn("spec.url");
 
         // expect:
-        classUnderTest.loadApi(specSource, emptyList(), new ParseOptions());
+        assertThrows(OpenApiInteractionValidator.ApiLoadException.class, () ->
+                classUnderTest.loadApi(specSource, emptyList(), new ParseOptions()));
     }
 
     @Test
-    @Ignore("This test fails due to overzealous regex check")
+    @Disabled("This test fails due to overzealous regex check")
     // The Schema#jsonSchema is being set with the original data when loading, which fails the regex check
     // Need to find a way to exclude or filter this too when we eventually start using the node
     public void removesBase64RegexPatternFromLoadedApi_Swagger() throws JsonProcessingException {

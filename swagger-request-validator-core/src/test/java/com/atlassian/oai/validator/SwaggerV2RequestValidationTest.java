@@ -8,8 +8,8 @@ import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import javax.annotation.Nonnull;
 import java.util.Map;
@@ -191,7 +191,7 @@ public class SwaggerV2RequestValidationTest {
     }
 
     @Test
-    @Ignore("Multipart form data not implemented yet")
+    @Disabled("Multipart form data not implemented yet")
     public void validate_withValidMultipartFormDataBody_shouldPass() {
         final String formData =
                 "--------------------------3046b8889e52e808\r\n" +
@@ -214,7 +214,7 @@ public class SwaggerV2RequestValidationTest {
     }
 
     @Test
-    @Ignore("Form data validation not yet implemented")
+    @Disabled("Form data validation not yet implemented")
     public void validate_withRequestMissingRequiredMultipartFormDataBody_shouldFail() {
         final String formData =
                 "--------------------------3046b8889e52e808\r\n" +
@@ -234,7 +234,7 @@ public class SwaggerV2RequestValidationTest {
     }
 
     @Test
-    @Ignore("Form data validation not yet implemented")
+    @Disabled("Form data validation not yet implemented")
     public void validate_multipartFormData_manyValuesForSingleKey() {
         final String formData =
                 "--------------------------3046b8889e52e808\r\n" +
@@ -263,7 +263,7 @@ public class SwaggerV2RequestValidationTest {
     }
 
     @Test
-    @Ignore("Form data validation not yet implemented")
+    @Disabled("Form data validation not yet implemented")
     public void validate_withInvalidMultipartFormDataRequestBody_shouldFail() {
         final String formData =
                 "--------------------------3046b8889e52e808\r\n" +

@@ -7,8 +7,8 @@ import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.ValidationReport;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import javax.annotation.Nonnull;
 import java.util.Map;
@@ -264,7 +264,7 @@ public class SwaggerV2ResponseValidationTest {
     }
 
     @Test
-    @Ignore("Swagger 2.0 parser currently does not read the 'required' flag on headers")
+    @Disabled("Swagger 2.0 parser currently does not read the 'required' flag on headers")
     public void validate_withResponseMissingRequiredHeader_shouldFail() {
         final Response response = SimpleResponse.Builder
                 .serverError()

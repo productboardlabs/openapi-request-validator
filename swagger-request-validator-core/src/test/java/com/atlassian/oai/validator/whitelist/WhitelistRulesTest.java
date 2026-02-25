@@ -7,7 +7,7 @@ import com.google.common.collect.ImmutableMap;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static com.atlassian.oai.validator.whitelist.OperationForWhitelisting.request;
 import static com.atlassian.oai.validator.whitelist.OperationForWhitelisting.response;
@@ -33,8 +33,8 @@ import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.response
 import static io.swagger.v3.oas.models.PathItem.HttpMethod.DELETE;
 import static io.swagger.v3.oas.models.PathItem.HttpMethod.PUT;
 import static java.util.Collections.singletonList;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertThat;
 
 public class WhitelistRulesTest {
 
