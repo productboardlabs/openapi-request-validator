@@ -1,21 +1,22 @@
 package com.atlassian.oai.validator.mockmvc;
 
 import com.atlassian.oai.validator.model.Response;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.nio.charset.StandardCharsets;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class MockMvcResponseTest {
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void mockHttpServletResponseIsRequired() throws Exception {
         final MockHttpServletResponse mockHttpServletResponse = null;
-        MockMvcResponse.of(mockHttpServletResponse);
+        assertThrows(NullPointerException.class, () -> MockMvcResponse.of(mockHttpServletResponse));
     }
 
     @Test

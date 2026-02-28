@@ -1,10 +1,10 @@
 package com.atlassian.oai.validator.restassured;
 
 import com.atlassian.oai.validator.model.Request;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -16,18 +16,18 @@ import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
 import static com.spotify.hamcrest.optional.OptionalMatchers.optionalWithValue;
 import static io.restassured.RestAssured.given;
 import static java.util.Arrays.stream;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 
 public class RestAssuredRequestTest {
 
-    @Rule
-    public WireMockRule wireMock = new WireMockRule();
+    @RegisterExtension
+    public static WireMockExtension wireMock = WireMockExtension.newInstance().build();
 
-    @Before
+    @BeforeEach
     public void setup() {
         wireMock.stubFor(any(anyUrl()).willReturn(responseDefinition().withStatus(200)));
     }
@@ -37,7 +37,7 @@ public class RestAssuredRequestTest {
 
         final CapturingFilter requestCaptor = new CapturingFilter();
         given()
-                .port(wireMock.port())
+                .port(wireMock.getPort())
                 .filter(requestCaptor)
                 .when()
                 .header("X-My-Header", "foo", "bar")
@@ -60,7 +60,7 @@ public class RestAssuredRequestTest {
 
         final CapturingFilter requestCaptor = new CapturingFilter();
         given()
-                .port(wireMock.port())
+                .port(wireMock.getPort())
                 .queryParam("queryParam", "value1")
                 .param("requestParam", "value2")
                 .filter(requestCaptor)
@@ -81,7 +81,7 @@ public class RestAssuredRequestTest {
 
         final CapturingFilter requestCaptor = new CapturingFilter();
         given()
-                .port(wireMock.port())
+                .port(wireMock.getPort())
                 .queryParam("queryParam", "value0", "value1")
                 .queryParam("queryparam", "VALUE0")
                 .param("requestParam", "value2")
@@ -102,7 +102,7 @@ public class RestAssuredRequestTest {
     public void mapsRequestBodyCorrectly_whenByteArray() throws IOException {
         final CapturingFilter requestCaptor = new CapturingFilter();
         given()
-                .port(wireMock.port())
+                .port(wireMock.getPort())
                 .contentType("multipart/form-data")
                 .filter(requestCaptor)
                 .multiPart("requestParam", "value2")
@@ -123,7 +123,7 @@ public class RestAssuredRequestTest {
     public void mapsRequestBodyCorrectly_forByteArrays_whenNoContentTypeDefined() throws IOException {
         final CapturingFilter requestCaptor = new CapturingFilter();
         given()
-                .port(wireMock.port())
+                .port(wireMock.getPort())
                 .filter(requestCaptor)
                 .body("Something 123 !@#")
                 .when()
@@ -140,7 +140,7 @@ public class RestAssuredRequestTest {
     public void mapsRequestBodyCorrectly_forInputStream() throws IOException {
         final CapturingFilter requestCaptor = new CapturingFilter();
         given()
-                .port(wireMock.port())
+                .port(wireMock.getPort())
                 .contentType("text/plain")
                 .filter(requestCaptor)
                 .body(new ByteArrayInputStream("foo".getBytes()))
@@ -163,7 +163,7 @@ public class RestAssuredRequestTest {
     private Request captureRequest(final io.restassured.http.Method method) {
         final CapturingFilter requestCaptor = new CapturingFilter();
         given()
-                .port(wireMock.port())
+                .port(wireMock.getPort())
                 .filter(requestCaptor)
                 .when()
                 .request(method, "/path")
