@@ -58,17 +58,17 @@
         <guava.version>33.5.0-jre</guava.version>
         <hamcrest.version>2.2</hamcrest.version>
         <hamcrest-optional.version>1.3.2</hamcrest-optional.version>
-        <jackson.version>2.20.0</jackson.version>
+        <jackson.version>2.21.1</jackson.version>
         <json-schema-validator.version>2.2.14</json-schema-validator.version>
         <jsr305.version>3.0.2</jsr305.version>
         <junit.version>4.13.2</junit.version>
-        <logback.version>1.2.11</logback.version>
+        <logback.version>1.2.13</logback.version>
         <mockito.version>4.11.0</mockito.version>
-        <pact-jvm.version>4.6.2</pact-jvm.version>
+        <pact-jvm.version>4.6.20</pact-jvm.version>
         <rest-assured.version>5.1.1</rest-assured.version>
         <servlet.api.version>4.0.1</servlet.api.version>
         <slf4j.version>1.7.36</slf4j.version>
-        <spring.version>6.2.11</spring.version>
+        <spring.version>6.2.17</spring.version>
         <swagger-parser.version>2.1.34</swagger-parser.version>
         <wiremock.version>2.35.2</wiremock.version>
         <jmh-core.version>1.36</jmh-core.version>
@@ -76,12 +76,11 @@
 
         <!-- Overrides for transitive dependencies to address vulnerabilities -->
         <jetty.version>9.4.58.v20250814</jetty.version>
-        <netty.version>4.1.115.Final</netty.version>
+        <netty.version>4.1.131.Final</netty.version>
         <rhino.version>1.7.15</rhino.version>
         <xerces.version>2.12.2</xerces.version>
         <org-json.version>20180130</org-json.version>
         <scala-library.version>2.13.16</scala-library.version>
-        <tika.version>1.28.5</tika.version>
         <commons-codec.version>1.19.0</commons-codec.version>
 
         <!-- Plugin versions -->
@@ -241,11 +240,6 @@
                 <version>${xerces.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.tika</groupId>
-                <artifactId>tika-core</artifactId>
-                <version>${tika.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>commons-codec</groupId>
                 <artifactId>commons-codec</artifactId>
                 <version>${commons-codec.version}</version>
@@ -365,6 +359,11 @@
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-webapp</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty.http2</groupId>
+                <artifactId>http2-server</artifactId>
                 <version>${jetty.version}</version>
             </dependency>
             <!-- -->
