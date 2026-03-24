@@ -64,7 +64,7 @@
         <junit.version>4.13.2</junit.version>
         <logback.version>1.2.11</logback.version>
         <mockito.version>4.11.0</mockito.version>
-        <pact-jvm.version>4.6.2</pact-jvm.version>
+        <pact-jvm.version>4.6.20</pact-jvm.version>
         <rest-assured.version>5.1.1</rest-assured.version>
         <servlet.api.version>4.0.1</servlet.api.version>
         <slf4j.version>1.7.36</slf4j.version>
@@ -76,12 +76,11 @@
 
         <!-- Overrides for transitive dependencies to address vulnerabilities -->
         <jetty.version>9.4.58.v20250814</jetty.version>
-        <netty.version>4.1.115.Final</netty.version>
+        <netty.version>4.1.131.Final</netty.version>
         <rhino.version>1.7.15</rhino.version>
         <xerces.version>2.12.2</xerces.version>
         <org-json.version>20180130</org-json.version>
         <scala-library.version>2.13.16</scala-library.version>
-        <tika.version>1.28.5</tika.version>
         <commons-codec.version>1.19.0</commons-codec.version>
 
         <!-- Plugin versions -->
@@ -239,11 +238,6 @@
                 <groupId>xerces</groupId>
                 <artifactId>xercesImpl</artifactId>
                 <version>${xerces.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.tika</groupId>
-                <artifactId>tika-core</artifactId>
-                <version>${tika.version}</version>
             </dependency>
             <dependency>
                 <groupId>commons-codec</groupId>
