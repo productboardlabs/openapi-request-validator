@@ -1,3 +1,11 @@
+# 2.46.1
+* Bump dependencies:
+  * `jackson`: 2.20.0 -> 2.21.1
+  * `logback`: 1.2.11 -> 1.2.13
+  * `pact`: 4.6.2 -> 4.6.20
+  * `spring`: 6.2.11 -> 6.2.17
+  * `netty`: 4.1.115.Final -> 4.1.131.Final
+
 # 2.46.0
 * Bump dependencies:
     * `spring`: 6.1.21 -> 6.2.11
