@@ -68,7 +68,7 @@
         <rest-assured.version>5.1.1</rest-assured.version>
         <servlet.api.version>4.0.1</servlet.api.version>
         <slf4j.version>1.7.36</slf4j.version>
-        <spring.version>6.2.11</spring.version>
+        <spring.version>6.2.17</spring.version>
         <swagger-parser.version>2.1.34</swagger-parser.version>
         <wiremock.version>2.35.2</wiremock.version>
         <jmh-core.version>1.36</jmh-core.version>
