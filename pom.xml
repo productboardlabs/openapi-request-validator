@@ -97,7 +97,6 @@
     <modules>
         <module>swagger-request-validator-core</module>
         <module>swagger-request-validator-pact</module>
-        <module>swagger-request-validator-wiremock</module>
         <module>swagger-request-validator-wiremock-junit5</module>
         <module>swagger-request-validator-restassured</module>
         <module>swagger-request-validator-mockmvc</module>
