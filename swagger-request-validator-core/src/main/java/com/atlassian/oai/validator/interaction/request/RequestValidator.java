@@ -9,8 +9,7 @@ import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.report.ValidationReport.MessageContext;
 import com.atlassian.oai.validator.schema.SchemaValidator;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.base.Joiner;
-import com.google.common.net.MediaType;
+import com.atlassian.oai.validator.util.MediaType;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -186,7 +185,7 @@ public class RequestValidator {
 
         return specMediaTypes
                 .stream()
-                .map(MediaType::parse)
+                .map(s -> MediaType.parse(s))
                 .filter(specType -> requestMediaTypes.stream().anyMatch(requestType -> typeComparer.test(specType, requestType)))
                 .findFirst()
                 .map(m -> empty())
@@ -463,7 +462,7 @@ public class RequestValidator {
         // the split values to get back original header value string
         final Collection<String> cookieValues = request.getHeaderValues("Cookie");
         if (!cookieValues.isEmpty()) {
-            final String cookieValuesStr = Joiner.on(",").join(cookieValues);
+            final String cookieValuesStr = String.join(",", cookieValues);
             // cookie list are separated by a semicolon and a space ('; ')
             final String[] cookieValuesArray = cookieValuesStr.split("; ");
             for (final String cookieVal : cookieValuesArray) {

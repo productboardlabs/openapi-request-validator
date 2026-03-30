@@ -1,6 +1,5 @@
 package com.atlassian.oai.validator.example.async;
 
-import com.google.common.collect.ImmutableMap;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,7 +40,7 @@ public class RestServiceController {
         if (pathVariable.equals("timeout")) {
             return new DeferredResult<>(1L);
         }
-        return defer(ImmutableMap.of("headerValue", headerValue, "pathVariable", pathVariable, "requestParam", requestParam));
+        return defer(Map.of("headerValue", headerValue, "pathVariable", pathVariable, "requestParam", requestParam));
     }
 
     @RequestMapping(method = RequestMethod.POST, produces = "application/json")
@@ -58,7 +57,9 @@ public class RestServiceController {
         if (sendInvalidResponse()) {
             return defer(Collections.emptyMap());
         }
-        return defer(new ImmutableMap.Builder<String, Object>().putAll(body).put("pathVariable", pathVariable).build());
+        final java.util.HashMap<String, Object> result = new java.util.HashMap<>(body);
+        result.put("pathVariable", pathVariable);
+        return defer(result);
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value = "/{pathVariable}", produces = "application/json")

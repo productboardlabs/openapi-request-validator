@@ -13,7 +13,7 @@ import au.com.dius.pact.core.pactbroker.PactBrokerResult;
 import au.com.dius.pact.provider.ConsumerInfo;
 import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.report.ValidationReport;
-import com.google.common.annotations.VisibleForTesting;
+import com.atlassian.oai.validator.util.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

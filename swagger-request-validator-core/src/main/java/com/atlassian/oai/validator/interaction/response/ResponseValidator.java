@@ -187,9 +187,9 @@ public class ResponseValidator {
             return ValidationReport.empty();
         }
 
-        final com.google.common.net.MediaType responseMediaType;
+        final com.atlassian.oai.validator.util.MediaType responseMediaType;
         try {
-            responseMediaType = com.google.common.net.MediaType.parse(responseContentTypeHeader.get());
+            responseMediaType = com.atlassian.oai.validator.util.MediaType.parse(responseContentTypeHeader.get());
         } catch (final IllegalArgumentException e) {
             return ValidationReport.singleton(messages.get(
                     "validation.response.contentType.invalid", responseContentTypeHeader.get())

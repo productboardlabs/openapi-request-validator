@@ -1,8 +1,7 @@
 package com.atlassian.oai.validator.model;
 
-import com.google.common.collect.ImmutableMap;
-
 import javax.annotation.Nonnull;
+
 import javax.annotation.Nullable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -104,7 +103,7 @@ public class ApiPathImpl extends NormalisedPathImpl implements ApiPath {
         if (paramNames.size() == 1
                 && template.indexOf(PARAM_START) == 0
                 && template.indexOf(PARAM_END) == template.length() - 1) {
-            return ImmutableMap.of(paramNames.get(0), of(decodePathParamValue(requestPathPart)));
+            return Map.of(paramNames.get(0), of(decodePathParamValue(requestPathPart)));
         }
 
         // Using a scanning approach rather than regexes etc. because we want to get any matches

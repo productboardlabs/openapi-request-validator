@@ -2,7 +2,7 @@ package com.atlassian.oai.validator.springmvc;
 
 import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
-import com.google.common.collect.ImmutableMap;
+
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.util.ReflectionUtils;
@@ -27,6 +27,6 @@ public class SpringMVCLevelResolverFactoryTest {
 
         // then:
         assertThat(getLevelsFromLevelResolver(resolver),
-                Matchers.equalTo(ImmutableMap.of("validation.request.path.missing", ValidationReport.Level.INFO)));
+                Matchers.equalTo(Map.of("validation.request.path.missing", ValidationReport.Level.INFO)));
     }
 }

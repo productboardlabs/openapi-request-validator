@@ -18,9 +18,8 @@ import com.atlassian.oai.validator.schema.transform.SchemaTransformer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.networknt.schema.InvalidSchemaException;
 import com.networknt.schema.JsonMetaSchema;
 import com.networknt.schema.JsonSchema;
@@ -147,19 +146,16 @@ public class SchemaValidator {
         this.transformers = transformers;
 
         if (validationConfiguration.isCacheEnabled()) {
-            this.jsonSchemaCache = CacheBuilder.newBuilder()
+            this.jsonSchemaCache = Caffeine.newBuilder()
                     .maximumSize(validationConfiguration.getMaxCacheSize())
-                    .build(new CacheLoader<JsonSchemaKey, JsonSchema>() {
-                        @Override
-                        public JsonSchema load(final JsonSchemaKey key) {
-                            final JsonNode schemaObject = readAndTransformSchemaObject(
-                                    key.schema,
-                                    key.forRequest,
-                                    key.forResponse,
-                                    definitions
-                            );
-                            return schemaFactory.getSchema(schemaObject, validatorsConfig);
-                        }
+                    .build(key -> {
+                        final JsonNode schemaObject = readAndTransformSchemaObject(
+                                key.schema,
+                                key.forRequest,
+                                key.forResponse,
+                                definitions
+                        );
+                        return schemaFactory.getSchema(schemaObject, validatorsConfig);
                     });
         } else {
             this.jsonSchemaCache = null;

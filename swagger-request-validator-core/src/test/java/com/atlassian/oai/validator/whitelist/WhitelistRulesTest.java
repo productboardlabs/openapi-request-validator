@@ -3,11 +3,13 @@ package com.atlassian.oai.validator.whitelist;
 import com.atlassian.oai.validator.report.ValidationReport.Message;
 import com.atlassian.oai.validator.whitelist.rule.WhitelistRule;
 import com.atlassian.oai.validator.whitelist.rule.WhitelistRules;
-import com.google.common.collect.ImmutableMap;
+
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 import org.junit.jupiter.api.Test;
+
+import java.util.Map;
 
 import static com.atlassian.oai.validator.whitelist.OperationForWhitelisting.request;
 import static com.atlassian.oai.validator.whitelist.OperationForWhitelisting.response;
@@ -183,13 +185,13 @@ public class WhitelistRulesTest {
     @Test
     public void testHeaderContains() {
         final WhitelistRule notJson = headerContains("Content-Type", "application/json").not();
-        assertThat(notJson, matches(request().withRequestHeaders(ImmutableMap.of())));
-        assertThat(notJson, matches(request().withRequestHeaders(ImmutableMap.of("content-type", singletonList("multipart/form-data")))));
-        assertThat(notJson, not(matches(request().withRequestHeaders(ImmutableMap.of("content-type", singletonList("application/json"))))));
+        assertThat(notJson, matches(request().withRequestHeaders(Map.of())));
+        assertThat(notJson, matches(request().withRequestHeaders(Map.of("content-type", singletonList("multipart/form-data")))));
+        assertThat(notJson, not(matches(request().withRequestHeaders(Map.of("content-type", singletonList("application/json"))))));
 
-        assertThat(notJson, matches(response().withResponseHeaders(ImmutableMap.of())));
-        assertThat(notJson, matches(response().withResponseHeaders(ImmutableMap.of("content-type", singletonList("multipart/form-data")))));
-        assertThat(notJson, not(matches(response().withResponseHeaders(ImmutableMap.of("content-type", singletonList("application/json"))))));
+        assertThat(notJson, matches(response().withResponseHeaders(Map.of())));
+        assertThat(notJson, matches(response().withResponseHeaders(Map.of("content-type", singletonList("multipart/form-data")))));
+        assertThat(notJson, not(matches(response().withResponseHeaders(Map.of("content-type", singletonList("application/json"))))));
     }
 
     @Test

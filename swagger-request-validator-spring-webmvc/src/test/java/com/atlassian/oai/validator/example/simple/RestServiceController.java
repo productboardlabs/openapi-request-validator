@@ -1,6 +1,5 @@
 package com.atlassian.oai.validator.example.simple;
 
-import com.google.common.collect.ImmutableMap;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -35,7 +34,7 @@ public class RestServiceController {
         if (sendInvalidResponse()) {
             return Collections.emptyMap();
         }
-        return ImmutableMap.of("headerValue", headerValue, "pathVariable", pathVariable, "requestParam", requestParam);
+        return Map.of("headerValue", headerValue, "pathVariable", pathVariable, "requestParam", requestParam);
     }
 
     @PostMapping(consumes = "application/json")
@@ -52,7 +51,9 @@ public class RestServiceController {
         if (sendInvalidResponse()) {
             return Collections.emptyMap();
         }
-        return new ImmutableMap.Builder<String, Object>().putAll(body).put("pathVariable", pathVariable).build();
+        final java.util.HashMap<String, Object> result = new java.util.HashMap<>(body);
+        result.put("pathVariable", pathVariable);
+        return result;
     }
 
     @DeleteMapping("/{pathVariable}")
@@ -65,6 +66,6 @@ public class RestServiceController {
 
     @PostMapping(value = "/post/blob", consumes = "application/octet-stream")
     public Map<String, Object> post(@RequestBody final byte[] blob) {
-        return ImmutableMap.of("size", blob.length);
+        return Map.of("size", blob.length);
     }
 }

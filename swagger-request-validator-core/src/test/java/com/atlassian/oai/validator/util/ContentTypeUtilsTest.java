@@ -1,7 +1,5 @@
 package com.atlassian.oai.validator.util;
 
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -9,13 +7,14 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
 import static com.atlassian.oai.validator.util.ContentTypeUtils.findMostSpecificMatch;
 import static com.atlassian.oai.validator.util.ContentTypeUtils.isJsonContentType;
-import static com.google.common.collect.ImmutableSet.of;
+import static java.util.Set.of;
 import static com.spotify.hamcrest.optional.OptionalMatchers.emptyOptional;
 import static com.spotify.hamcrest.optional.OptionalMatchers.optionalWithValue;
 import static java.util.Collections.emptySet;
@@ -122,24 +121,24 @@ public class ContentTypeUtilsTest {
 
         @Test
         public void getCharsetFromContentType_doesNotFailIfMultimapIsNull() {
-            assertThat(ContentTypeUtils.getCharsetFromContentType((Multimap<String, String>) null).isPresent(), is(false));
+            assertThat(ContentTypeUtils.getCharsetFromContentType((Map<String, List<String>>) null).isPresent(), is(false));
         }
 
         @Test
         public void getCharsetFromContentType_doesNotFailIfMultimapDoesNotContainContentType() {
-            final Multimap<String, String> headers = Multimaps.forMap(Collections.emptyMap());
+            final Map<String, List<String>> headers = Map.of();
             assertThat(ContentTypeUtils.getCharsetFromContentType(headers).isPresent(), is(false));
         }
 
         @Test
         public void getCharsetFromContentType_charsetNotResolvableForContentTypeHeader() {
-            final Multimap<String, String> headers = Multimaps.forMap(Collections.singletonMap("Content-Type", "text/plain"));
+            final Map<String, List<String>> headers = Map.of("Content-Type", List.of("text/plain"));
             assertThat(ContentTypeUtils.getCharsetFromContentType(headers).isPresent(), is(false));
         }
 
         @Test
         public void getCharsetFromContentType_determinesTheCharsetForContentTypeHeader() {
-            final Multimap<String, String> headers = Multimaps.forMap(Collections.singletonMap("Content-Type", "application/xml; charset=ISO-8859-1"));
+            final Map<String, List<String>> headers = Map.of("Content-Type", List.of("application/xml; charset=ISO-8859-1"));
             assertThat(ContentTypeUtils.getCharsetFromContentType(headers).get(), is(StandardCharsets.ISO_8859_1));
         }
     }
