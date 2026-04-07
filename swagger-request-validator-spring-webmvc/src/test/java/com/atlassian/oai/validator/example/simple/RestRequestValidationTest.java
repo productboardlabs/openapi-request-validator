@@ -1,6 +1,5 @@
 package com.atlassian.oai.validator.example.simple;
 
-import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
@@ -33,13 +32,12 @@ public class RestRequestValidationTest {
 
     @Test
     public void testGet_success() {
-        final Map<String, List<String>> additionalHeaders = ImmutableMap
-                .of("headerValue", singletonList("valueHeader"));
+        final Map<String, List<String>> additionalHeaders = Map.of("headerValue", singletonList("valueHeader"));
         final ResponseEntity<HashMap> response = restRequest("/spring/variablePath?requestParam=paramRequest",
                 HttpMethod.GET, null /* no body */, additionalHeaders);
 
         // then: 'the response contains the header, path variable and query parameter'
-        final Map<String, Object> expectedBody = ImmutableMap.of("headerValue", "valueHeader",
+        final Map<String, Object> expectedBody = Map.of("headerValue", "valueHeader",
                 "pathVariable", "variablePath",
                 "requestParam", "paramRequest");
         assertOkRequest(response, expectedBody);
@@ -58,8 +56,7 @@ public class RestRequestValidationTest {
 
     @Test
     public void testGet_invalidResponse() {
-        final Map<String, List<String>> additionalHeaders = ImmutableMap
-                .of("headerValue", singletonList("valueHeader"));
+        final Map<String, List<String>> additionalHeaders = Map.of("headerValue", singletonList("valueHeader"));
         final ResponseEntity<HashMap> response = requestWithInvalidResponse("/spring/variablePath?requestParam=paramRequest",
                 HttpMethod.GET, null /* no body */, additionalHeaders);
 
@@ -74,8 +71,8 @@ public class RestRequestValidationTest {
 
     @Test
     public void testPost_success() {
-        final Map<String, Object> sendBody = ImmutableMap.of("string", "text",
-                "integer", 1022, "object", ImmutableMap.of("boolean", true));
+        final Map<String, Object> sendBody = Map.of("string", "text",
+                "integer", 1022, "object", Map.of("boolean", true));
         final ResponseEntity<HashMap> response = restRequest(
                 "/spring", HttpMethod.POST, sendBody);
 
@@ -85,7 +82,7 @@ public class RestRequestValidationTest {
 
     @Test
     public void testPost_invalidRequest() {
-        final Map<String, Object> sendBody = ImmutableMap.of("integer", "noInteger");
+        final Map<String, Object> sendBody = Map.of("integer", "noInteger");
         final ResponseEntity<HashMap> response = restRequest("/spring",
                 HttpMethod.POST, sendBody);
 
@@ -100,8 +97,8 @@ public class RestRequestValidationTest {
 
     @Test
     public void testPost_invalidResponse() {
-        final Map<String, Object> sendBody = ImmutableMap.of("string", "text",
-                "integer", 1022, "object", ImmutableMap.of("boolean", true));
+        final Map<String, Object> sendBody = Map.of("string", "text",
+                "integer", 1022, "object", Map.of("boolean", true));
         final ResponseEntity<HashMap> response = requestWithInvalidResponse(
                 "/spring", HttpMethod.POST, sendBody, Collections.emptyMap());
 
@@ -120,19 +117,19 @@ public class RestRequestValidationTest {
                 "/spring/post/blob", HttpMethod.POST, "bytes".getBytes(StandardCharsets.UTF_8));
 
         // then: 'the response contains the size of the send blob'
-        final Map<String, Object> expectedBody = ImmutableMap.of("size", 5);
+        final Map<String, Object> expectedBody = Map.of("size", 5);
         assertOkRequest(response, expectedBody);
     }
 
     @Test
     public void testPut_success() {
-        final Map<String, Object> sendBody = ImmutableMap.of("putValue", "valuePut");
+        final Map<String, Object> sendBody = Map.of("putValue", "valuePut");
         final ResponseEntity<HashMap> response = restRequest("/spring/variablePath",
                 HttpMethod.PUT, sendBody);
 
         // then: 'the response contains a copy of the request including the path parameter'
-        final Map<String, Object> expectedBody = ImmutableMap.<String, Object>builder()
-                .putAll(sendBody).put("pathVariable", "variablePath").build();
+        final Map<String, Object> expectedBody = new java.util.HashMap<>(sendBody);
+        ((java.util.HashMap<String, Object>) expectedBody).put("pathVariable", "variablePath");
         assertOkRequest(response, expectedBody);
     }
 
@@ -146,7 +143,7 @@ public class RestRequestValidationTest {
 
     @Test
     public void testPut_invalidResponse() {
-        final Map<String, Object> sendBody = ImmutableMap.of("putValue", "valuePut");
+        final Map<String, Object> sendBody = Map.of("putValue", "valuePut");
         final ResponseEntity<HashMap> response = requestWithInvalidResponse("/spring/variablePath",
                 HttpMethod.PUT, sendBody, Collections.emptyMap());
 
@@ -189,7 +186,7 @@ public class RestRequestValidationTest {
     }
 
     private ResponseEntity<HashMap> restRequest(final String uri, final HttpMethod method, final Object body) {
-        return restRequest(uri, method, body, ImmutableMap.of());
+        return restRequest(uri, method, body, Map.of());
     }
 
     private ResponseEntity<HashMap> restRequest(final String uri, final HttpMethod method, final Object body,

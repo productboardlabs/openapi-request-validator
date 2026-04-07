@@ -7,9 +7,7 @@ import com.atlassian.oai.validator.model.ApiPathImpl;
 import com.atlassian.oai.validator.model.NormalisedPath;
 import com.atlassian.oai.validator.model.NormalisedPathImpl;
 import com.atlassian.oai.validator.model.Request;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
+import com.atlassian.oai.validator.util.VisibleForTesting;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
@@ -21,6 +19,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -45,7 +45,7 @@ public class ApiOperationResolver {
     private final String apiPrefix;
 
     private final Map<Integer, List<ApiPath>> apiPathsGroupedByNumberOfParts;
-    private final Table<String, PathItem.HttpMethod, Operation> operations;
+    private final Map<String, Map<PathItem.HttpMethod, Operation>> operations;
 
     /**
      * A utility for finding the best fitting API path.
@@ -67,10 +67,11 @@ public class ApiOperationResolver {
                 .collect(groupingBy(NormalisedPath::numberOfParts));
 
         // create a operation mapping for the API path and HTTP method
-        operations = HashBasedTable.create();
+        operations = new HashMap<>();
         apiPaths.forEach((pathKey, apiPath) ->
                 apiPath.readOperationsMap().forEach((httpMethod, operation) ->
-                        operations.put(pathKey, httpMethod, operation))
+                        operations.computeIfAbsent(pathKey, k -> new EnumMap<>(PathItem.HttpMethod.class))
+                                .put(httpMethod, operation))
         );
     }
 
@@ -100,7 +101,7 @@ public class ApiOperationResolver {
         // Try to find the operation which fits the HTTP method,
         final PathItem.HttpMethod httpMethod = PathItem.HttpMethod.valueOf(method.name());
         final List<ApiPath> matchingPathAndMethod = matchingPaths.stream()
-                .filter(apiPath -> operations.contains(apiPath.original(), httpMethod))
+                .filter(apiPath -> operations.containsKey(apiPath.original()) && operations.get(apiPath.original()).containsKey(httpMethod))
                 .collect(toList());
 
         if (matchingPathAndMethod.isEmpty()) {
@@ -113,7 +114,7 @@ public class ApiOperationResolver {
                 .findFirst();
 
         if (exactMatch.isPresent()) {
-            return new ApiOperationMatch(new ApiOperation(exactMatch.get(), requestPath, httpMethod, operations.get(exactMatch.get().original(), httpMethod)));
+            return new ApiOperationMatch(new ApiOperation(exactMatch.get(), requestPath, httpMethod, operations.get(exactMatch.get().original()).get(httpMethod)));
         }
 
         // Finally, use the specificity score to find the most likely match
@@ -121,7 +122,7 @@ public class ApiOperationResolver {
                 .max(comparingInt(ApiOperationResolver::specificityScore));
 
         return scoredMatch
-                .map(match -> new ApiOperationMatch(new ApiOperation(match, requestPath, httpMethod, operations.get(match.original(), httpMethod))))
+                .map(match -> new ApiOperationMatch(new ApiOperation(match, requestPath, httpMethod, operations.get(match.original()).get(httpMethod))))
                 .orElse(ApiOperationMatch.NOT_ALLOWED_OPERATION);
     }
 

@@ -1,6 +1,5 @@
 package com.atlassian.oai.validator.example.async;
 
-import com.google.common.collect.ImmutableMap;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -13,7 +12,7 @@ public class TimeoutExceptionHandler {
     @ExceptionHandler(AsyncRequestTimeoutException.class)
     public ResponseEntity<Map<String, String>> handle() {
         return ResponseEntity.ok(
-                ImmutableMap.of("headerValue", "timeout", "pathVariable", "timeout", "requestParam", "timeout")
+                Map.of("headerValue", "timeout", "pathVariable", "timeout", "requestParam", "timeout")
         );
     }
 }

@@ -1,8 +1,24 @@
 # 3.0 Next
 
 **Breaking Changes**
-- [https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/502](requests with no content type are now validated)
+- [Requests with no content type are now validated](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/502)
   - use the `missingRequestContentType` whitelist rule if you want to maintain previous behavior.
+
+**Dependency Changes**
+- Removed Guava (`com.google.guava:guava`) as a runtime dependency from `swagger-request-validator-core`.
+  All Guava usages have been replaced with JDK alternatives and Caffeine (`com.github.ben-manes.caffeine:caffeine`).
+  - Schema validation cache now uses Caffeine's `LoadingCache` (Guava `CacheBuilder` removed)
+  - Collection utilities replaced with JDK `TreeMap`, `LinkedHashMap`, `ArrayList`, `Map.of()`, `List.of()`
+  - `com.google.common.net.MediaType` replaced with a new internal `MediaType` utility class
+  - `@com.google.common.annotations.VisibleForTesting` replaced with a project-local `@VisibleForTesting` annotation
+    (`com.atlassian.oai.validator.util.VisibleForTesting`)
+- Added Caffeine `3.1.8` as a new compile-scope dependency in `swagger-request-validator-core`
+
+**Migration Notes**
+- If you used `@com.google.common.annotations.VisibleForTesting` from Guava transitively, replace it with
+  `@com.atlassian.oai.validator.util.VisibleForTesting` or remove it.
+- Public API signatures that previously accepted `Multimap<String, Collection<String>>` now accept
+  `Map<String, Collection<String>>` (pure JDK types).
 
 # 2.46.0
 * Bump dependencies:

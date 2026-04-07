@@ -5,7 +5,7 @@ import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.whitelist.rule.WhitelistRule;
-import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
@@ -32,11 +32,9 @@ public final class ValidationErrorsWhitelist {
      * @return A new instance with the added rule.
      */
     public ValidationErrorsWhitelist withRule(final String title, final WhitelistRule rule) {
-        return new ValidationErrorsWhitelist(
-                ImmutableList.<NamedWhitelistRule>builder()
-                        .addAll(rules)
-                        .add(new NamedWhitelistRule(title, rule))
-                        .build());
+        final List<NamedWhitelistRule> newRules = new ArrayList<>(rules);
+        newRules.add(new NamedWhitelistRule(title, rule));
+        return new ValidationErrorsWhitelist(newRules);
     }
 
     /**
@@ -58,8 +56,8 @@ public final class ValidationErrorsWhitelist {
                 .findFirst();
     }
 
-    private ValidationErrorsWhitelist(final Iterable<NamedWhitelistRule> rules) {
-        this.rules = ImmutableList.copyOf(rules);
+    private ValidationErrorsWhitelist(final List<NamedWhitelistRule> rules) {
+        this.rules = List.copyOf(rules);
     }
 
     @Override

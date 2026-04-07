@@ -3,20 +3,16 @@ package com.atlassian.oai.validator.util;
 import com.atlassian.oai.validator.model.Headers;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Multimap;
-import com.google.common.net.MediaType;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import static com.google.common.net.MediaType.FORM_DATA;
-import static com.google.common.net.MediaType.JSON_UTF_8;
 import static java.util.Optional.empty;
 
 public class ContentTypeUtils {
@@ -46,7 +42,7 @@ public class ContentTypeUtils {
     public static boolean isJsonContentType(@Nullable final String contentType) {
         final Optional<MediaType> optionalMediaType = parseContentType(contentType);
         return optionalMediaType.map(mediaType -> {
-            if (mediaType.withoutParameters().is(JSON_UTF_8.withoutParameters())) {
+            if (mediaType.withoutParameters().is(MediaType.JSON_UTF_8.withoutParameters())) {
                 return true;
             }
             if (mediaType.type().equals("application")) {
@@ -78,7 +74,7 @@ public class ContentTypeUtils {
      * @return Whether the provided content-type is a form data type.
      */
     public static boolean isFormDataContentType(@Nullable final String contentType) {
-        return matches(contentType, FORM_DATA);
+        return matches(contentType, MediaType.FORM_DATA);
     }
 
     /**
@@ -253,7 +249,7 @@ public class ContentTypeUtils {
      */
     public static boolean matchesAny(final MediaType candidate, final Collection<String> apiContentTypes) {
         return apiContentTypes.stream()
-                .map(com.google.common.net.MediaType::parse)
+                .map(MediaType::parse)
                 .anyMatch(apiMediaType -> candidate.withoutParameters().is(apiMediaType.withoutParameters()));
     }
 
@@ -268,7 +264,7 @@ public class ContentTypeUtils {
      */
     public static Optional<Charset> getCharsetFromContentType(@Nullable final String contentType) {
         return parseContentType(contentType)
-                .flatMap(m -> Optional.ofNullable(m.charset().orNull()));
+                .flatMap(m -> m.charset());
     }
 
     /**
@@ -281,10 +277,10 @@ public class ContentTypeUtils {
      *
      * @return The charset of the content-type, or {@code empty} if none is defined.
      */
-    public static Optional<Charset> getCharsetFromContentType(@Nullable final Multimap<String, String> headers) {
+    public static Optional<Charset> getCharsetFromContentType(@Nullable final Map<String, List<String>> headers) {
         if (headers != null) {
-            // Multimap#get(String) always returns at least an empty collection even if the key is not available
-            final String contentType = Iterables.getFirst(headers.get(Headers.CONTENT_TYPE), null);
+            final List<String> values = headers.get(Headers.CONTENT_TYPE);
+            final String contentType = (values != null && !values.isEmpty()) ? values.get(0) : null;
             return getCharsetFromContentType(contentType);
         }
         return Optional.empty();
@@ -326,7 +322,13 @@ public class ContentTypeUtils {
         }
 
         boolean matches(final String contentType) {
-            return MediaType.parse(contentType).withoutParameters().is(mediaType.withoutParameters());
+            final MediaType candidate = MediaType.parse(contentType);
+            // If the API content type has parameters, do a full match (including params, case-insensitive)
+            if (mediaType.parameterCount() > 0) {
+                return candidate.is(mediaType);
+            }
+            // Otherwise, match without parameters (wildcard/range matching)
+            return candidate.withoutParameters().is(mediaType.withoutParameters());
         }
 
         public String getContentType() {
@@ -341,7 +343,18 @@ public class ContentTypeUtils {
     private static class ParsedContentTypeComparator implements Comparator<ParsedContentType> {
         @Override
         public int compare(final ParsedContentType o1, final ParsedContentType o2) {
-            return countWildcards(o1.getMediaType()) - countWildcards(o2.getMediaType());
+            // Fewer wildcards = more specific = sort first
+            final int wildcardCmp = countWildcards(o1.getMediaType()) - countWildcards(o2.getMediaType());
+            if (wildcardCmp != 0) {
+                return wildcardCmp;
+            }
+            // More parameters = more specific = sort first
+            final int paramCmp = o2.getMediaType().parameterCount() - o1.getMediaType().parameterCount();
+            if (paramCmp != 0) {
+                return paramCmp;
+            }
+            // Stable tie-break: alphabetical by content-type string
+            return o1.getContentType().compareTo(o2.getContentType());
         }
 
         private int countWildcards(final MediaType mt) {

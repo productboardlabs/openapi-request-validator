@@ -5,8 +5,8 @@ import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableList;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+
 import io.swagger.parser.OpenAPIParser;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.ArraySchema;
@@ -78,7 +78,7 @@ public class SchemaValidatorTest {
 
     @Test
     public void validate_withNullSchema_shouldValidateAnyJson() {
-        final List<String> values = ImmutableList.of("1", "\"string\"", "{\"prop\":3}", "[1,2,3]", "null");
+        final List<String> values = List.of("1", "\"string\"", "{\"prop\":3}", "[1,2,3]", "null");
 
         values.forEach(v -> assertPass(classUnderTest.validate(v, null, "prefix")));
     }
@@ -931,7 +931,7 @@ public class SchemaValidatorTest {
         assertPass(tester.validate(value, schema, "prefix"));
         final LoadingCache jsonSchemaCache1 = (LoadingCache) jsonSchemaField.get(tester);
         assertNotNull(jsonSchemaCache1);
-        assertEquals(jsonSchemaCache1.size(), 1);
+        assertEquals(jsonSchemaCache1.estimatedSize(), 1);
 
         final String value1 = "{\"foo\":\"bar\"}";
         final Schema schema1 = new ObjectSchema()
@@ -940,7 +940,7 @@ public class SchemaValidatorTest {
         assertPass(tester.validate(value1, schema1, "prefix"));
         final LoadingCache jsonSchemaCache2 = (LoadingCache) jsonSchemaField.get(tester);
         assertNotNull(jsonSchemaCache2);
-        assertEquals(jsonSchemaCache2.size(), 2);
+        assertEquals(jsonSchemaCache2.estimatedSize(), 2);
     }
 
     private Map<String, Schema> getSchemasFrom(final String api) {

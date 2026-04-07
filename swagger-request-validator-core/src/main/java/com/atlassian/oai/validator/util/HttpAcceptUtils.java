@@ -1,7 +1,5 @@
 package com.atlassian.oai.validator.util;
 
-import com.google.common.collect.ImmutableList;
-
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +23,7 @@ public final class HttpAcceptUtils {
      */
     public static List<String> splitAcceptHeader(@Nullable final String acceptHeaderValue) {
         if (isBlank(acceptHeaderValue)) {
-            return ImmutableList.of();
+            return List.of();
         }
         final List<String> result = new ArrayList<>();
         StringBuilder currentValue = new StringBuilder();

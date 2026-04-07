@@ -4,9 +4,9 @@ import com.atlassian.oai.validator.model.ApiOperation;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.report.ValidationReport.Message;
-import com.google.common.collect.ImmutableList;
 
 import javax.annotation.Nullable;
+import java.util.List;
 
 /**
  * A rule for matching validation messages. Matched errors are whitelisted (ignored) and don't fail validation.
@@ -19,14 +19,14 @@ public interface WhitelistRule {
      * Creates a new rule that matches only if this and that matches.
      */
     default WhitelistRule and(final WhitelistRule rule) {
-        return new AndWhitelistRule(ImmutableList.of(this, rule));
+        return new AndWhitelistRule(List.of(this, rule));
     }
 
     /**
      * Creates a new rule that matches if this or that matches.
      */
     default WhitelistRule or(final WhitelistRule rule) {
-        return new OrWhitelistRule(ImmutableList.of(this, rule));
+        return new OrWhitelistRule(List.of(this, rule));
     }
 
     /**

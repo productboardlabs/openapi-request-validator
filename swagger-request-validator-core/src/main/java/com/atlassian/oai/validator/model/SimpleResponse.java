@@ -1,8 +1,6 @@
 package com.atlassian.oai.validator.model;
 
 import com.atlassian.oai.validator.util.ContentTypeUtils;
-import com.google.common.collect.Multimap;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.InputStream;
@@ -11,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.Optional;
 
 import static com.atlassian.oai.validator.model.Headers.CONTENT_TYPE;
@@ -64,7 +63,7 @@ public class SimpleResponse implements Response {
     public static class Builder {
 
         private final int status;
-        private final Multimap<String, String> headers;
+        private final Map<String, List<String>> headers;
         private Body body;
         private String bodyAsStringFallback;
 
@@ -146,7 +145,7 @@ public class SimpleResponse implements Response {
          */
         public Builder(final int status) {
             this.status = status;
-            headers = SimpleRequest.Builder.multimapBuilder(false /* header are always case insensitive */);
+            headers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         }
 
         /**
@@ -265,7 +264,7 @@ public class SimpleResponse implements Response {
                         .orElse(StandardCharsets.UTF_8);
                 this.body = new StringBody(bodyAsStringFallback, charset);
             }
-            return new SimpleResponse(status, headers.asMap(), body);
+            return new SimpleResponse(status, java.util.Collections.unmodifiableMap(headers), body);
         }
     }
 }

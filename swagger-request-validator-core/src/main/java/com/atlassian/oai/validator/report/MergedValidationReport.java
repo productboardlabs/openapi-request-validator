@@ -1,6 +1,6 @@
 package com.atlassian.oai.validator.report;
 
-import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -15,17 +15,17 @@ import static java.util.stream.Collectors.toList;
  */
 public class MergedValidationReport implements ValidationReport {
 
-    private final ImmutableList<ValidationReport> reports;
+    private final List<ValidationReport> reports;
 
     MergedValidationReport(final ValidationReport validationReport1, final ValidationReport validationReport2) {
-        final ImmutableList.Builder<ValidationReport> reportsBuilder = new ImmutableList.Builder<>();
+        final List<ValidationReport> reportsBuilder = new ArrayList<>();
         collect(reportsBuilder, validationReport1);
         collect(reportsBuilder, validationReport2);
-        reports = reportsBuilder.build();
+        reports = List.copyOf(reportsBuilder);
     }
 
     MergedValidationReport(final List<ValidationReport> validationReports) {
-        reports = ImmutableList.copyOf(validationReports);
+        reports = List.copyOf(validationReports);
     }
 
     @Nonnull
@@ -44,11 +44,11 @@ public class MergedValidationReport implements ValidationReport {
         return new MergedValidationReport(reports.stream().map(r -> r.withAdditionalContext(context)).collect(toList()));
     }
 
-    private ImmutableList<ValidationReport> getReports() {
+    private List<ValidationReport> getReports() {
         return reports;
     }
 
-    private static void collect(final ImmutableList.Builder<ValidationReport> reportBuilder, final ValidationReport report) {
+    private static void collect(final List<ValidationReport> reportBuilder, final ValidationReport report) {
         if (report instanceof EmptyValidationReport) {
             return;
         }

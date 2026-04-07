@@ -9,8 +9,7 @@ import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.ValidationReport;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterators;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
@@ -88,7 +87,7 @@ public class OpenApiValidationServiceTest {
     }
 
     private static Enumeration<String> asEnumeration(final String... values) {
-        return Iterators.asEnumeration(Arrays.asList(values).iterator());
+        return Collections.enumeration(Arrays.asList(values));
     }
 
     @BeforeEach
@@ -300,7 +299,7 @@ public class OpenApiValidationServiceTest {
         // then:
         assertThat(result.getResponseBody().isPresent(), equalTo(true));
         assertThat(result.getStatus(), is(404));
-        assertThat(getHeadersFromResponse(result), equalTo(ImmutableMap.of(
+        assertThat(getHeadersFromResponse(result), equalTo(Map.of(
                 "header 1", asList("header value 1", "header value 2"),
                 "header 2", asList("header value 3"),
                 "Content-Type", asList("application/json")
@@ -513,22 +512,18 @@ public class OpenApiValidationServiceTest {
                     new UrlPathHelper());
             final ServletInputStream inputStream = servletRequest.getInputStream();
             final Request request = openApiValidationService.buildRequest(servletRequest, () -> new InputStreamBody(inputStream));
-            return new ImmutableMap.Builder()
-                    .put("springRequest",
-                            new ImmutableMap.Builder()
-                                    .put("pathVariable", pathVariable)
-                                    .put("queryParam", queryParam)
-                                    .put("headerValue", headerValue)
-                                    .build()
+            return Map.of(
+                    "springRequest", Map.of(
+                            "pathVariable", pathVariable,
+                            "queryParam", queryParam,
+                            "headerValue", headerValue
+                    ),
+                    "validationRequest", Map.of(
+                            "path", request.getPath(),
+                            "queryParam", request.getQueryParameterValues("queryParam").iterator().next(),
+                            "headerValue", request.getHeaderValue("headerValue")
                     )
-                    .put("validationRequest",
-                            new ImmutableMap.Builder()
-                                    .put("path", request.getPath())
-                                    .put("queryParam", request.getQueryParameterValues("queryParam").iterator().next())
-                                    .put("headerValue", request.getHeaderValue("headerValue"))
-                                    .build()
-                    )
-                    .build();
+            );
         }
     }
 }

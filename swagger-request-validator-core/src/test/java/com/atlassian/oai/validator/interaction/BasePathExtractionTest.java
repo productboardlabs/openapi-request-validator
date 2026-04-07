@@ -1,6 +1,5 @@
 package com.atlassian.oai.validator.interaction;
 
-import com.google.common.collect.ImmutableList;
 import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.servers.ServerVariable;
 import io.swagger.v3.oas.models.servers.ServerVariables;
@@ -26,7 +25,7 @@ public class BasePathExtractionTest {
 
     @Test
     public void returnsBasePathOfServer_whenSingleServer() {
-        final List<Server> servers = ImmutableList.of(
+        final List<Server> servers = List.of(
                 new Server().url("https://localhost:8080/base/path/1")
         );
 
@@ -35,7 +34,7 @@ public class BasePathExtractionTest {
 
     @Test
     public void returnsBasePathOfFirstServer_whenMultipleServers() {
-        final List<Server> servers = ImmutableList.of(
+        final List<Server> servers = List.of(
                 new Server().url("http://example.com/base/path/1"),
                 new Server().url("https://localhost:8080/base/path/2"),
                 new Server().url("http://example.com/base/path/3")
@@ -46,7 +45,7 @@ public class BasePathExtractionTest {
 
     @Test
     public void substitutesPathVariables_whenPresent() {
-        final List<Server> servers = ImmutableList.of(
+        final List<Server> servers = List.of(
                 new Server()
                         .url("https://localhost:8080/api/{scope}/{version}")
                         .variables(
@@ -60,7 +59,7 @@ public class BasePathExtractionTest {
 
     @Test
     public void substitutesHostVariables_whenPresent() {
-        final List<Server> servers = ImmutableList.of(
+        final List<Server> servers = List.of(
                 new Server()
                         .url("https://localhost{region}:{port}/api/{scope}/{version}")
                         .variables(
@@ -76,7 +75,7 @@ public class BasePathExtractionTest {
 
     @Test
     public void substitutesVariables_whenEmptyString() {
-        final List<Server> servers = ImmutableList.of(
+        final List<Server> servers = List.of(
                 new Server()
                         .url("https://{username}.server{region}:{port}/api/{scope}/{version}")
                         .variables(
@@ -95,7 +94,7 @@ public class BasePathExtractionTest {
     public void substitutesVariables_whenNullDefault() {
         // This scenario can occur when the OAI parser fails to set an empty string
         // for a default value and instead returns a null
-        final List<Server> servers = ImmutableList.of(
+        final List<Server> servers = List.of(
                 new Server()
                         .url("https://server{region}:200/api")
                         .variables(
@@ -108,7 +107,7 @@ public class BasePathExtractionTest {
 
     @Test
     public void returnsUrlOfServer_whenOnlyUrlPathIsDefined() {
-        final List<Server> servers = ImmutableList.of(
+        final List<Server> servers = List.of(
                 new Server().url("/base/path/1")
         );
 
@@ -117,7 +116,7 @@ public class BasePathExtractionTest {
 
     @Test
     public void returnsUrlOfServer_whenNotAValidUrl() {
-        final List<Server> servers = ImmutableList.of(
+        final List<Server> servers = List.of(
                 new Server().url("{notaurl}")
         );
 
@@ -126,7 +125,7 @@ public class BasePathExtractionTest {
 
     @Test
     public void returnsDefault_whenServerUrlNull() {
-        final List<Server> servers = ImmutableList.of(
+        final List<Server> servers = List.of(
                 new Server().url(null)
         );
 
