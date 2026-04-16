@@ -2,9 +2,9 @@ package com.atlassian.oai.validator.pact;
 
 import au.com.dius.pact.core.model.BrokerUrlSource;
 import com.atlassian.oai.validator.OpenApiInteractionValidator;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import org.junit.Rule;
-import org.junit.Test;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.net.URL;
 import java.util.stream.Collectors;
@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.everyItem;
@@ -21,10 +21,12 @@ import static org.hamcrest.Matchers.startsWith;
 
 public class PactProviderValidatorTest {
 
-    @Rule
-    public final WireMockRule wireMock = new WireMockRule(options()
-            .usingFilesUnderClasspath("wiremock")
-            .dynamicPort());
+    @RegisterExtension
+    static final WireMockExtension WIRE_MOCK = WireMockExtension.newInstance()
+            .options(wireMockConfig()
+                    .usingFilesUnderClasspath("wiremock")
+                    .dynamicPort())
+            .build();
 
     @Test
     public void validate_withNoConsumers_returnsEmptyMap() {
@@ -122,13 +124,13 @@ public class PactProviderValidatorTest {
         final PactProviderValidator validator =
                 PactProviderValidator
                         .createFor("/oai/api-users.json")
-                        .withPactsFrom("http://localhost:" + wireMock.port(), "Provider")
+                        .withPactsFrom("http://localhost:" + WIRE_MOCK.getRuntimeInfo().getHttpPort(), "Provider")
                         .build();
 
         assertThat(validator.getConsumers().size(), is(2));
         assertThat(validator.getConsumers().stream()
                 .map(consumerInfo -> ((BrokerUrlSource) (consumerInfo.getPactSource())).getUrl())
-                .collect(Collectors.toList()), everyItem(startsWith("http://localhost:" + wireMock.port())));
+                .collect(Collectors.toList()), everyItem(startsWith("http://localhost:" + WIRE_MOCK.getRuntimeInfo().getHttpPort())));
     }
 
     @Test
@@ -139,7 +141,7 @@ public class PactProviderValidatorTest {
         final PactProviderValidator validator =
                 PactProviderValidator
                         .createFor("/oai/api-users.json")
-                        .withPactsFrom("http://localhost:" + wireMock.port(), "Provider")
+                        .withPactsFrom("http://localhost:" + WIRE_MOCK.getRuntimeInfo().getHttpPort(), "Provider")
                         .build();
 
         assertThat(validator.getConsumers().size(), is(0));
@@ -186,7 +188,7 @@ public class PactProviderValidatorTest {
     }
 
     private void setupBrokerLatestPactsResponse(final int status, final String responseName) {
-        wireMock.stubFor(get(urlPathEqualTo("/pacts/provider/Provider/latest"))
+        WIRE_MOCK.stubFor(get(urlPathEqualTo("/pacts/provider/Provider/latest"))
                 .willReturn(aResponse()
                         .withStatus(status)
                         .withHeader("Content-Type", "application/json")
@@ -195,7 +197,7 @@ public class PactProviderValidatorTest {
     }
 
     private void setupBrokerRootResponse() {
-        wireMock.stubFor(get(urlPathEqualTo("/"))
+        WIRE_MOCK.stubFor(get(urlPathEqualTo("/"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
