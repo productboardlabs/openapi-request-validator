@@ -56,8 +56,13 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>au.com.dius.pact.consumer</groupId>
-            <artifactId>junit</artifactId>
+            <artifactId>junit5</artifactId>
             <version>${pact-jvm.version}</version>
             <scope>test</scope>
         </dependency>

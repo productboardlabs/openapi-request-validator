@@ -14,11 +14,55 @@
     (`com.atlassian.oai.validator.util.VisibleForTesting`)
 - Added Caffeine `3.1.8` as a new compile-scope dependency in `swagger-request-validator-core`
 
+**Pact Module (`swagger-request-validator-pact`) — JUnit 5 migration**
+- `ValidatedPactProviderRule` (JUnit 4 `@Rule`) has been replaced by `ValidatedPactConsumerTestExtension`
+  (JUnit 5 `@RegisterExtension`). The new extension wraps `PactConsumerTestExt` from `pact-jvm` and validates
+  each pact interaction against the OpenAPI / Swagger spec before the test body executes.
+- `@ValidatedPactConsumerTest` is a new convenience meta-annotation for `@ExtendWith(ValidatedPactConsumerTestExtension.class)`.
+- The Pact JUnit 5 library (`au.com.dius.pact.consumer:junit5`) is now used in place of the JUnit 4 library
+  (`au.com.dius.pact.consumer:junit`). Pact method signatures must now use `V4Pact` and `PactBuilder` instead
+  of `RequestResponsePact` and `PactDslWithProvider`.
+
 **Migration Notes**
 - If you used `@com.google.common.annotations.VisibleForTesting` from Guava transitively, replace it with
   `@com.atlassian.oai.validator.util.VisibleForTesting` or remove it.
 - Public API signatures that previously accepted `Multimap<String, Collection<String>>` now accept
   `Map<String, Collection<String>>` (pure JDK types).
+
+**Migration Notes — Pact module**
+- Replace `ValidatedPactProviderRule` with `ValidatedPactConsumerTestExtension`:
+
+  ```java
+  // Before (JUnit 4)
+  @Rule
+  public final ValidatedPactProviderRule provider =
+          new ValidatedPactProviderRule("http://my-provider/api-spec.yaml", null, this);
+
+  @Pact(provider = "MyProvider", consumer = "MyConsumer")
+  public RequestResponsePact myInteraction(final PactDslWithProvider builder) { ... }
+
+  @Test
+  @PactVerification(value = "MyProvider", fragment = "myInteraction")
+  public void myTest() { /* use provider.getMockServer().getUrl() */ }
+
+  // After (JUnit 5)
+  @RegisterExtension
+  static final ValidatedPactConsumerTestExtension provider =
+          new ValidatedPactConsumerTestExtension("http://my-provider/api-spec.yaml", null);
+
+  @Pact(provider = "MyProvider", consumer = "MyConsumer")
+  public V4Pact myInteraction(final PactBuilder builder) {
+      return builder.usingLegacyDsl()...toPact(V4Pact.class);
+  }
+
+  @Test
+  @PactTestFor(pactMethod = "myInteraction")
+  public void myTest(final MockServer mockServer) { /* use mockServer.getUrl() */ }
+  ```
+- Replace the `au.com.dius.pact.consumer:junit` dependency with `au.com.dius.pact.consumer:junit5`.
+- Add `org.junit.jupiter:junit-jupiter` to your test dependencies if not already present.
+- `@IgnoreApiValidation` continues to work as before — annotate a test method to skip spec validation for that
+  specific interaction.
 
 # 2.46.0
 * Bump dependencies:
