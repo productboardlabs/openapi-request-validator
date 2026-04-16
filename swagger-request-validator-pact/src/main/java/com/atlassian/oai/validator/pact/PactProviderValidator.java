@@ -59,7 +59,7 @@ import static java.util.stream.Collectors.toList;
  *
  * @see <a href="https://docs.pact.io/documentation/sharings_pacts.html">Pact broker</a>
  * @see OpenApiInteractionValidator
- * @see ValidatedPactProviderRule
+ * @see ValidatedPactConsumerTestExtension
  */
 public class PactProviderValidator {
 

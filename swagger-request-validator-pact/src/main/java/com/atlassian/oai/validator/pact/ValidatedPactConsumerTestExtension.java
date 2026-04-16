@@ -31,9 +31,9 @@ import java.util.List;
  * Usage: Register this extension instead of (or in place of) {@code @ExtendWith(PactConsumerTestExt.class)},
  * and annotate your test class with {@code @PactTestFor} as usual.
  */
-public class ValidatedPactConsumerTestExtension
-        implements Extension, BeforeTestExecutionCallback, BeforeAllCallback,
-        AfterTestExecutionCallback, AfterAllCallback, ParameterResolver {
+public class ValidatedPactConsumerTestExtension implements Extension, BeforeTestExecutionCallback,
+        BeforeAllCallback, AfterTestExecutionCallback,
+        AfterAllCallback, ParameterResolver {
 
     /**
      * The namespace used by {@link PactConsumerTestExt} to store pact data in the extension context.
