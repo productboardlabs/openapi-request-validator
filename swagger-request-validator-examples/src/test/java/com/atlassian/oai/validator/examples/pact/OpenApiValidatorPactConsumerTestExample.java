@@ -1,31 +1,32 @@
 package com.atlassian.oai.validator.examples.pact;
 
+import au.com.dius.pact.consumer.MockServer;
+import au.com.dius.pact.consumer.dsl.PactBuilder;
 import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
-import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
-import au.com.dius.pact.consumer.junit.PactProviderRule;
-import au.com.dius.pact.consumer.junit.PactVerification;
-import au.com.dius.pact.core.model.RequestResponsePact;
+import au.com.dius.pact.consumer.junit5.PactTestFor;
+import au.com.dius.pact.core.model.V4Pact;
 import au.com.dius.pact.core.model.annotations.Pact;
 import com.atlassian.oai.validator.pact.IgnoreApiValidation;
-import com.atlassian.oai.validator.pact.ValidatedPactProviderRule;
-import org.junit.Rule;
-import org.junit.Test;
+import com.atlassian.oai.validator.pact.ValidatedPactConsumerTestExtension;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static io.restassured.RestAssured.given;
 
 /**
- * An example Pact Consumer test that shows use of the {@link ValidatedPactProviderRule} to apply Swagger/OAI
- * validation to Pact interactions.
+ * An example Pact Consumer test that shows use of the {@link ValidatedPactConsumerTestExtension} to apply
+ * OpenAPI / Swagger validation to Pact interactions.
  * <p>
  * This gives very fast feedback if a consumer's expectations do not match the API specification, without the
  * need to execute the Pacts against the Provider.
  * <p>
- * <b>Note:</b> Its still a good idea to run the Provider side of the Pact interaction; This validation helps
+ * <b>Note:</b> It's still a good idea to run the Provider side of the Pact interaction; this validation helps
  * catch a class of problems sooner.
  *
- * @see <a href="https://github.com/realestate-com-au/pact">Pact</a>
- * @see <a href="https://github.com/DiUS/pact-jvm">Pact-jvm</a>
+ * @see <a href="https://docs.pact.io/">Pact</a>
+ * @see <a href="https://github.com/pact-foundation/pact-jvm">Pact-jvm</a>
  */
+@PactTestFor(providerName = OpenApiValidatorPactConsumerTestExample.PROVIDER_ID)
 public class OpenApiValidatorPactConsumerTestExample {
 
     public static final String PROVIDER_ID = "Petstore";
@@ -33,15 +34,17 @@ public class OpenApiValidatorPactConsumerTestExample {
     public static final String SWAGGER_JSON_URL = "https://petstore.swagger.io/v2/swagger.json";
 
     /**
-     * Validated Pact provider rule - adds OAI validation to the standard {@link PactProviderRule}
+     * Validated Pact consumer extension — wraps the standard Pact mock server with OpenAPI validation.
+     * Each pact interaction is validated against the spec before the test body executes.
      */
-    @Rule
-    public ValidatedPactProviderRule provider =
-            new ValidatedPactProviderRule(SWAGGER_JSON_URL, null, PROVIDER_ID, this);
+    @RegisterExtension
+    static final ValidatedPactConsumerTestExtension PROVIDER =
+            new ValidatedPactConsumerTestExtension(SWAGGER_JSON_URL, null);
 
     @Pact(provider = PROVIDER_ID, consumer = CONSUMER_ID)
-    public RequestResponsePact getValidPet(final PactDslWithProvider builder) {
+    public V4Pact getValidPet(final PactBuilder builder) {
         return builder
+                .usingLegacyDsl()
                 .uponReceiving("GET valid pet")
                 .method("GET")
                 .path("/pet/1")
@@ -49,30 +52,32 @@ public class OpenApiValidatorPactConsumerTestExample {
                 .willRespondWith()
                 .status(200)
                 .body(new PactDslJsonBody().stringValue("name", "fido").array("photoUrls").closeArray().asBody())
-                .toPact();
+                .toPact(V4Pact.class);
     }
 
     @Pact(provider = PROVIDER_ID, consumer = CONSUMER_ID)
-    public RequestResponsePact getPetWithIncompleteResponse(final PactDslWithProvider builder) {
+    public V4Pact getPetWithIncompleteResponse(final PactBuilder builder) {
         return builder
-                .uponReceiving("GET invalid pet")
+                .usingLegacyDsl()
+                .uponReceiving("GET pet with incomplete response")
                 .method("GET")
                 .path("/pet/2")
                 .matchHeader("api_key", ".*")
                 .willRespondWith()
                 .status(200)
                 .body(new PactDslJsonBody()
-                        // Response missing required field "photoUrls"
-                        // API validation is lenient to missing fields and will succeed
+                        // Response missing required field "photoUrls".
+                        // API validation is lenient about missing fields in the Pact context and will succeed.
                         .stringValue("name", "fido")
                 )
-                .toPact();
+                .toPact(V4Pact.class);
     }
 
     @Pact(provider = PROVIDER_ID, consumer = CONSUMER_ID)
-    public RequestResponsePact getPetWithInvalidResponse(final PactDslWithProvider builder) {
+    public V4Pact getPetWithInvalidResponse(final PactBuilder builder) {
         return builder
-                .uponReceiving("GET invalid pet")
+                .usingLegacyDsl()
+                .uponReceiving("GET pet with invalid response")
                 .method("GET")
                 .path("/pet/3")
                 .matchHeader("api_key", ".*")
@@ -80,28 +85,30 @@ public class OpenApiValidatorPactConsumerTestExample {
                 .status(200)
                 .body(new PactDslJsonBody()
                         .stringValue("name", "fido")
-                        // Response has the incorrect type for a field
-                        // API validation will fail
+                        // Response has the incorrect type for the 'id' field (string instead of integer).
+                        // API validation will fail.
                         .stringType("id", "fido01")
                 )
-                .toPact();
+                .toPact(V4Pact.class);
     }
 
     @Pact(provider = PROVIDER_ID, consumer = CONSUMER_ID)
-    public RequestResponsePact getPetWithInvalidId(final PactDslWithProvider builder) {
+    public V4Pact getPetWithInvalidId(final PactBuilder builder) {
         return builder
+                .usingLegacyDsl()
                 .uponReceiving("GET pet with invalid ID")
                 .method("GET")
                 .path("/pet/a")
                 .matchHeader("api_key", ".*")
                 .willRespondWith()
                 .status(400)
-                .toPact();
+                .toPact(V4Pact.class);
     }
 
     @Pact(provider = PROVIDER_ID, consumer = CONSUMER_ID)
-    public RequestResponsePact getPetWithAdditionalProperties(final PactDslWithProvider builder) {
+    public V4Pact getPetWithAdditionalProperties(final PactBuilder builder) {
         return builder
+                .usingLegacyDsl()
                 .uponReceiving("GET pet with additional properties")
                 .method("GET")
                 .path("/pet/4")
@@ -113,7 +120,7 @@ public class OpenApiValidatorPactConsumerTestExample {
                         .numberValue("extra", 33)
                         .array("photoUrls").closeArray()
                         .asBody())
-                .toPact();
+                .toPact(V4Pact.class);
     }
 
     /**
@@ -122,84 +129,81 @@ public class OpenApiValidatorPactConsumerTestExample {
      * This is expected to PASS both API validation and Pact execution.
      */
     @Test
-    @PactVerification(value = PROVIDER_ID, fragment = "getValidPet")
-    public void testGetValidPet() {
+    @PactTestFor(pactMethod = "getValidPet")
+    public void testGetValidPet(final MockServer mockServer) {
         given()
                 .header("api_key", "some-api-key")
-                .get(provider.getMockServer().getUrl() + "/pet/1");
+                .get(mockServer.getUrl() + "/pet/1");
     }
 
     /**
      * Test a GET with an expectation that does not specify all the required fields in the response payload.
      * <p>
-     * Usually this validation would fail as a required field is missing. However, in keeping with the Pact
-     * philosophy of only specifying things the client cares about, the ValidatedPactProviderRule is lenient
-     * regarding missing fields in the response. This behavior can be overridden using system properties or a
-     * <code>swagger-validator.properties</code> file.
-     * See {@link com.atlassian.oai.validator.report.LevelLoader} for more details.
+     * Usually this would fail as a required field is missing. However, in keeping with the Pact philosophy of
+     * only specifying fields the client cares about, the extension is lenient regarding missing response fields.
+     * This behaviour can be overridden — see {@link com.atlassian.oai.validator.report.LevelLoader} for details.
      * <p>
-     * This test is expected to PASS
+     * This test is expected to PASS.
      */
     @Test
-    @PactVerification(value = PROVIDER_ID, fragment = "getPetWithIncompleteResponse")
-    public void testGetPetWithIncompleteResponse() {
+    @PactTestFor(pactMethod = "getPetWithIncompleteResponse")
+    public void testGetPetWithIncompleteResponse(final MockServer mockServer) {
         given()
                 .header("api_key", "some-api-key")
-                .get(provider.getMockServer().getUrl() + "/pet/2");
+                .get(mockServer.getUrl() + "/pet/2");
     }
 
     /**
      * Test a GET with an expectation that specifies an incorrect field type in the response.
      * <p>
-     * Without API validation this test would pass and the mistake would only be detected during Provider test execution.
-     * However, with the API validation we get feedback immediately that the Consumer expectation is invalid.
+     * Without API validation this test would pass and the mistake would only be detected during Provider test
+     * execution. With API validation we get immediate feedback that the consumer expectation is invalid.
      * <p>
-     * This test is expected to FAIL
+     * This test is expected to FAIL.
      */
     @Test
-    @PactVerification(value = PROVIDER_ID, fragment = "getPetWithInvalidResponse")
-    public void testGetPetWithInvalidResponse() {
+    @PactTestFor(pactMethod = "getPetWithInvalidResponse")
+    public void testGetPetWithInvalidResponse(final MockServer mockServer) {
         given()
                 .header("api_key", "some-api-key")
-                .get(provider.getMockServer().getUrl() + "/pet/3");
+                .get(mockServer.getUrl() + "/pet/3");
     }
 
     /**
      * Test a GET with an expectation that specifies an additional field in the response.
      * <p>
-     * Without API validation this test would pass and the mistake would only be detected during Provider test execution.
-     * However, with the API validation we get feedback immediately that the Consumer expectation is invalid.
+     * Without API validation this test would pass and the mistake would only be detected during Provider test
+     * execution. With API validation we get immediate feedback that the consumer expectation is invalid.
      * <p>
-     * If this is in fact desired behavior (e.g. the Consumer knows that the field exists but is just not in the
-     * Provider spec) the validation failure can be changed to a warning by setting the message level
-     * <code>validation.schema.additionalProperties=WARN</code>
+     * If this is desired behaviour (e.g. the consumer knows the field exists but it's not in the spec), the
+     * validation failure can be suppressed by setting:
+     * <code>validation.response.body.schema.additionalProperties=WARN</code>
      * <p>
-     * This test is expected to FAIL
+     * This test is expected to FAIL.
      */
     @Test
-    @PactVerification(value = PROVIDER_ID, fragment = "getPetWithAdditionalProperties")
-    public void testGetPetWithAdditionalPropertiesInResponse() {
+    @PactTestFor(pactMethod = "getPetWithAdditionalProperties")
+    public void testGetPetWithAdditionalPropertiesInResponse(final MockServer mockServer) {
         given()
                 .header("api_key", "some-api-key")
-                .get(provider.getMockServer().getUrl() + "/pet/4");
+                .get(mockServer.getUrl() + "/pet/4");
     }
 
     /**
-     * Test known bad request.
+     * Test a known bad request.
      * <p>
-     * This would normally fail API validation because the request path "pet/a" is not a valid. However,
-     * it may be a useful test to run against the Provider, and so we use the <code>IgnoreApiValidation</code>
-     * annotation to skip validation against the specification for this specific test.
+     * This would normally fail API validation because the request path "/pet/a" is not valid. However, it may
+     * be useful to run against the Provider, so we use {@link IgnoreApiValidation} to skip spec validation for
+     * this specific test.
      * <p>
-     * This test is expected to PASS
+     * This test is expected to PASS.
      */
     @Test
-    @PactVerification(value = PROVIDER_ID, fragment = "getPetWithInvalidId")
+    @PactTestFor(pactMethod = "getPetWithInvalidId")
     @IgnoreApiValidation
-    public void testGetWithInvalidId() {
+    public void testGetWithInvalidId(final MockServer mockServer) {
         given()
                 .header("api_key", "some-api-key")
-                .get(provider.getMockServer().getUrl() + "/pet/a");
+                .get(mockServer.getUrl() + "/pet/a");
     }
-
 }

@@ -2,14 +2,14 @@ package com.atlassian.oai.validator.examples.pact;
 
 import com.atlassian.oai.validator.pact.PactProviderValidationResults;
 import com.atlassian.oai.validator.pact.PactProviderValidator;
-import com.atlassian.oai.validator.pact.ValidatedPactProviderRule;
-import org.junit.Test;
+import com.atlassian.oai.validator.pact.ValidatedPactConsumerTestExtension;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * An example Pact Provider test that uses the {@link PactProviderValidator} to validate consumer Pacts
- * against a service Swagger API specification.
+ * against a service OpenAPI / Swagger API specification.
  */
 public class OpenApiValidatorPactProviderTestExample {
 
@@ -17,9 +17,9 @@ public class OpenApiValidatorPactProviderTestExample {
 
     /**
      * This test simulates running against a Consumer where all interactions in the Pact spec are valid according
-     * to the Swagger API spec.
+     * to the OpenAPI / Swagger API spec.
      * <p>
-     * This test is expected to PASS
+     * This test is expected to PASS.
      */
     @Test
     public void validate_withLocalPact_withValidInteractions() {
@@ -30,7 +30,6 @@ public class OpenApiValidatorPactProviderTestExample {
                 .build();
 
         assertNoBreakingChanges(validator.validate());
-
     }
 
     /**
@@ -40,14 +39,14 @@ public class OpenApiValidatorPactProviderTestExample {
      * <ol>
      * <li>
      * The Consumer has invalid expectations on the Provider (which could perhaps have been mitigated by
-     * using the {@link ValidatedPactProviderRule} on the Consumer side); OR
+     * using the {@link ValidatedPactConsumerTestExtension} on the Consumer side); OR
      * </li>
      * <li>
-     * The Provider has made a breaking change to their Swagger API specification and will break a Consumer.
+     * The Provider has made a breaking change to their OpenAPI specification that will break a Consumer.
      * </li>
      * </ol>
      * <p>
-     * This test is expected to FAIL
+     * This test is expected to FAIL.
      */
     @Test
     public void validate_withLocalPact_withInvalidInteractions() {
@@ -58,7 +57,6 @@ public class OpenApiValidatorPactProviderTestExample {
                 .build();
 
         assertNoBreakingChanges(validator.validate());
-
     }
 
     private void assertNoBreakingChanges(final PactProviderValidationResults results) {
@@ -68,5 +66,4 @@ public class OpenApiValidatorPactProviderTestExample {
             fail(msg.toString());
         }
     }
-
 }

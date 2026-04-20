@@ -48,14 +48,13 @@
 
         <!-- Optional JUnit dependencies needed to use the provided JUnit rule -->
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
             <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>au.com.dius.pact.consumer</groupId>
-            <artifactId>junit</artifactId>
-            <version>${pact-jvm.version}</version>
+            <artifactId>junit5</artifactId>
             <optional>true</optional>
         </dependency>
 
@@ -67,6 +66,11 @@
         </dependency>
 
         <!-- Test dependencies -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
