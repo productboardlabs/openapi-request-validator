@@ -1,6 +1,6 @@
 package com.atlassian.oai.validator.examples.mockmvc;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 

@@ -4,10 +4,12 @@ import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.springweb.client.OpenApiValidationClientHttpRequestInterceptor;
 import com.atlassian.oai.validator.whitelist.ValidationErrorsWhitelist;
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +23,7 @@ import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.messageH
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * An example that uses the {@link OpenApiValidationClientHttpRequestInterceptor} to validate request/response interactions
@@ -52,19 +54,21 @@ public class OpenApiValidationClientHttpRequestInterceptorTestExample {
     // Using wiremock to simulate a production service.
     // In a real-world use case you would call out to your service (e.g. in a Spring WebMVC test,
     // or to a service running in your TEST environment etc.)
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule(PORT);
+    @RegisterExtension
+    static final WireMockExtension WIRE_MOCK = WireMockExtension.newInstance()
+            .options(wireMockConfig().port(PORT))
+            .build();
 
-    @Before
+    @BeforeEach
     public void setupWireMock() {
-        wireMockRule.stubFor(
+        WIRE_MOCK.stubFor(
                 WireMock.get(urlEqualTo("/pet/1"))
                         .willReturn(aResponse()
                                 .withStatus(200)
                                 .withHeader("content-type", "application/json")
                                 .withBody("{\"name\":\"fido\", \"photoUrls\":[]}")));
 
-        wireMockRule.stubFor(
+        WIRE_MOCK.stubFor(
                 WireMock.get(urlEqualTo("/pet/2"))
                         .willReturn(aResponse()
                                 .withStatus(200)
@@ -72,7 +76,7 @@ public class OpenApiValidationClientHttpRequestInterceptorTestExample {
                                 .withBody("{\"name\":\"fido\"}"))); // Missing required 'photoUrls' field
     }
 
-    @Before
+    @BeforeEach
     public void setupRestTemplate() {
         restTemplate = new RestTemplate();
         restTemplate.setInterceptors(Collections.singletonList(validationInterceptor));

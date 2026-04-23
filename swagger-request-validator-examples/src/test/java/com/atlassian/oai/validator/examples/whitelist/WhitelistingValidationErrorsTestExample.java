@@ -8,7 +8,7 @@ import com.atlassian.oai.validator.whitelist.ValidationErrorsWhitelist;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.allOf;
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.anyOf;
@@ -18,7 +18,7 @@ import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.methodIs
 import static com.atlassian.oai.validator.whitelist.rule.WhitelistRules.pathContains;
 import static io.swagger.v3.oas.models.PathItem.HttpMethod.GET;
 import static io.swagger.v3.oas.models.PathItem.HttpMethod.POST;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * In this example we create a validator with two whitelist rules.

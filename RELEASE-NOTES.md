@@ -4,6 +4,9 @@
 - [Requests with no content type are now validated](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/502)
   - use the `missingRequestContentType` whitelist rule if you want to maintain previous behavior.
 
+**Improvements**
+- Remove JUnit4 (`junit:junit`) dependency from the examples module; all example tests now use JUnit5 (Jupiter)
+
 **Dependency Changes**
 - Removed Guava (`com.google.guava:guava`) as a runtime dependency from `swagger-request-validator-core`.
   All Guava usages have been replaced with JDK alternatives and Caffeine (`com.github.ben-manes.caffeine:caffeine`).
