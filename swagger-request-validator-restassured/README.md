@@ -5,7 +5,7 @@
 Integrations between the Swagger Request Validator and the [REST Assured testing library](http://rest-assured.io/).
 
 This module includes request/response adaptors that allow validation of REST Assured interactions with the Swagger Request
-Validator, and a `SwaggerValidationFilter` that can be used to add validation to a REST Assured interaction.
+Validator, and an `OpenApiValidationFilter` that can be used to add validation to a REST Assured interaction.
 
 ## Usage ##
 
@@ -20,7 +20,7 @@ Validator, and a `SwaggerValidationFilter` that can be used to add validation to
 See the [examples module](https://bitbucket.org/atlassian/swagger-request-validator/src/master/swagger-request-validator-examples/?at=master)
 for running examples of how the REST Assured module can be used.
 
-### SwaggerValidationFilter ###
+### OpenApiValidationFilter ###
 The simplest way to use the integration is to add the `OpenApiValidationFilter` to a REST Assured interaction.
 
 ```

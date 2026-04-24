@@ -35,7 +35,7 @@ public class OpenApiValidationClientHttpRequestInterceptorTest {
     }
 
     @Test
-    public void create_withNullSwaggerRequestResponseValidator_throwsException() {
+    public void create_withNullOpenApiInteractionValidator_throwsException() {
         assertThrows(NullPointerException.class, () -> new OpenApiValidationClientHttpRequestInterceptor((OpenApiInteractionValidator) null));
     }
 

@@ -30,7 +30,7 @@ public class OpenApiValidationFilterTest {
     }
 
     @Test
-    public void create_withNullSwaggerRequestResponseValidator_throwsException() {
+    public void create_withNullOpenApiInteractionValidator_throwsException() {
         assertThrows(NullPointerException.class, () -> new OpenApiValidationFilter((OpenApiInteractionValidator) null));
     }
 
