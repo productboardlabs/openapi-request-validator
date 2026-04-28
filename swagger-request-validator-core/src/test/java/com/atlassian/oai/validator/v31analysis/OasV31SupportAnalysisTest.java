@@ -539,11 +539,12 @@ public class OasV31SupportAnalysisTest {
     @DisplayName("10. unevaluatedProperties")
     class UnevaluatedProperties {
 
-        // Note: the validator auto-injects additionalProperties:false on object schemas
-        // by default (AdditionalPropertiesInjectionTransformer). To exercise
-        // unevaluatedProperties cleanly we must opt out of additional-properties
-        // validation via withAdditionalPropertiesValidation(false), or use a top-level
-        // type:object with explicit additionalProperties:true on each allOf branch.
+        // Correct test schema: NO additionalProperties on branches.
+        // unevaluatedProperties:false at the top requires that every property
+        // be "evaluated" by some keyword in the schema (typically `properties`,
+        // `patternProperties`, or `additionalProperties`). When a branch declares
+        // additionalProperties:true, networknt counts every property as evaluated
+        // by that branch and unevaluatedProperties has nothing to flag.
         private final String spec =
                 "openapi: 3.1.0\n"
               + "info: {title: t, version: '1'}\n"
@@ -555,21 +556,20 @@ public class OasV31SupportAnalysisTest {
               + "        content:\n"
               + "          application/json:\n"
               + "            schema:\n"
+              + "              type: object\n"
               + "              allOf:\n"
               + "                - type: object\n"
               + "                  properties: { a: { type: string } }\n"
-              + "                  additionalProperties: true\n"
               + "                - type: object\n"
               + "                  properties: { b: { type: string } }\n"
-              + "                  additionalProperties: true\n"
               + "              unevaluatedProperties: false\n"
               + "      responses: { '200': {description: ok} }\n";
 
         private OpenApiInteractionValidator validator() {
-            // Disable additionalProperties auto-injection so unevaluatedProperties
-            // is the only constraint enforcing closed-schema behaviour.
-            // The validator wires this via the LevelResolver — ignoring the
-            // additionalProperties message-key skips the auto-injection.
+            // Disable additionalProperties auto-injection. With it on, the validator
+            // injects additionalProperties:false into each allOf branch, which causes
+            // valid payloads to fail because property `b` is not declared in the
+            // branch that declares property `a` (and vice-versa).
             return OpenApiInteractionValidator.createForInlineApiSpecification(spec)
                     .withLevelResolver(LevelResolver.create()
                             .withLevel("validation.schema.additionalProperties",
@@ -579,32 +579,39 @@ public class OasV31SupportAnalysisTest {
         }
 
         @Test
-        @DisplayName("documents: with auto-injection off, declared properties pass")
-        void documents_declared_only_with_injection_off() {
-            final ValidationReport report = validator().validateRequest(
-                    jsonPost("/thing", "{\"a\": \"x\", \"b\": \"y\"}"));
-            LOG.error("[unevaluated: declared only] errors? {}{}",
-                    report.hasErrors(), formatMessages(report));
+        @DisplayName("declared-only payload passes when injection disabled")
+        void declared_only_with_injection_off_passes() {
+            assertPasses(validator().validateRequest(
+                    jsonPost("/thing", "{\"a\": \"x\", \"b\": \"y\"}")));
         }
 
         @Test
-        @DisplayName("documents: whether unevaluatedProperties is actually enforced when auto-injection is off")
-        void documents_unevaluated_with_injection_off() {
-            final ValidationReport report = validator().validateRequest(
-                    jsonPost("/thing", "{\"a\": \"x\", \"b\": \"y\", \"c\": \"z\"}"));
-            LOG.error("[unevaluated: extra c, injection off] errors? {} (expected: true){}",
-                    report.hasErrors(), formatMessages(report));
+        @DisplayName("extra property is rejected by unevaluatedProperties:false")
+        void unevaluated_with_injection_off_fails() {
+            assertFails(validator().validateRequest(
+                    jsonPost("/thing", "{\"a\": \"x\", \"b\": \"y\", \"c\": \"z\"}")));
         }
 
         @Test
-        @DisplayName("documents: default behaviour — additionalProperties:false auto-injected, conflicts with unevaluatedProperties")
-        void documents_default_behaviour_with_auto_injection() {
+        @DisplayName("default behaviour — auto-injection respects unevaluatedProperties (no manual opt-out needed)")
+        void default_behaviour_with_unevaluated_in_spec() {
+            // After the AdditionalPropertiesInjectionTransformer 3.1 fix:
+            // when the schema declares unevaluatedProperties, the transformer
+            // suppresses auto-injection on the composition branches. So a valid
+            // payload should pass without needing the LevelResolver workaround.
             final OpenApiInteractionValidator v =
                     OpenApiInteractionValidator.createForInlineApiSpecification(spec).build();
-            final ValidationReport report = v.validateRequest(
-                    jsonPost("/thing", "{\"a\": \"x\", \"b\": \"y\"}"));
-            LOG.error("[unevaluated + additionalProperties auto-injected, valid payload] errors? {}{}",
-                    report.hasErrors(), formatMessages(report));
+            assertPasses(v.validateRequest(
+                    jsonPost("/thing", "{\"a\": \"x\", \"b\": \"y\"}")));
+        }
+
+        @Test
+        @DisplayName("default behaviour — extra property still rejected by unevaluatedProperties")
+        void default_behaviour_extra_property_rejected() {
+            final OpenApiInteractionValidator v =
+                    OpenApiInteractionValidator.createForInlineApiSpecification(spec).build();
+            assertFails(v.validateRequest(
+                    jsonPost("/thing", "{\"a\": \"x\", \"b\": \"y\", \"c\": \"z\"}")));
         }
     }
 
