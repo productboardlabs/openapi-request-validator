@@ -2,7 +2,7 @@
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-wiremock-juni5/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-wiremock-junit5)
 
-WireMock extension `OpenApiValidator` that applies OpenAPI / Swagger validation to [WireMock](http://wiremock.org/) requests and responses. 
+WireMock extension `OpenApiValidationListener` that applies OpenAPI / Swagger validation to [WireMock](http://wiremock.org/) requests and responses.
 This extension is compatible with JUnit5+.
 
 ## Usage
