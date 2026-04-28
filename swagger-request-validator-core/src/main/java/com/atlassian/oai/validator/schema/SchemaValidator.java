@@ -10,6 +10,7 @@ import com.atlassian.oai.validator.schema.format.FloatFormat;
 import com.atlassian.oai.validator.schema.format.Int32Format;
 import com.atlassian.oai.validator.schema.format.Int64Format;
 import com.atlassian.oai.validator.schema.transform.AdditionalPropertiesInjectionTransformer;
+import com.atlassian.oai.validator.schema.transform.DiscriminatorMappingTransformer;
 import com.atlassian.oai.validator.schema.transform.ExclusiveMinMaxTransformer;
 import com.atlassian.oai.validator.schema.transform.RequiredFieldTransformer;
 import com.atlassian.oai.validator.schema.transform.SchemaDefinitionsInjectionTransformer;
@@ -141,6 +142,7 @@ public class SchemaValidator {
         final List<SchemaTransformer> transformers = Arrays.asList(
             SchemaDefinitionsInjectionTransformer.getInstance(),
             ExclusiveMinMaxTransformer.getInstance(),
+            DiscriminatorMappingTransformer.getInstance(),
             AdditionalPropertiesInjectionTransformer.getInstance(),
             RequiredFieldTransformer.getInstance());
         this.transformers = transformers;

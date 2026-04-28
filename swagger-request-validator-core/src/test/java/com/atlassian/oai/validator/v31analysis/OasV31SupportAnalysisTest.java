@@ -1073,30 +1073,75 @@ public class OasV31SupportAnalysisTest {
               + "        side: { type: number }\n";
 
         @Test
-        @DisplayName("documents: discriminator with mapping behaviour")
-        void documents_discriminator_mapping() {
-            final ValidationReport report = validatorFor(spec).validateRequest(
-                    jsonPost("/shapes", "{\"kind\": \"circle\", \"radius\": 5}"));
-            LOG.error("[discriminator: kind=circle (mapped to Circle)] errors? {}{}",
-                    report.hasErrors(), formatMessages(report));
+        @DisplayName("circle payload (mapped to Circle) passes after fix")
+        void circle_via_mapping_passes() {
+            assertPasses(validatorFor(spec).validateRequest(
+                    jsonPost("/shapes", "{\"kind\": \"circle\", \"radius\": 5}")));
         }
 
         @Test
-        @DisplayName("documents: discriminator using exact schema name")
-        void documents_discriminator_using_schema_name() {
-            // Per spec, when no mapping is given, the discriminator value
-            // must equal the schema name. Test with capitalised "Circle".
-            final ValidationReport report = validatorFor(spec).validateRequest(
-                    jsonPost("/shapes", "{\"kind\": \"Circle\", \"radius\": 5}"));
-            LOG.error("[discriminator: kind=Circle (matches schema name)] errors? {}{}",
-                    report.hasErrors(), formatMessages(report));
+        @DisplayName("square payload (mapped to Square) passes after fix")
+        void square_via_mapping_passes() {
+            assertPasses(validatorFor(spec).validateRequest(
+                    jsonPost("/shapes", "{\"kind\": \"square\", \"side\": 5}")));
         }
 
         @Test
-        @DisplayName("circle payload missing radius fails (oneOf still triggers)")
+        @DisplayName("circle payload missing required radius fails (oneOf still enforces)")
         void circle_missing_radius_fails() {
             assertFails(validatorFor(spec).validateRequest(
-                    jsonPost("/shapes", "{\"kind\": \"Circle\"}")));
+                    jsonPost("/shapes", "{\"kind\": \"circle\"}")));
+        }
+
+        @Test
+        @DisplayName("payload with unknown discriminator value fails")
+        void unknown_discriminator_value_fails() {
+            assertFails(validatorFor(spec).validateRequest(
+                    jsonPost("/shapes", "{\"kind\": \"triangle\", \"sides\": 3}")));
+        }
+
+        // Also exercise the "no mapping, match schema name" pattern.
+        private final String specNoMapping =
+                "openapi: 3.1.0\n"
+              + "info: {title: t, version: '1'}\n"
+              + "paths:\n"
+              + "  /shapes:\n"
+              + "    post:\n"
+              + "      requestBody:\n"
+              + "        required: true\n"
+              + "        content:\n"
+              + "          application/json:\n"
+              + "            schema:\n"
+              + "              oneOf:\n"
+              + "                - $ref: '#/components/schemas/Circle'\n"
+              + "                - $ref: '#/components/schemas/Square'\n"
+              + "              discriminator:\n"
+              + "                propertyName: kind\n"
+              + "      responses: { '200': {description: ok} }\n"
+              + "components:\n"
+              + "  schemas:\n"
+              + "    Circle:\n"
+              + "      type: object\n"
+              + "      required: [kind, radius]\n"
+              + "      properties:\n"
+              + "        kind: { type: string }\n"
+              + "        radius: { type: number }\n"
+              + "    Square:\n"
+              + "      type: object\n"
+              + "      required: [kind, side]\n"
+              + "      properties:\n"
+              + "        kind: { type: string }\n"
+              + "        side: { type: number }\n";
+
+        @Test
+        @DisplayName("no mapping: discriminator value equals schema name (Circle)")
+        void no_mapping_uses_schema_name() {
+            // Without a mapping, the discriminator value must equal the schema
+            // name. The transformer falls back to using the inlined branch's
+            // pre-resolved $ref tail (when refs survive resolveFully) or the
+            // structural-match-by-shape against components.schemas.
+            assertPasses(validatorFor(specNoMapping).validateRequest(
+                    jsonPost("/shapes", "{\"kind\": \"Circle\", \"radius\": 5}")));
         }
     }
 
