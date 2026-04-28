@@ -697,10 +697,6 @@ public class OasV31SupportAnalysisTest {
     @DisplayName("12. Top-level webhooks (3.1 NEW)")
     class Webhooks {
 
-        // Webhooks specs have NO paths (or empty paths). They define operations
-        // the SERVER will send to clients. Validation should still be possible
-        // via something like validateRequest("/webhook-name", ...) or similar.
-
         private final String spec =
                 "openapi: 3.1.0\n"
               + "info: {title: t, version: '1'}\n"
@@ -720,31 +716,35 @@ public class OasV31SupportAnalysisTest {
               + "      responses: { '200': {description: ok} }\n";
 
         @Test
-        @DisplayName("documents whether webhook spec is loadable at all")
-        void documents_webhook_loadability() {
-            try {
-                final OpenApiInteractionValidator v = validatorFor(spec);
-                assertNotNull(v);
-                LOG.error("[webhooks] spec loaded successfully (no validator entry point exists)");
-            } catch (final Exception e) {
-                LOG.error("[webhooks] spec load FAILED: " + e.getMessage());
-                throw e;
-            }
+        @DisplayName("webhook request with valid body passes")
+        void valid_webhook_request_passes() {
+            final OpenApiInteractionValidator v = validatorFor(spec);
+            assertPasses(v.validateWebhookRequest("newOrder", jsonPost("/newOrder",
+                    "{\"orderId\": \"ord-1\"}")));
         }
 
         @Test
-        @DisplayName("documents that webhook bodies cannot be validated via path lookup")
-        void documents_webhook_validation_unsupported() {
+        @DisplayName("webhook request missing required field fails")
+        void invalid_webhook_request_fails() {
             final OpenApiInteractionValidator v = validatorFor(spec);
-            // Validator only knows about paths, not webhook keys. Try treating the
-            // webhook key as a path and see what happens.
-            final ValidationReport report = v.validateRequest(jsonPost("/newOrder",
-                    "{\"orderId\": \"ord-1\"}"));
-            LOG.error("[webhooks /newOrder] errors? " + report.hasErrors()
-                    + formatMessages(report));
-            // If this passes, it means there's no operation defined for /newOrder
-            // and the validator silently skips. If it fails with "no path matched"
-            // that confirms webhooks aren't reachable through the normal API.
+            assertFails(v.validateWebhookRequest("newOrder", jsonPost("/newOrder", "{}")));
+        }
+
+        @Test
+        @DisplayName("unknown webhook name returns 'webhook not found' error")
+        void unknown_webhook_fails() {
+            final OpenApiInteractionValidator v = validatorFor(spec);
+            assertFails(v.validateWebhookRequest("unknownWebhook",
+                    jsonPost("/unknownWebhook", "{}")));
+        }
+
+        @Test
+        @DisplayName("webhook request with wrong HTTP method fails")
+        void wrong_method_on_webhook_fails() {
+            final OpenApiInteractionValidator v = validatorFor(spec);
+            // The webhook is declared with POST; sending GET should fail.
+            assertFails(v.validateWebhookRequest("newOrder",
+                    SimpleRequest.Builder.get("/newOrder").build()));
         }
     }
 

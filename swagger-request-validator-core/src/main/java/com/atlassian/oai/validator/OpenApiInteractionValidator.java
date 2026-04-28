@@ -6,6 +6,7 @@ import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 
 import com.atlassian.oai.validator.interaction.ApiOperationResolver;
+import com.atlassian.oai.validator.interaction.WebhookResolver;
 import com.atlassian.oai.validator.interaction.request.CustomRequestValidator;
 import com.atlassian.oai.validator.interaction.request.RequestValidator;
 import com.atlassian.oai.validator.interaction.response.CustomResponseValidator;
@@ -143,6 +144,8 @@ public class OpenApiInteractionValidator {
         return new Builder().withApi(api);
     }
 
+    private final WebhookResolver webhookResolver;
+
     private OpenApiInteractionValidator(@Nonnull final OpenAPI api,
                                         @Nullable final String basePathOverride,
                                         @Nonnull final MessageResolver messages,
@@ -153,6 +156,7 @@ public class OpenApiInteractionValidator {
                                         final boolean strictOperationPathMatching) {
         this.messages = messages;
         apiOperationResolver = new ApiOperationResolver(api, basePathOverride, strictOperationPathMatching);
+        webhookResolver = new WebhookResolver(api);
         final SchemaValidator schemaValidator = new SchemaValidator(api, messages, validationConfiguration);
         requestValidator = new RequestValidator(schemaValidator, messages, api, customRequestValidators);
         responseValidator = new ResponseValidator(schemaValidator, messages, api, customResponseValidators);
@@ -232,6 +236,107 @@ public class OpenApiInteractionValidator {
                 apiOperation -> responseValidator.validateResponse(response, apiOperation),
                 (apiOperation, report) -> withWhitelistApplied(report, apiOperation, null, response));
         //CHECKSTYLE:ON Indentation
+    }
+
+    /**
+     * Validate a webhook request against the OAS 3.1 webhook definition.
+     *
+     * <p>Webhooks (introduced in OAS 3.1) are operations the API server sends
+     * to clients. They are addressed by name in the spec's top-level
+     * {@code webhooks} map, not by URL path. Use this method to validate the
+     * request body / parameters that your server is about to send to a webhook
+     * subscriber, or that you have just received as a webhook subscriber from
+     * an upstream provider.
+     *
+     * @param webhookName the webhook key from the spec's {@code webhooks} map
+     * @param request the request to validate
+     *
+     * @return the validation report
+     */
+    @Nonnull
+    public ValidationReport validateWebhookRequest(@Nonnull final String webhookName,
+                                                   @Nonnull final Request request) {
+        requireNonNull(webhookName, "A webhook name is required");
+        requireNonNull(request, "A request is required");
+        return validateOnWebhookOperation(
+                webhookName, request.getMethod(),
+                apiOperation -> requestValidator.validateRequest(request, apiOperation),
+                (apiOperation, report) -> withWhitelistApplied(report, apiOperation, request, null));
+    }
+
+    /**
+     * Validate a webhook response against the OAS 3.1 webhook definition.
+     *
+     * @param webhookName the webhook key from the spec's {@code webhooks} map
+     * @param method the HTTP method declared on the webhook
+     * @param response the response to validate
+     *
+     * @return the validation report
+     */
+    @Nonnull
+    public ValidationReport validateWebhookResponse(@Nonnull final String webhookName,
+                                                    @Nonnull final Request.Method method,
+                                                    @Nonnull final Response response) {
+        requireNonNull(webhookName, "A webhook name is required");
+        requireNonNull(method, "A method is required");
+        requireNonNull(response, "A response is required");
+        return validateOnWebhookOperation(
+                webhookName, method,
+                apiOperation -> responseValidator.validateResponse(response, apiOperation),
+                (apiOperation, report) -> withWhitelistApplied(report, apiOperation, null, response));
+    }
+
+    /**
+     * Validate a webhook request and response together against the OAS 3.1
+     * webhook definition.
+     *
+     * @param webhookName the webhook key from the spec's {@code webhooks} map
+     * @param request the request to validate
+     * @param response the response to validate
+     *
+     * @return the validation report
+     */
+    @Nonnull
+    public ValidationReport validateWebhook(@Nonnull final String webhookName,
+                                            @Nonnull final Request request,
+                                            @Nonnull final Response response) {
+        requireNonNull(webhookName, "A webhook name is required");
+        requireNonNull(request, "A request is required");
+        requireNonNull(response, "A response is required");
+        return validateOnWebhookOperation(
+                webhookName, request.getMethod(),
+                apiOperation ->
+                        requestValidator.validateRequest(request, apiOperation)
+                                .merge(responseValidator.validateResponse(response, apiOperation)),
+                (apiOperation, report) -> withWhitelistApplied(report, apiOperation, request, response));
+    }
+
+    private ValidationReport validateOnWebhookOperation(@Nonnull final String webhookName,
+                                                        @Nonnull final Request.Method method,
+                                                        @Nonnull final Function<ApiOperation, ValidationReport> validationFunction,
+                                                        @Nonnull final BiFunction<ApiOperation, ValidationReport, ValidationReport> whitelistingFunction) {
+        final MessageContext context = MessageContext.create()
+                .withRequestPath(webhookName)
+                .withRequestMethod(method)
+                .build();
+
+        if (!webhookResolver.hasWebhook(webhookName)) {
+            return whitelistingFunction.apply(null, ValidationReport.singleton(
+                    messages.get("validation.request.webhook.missing", webhookName)).withAdditionalContext(context)
+            );
+        }
+
+        final ApiOperation apiOperation = webhookResolver.findOperation(webhookName, method);
+        if (apiOperation == null) {
+            return whitelistingFunction.apply(null, ValidationReport.singleton(
+                    messages.get("validation.request.operation.notAllowed", method, webhookName)).withAdditionalContext(context)
+            );
+        }
+
+        return validationFunction
+                .andThen(report -> whitelistingFunction.apply(apiOperation, report))
+                .apply(apiOperation)
+                .withAdditionalContext(context);
     }
 
     private ValidationReport validateOnApiOperation(@Nonnull final String path,
