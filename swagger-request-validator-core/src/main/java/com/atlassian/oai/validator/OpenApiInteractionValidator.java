@@ -666,6 +666,13 @@ public class OpenApiInteractionValidator {
             parseOptions.setResolve(true);
             parseOptions.setResolveFully(true);
             parseOptions.setResolveCombinators(false);
+            // OAS 3.1: schemas like {const: "x"}, {if/then/else}, or
+            // boolean-as-schema have no explicit `type`. With the default
+            // `explicitObjectSchema=true`, swagger-parser injects type:object
+            // into them, which then fails validation for any non-object value.
+            // Disabling preserves the original schema shape; OAS 3.0 specs
+            // typically declare `type` explicitly so this is safe for both.
+            parseOptions.setExplicitObjectSchema(false);
             return parseOptions;
         }
     }

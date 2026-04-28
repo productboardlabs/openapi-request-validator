@@ -292,12 +292,20 @@ public class OasV31SupportAnalysisTest {
         }
 
         @Test
-        @DisplayName("documents: untyped const property behaviour")
-        void documents_untyped_const_behaviour() {
-            final ValidationReport report = validatorFor(untypedSpec).validateRequest(
-                    jsonPost("/events", "{\"kind\": \"order.created\"}"));
-            LOG.error("[const without explicit type] errors? {}{}",
-                    report.hasErrors(), formatMessages(report));
+        @DisplayName("untyped const: matching value passes (after fix)")
+        void untyped_matching_const_passes() {
+            // Before the explicitObjectSchema=false fix, swagger-parser injected
+            // type:object into the const property's schema, causing the validator
+            // to report "string found, object expected".
+            assertPasses(validatorFor(untypedSpec).validateRequest(
+                    jsonPost("/events", "{\"kind\": \"order.created\"}")));
+        }
+
+        @Test
+        @DisplayName("untyped const: non-matching value fails (after fix)")
+        void untyped_non_matching_const_fails() {
+            assertFails(validatorFor(untypedSpec).validateRequest(
+                    jsonPost("/events", "{\"kind\": \"order.deleted\"}")));
         }
     }
 
@@ -624,8 +632,8 @@ public class OasV31SupportAnalysisTest {
     class BooleanSchemas {
 
         @Test
-        @DisplayName("documents: schema:true at top level — does the parser even accept it?")
-        void documents_true_schema_loadability() {
+        @DisplayName("schema:true at top level loads (parser warning ignored)")
+        void true_schema_loads() {
             final String spec =
                     "openapi: 3.1.0\n"
                   + "info: {title: t, version: '1'}\n"
@@ -638,17 +646,12 @@ public class OasV31SupportAnalysisTest {
                   + "          application/json:\n"
                   + "            schema: true\n"
                   + "      responses: { '200': {description: ok} }\n";
-            try {
-                validatorFor(spec);
-                LOG.error("[boolean schema:true] PARSE OK");
-            } catch (final Exception e) {
-                LOG.error("[boolean schema:true] PARSE REJECTED: {}", e.getMessage());
-            }
+            assertNotNull(validatorFor(spec));
         }
 
         @Test
-        @DisplayName("documents: schema:false at top level — does the parser even accept it?")
-        void documents_false_schema_loadability() {
+        @DisplayName("schema:false at top level loads (parser warning ignored)")
+        void false_schema_loads() {
             final String spec =
                     "openapi: 3.1.0\n"
                   + "info: {title: t, version: '1'}\n"
@@ -661,17 +664,12 @@ public class OasV31SupportAnalysisTest {
                   + "          application/json:\n"
                   + "            schema: false\n"
                   + "      responses: { '200': {description: ok} }\n";
-            try {
-                validatorFor(spec);
-                LOG.error("[boolean schema:false] PARSE OK");
-            } catch (final Exception e) {
-                LOG.error("[boolean schema:false] PARSE REJECTED: {}", e.getMessage());
-            }
+            assertNotNull(validatorFor(spec));
         }
 
         @Test
-        @DisplayName("documents: schema:true as nested property schema")
-        void documents_nested_true_schema_loadability() {
+        @DisplayName("schema:true as nested property schema loads cleanly")
+        void nested_true_schema_loads() {
             final String spec =
                     "openapi: 3.1.0\n"
                   + "info: {title: t, version: '1'}\n"
@@ -687,12 +685,7 @@ public class OasV31SupportAnalysisTest {
                   + "              properties:\n"
                   + "                anything: true\n"
                   + "      responses: { '200': {description: ok} }\n";
-            try {
-                validatorFor(spec);
-                LOG.error("[nested boolean schema:true] PARSE OK");
-            } catch (final Exception e) {
-                LOG.error("[nested boolean schema:true] PARSE REJECTED: {}", e.getMessage());
-            }
+            assertNotNull(validatorFor(spec));
         }
     }
 
