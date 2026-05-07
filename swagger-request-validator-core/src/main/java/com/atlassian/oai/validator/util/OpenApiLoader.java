@@ -60,7 +60,24 @@ public class OpenApiLoader {
         if (parseResult == null || parseResult.getOpenAPI() == null) {
             return true;
         }
-        return parseResult.getMessages() != null && !parseResult.getMessages().isEmpty();
+        if (parseResult.getMessages() == null || parseResult.getMessages().isEmpty()) {
+            return false;
+        }
+        // Filter out warnings that don't actually prevent validation. The parser
+        // emits these as messages but still produces a usable OpenAPI model.
+        // Today this covers OAS 3.1 boolean schemas (`schema: true`/`schema: false`)
+        // which are valid JSON Schema 2020-12 but the swagger-parser POJO model
+        // expects an object — see the parser's `is not of type object` warning.
+        return parseResult.getMessages().stream().anyMatch(msg -> !isIgnorableWarning(msg));
+    }
+
+    private static boolean isIgnorableWarning(@Nonnull final String message) {
+        // OAS 3.1 boolean schemas: parser still produces a valid OpenAPI POJO
+        // (with the schema represented as null/missing — equivalent to `true`).
+        // Net effect: validation passes anything for `true`, validation has no
+        // schema to enforce for `false` (so anything passes there too — at the
+        // OpenAPI structural level; downstream validators may still fail).
+        return message != null && message.endsWith("schema is not of type `object`");
     }
 
     private SwaggerParseResult readSwaggerParserResult(final SpecSource specSource,
