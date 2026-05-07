@@ -1,19 +1,11 @@
 package com.atlassian.oai.validator.v31analysis;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.networknt.schema.JsonMetaSchema;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.SchemaValidatorsConfig;
-import com.networknt.schema.SpecVersion;
-import com.networknt.schema.ValidationMessage;
-import com.networknt.schema.oas.OpenApi31;
+import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.dialect.Dialects;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Set;
 
 /**
  * Deep probe for the unevaluatedProperties failure mode. Tries every
@@ -24,12 +16,13 @@ public class UnevaluatedDeepProbeTest {
     private static final Logger LOG = LoggerFactory.getLogger(UnevaluatedDeepProbeTest.class);
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private static int run(final String label, final JsonSchemaFactory factory,
-                           final SchemaValidatorsConfig cfg,
-                           final String schemaJson, final String input) throws Exception {
-        final JsonSchema schema = cfg == null ? factory.getSchema(schemaJson) : factory.getSchema(schemaJson, cfg);
-        final JsonNode node = MAPPER.readTree(input);
-        final Set<ValidationMessage> errs = schema.validate(node);
+    private static int run(final String label,
+                           final SchemaRegistry registry,
+                           final String schemaJson,
+                           final String input) throws Exception {
+        final var schema = registry.getSchema(schemaJson);
+        final var node = MAPPER.readTree(input);
+        final var errs = schema.validate(node);
         LOG.error("[{}] errors: {}", label, errs.size());
         errs.forEach(e -> LOG.error("    - {}", e));
         return errs.size();
@@ -47,16 +40,13 @@ public class UnevaluatedDeepProbeTest {
                 + "}";
         final String bad = "{\"a\":\"x\",\"b\":\"y\",\"c\":\"z\"}";
 
-        run("default 2020-12", JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012), null, schema, bad);
+        run("default 2020-12", SchemaRegistry.withDefaultDialect(Dialects.getDraft202012()), schema, bad);
     }
 
     @Test
     void allOf_with_unevaluated_oas31_metaschema_NO_TYPE_SCHEMA_AT_TOP() throws Exception {
         // Reproduce what SchemaValidator does — uses OpenApi31 meta-schema as default
-        final JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012, builder -> {
-            builder.metaSchema(JsonMetaSchema.builder(OpenApi31.getInstance()).build())
-                   .defaultMetaSchemaIri(OpenApi31.getInstance().getIri());
-        });
+        final var registry = SchemaRegistry.withDefaultDialect(Dialects.getOpenApi31());
 
         final String schema = "{"
                 + "\"allOf\":["
@@ -67,7 +57,7 @@ public class UnevaluatedDeepProbeTest {
                 + "}";
         final String bad = "{\"a\":\"x\",\"b\":\"y\",\"c\":\"z\"}";
 
-        run("OpenApi31 metaschema, no top type", factory, null, schema, bad);
+        run("OpenApi31 metaschema, no top type", registry, schema, bad);
     }
 
     @Test
@@ -85,16 +75,12 @@ public class UnevaluatedDeepProbeTest {
                 + "}";
         final String bad = "{\"a\":\"x\",\"b\":\"y\",\"c\":\"z\"}";
 
-        run("default 2020-12 with additionalProperties:true on branches", JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012), null, schema, bad);
+        run("default 2020-12 with additionalProperties:true on branches", SchemaRegistry.withDefaultDialect(Dialects.getDraft202012()), schema, bad);
     }
 
     @Test
     void allOf_with_unevaluated_object_at_top_OAS31_metaschema() throws Exception {
-        // What if we add type:object at the top level?
-        final JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012, builder -> {
-            builder.metaSchema(JsonMetaSchema.builder(OpenApi31.getInstance()).build())
-                   .defaultMetaSchemaIri(OpenApi31.getInstance().getIri());
-        });
+        final var registry = SchemaRegistry.withDefaultDialect(Dialects.getOpenApi31());
 
         final String schema = "{"
                 + "\"type\":\"object\","
@@ -106,6 +92,6 @@ public class UnevaluatedDeepProbeTest {
                 + "}";
         final String bad = "{\"a\":\"x\",\"b\":\"y\",\"c\":\"z\"}";
 
-        run("OpenApi31 metaschema, type:object at top", factory, null, schema, bad);
+        run("OpenApi31 metaschema, type:object at top", registry, schema, bad);
     }
 }

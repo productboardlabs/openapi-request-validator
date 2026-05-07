@@ -1,7 +1,5 @@
 package com.atlassian.oai.validator.schema;
 
-import static java.util.Objects.requireNonNull;
-
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.format.Base64Format;
@@ -11,7 +9,6 @@ import com.atlassian.oai.validator.schema.format.Int32Format;
 import com.atlassian.oai.validator.schema.format.Int64Format;
 import com.atlassian.oai.validator.schema.transform.AdditionalPropertiesInjectionTransformer;
 import com.atlassian.oai.validator.schema.transform.DiscriminatorMappingTransformer;
-import com.atlassian.oai.validator.schema.transform.ExclusiveMinMaxTransformer;
 import com.atlassian.oai.validator.schema.transform.RequiredFieldTransformer;
 import com.atlassian.oai.validator.schema.transform.SchemaDefinitionsInjectionTransformer;
 import com.atlassian.oai.validator.schema.transform.SchemaTransformationContext;
@@ -21,21 +18,28 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.networknt.schema.Error;
 import com.networknt.schema.InvalidSchemaException;
-import com.networknt.schema.JsonMetaSchema;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.SchemaValidatorsConfig;
-import com.networknt.schema.SpecVersion;
-import com.networknt.schema.ValidationMessage;
-import com.networknt.schema.oas.OpenApi30;
-import com.networknt.schema.oas.OpenApi31;
+import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.SchemaRegistryConfig;
+import com.networknt.schema.SpecificationVersion;
+import com.networknt.schema.dialect.Dialect;
+import com.networknt.schema.dialect.DialectRegistry;
+import com.networknt.schema.dialect.Dialects;
+import com.networknt.schema.dialect.OpenApi30;
+import com.networknt.schema.dialect.OpenApi31;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.core.util.Json31;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.SpecVersion;
 import io.swagger.v3.oas.models.media.DateTimeSchema;
 import io.swagger.v3.oas.models.media.Schema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -44,11 +48,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static java.util.Objects.requireNonNull;
 
 public class SchemaValidator {
 
@@ -59,9 +60,8 @@ public class SchemaValidator {
     public static final String INVALID_JSON_KEY = "validation.schema.invalidJson";
 
     private final MessageResolver messages;
-    private final LoadingCache<JsonSchemaKey, JsonSchema> jsonSchemaCache;
-    private final JsonSchemaFactory schemaFactory;
-    private final SchemaValidatorsConfig validatorsConfig;
+    private final LoadingCache<JsonSchemaKey, com.networknt.schema.Schema> jsonSchemaCache;
+    private final SchemaRegistry schemaRegistry;
     private final JsonNode definitions;
     private final ValidationConfiguration validationConfiguration;
     private final ValidationMessageConverter messageConverter;
@@ -72,11 +72,11 @@ public class SchemaValidator {
      * This value is derived from the {@link OpenAPI#getSpecVersion()} of the provided API
      * definition.
      * <ul>
-     * <li>If {@code true}, the validator configures the underlying {@link JsonSchemaFactory} to use
-     * {@link SpecVersion.VersionFlag#V4} (JSON Schema Draft 4) and the {@link OpenApi30} meta-schema.
+     * <li>If {@code true}, the validator configures the underlying {@link DialectRegistry} to use
+     * {@link SpecificationVersion#DRAFT_4} (JSON Schema Draft 4) and the {@link OpenApi30} meta-schema.
      * It also utilizes the standard {@link Json#mapper()} for JSON processing.</li>
      * <li>If {@code false}, it assumes OpenAPI 3.1 context, configuring the factory for
-     * {@link SpecVersion.VersionFlag#V202012} (JSON Schema 2020-12) and the {@link OpenApi31} meta-schema.
+     * {@link SpecificationVersion#DRAFT_2020_12} (JSON Schema 2020-12) and the {@link OpenApi31} meta-schema.
      * In this mode, {@link Json31#mapper()} is used to support 3.1 specific features.</li>
      * </ul>
      */
@@ -106,32 +106,18 @@ public class SchemaValidator {
         this.messages = requireNonNull(messages);
         this.validationConfiguration = requireNonNull(validationConfiguration);
         this.messageConverter = new ValidationMessageConverter(messages);
-        this.validatorsConfig = SchemaValidatorsConfig.builder()
-                .formatAssertionsEnabled(true)
-                .discriminatorKeywordEnabled(true)
-                .nullableKeywordEnabled(true)
-                .build();
 
-        this.isOpenApi30 = api.getSpecVersion() == io.swagger.v3.oas.models.SpecVersion.V30;
-        final SpecVersion.VersionFlag specVersion = isOpenApi30 ? SpecVersion.VersionFlag.V4 : SpecVersion.VersionFlag.V202012;
+        this.isOpenApi30 = api.getSpecVersion() == SpecVersion.V30;
 
-        this.schemaFactory = JsonSchemaFactory.getInstance(specVersion, builder -> {
-            final JsonMetaSchema baseMetaSchema = isOpenApi30
-                    ? OpenApi30.getInstance()
-                    : OpenApi31.getInstance();
-
-            final JsonMetaSchema metaSchemaWithFormats = JsonMetaSchema.builder(baseMetaSchema)
-                    .format(new Int64Format())
-                    .format(new Int32Format())
-                    .format(new DoubleFormat())
-                    .format(new FloatFormat())
-                    .format(new Base64Format())
+        final Dialect defaultDialect = isOpenApi30 ? Dialects.getOpenApi30() : Dialects.getOpenApi31();
+        this.schemaRegistry = SchemaRegistry.withDefaultDialect(dialectWithFormats(defaultDialect), builder -> {
+            final SchemaRegistryConfig config = SchemaRegistryConfig.builder()
+                    .formatAssertionsEnabled(true)
                     .build();
 
-            builder
-                    .metaSchema(JsonMetaSchema.builder(metaSchemaWithFormats).build())
-                    .defaultMetaSchemaIri(metaSchemaWithFormats.getIri());
+            builder.schemaRegistryConfig(config);
         });
+
         this.definitions = Optional.ofNullable(api.getComponents())
                 .map(Components::getSchemas)
             .map(schemas -> isOpenApi30 ? Json.mapper().convertValue(schemas, JsonNode.class)
@@ -141,7 +127,6 @@ public class SchemaValidator {
 
         final List<SchemaTransformer> transformers = Arrays.asList(
             SchemaDefinitionsInjectionTransformer.getInstance(),
-            ExclusiveMinMaxTransformer.getInstance(),
             DiscriminatorMappingTransformer.getInstance(),
             AdditionalPropertiesInjectionTransformer.getInstance(),
             RequiredFieldTransformer.getInstance());
@@ -157,11 +142,21 @@ public class SchemaValidator {
                                 key.forResponse,
                                 definitions
                         );
-                        return schemaFactory.getSchema(schemaObject, validatorsConfig);
+                        return schemaRegistry.getSchema(schemaObject);
                     });
         } else {
             this.jsonSchemaCache = null;
         }
+    }
+
+    private Dialect dialectWithFormats(final Dialect base) {
+        return Dialect.builder(base)
+            .format(new Int64Format())
+            .format(new Int32Format())
+            .format(new DoubleFormat())
+            .format(new FloatFormat())
+            .format(new Base64Format())
+            .build();
     }
 
     /**
@@ -243,10 +238,8 @@ public class SchemaValidator {
         }
 
         try {
-            final JsonSchema resolvedJsonSchema = resolveJsonSchema(schema, keyPrefix);
-            final Set<ValidationMessage> validationMessages = resolvedJsonSchema.validate(supplier.get(), executionContext -> {
-                executionContext.getExecutionConfig().setFormatAssertionsEnabled(true);
-            });
+            final com.networknt.schema.Schema resolvedJsonSchema = resolveJsonSchema(schema, keyPrefix);
+            final List<Error> validationMessages = resolvedJsonSchema.validate(supplier.get());
             return messageConverter.toValidationReport(validationMessages, keyPrefix);
         } catch (final InvalidSchemaException e) {
             return ValidationReport.singleton(
@@ -262,8 +255,8 @@ public class SchemaValidator {
         }
     }
 
-    private JsonSchema resolveJsonSchema(final Schema<?> schema,
-                                         @Nullable final String keyPrefix) {
+    private com.networknt.schema.Schema resolveJsonSchema(final Schema<?> schema,
+                                                          @Nullable final String keyPrefix) {
         final boolean forRequest = "request.body".equalsIgnoreCase(keyPrefix);
         final boolean forResponse = "response.body".equalsIgnoreCase(keyPrefix);
         final JsonSchemaKey jsonSchemaKey = new JsonSchemaKey(schema, forRequest, forResponse);
@@ -272,7 +265,7 @@ public class SchemaValidator {
                 return jsonSchemaCache.get(jsonSchemaKey);
             }
             final JsonNode schemaObject = readAndTransformSchemaObject(schema, forRequest, forResponse, definitions);
-            return schemaFactory.getSchema(schemaObject, validatorsConfig);
+            return schemaRegistry.getSchema(schemaObject);
         } catch (final Exception e) {
             // TODO: Need to handle this exception
             throw new RuntimeException("JsonSchema construction failed", e);

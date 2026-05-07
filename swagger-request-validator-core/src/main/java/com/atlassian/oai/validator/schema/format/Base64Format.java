@@ -1,7 +1,7 @@
 package com.atlassian.oai.validator.schema.format;
 
 import com.networknt.schema.ExecutionContext;
-import com.networknt.schema.Format;
+import com.networknt.schema.format.Format;
 
 public class Base64Format implements Format {
     private static final boolean[] BASE64_CHARACTERS = initBase64Characters();
