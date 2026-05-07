@@ -49,6 +49,7 @@ public class OpenApiInteractionValidator {
     private final MessageResolver messages;
 
     private final ApiOperationResolver apiOperationResolver;
+    private final WebhookResolver webhookResolver;
     private final RequestValidator requestValidator;
     private final ResponseValidator responseValidator;
     private final ValidationErrorsWhitelist whitelist;
@@ -143,8 +144,6 @@ public class OpenApiInteractionValidator {
     public static Builder createFor(@Nonnull final OpenAPI api) {
         return new Builder().withApi(api);
     }
-
-    private final WebhookResolver webhookResolver;
 
     private OpenApiInteractionValidator(@Nonnull final OpenAPI api,
                                         @Nullable final String basePathOverride,

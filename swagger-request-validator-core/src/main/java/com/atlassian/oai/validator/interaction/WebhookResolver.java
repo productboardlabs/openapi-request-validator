@@ -30,6 +30,15 @@ import java.util.Map;
  */
 public class WebhookResolver {
 
+    /**
+     * Prefix used when constructing synthetic {@link ApiPath} instances for
+     * webhooks. Webhooks are addressed by name, not URL, but downstream
+     * validators expect an {@code ApiPath} for context. Prefixing with
+     * {@code /webhook/} namespaces these synthetic paths so they cannot
+     * collide with real URL paths declared under {@code paths}.
+     */
+    private static final String WEBHOOK_PATH_PREFIX = "/webhook/";
+
     private final Map<String, Map<PathItem.HttpMethod, Operation>> operationsByWebhook;
     private final Map<String, ApiPath> apiPathByWebhook;
 
@@ -53,8 +62,10 @@ public class WebhookResolver {
                 operationsByWebhook.put(name, ops);
                 // We construct a synthetic ApiPath using the webhook name as
                 // the path. Downstream validators only use this for context;
-                // matching has already been done by name.
-                apiPathByWebhook.put(name, new ApiPathImpl(name, "/", false));
+                // matching has already been done by name. The /webhook/
+                // prefix namespaces these so they cannot collide with real
+                // URL paths declared under `paths`.
+                apiPathByWebhook.put(name, new ApiPathImpl(WEBHOOK_PATH_PREFIX + name, "/", false));
             }
         }
     }
