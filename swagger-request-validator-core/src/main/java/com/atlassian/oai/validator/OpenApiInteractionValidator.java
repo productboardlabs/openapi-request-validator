@@ -721,9 +721,8 @@ public class OpenApiInteractionValidator {
         /**
          * Optionally supply a configuration to configure the following aspects of validation:
          * <ul>
-         *     <li>The cache size of {@link com.networknt.schema.JsonSchema} in {@link SchemaValidator} </li>
+         *     <li>The cache size of {@link com.networknt.schema.Schema} in {@link SchemaValidator} </li>
          * </ul>
-         * @param validationConfiguration The configuration for OpenApi validation.
          * @param validationConfiguration The configuration for OpenApi validation.
          * @return this builder instance
          */

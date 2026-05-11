@@ -6,11 +6,11 @@ import com.atlassian.oai.validator.report.ValidationReport;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static java.util.stream.Collectors.toList;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class OpenApiInteractionValidatorBase64ValidationTest {
 
@@ -120,57 +120,62 @@ public class OpenApiInteractionValidatorBase64ValidationTest {
                                 .map(parameter -> parameter.getName() + ": " + message.getMessage())
                                 .orElseGet(message::getMessage)
                 )
+                .sorted()
                 .collect(toList());
-        assertThat(list, containsInAnyOrder(
-            "does not match the regex pattern a+",
-            "does not match the regex pattern a+",
-            "does not match the regex pattern a+",
-            "does not match the regex pattern a+",
-            "does not match the regex pattern a+",
-            "does not match the regex pattern a+",
-            "headerPattern: does not match the regex pattern a+",
-            "headerPatternArray: does not match the regex pattern a+",
-            "headerPatternArray: does not match the regex pattern a+",
-            "pathPattern: does not match the regex pattern a+",
-            "pathPatternArray: does not match the regex pattern a+",
-            "pathPatternArray: does not match the regex pattern a+",
-            "queryPattern: does not match the regex pattern a+",
-            "queryPatternArray: does not match the regex pattern a+",
-            "queryPatternArray: does not match the regex pattern a+",
-            "refHeaderPattern: does not match the regex pattern a+",
-            "refHeaderPatternArray: does not match the regex pattern a+",
-            "refHeaderPatternArray: does not match the regex pattern a+",
-            "refPathPattern: does not match the regex pattern a+",
-            "refPathPatternArray: does not match the regex pattern a+",
-            "refPathPatternArray: does not match the regex pattern a+",
-            "refQueryPattern: does not match the regex pattern a+",
-            "refQueryPatternArray: does not match the regex pattern a+",
-            "refQueryPatternArray: does not match the regex pattern a+",
-            "headerByte: does not match the byte pattern ",
-            "headerByteArray: does not match the byte pattern ",
-            "headerByteArray: does not match the byte pattern ",
-            "refHeaderByte: does not match the byte pattern ",
-            "refHeaderByteArray: does not match the byte pattern ",
-            "refHeaderByteArray: does not match the byte pattern ",
-            "pathByte: does not match the byte pattern ",
-            "pathByteArray: does not match the byte pattern ",
-            "pathByteArray: does not match the byte pattern ",
-            "refPathByte: does not match the byte pattern ",
-            "refPathByteArray: does not match the byte pattern ",
-            "refPathByteArray: does not match the byte pattern ",
-            "does not match the byte pattern ",
-            "does not match the byte pattern ",
-            "does not match the byte pattern ",
-            "does not match the byte pattern ",
-            "does not match the byte pattern ",
-            "does not match the byte pattern ",
-            "queryByte: does not match the byte pattern ",
-            "queryByteArray: does not match the byte pattern ",
-            "queryByteArray: does not match the byte pattern ",
-            "refQueryByte: does not match the byte pattern ",
-            "refQueryByteArray: does not match the byte pattern ",
-            "refQueryByteArray: does not match the byte pattern "
-        ));
+
+        assertEquals(
+                Stream.of(
+                        "does not match the regex pattern a+",
+                        "does not match the regex pattern a+",
+                        "does not match the regex pattern a+",
+                        "does not match the regex pattern a+",
+                        "does not match the regex pattern a+",
+                        "does not match the regex pattern a+",
+                        "headerPattern: does not match the regex pattern a+",
+                        "headerPatternArray: does not match the regex pattern a+",
+                        "headerPatternArray: does not match the regex pattern a+",
+                        "pathPattern: does not match the regex pattern a+",
+                        "pathPatternArray: does not match the regex pattern a+",
+                        "pathPatternArray: does not match the regex pattern a+",
+                        "queryPattern: does not match the regex pattern a+",
+                        "queryPatternArray: does not match the regex pattern a+",
+                        "queryPatternArray: does not match the regex pattern a+",
+                        "refHeaderPattern: does not match the regex pattern a+",
+                        "refHeaderPatternArray: does not match the regex pattern a+",
+                        "refHeaderPatternArray: does not match the regex pattern a+",
+                        "refPathPattern: does not match the regex pattern a+",
+                        "refPathPatternArray: does not match the regex pattern a+",
+                        "refPathPatternArray: does not match the regex pattern a+",
+                        "refQueryPattern: does not match the regex pattern a+",
+                        "refQueryPatternArray: does not match the regex pattern a+",
+                        "refQueryPatternArray: does not match the regex pattern a+",
+                        "headerByte: does not match the byte pattern",
+                        "headerByteArray: does not match the byte pattern",
+                        "headerByteArray: does not match the byte pattern",
+                        "refHeaderByte: does not match the byte pattern",
+                        "refHeaderByteArray: does not match the byte pattern",
+                        "refHeaderByteArray: does not match the byte pattern",
+                        "pathByte: does not match the byte pattern",
+                        "pathByteArray: does not match the byte pattern",
+                        "pathByteArray: does not match the byte pattern",
+                        "refPathByte: does not match the byte pattern",
+                        "refPathByteArray: does not match the byte pattern",
+                        "refPathByteArray: does not match the byte pattern",
+                        "does not match the byte pattern",
+                        "does not match the byte pattern",
+                        "does not match the byte pattern",
+                        "does not match the byte pattern",
+                        "does not match the byte pattern",
+                        "does not match the byte pattern",
+                        "queryByte: does not match the byte pattern",
+                        "queryByteArray: does not match the byte pattern",
+                        "queryByteArray: does not match the byte pattern",
+                        "refQueryByte: does not match the byte pattern",
+                        "refQueryByteArray: does not match the byte pattern",
+                        "refQueryByteArray: does not match the byte pattern"
+                ).sorted().toList(),
+                list
+        );
     }
 
     @Test

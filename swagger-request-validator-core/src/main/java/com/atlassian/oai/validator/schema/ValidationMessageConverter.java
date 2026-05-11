@@ -2,7 +2,7 @@ package com.atlassian.oai.validator.schema;
 
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
-import com.networknt.schema.ValidationMessage;
+import com.networknt.schema.Error;
 
 import java.util.Collection;
 import java.util.List;
@@ -10,7 +10,7 @@ import java.util.List;
 import static java.util.stream.Collectors.toList;
 
 /**
- * Convert a {@link com.networknt.schema.ValidationMessage} into a
+ * Convert a {@link com.networknt.schema.Error} into a
  * {@link com.atlassian.oai.validator.report.ValidationReport}
  */
 public class ValidationMessageConverter {
@@ -21,7 +21,7 @@ public class ValidationMessageConverter {
         this.messages = messages;
     }
 
-    ValidationReport toValidationReport(final Collection<ValidationMessage> validationMessages,
+    ValidationReport toValidationReport(final Collection<Error> validationMessages,
                                         final String keyPrefix) {
         final List<ValidationReport.Message> messages = validationMessages.stream()
                 .map(m -> toMessage(m, keyPrefix))
@@ -30,13 +30,13 @@ public class ValidationMessageConverter {
         return ValidationReport.from(messages);
     }
 
-    ValidationReport.Message toMessage(final ValidationMessage validationMessage,
+    ValidationReport.Message toMessage(final Error validationMessage,
                                        final String keyPrefix) {
         final String keyword = validationMessage.getMessageKey();
 
         return messages.create(
                 "validation." + keyPrefix + ".schema." + keyword,
-                validationMessage.getError()
+                validationMessage.getMessage()
         ).withAdditionalContext(
                 ValidationReport.MessageContext.create()
                         .withPointers(

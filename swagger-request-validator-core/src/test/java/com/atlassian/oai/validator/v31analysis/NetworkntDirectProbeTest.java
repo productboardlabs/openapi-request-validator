@@ -1,19 +1,11 @@
 package com.atlassian.oai.validator.v31analysis;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.networknt.schema.JsonMetaSchema;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.SchemaValidatorsConfig;
-import com.networknt.schema.SpecVersion;
-import com.networknt.schema.ValidationMessage;
-import com.networknt.schema.oas.OpenApi31;
+import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.dialect.Dialects;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Set;
 
 /**
  * Probes networknt directly (bypassing this validator's transformer
@@ -28,13 +20,12 @@ public class NetworkntDirectProbeTest {
     private static final Logger LOG = LoggerFactory.getLogger(NetworkntDirectProbeTest.class);
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
-    private static final JsonSchemaFactory FACTORY =
-            JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012);
+    private static final SchemaRegistry REGISTRY = SchemaRegistry.withDefaultDialect(Dialects.getOpenApi31());
 
     private static int validate(final String schemaJson, final String input) throws Exception {
-        final JsonSchema schema = FACTORY.getSchema(schemaJson);
-        final JsonNode node = MAPPER.readTree(input);
-        final Set<ValidationMessage> errs = schema.validate(node);
+        final var schema = REGISTRY.getSchema(schemaJson);
+        final var node = MAPPER.readTree(input);
+        final var errs = schema.validate(node);
         errs.forEach(e -> LOG.error("  - {}", e));
         return errs.size();
     }
@@ -126,14 +117,6 @@ public class NetworkntDirectProbeTest {
 
     @Test
     void discriminator_with_mapping_via_oas31_metaschema() throws Exception {
-        // OAS-style discriminator using the OAS 3.1 meta-schema (mirrors what
-        // SchemaValidator does). The discriminator keyword is NOT JSON Schema
-        // standard, so it requires the OAS dialect + discriminatorKeywordEnabled.
-        final JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012, builder -> {
-            builder.metaSchema(JsonMetaSchema.builder(OpenApi31.getInstance()).build())
-                   .defaultMetaSchemaIri(OpenApi31.getInstance().getIri());
-        });
-
         final String schema = "{"
                 + "  \"oneOf\": ["
                 + "    {\"$ref\":\"#/$defs/Circle\"},"
@@ -154,12 +137,9 @@ public class NetworkntDirectProbeTest {
                 + "  }"
                 + "}";
 
-        final SchemaValidatorsConfig cfg = SchemaValidatorsConfig.builder()
-                .discriminatorKeywordEnabled(true).build();
-
-        final JsonSchema s = factory.getSchema(schema, cfg);
-        final JsonNode node = MAPPER.readTree("{\"kind\":\"circle\",\"radius\":5}");
-        final Set<ValidationMessage> errs = s.validate(node);
+        final var s = REGISTRY.getSchema(schema);
+        final var node = MAPPER.readTree("{\"kind\":\"circle\",\"radius\":5}");
+        final var errs = s.validate(node);
         errs.forEach(e -> LOG.error("    - {}", e));
         LOG.error("[direct/discriminator+mapping circle] errors: {}", errs.size());
     }

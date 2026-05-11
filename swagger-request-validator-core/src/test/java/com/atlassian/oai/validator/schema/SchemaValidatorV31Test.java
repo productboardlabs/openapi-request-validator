@@ -3,10 +3,14 @@ package com.atlassian.oai.validator.schema;
 import com.atlassian.oai.validator.report.MessageResolver;
 import io.swagger.parser.OpenAPIParser;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.SpecVersion;
+import io.swagger.v3.oas.models.media.IntegerSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
 
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFailWithoutContext;
@@ -99,6 +103,17 @@ public class SchemaValidatorV31Test {
         final Schema includeSummarySchema = parserWithMultiSchema.getPaths().get("/reports/{reportId}/{detailedView}").getGet().getParameters().get(2).getSchema();
 
         assertFailWithoutContext(schemaValidatorWithMultiSchema.validate(includeSummarySchemaValue1, includeSummarySchema, "prefix"), "validation.prefix.schema.invalidJson");
+    }
+
+    @Test
+    public void validate_exclusiveMaximum() {
+        final var openAPI = new OpenAPI(SpecVersion.V31);
+        final var schemaValidator = new SchemaValidator(openAPI, new MessageResolver());
+        final var schema = new IntegerSchema();
+        schema.exclusiveMaximumValue(BigDecimal.valueOf(10));
+
+        final var res = schemaValidator.validate("10", schema, "request");
+        assertFail(res, "validation.request.schema.exclusiveMaximum");
     }
 
     private SchemaValidator validator(final String api) {

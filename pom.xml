@@ -59,7 +59,7 @@
         <hamcrest.version>2.2</hamcrest.version>
         <hamcrest-optional.version>1.3.2</hamcrest-optional.version>
         <jackson.version>2.20.0</jackson.version>
-        <networknt-validator.version>1.5.1</networknt-validator.version>
+        <networknt-validator.version>2.0.1</networknt-validator.version>
         <jsr305.version>3.0.2</jsr305.version>
         <logback.version>1.5.25</logback.version>
         <mockito.version>4.11.0</mockito.version>

@@ -3,10 +3,10 @@ package com.atlassian.oai.validator.schema.format;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.NumericNode;
 import com.networknt.schema.ExecutionContext;
-import com.networknt.schema.Format;
-import com.networknt.schema.JsonType;
-import com.networknt.schema.TypeFactory;
-import com.networknt.schema.ValidationContext;
+import com.networknt.schema.SchemaContext;
+import com.networknt.schema.format.Format;
+import com.networknt.schema.utils.JsonType;
+import com.networknt.schema.utils.TypeFactory;
 
 import java.math.BigDecimal;
 
@@ -22,8 +22,8 @@ public class DoubleFormat implements Format {
     }
 
     @Override
-    public boolean matches(final ExecutionContext executionContext, final ValidationContext validationContext, final JsonNode value) {
-        final JsonType nodeType = TypeFactory.getValueNodeType(value, validationContext.getConfig());
+    public boolean matches(final ExecutionContext executionContext, final SchemaContext schemaContext, final JsonNode value) {
+        final JsonType nodeType = TypeFactory.getValueNodeType(value, schemaContext.getSchemaRegistryConfig());
 
         if (nodeType != JsonType.NUMBER) {
             return true;
