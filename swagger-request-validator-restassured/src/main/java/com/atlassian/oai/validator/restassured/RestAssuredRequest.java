@@ -3,9 +3,11 @@ package com.atlassian.oai.validator.restassured;
 import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import io.restassured.specification.FilterableRequestSpecification;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
@@ -113,7 +115,14 @@ public class RestAssuredRequest implements Request {
         } else if (body instanceof byte[]) {
             builder.withBody((byte[]) body);
         } else if (body instanceof InputStream) {
-            builder.withBody((InputStream) body);
+            try {
+                final byte[] bytes = IOUtils.toByteArray((InputStream) body);
+                builder.withBody(bytes);
+                // Restore the body on the request spec so REST Assured can still send it
+                originalRequest.body(bytes);
+            } catch (final IOException e) {
+                log.warn("Failed to read InputStream body for validation. No request body will be used in validation.", e);
+            }
         } else {
             // TODO: Add support for other body types
             log.warn("Only String, byte[] and InputStream bodies supported. No request body of type '{}' will be used in validation.", body.getClass());

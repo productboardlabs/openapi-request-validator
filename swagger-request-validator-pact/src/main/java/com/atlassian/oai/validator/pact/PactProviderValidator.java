@@ -10,6 +10,7 @@ import au.com.dius.pact.core.model.V4Pact;
 import au.com.dius.pact.core.pactbroker.PactBrokerClient;
 import au.com.dius.pact.core.pactbroker.PactBrokerClientConfig;
 import au.com.dius.pact.core.pactbroker.PactBrokerResult;
+import au.com.dius.pact.core.support.Auth;
 import au.com.dius.pact.provider.ConsumerInfo;
 import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.atlassian.oai.validator.report.ValidationReport;
@@ -130,8 +131,8 @@ public class PactProviderValidator {
                 new PactProviderValidationResults.ConsumerResult(consumer.getName(), getPactSourceLocation(consumer));
 
         final Map<String, Object> options = new HashMap<>();
-        final List<Object> authOptions = consumer.getPactFileAuthentication();
-        if (authOptions != null && !authOptions.isEmpty()) {
+        final Auth authOptions = consumer.getAuth();
+        if (authOptions != null) {
             options.put("authentication", authOptions);
         }
 
