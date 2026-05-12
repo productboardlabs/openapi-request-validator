@@ -11,7 +11,7 @@ If validation fails, an `OpenApiValidationException` (a subclass of `RestClientE
 ## Requirements ##
 
 - Java 17+
-- Spring Framework 6+ (`spring-web`)
+- Spring Framework 6+ (`spring-web`) — Spring Framework 7+ recommended
 
 ## Usage ##
 

@@ -104,18 +104,18 @@ To get better control over the validation a custom `OpenApiInteractionValidator`
     }
 ```
 
-See the [OpenAPI Request Validator - Core](https://bitbucket.org/atlassian/openapi-request-validator/src/master/openapi-request-validator-core/README.md?at=master) for more information on customizing the validator.
+See the [OpenAPI Request Validator - Core](../openapi-request-validator-core/README.md) for more information on customizing the validator.
 
-You might want to add logging for the package: ```com.atlassian.oai.validator.springmvc```
+You might want to add logging for the package: `com.atlassian.oai.validator.springmvc`
 
 ## Example ##
 
-Please see [the tests](https://bitbucket.org/atlassian/openapi-request-validator/src/master/openapi-request-validator-spring-webmvc/src/test/java/com/atlassian/oai/validator/example/?at=master) for working examples.
+See the [example tests](src/test/java/com/atlassian/oai/validator/example/) for working examples.
 
-* There is a simple example that shows how to add the Swagger Request Validation adapter.
-* An advanced example shows how to additionally add an ExceptionHandler to map the `InvalidRequestException` and `InvalidResponseException` to a custom response.
-* Another example shows how to add custom request logging before each validation. A custom `OpenApiInteractionValidator` is used in this example.
-* Not much different is the example for async processing.
+* **Simple** — shows how to add the OpenAPI validation filter and interceptor to a Spring WebMVC application.
+* **Exception handler** — shows how to add an `ExceptionHandler` to map `InvalidRequestException` and `InvalidResponseException` to a custom response.
+* **Request logging** — shows how to add custom request logging before each validation using a custom `OpenApiInteractionValidator`.
+* **Async** — shows how to use validation in an async request-processing context.
 
 ## Limitations ##
 

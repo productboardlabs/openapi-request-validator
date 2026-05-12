@@ -4,14 +4,12 @@
 
 Integrations between the OpenAPI Request Validator and version 7.x onwards of [Spring MockMvc](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/test/web/servlet/MockMvc.html).
 
-For integration with earlier versions of Spring MockMvc see [openapi-request-validator-mockmvc-legacy](../openapi-request-validator-mockmvc-legacy).
-
 This module includes request/response adaptors that allow validation of Spring MockMvc interactions with the OpenAPI Request
 Validator, and a `ResultMatcher` that can be used to add validation to a MockMvc interaction.
 
 ## Usage ##
 
-```
+```xml
 <dependency>
     <groupId>com.atlassian.oai</groupId>
     <artifactId>openapi-request-validator-mockmvc</artifactId>
@@ -19,15 +17,14 @@ Validator, and a `ResultMatcher` that can be used to add validation to a MockMvc
 </dependency>
 ```
 
-See [SwaggerValidationMatchersTest](src/test/java/com/atlassian/oai/validator/mockmvc/SwaggerValidationMatchersTest.java) 
-and the [examples module](https://bitbucket.org/atlassian/openapi-request-validator/src/master/openapi-request-validator-examples/?at=master)
+See [OpenApiValidationMatchersTest](src/test/java/com/atlassian/oai/validator/mockmvc/OpenApiValidationMatchersTest.java)
+and the [examples module](../openapi-request-validator-examples/README.md)
 for running examples of how the MockMvc module can be used.
 
 ### ResultMatcher ###
 The simplest way to use the integration is to add the `ResultMatcher` to the expectations of a MockMvc interaction.
 
 ```java
-
 @Test
 public void testStuff() {
     this.mvc
@@ -39,7 +36,7 @@ public void testStuff() {
 If you need to customise the validation behavior you can supply a pre-initialised validator to the `isValid` matcher.
 
 ```java
-@BeforeClass
+@BeforeAll
 public static void setup() {
     validator = ...some validator initialisation and configuration...
 }
@@ -47,7 +44,7 @@ public static void setup() {
 @Test
 public void testStuff() throws Exception {
     this.mvc
-        .perform(post("/hello/bob")
+        .perform(post("/hello/bob"))
         .andExpect(openApi().isValid(validator));
 }
 ```
