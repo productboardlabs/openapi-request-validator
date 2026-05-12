@@ -4,44 +4,41 @@ import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.util.ValidatorTestUtil;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import static com.atlassian.oai.validator.OpenApiInteractionValidator.createForSpecificationUrl;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 
-@RunWith(Parameterized.class)
 public class OpenAPIV3RequestPathParamReservedCharactersValidationTest {
 
     final OpenApiInteractionValidator classUnderTest =
             createForSpecificationUrl("/oai/v3/api-with-path-param-reserved-characters.yaml").build();
 
-    @Parameterized.Parameters(name = "{0}")
-    public static Object[][] data() {
-        return new Object[][]{
-                {"shouldPass_whenValid", "/test/abc%2F%7C/foo", passes()},
-                {"shouldFail_whenInvalid", "/test/abc%2F/foo", fails("validation.request.parameter.schema.pattern")}
-        };
+    static Stream<TestCase> params() {
+        return Stream.of(
+                new TestCase("shouldPass_whenValid", "/test/abc%2F%7C/foo", passes()),
+                new TestCase("shouldFail_whenInvalid", "/test/abc%2F/foo", fails("validation.request.parameter.schema.pattern"))
+        );
     }
 
-    @Parameterized.Parameter
-    public String testName;
-
-    @Parameterized.Parameter(1)
-    public String requestPath;
-
-    @Parameterized.Parameter(2)
-    public Consumer<ValidationReport> assertion;
-
-    @Test
-    public void test() {
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("params")
+    public void test(final TestCase testCase) {
         final Request request = SimpleRequest.Builder
-                .get(requestPath)
+                .get(testCase.requestPath())
                 .build();
-        assertion.accept(classUnderTest.validateRequest(request));
+        testCase.assertion().accept(classUnderTest.validateRequest(request));
+    }
+
+    record TestCase(String testName, String requestPath, Consumer<ValidationReport> assertion) {
+        @Override
+        public String toString() {
+            return testName;
+        }
     }
 
     private static Consumer<ValidationReport> passes() {

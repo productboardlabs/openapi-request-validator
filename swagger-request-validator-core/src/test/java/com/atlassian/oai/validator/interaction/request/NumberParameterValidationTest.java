@@ -1,10 +1,5 @@
 package com.atlassian.oai.validator.interaction.request;
 
-import com.atlassian.oai.validator.report.MessageResolver;
-import com.atlassian.oai.validator.schema.SchemaValidator;
-import io.swagger.v3.oas.models.OpenAPI;
-import org.junit.Test;
-
 import static com.atlassian.oai.validator.util.ParameterGenerator.enumeratedFloatParam;
 import static com.atlassian.oai.validator.util.ParameterGenerator.floatParam;
 import static com.atlassian.oai.validator.util.ParameterGenerator.floatParamFormat;
@@ -12,6 +7,11 @@ import static com.atlassian.oai.validator.util.ParameterGenerator.floatParamMult
 import static com.atlassian.oai.validator.util.ParameterGenerator.stringParam;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
+
+import com.atlassian.oai.validator.report.MessageResolver;
+import com.atlassian.oai.validator.schema.SchemaValidator;
+import io.swagger.v3.oas.models.OpenAPI;
+import org.junit.jupiter.api.Test;
 
 public class NumberParameterValidationTest {
 

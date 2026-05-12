@@ -5,10 +5,11 @@ import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.whitelist.StatusType;
-import com.google.common.collect.ImmutableList;
 import io.swagger.v3.oas.models.PathItem;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
@@ -24,14 +25,14 @@ public final class WhitelistRules {
      * Creates a rule that matches if all given rules match.
      */
     public static WhitelistRule allOf(final WhitelistRule... rules) {
-        return new AndWhitelistRule(ImmutableList.copyOf(rules));
+        return new AndWhitelistRule(Arrays.asList(rules));
     }
 
     /**
      * Creates a rule that matches if any of the given rules match.
      */
     public static WhitelistRule anyOf(final WhitelistRule... rules) {
-        return new OrWhitelistRule(ImmutableList.copyOf(rules));
+        return new OrWhitelistRule(Arrays.asList(rules));
     }
 
     /**
@@ -238,6 +239,22 @@ public final class WhitelistRules {
                                 .anyMatch(value -> stringContains(value, substring));
                     }
                 });
+    }
+
+    /**
+     * Before v3, requests with missing content types would not fail validation, this was fixed in v3. This whitelist
+     * rule maintains the pre-v3 logic.
+     */
+    public static WhitelistRule missingRequestContentType() {
+        return allOf(
+                messageHasKey("validation.request.contentType.notAllowed"),
+                new PrintableWhitelistRule(
+                        "Missing request Content-Type",
+                        (message, operation, request, response) -> Optional.ofNullable(request)
+                                .flatMap(Request::getContentType)
+                                .isEmpty()
+                )
+        );
     }
 
     private static boolean regexpContain(final String value, final String regexp) {

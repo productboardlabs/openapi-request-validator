@@ -1,8 +1,10 @@
 package com.atlassian.oai.validator.report;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 public class EmptyValidationReportTest {
@@ -11,16 +13,16 @@ public class EmptyValidationReportTest {
 
     @Test
     public void test_hasErrors() {
-        Assert.assertFalse(classUnderTest.hasErrors());
+        assertFalse(classUnderTest.hasErrors());
     }
 
     @Test
     public void test_getMessages() {
-        Assert.assertTrue(classUnderTest.getMessages().isEmpty());
+        assertTrue(classUnderTest.getMessages().isEmpty());
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void test_getMessages_cantBeModified() {
-        classUnderTest.getMessages().add(mock(ValidationReport.Message.class));
+        assertThrows(UnsupportedOperationException.class, () -> classUnderTest.getMessages().add(mock(ValidationReport.Message.class)));
     }
 }

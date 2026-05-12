@@ -1,6 +1,6 @@
 package com.atlassian.oai.validator.springmvc;
 
-import com.google.common.primitives.Bytes;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -364,7 +364,7 @@ public class ResettableRequestServletWrapperTest {
             }
             list.add((byte) value);
         }
-        return Bytes.toArray(list);
+        return ArrayUtils.toPrimitive(list.toArray(new Byte[0]));
     }
 
     @FunctionalInterface

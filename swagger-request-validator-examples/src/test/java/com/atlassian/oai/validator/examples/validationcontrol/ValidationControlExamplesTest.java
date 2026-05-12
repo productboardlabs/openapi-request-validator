@@ -6,13 +6,13 @@ import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.JsonValidationReportFormat;
 import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import static com.atlassian.oai.validator.report.ValidationReport.Level.IGNORE;
 import static com.google.common.collect.ImmutableMap.of;
 import static io.swagger.v3.core.util.Json.pretty;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -45,6 +45,7 @@ public class ValidationControlExamplesTest {
                 validator.validate(
                         SimpleRequest.Builder
                                 .post("/test")
+                                .withContentType("application/json")
                                 .withBody(pretty(of(
                                         "msg", "Hello world"
                                 )))

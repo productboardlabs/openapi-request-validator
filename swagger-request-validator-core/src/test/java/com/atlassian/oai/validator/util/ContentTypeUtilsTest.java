@@ -1,141 +1,109 @@
 package com.atlassian.oai.validator.util;
 
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
-import org.junit.Test;
-import org.junit.experimental.runners.Enclosed;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static com.atlassian.oai.validator.util.ContentTypeUtils.findMostSpecificMatch;
 import static com.atlassian.oai.validator.util.ContentTypeUtils.isJsonContentType;
-import static com.google.common.collect.ImmutableSet.of;
+import static java.util.Set.of;
 import static com.spotify.hamcrest.optional.OptionalMatchers.emptyOptional;
 import static com.spotify.hamcrest.optional.OptionalMatchers.optionalWithValue;
 import static java.util.Collections.emptySet;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 
-@RunWith(Enclosed.class)
 public class ContentTypeUtilsTest {
 
-    @RunWith(Parameterized.class)
-    public static class FindMostSpecificMatchTests {
+    @Nested
+    class FindMostSpecificMatchTests {
 
-        @Parameterized.Parameters(name = "findMostSpecificMatch {0}")
-        public static Object[][] params() {
-            return new Object[][]{
-                    {"returns empty when no API list", "text/plain", emptySet(), null},
-                    {"returns empty when no matches", "text/plain", of("application/json", "application/*"), null},
-                    {"returns match when direct match", "text/plain", of("application/json", "text/plain"), "text/plain"},
-                    {"returns match when range match", "text/plain", of("application/json", "text/*"), "text/*"},
-                    {"returns most specific match when multiple matches", "text/plain", of("application/json", "*/*", "text/*"), "text/*"},
-                    {"returns global wildcard when supplied", "*/*", of("application/json", "*/*", "text/*"), "*/*"},
-                    {"returns global wildcard when no more specific match", "application/xml", of("application/json", "*/*", "text/*"), "*/*"},
-                    {"returns empty when invalid media type", "foop", of("application/json", "*/*", "text/*"), null},
-                    {"handles case differences in params", "application/json;charset=utf-8",
-                            of("application/json;charset=UTF-8", "application/json;charset=UTF-16"), "application/json;charset=UTF-8"},
-                    {"handles whitespace differences in params", "application/json; charset=utf-8",
-                            of("application/json;charset=UTF-8", "application/json;charset=UTF-16"), "application/json;charset=UTF-8"},
-            };
+        static Stream<FindMostSpecificMatchTestCase> params() {
+            return Stream.of(
+                    new FindMostSpecificMatchTestCase("returns empty when no API list", "text/plain", emptySet(), null),
+                    new FindMostSpecificMatchTestCase("returns empty when no matches", "text/plain", of("application/json", "application/*"), null),
+                    new FindMostSpecificMatchTestCase("returns match when direct match", "text/plain", of("application/json", "text/plain"), "text/plain"),
+                    new FindMostSpecificMatchTestCase("returns match when range match", "text/plain", of("application/json", "text/*"), "text/*"),
+                    new FindMostSpecificMatchTestCase("returns most specific match when multiple matches", "text/plain", of("application/json", "*/*", "text/*"), "text/*"),
+                    new FindMostSpecificMatchTestCase("returns global wildcard when supplied", "*/*", of("application/json", "*/*", "text/*"), "*/*"),
+                    new FindMostSpecificMatchTestCase("returns global wildcard when no more specific match", "application/xml", of("application/json", "*/*", "text/*"), "*/*"),
+                    new FindMostSpecificMatchTestCase("returns empty when invalid media type", "foop", of("application/json", "*/*", "text/*"), null),
+                    new FindMostSpecificMatchTestCase("handles case differences in params", "application/json;charset=utf-8",
+                            of("application/json;charset=UTF-8", "application/json;charset=UTF-16"), "application/json;charset=UTF-8"),
+                    new FindMostSpecificMatchTestCase("handles whitespace differences in params", "application/json; charset=utf-8",
+                            of("application/json;charset=UTF-8", "application/json;charset=UTF-16"), "application/json;charset=UTF-8")
+            );
         }
 
-        @Parameterized.Parameter(0)
-        public String description;
-
-        @Parameterized.Parameter(1)
-        public String candidate;
-
-        @Parameterized.Parameter(2)
-        public Set<String> apiContentTypes;
-
-        @Parameterized.Parameter(3)
-        public String expected;
-
-        @Test
-        public void test() {
+        @ParameterizedTest(name = "findMostSpecificMatch {0}")
+        @MethodSource("params")
+        void test(final FindMostSpecificMatchTestCase testCase) {
             assertThat(
-                    findMostSpecificMatch(candidate, apiContentTypes),
-                    expected == null ? emptyOptional() : optionalWithValue(is(expected))
+                    findMostSpecificMatch(testCase.candidate(), testCase.apiContentTypes()),
+                    testCase.expected() == null ? emptyOptional() : optionalWithValue(is(testCase.expected()))
             );
         }
     }
 
-    @RunWith(Parameterized.class)
-    public static class MatchesAnyTests {
+    @Nested
+    class MatchesAnyTests {
 
-        @Parameterized.Parameters(name = "matchesAny {0}")
-        public static Object[][] params() {
-            return new Object[][]{
-                    {"returns false when null candidate", null, of("application/json", "text/xml"), false},
-                    {"returns false when empty API list", "application/json", emptySet(), false},
-                    {"returns true when direct match", "application/json", of("application/json", "text/xml"), true},
-                    {"returns false when no direct match", "application/json", of("text/json", "text/xml"), false},
-                    {"returns true when subtype range match", "application/json", of("application/*", "text/xml"), true},
-                    {"returns false when no subtype range match", "application/json", of("text/*", "text/xml"), false},
-                    {"returns true when global match", "application/hal+json", of("*/*", "text/xml"), true},
-                    {"returns true when charsets defined and direct match", "application/json;charset=utf-8", of("application/json", "text/xml"), true},
-                    {"returns true when suffix match", "application/hal+json", of("application/json", "application/hal+json", "text/xml"), true},
-            };
+        static Stream<MatchesAnyTestCase> params() {
+            return Stream.of(
+                    new MatchesAnyTestCase("returns false when null candidate", null, of("application/json", "text/xml"), false),
+                    new MatchesAnyTestCase("returns false when empty API list", "application/json", emptySet(), false),
+                    new MatchesAnyTestCase("returns true when direct match", "application/json", of("application/json", "text/xml"), true),
+                    new MatchesAnyTestCase("returns false when no direct match", "application/json", of("text/json", "text/xml"), false),
+                    new MatchesAnyTestCase("returns true when subtype range match", "application/json", of("application/*", "text/xml"), true),
+                    new MatchesAnyTestCase("returns false when no subtype range match", "application/json", of("text/*", "text/xml"), false),
+                    new MatchesAnyTestCase("returns true when global match", "application/hal+json", of("*/*", "text/xml"), true),
+                    new MatchesAnyTestCase("returns true when charsets defined and direct match", "application/json;charset=utf-8", of("application/json", "text/xml"), true),
+                    new MatchesAnyTestCase("returns true when suffix match", "application/hal+json", of("application/json", "application/hal+json", "text/xml"), true)
+            );
         }
 
-        @Parameterized.Parameter(0)
-        public String description;
-
-        @Parameterized.Parameter(1)
-        public String candidate;
-
-        @Parameterized.Parameter(2)
-        public Collection<String> apiContentTypes;
-
-        @Parameterized.Parameter(3)
-        public boolean expected;
-
-        @Test
-        public void test() {
-            assertThat(ContentTypeUtils.matchesAny(candidate, apiContentTypes), is(expected));
+        @ParameterizedTest(name = "matchesAny {0}")
+        @MethodSource("params")
+        void test(final MatchesAnyTestCase testCase) {
+            assertThat(ContentTypeUtils.matchesAny(testCase.candidate(), testCase.apiContentTypes()), is(testCase.expected()));
         }
 
     }
 
-    @RunWith(Parameterized.class)
-    public static class IsJsonContentTypeTests {
+    @Nested
+    class IsJsonContentTypeTests {
 
-        @Parameterized.Parameters(name = "isJsonContentType({0}) expects {1}")
-        public static Object[][] params() {
-            return new Object[][]{
-                    {"application/json", true},
-                    {"application/hal+json", true},
-                    {"application/custom+json", true},
-                    {"application/*+json", true},
-                    {"application/xml", false},
-                    {"invalid-media-type", false},
-                    {"application/*", false},
-                    {null, false},
-                    {"application/json;charset=utf-8", true},
-            };
+        static Stream<IsJsonContentTypeTestCase> params() {
+            return Stream.of(
+                    new IsJsonContentTypeTestCase("application/json", true),
+                    new IsJsonContentTypeTestCase("application/hal+json", true),
+                    new IsJsonContentTypeTestCase("application/custom+json", true),
+                    new IsJsonContentTypeTestCase("application/*+json", true),
+                    new IsJsonContentTypeTestCase("application/xml", false),
+                    new IsJsonContentTypeTestCase("invalid-media-type", false),
+                    new IsJsonContentTypeTestCase("application/*", false),
+                    new IsJsonContentTypeTestCase(null, false),
+                    new IsJsonContentTypeTestCase("application/json;charset=utf-8", true)
+            );
         }
 
-        @Parameterized.Parameter(0)
-        public String contentType;
-
-        @Parameterized.Parameter(1)
-        public boolean expectation;
-
-        @Test
-        public void test() {
-            assertThat(isJsonContentType(contentType), is(expectation));
+        @ParameterizedTest(name = "{0}")
+        @MethodSource("params")
+        void test(final IsJsonContentTypeTestCase testCase) {
+            assertThat(isJsonContentType(testCase.contentType()), is(testCase.expectation()));
         }
     }
 
-    @RunWith(JUnit4.class)
-    public static class DefaultTests {
+    @Nested
+    class DefaultTests {
         @Test
         public void getCharsetFromContentType_doesNotFailIfContentTypeIsNull() {
             assertThat(ContentTypeUtils.getCharsetFromContentType((String) null).isPresent(), is(false));
@@ -153,25 +121,46 @@ public class ContentTypeUtilsTest {
 
         @Test
         public void getCharsetFromContentType_doesNotFailIfMultimapIsNull() {
-            assertThat(ContentTypeUtils.getCharsetFromContentType((Multimap<String, String>) null).isPresent(), is(false));
+            assertThat(ContentTypeUtils.getCharsetFromContentType((Map<String, List<String>>) null).isPresent(), is(false));
         }
 
         @Test
         public void getCharsetFromContentType_doesNotFailIfMultimapDoesNotContainContentType() {
-            final Multimap<String, String> headers = Multimaps.forMap(Collections.emptyMap());
+            final Map<String, List<String>> headers = Map.of();
             assertThat(ContentTypeUtils.getCharsetFromContentType(headers).isPresent(), is(false));
         }
 
         @Test
         public void getCharsetFromContentType_charsetNotResolvableForContentTypeHeader() {
-            final Multimap<String, String> headers = Multimaps.forMap(Collections.singletonMap("Content-Type", "text/plain"));
+            final Map<String, List<String>> headers = Map.of("Content-Type", List.of("text/plain"));
             assertThat(ContentTypeUtils.getCharsetFromContentType(headers).isPresent(), is(false));
         }
 
         @Test
         public void getCharsetFromContentType_determinesTheCharsetForContentTypeHeader() {
-            final Multimap<String, String> headers = Multimaps.forMap(Collections.singletonMap("Content-Type", "application/xml; charset=ISO-8859-1"));
+            final Map<String, List<String>> headers = Map.of("Content-Type", List.of("application/xml; charset=ISO-8859-1"));
             assertThat(ContentTypeUtils.getCharsetFromContentType(headers).get(), is(StandardCharsets.ISO_8859_1));
+        }
+    }
+
+    record FindMostSpecificMatchTestCase(String description, String candidate, Set<String> apiContentTypes, String expected) {
+        @Override
+        public String toString() {
+            return description;
+        }
+    }
+
+    record MatchesAnyTestCase(String description, String candidate, Collection<String> apiContentTypes, boolean expected) {
+        @Override
+        public String toString() {
+            return description;
+        }
+    }
+
+    record IsJsonContentTypeTestCase(String contentType, boolean expectation) {
+        @Override
+        public String toString() {
+            return contentType + " -> " + expectation;
         }
     }
 }

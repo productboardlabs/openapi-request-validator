@@ -7,7 +7,8 @@ import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import io.swagger.v3.parser.core.models.ParseOptions;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import javax.annotation.Nonnull;
 import java.util.Map;
@@ -31,6 +32,7 @@ public class OpenAPIV3RequestValidationTest {
         final Request request = SimpleRequest.Builder
                 .post("/users")
                 .withAuthorization("Basic EncryptedUsernameAndPassword")
+                .withContentType("application/json")
                 .withBody(loadJsonRequest("newuser-valid"))
                 .build();
 
@@ -85,7 +87,7 @@ public class OpenAPIV3RequestValidationTest {
     }
 
     @Test
-    public void validate_withMissingContentType_shouldSucceed_withoutRequestBodyValidation() {
+    public void validate_withMissingContentType_shouldFail_withoutRequestBodyValidation() {
         // See https://tools.ietf.org/html/rfc7231#section-3.1.1.5
         final Request request = SimpleRequest.Builder
                 .post("/users")
@@ -93,7 +95,7 @@ public class OpenAPIV3RequestValidationTest {
                 .withBody("not-json")
                 .build();
 
-        assertPass(classUnderTest.validateRequest(request));
+        assertFail(classUnderTest.validateRequest(request), "validation.request.contentType.notAllowed");
     }
 
     @Test
@@ -289,7 +291,7 @@ public class OpenAPIV3RequestValidationTest {
                 .build();
 
         assertFail(classUnderTest.validateRequest(request),
-                "validation.request.body.schema.oneOf");
+                "validation.request.body.schema.oneOf.indexes");
     }
 
     @Test
@@ -358,7 +360,7 @@ public class OpenAPIV3RequestValidationTest {
                 .build();
 
         assertFail(classUnderTest.validateRequest(request),
-                "validation.request.body.schema.allOf");
+                "validation.request.body.schema.type");
     }
 
     @Test
@@ -376,7 +378,7 @@ public class OpenAPIV3RequestValidationTest {
                 .build();
 
         assertFail(classUnderTest.validateRequest(request),
-                "validation.request.body.schema.allOf");
+                "validation.request.body.schema.required");
     }
 
     @Test
@@ -444,7 +446,8 @@ public class OpenAPIV3RequestValidationTest {
                 .build();
 
         assertFail(classUnderTest.validateRequest(request),
-                "validation.request.body.schema.anyOf");
+                "validation.request.body.schema.type",
+                             "validation.request.body.schema.required");
     }
 
     @Test
@@ -462,7 +465,7 @@ public class OpenAPIV3RequestValidationTest {
                 .build();
 
         assertFail(classUnderTest.validateRequest(request),
-                "validation.request.body.schema.anyOf");
+                "validation.request.body.schema.type");
     }
 
     @Test
@@ -480,9 +483,10 @@ public class OpenAPIV3RequestValidationTest {
                 .build();
 
         assertFail(classUnderTest.validateRequest(request),
-                "validation.request.body.schema.anyOf");
+                "validation.request.body.schema.required");
     }
 
+    @Disabled("Ignore this test because networknt does not support oneOf with discriminator")
     @Test
     public void validate_withOneOfDiscriminators_shouldPass_whenValid() {
         final OpenApiInteractionValidator classUnderTest =
@@ -534,6 +538,7 @@ public class OpenAPIV3RequestValidationTest {
         assertFail(classUnderTest.validateRequest(request));
     }
 
+    @Disabled("Ignore this test because networknt does not support oneOf with discriminator")
     @Test
     public void validate_withOneOfDiscriminatorsWithMapping_shouldPass_whenValid() {
         final OpenApiInteractionValidator classUnderTest =

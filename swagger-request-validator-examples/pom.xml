@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.atlassian.oai</groupId>
         <artifactId>swagger-request-validator</artifactId>
-        <version>2.46.2-SNAPSHOT</version>
+        <version>3.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -25,10 +25,6 @@
         <dependency>
             <groupId>com.atlassian.oai</groupId>
             <artifactId>swagger-request-validator-pact</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.atlassian.oai</groupId>
-            <artifactId>swagger-request-validator-wiremock</artifactId>
         </dependency>
         <dependency>
             <groupId>com.atlassian.oai</groupId>
@@ -55,13 +51,14 @@
         </dependency>
 
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>au.com.dius.pact.consumer</groupId>
-            <artifactId>junit</artifactId>
+            <artifactId>junit5</artifactId>
+            <version>${pact-jvm.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -79,6 +76,11 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

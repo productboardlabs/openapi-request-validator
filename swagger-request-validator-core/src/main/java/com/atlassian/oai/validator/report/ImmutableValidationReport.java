@@ -1,8 +1,7 @@
 package com.atlassian.oai.validator.report;
 
-import com.google.common.collect.ImmutableList;
-
 import javax.annotation.Nonnull;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -24,7 +23,7 @@ public class ImmutableValidationReport implements ValidationReport {
             messages = Collections.emptyList();
             return;
         }
-        messages = ImmutableList.of(message);
+        messages = List.of(message);
     }
 
     ImmutableValidationReport(final ValidationReport.Message... messages) {
@@ -32,7 +31,7 @@ public class ImmutableValidationReport implements ValidationReport {
             this.messages = Collections.emptyList();
             return;
         }
-        this.messages = ImmutableList.copyOf(stream(messages).filter(Objects::nonNull).collect(toList()));
+        this.messages = List.copyOf(stream(messages).filter(Objects::nonNull).collect(toList()));
     }
 
     ImmutableValidationReport(final List<ValidationReport.Message> messages) {
@@ -40,7 +39,7 @@ public class ImmutableValidationReport implements ValidationReport {
             this.messages = Collections.emptyList();
             return;
         }
-        this.messages = ImmutableList.copyOf(messages.stream().filter(Objects::nonNull).collect(toList()));
+        this.messages = List.copyOf(messages.stream().filter(Objects::nonNull).collect(toList()));
     }
 
     @Nonnull

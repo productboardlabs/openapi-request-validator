@@ -7,12 +7,13 @@ import io.restassured.http.Headers;
 import io.restassured.response.Response;
 import io.restassured.response.ResponseBody;
 import io.restassured.specification.FilterableRequestSpecification;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -23,19 +24,19 @@ public class OpenApiValidationFilterTest {
 
     private OpenApiValidationFilter classUnderTest = new OpenApiValidationFilter("api.json");
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void create_withNullString_throwsException() {
-        new OpenApiValidationFilter((String) null);
+        assertThrows(IllegalArgumentException.class, () -> new OpenApiValidationFilter((String) null));
     }
 
-    @Test(expected = NullPointerException.class)
-    public void create_withNullSwaggerRequestResponseValidator_throwsException() {
-        new OpenApiValidationFilter((OpenApiInteractionValidator) null);
+    @Test
+    public void create_withNullOpenApiInteractionValidator_throwsException() {
+        assertThrows(NullPointerException.class, () -> new OpenApiValidationFilter((OpenApiInteractionValidator) null));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void create_withEmpty_throwsException() {
-        new OpenApiValidationFilter("");
+        assertThrows(IllegalArgumentException.class, () -> new OpenApiValidationFilter(""));
     }
 
     @Test
@@ -46,12 +47,14 @@ public class OpenApiValidationFilterTest {
                 notNullValue());
     }
 
-    @Test(expected = OpenApiValidationFilter.OpenApiValidationException.class)
+    @Test
     public void filter_throwsException_ifValidationFails() {
-        assertThat(classUnderTest.filter(
-                requestSpec("GET", "/hello/bob"), null,
-                response(200, "{\"msg\":\"Hello bob!\"}")), // Wrong field name
-                notNullValue());
+        assertThrows(OpenApiValidationFilter.OpenApiValidationException.class, () ->
+                classUnderTest.filter(
+                        requestSpec("GET", "/hello/bob"), null,
+                        response(200, "{\"msg\":\"Hello bob!\"}") // Wrong field name
+                )
+        );
     }
 
     @Test
@@ -76,7 +79,9 @@ public class OpenApiValidationFilterTest {
             notNullValue());
     }
 
-    private FilterableRequestSpecification requestSpec(final String method, final String path, final String body) {
+    private FilterableRequestSpecification requestSpec(final String method,
+                                                       final String path,
+                                                       final String body) {
         final FilterableRequestSpecification request = mock(FilterableRequestSpecification.class);
         when(request.getMethod()).thenReturn(method);
         when(request.getDerivedPath()).thenReturn(path);
@@ -93,7 +98,7 @@ public class OpenApiValidationFilterTest {
     }
 
     private FilterContext response(final int status, final String body) {
-        final ResponseBody responseBody = mock(ResponseBody.class);
+        final var responseBody = mock(ResponseBody.class);
         when(responseBody.asByteArray()).thenReturn(body.getBytes(StandardCharsets.UTF_8));
 
         final Response response = mock(Response.class);
@@ -108,7 +113,7 @@ public class OpenApiValidationFilterTest {
     }
 
     private FilterContext emptyResponse() {
-        final ResponseBody responseBody = mock(ResponseBody.class);
+        final var responseBody = mock(ResponseBody.class);
         when(responseBody.asByteArray()).thenReturn(new byte[0]); // This is what RestAssured will return by default
 
         final Response response = mock(Response.class);

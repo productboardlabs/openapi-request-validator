@@ -2,27 +2,37 @@ package com.atlassian.oai.validator.schema;
 
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
+import com.atlassian.oai.validator.schema.format.Base64Format;
+import com.atlassian.oai.validator.schema.format.DoubleFormat;
+import com.atlassian.oai.validator.schema.format.FloatFormat;
+import com.atlassian.oai.validator.schema.format.Int32Format;
+import com.atlassian.oai.validator.schema.format.Int64Format;
 import com.atlassian.oai.validator.schema.transform.AdditionalPropertiesInjectionTransformer;
+import com.atlassian.oai.validator.schema.transform.DiscriminatorMappingTransformer;
 import com.atlassian.oai.validator.schema.transform.RequiredFieldTransformer;
 import com.atlassian.oai.validator.schema.transform.SchemaDefinitionsInjectionTransformer;
-import com.atlassian.oai.validator.schema.transform.SchemaRefInjectionTransformer;
 import com.atlassian.oai.validator.schema.transform.SchemaTransformationContext;
 import com.atlassian.oai.validator.schema.transform.SchemaTransformer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
-import com.github.fge.jsonschema.core.report.ListProcessingReport;
-import com.github.fge.jsonschema.main.JsonSchema;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
-import com.google.common.base.Throwables;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.Iterables;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.networknt.schema.Error;
+import com.networknt.schema.InvalidSchemaException;
+import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.SchemaRegistryConfig;
+import com.networknt.schema.SpecificationVersion;
+import com.networknt.schema.dialect.Dialect;
+import com.networknt.schema.dialect.DialectRegistry;
+import com.networknt.schema.dialect.Dialects;
+import com.networknt.schema.dialect.OpenApi30;
+import com.networknt.schema.dialect.OpenApi31;
 import io.swagger.v3.core.util.Json;
+import io.swagger.v3.core.util.Json31;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.SpecVersion;
 import io.swagger.v3.oas.models.media.DateTimeSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import org.slf4j.Logger;
@@ -34,111 +44,119 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Supplier;
 
-import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.StreamSupport.stream;
 
-/**
- * Validate a value against the schema defined in an OpenAPI / Swagger specification.
- * <p>
- * Supports validation of properties and request/response bodies, and supports schema references.
- */
 public class SchemaValidator {
 
     private static final Logger log = LoggerFactory.getLogger(SchemaValidator.class);
 
     public static final String ADDITIONAL_PROPERTIES_KEY = "validation.schema.additionalProperties";
-    public static final String INVALID_JSON_KEY = "validation.schema.invalidJson";
-    public static final String UNKNOWN_ERROR_KEY = "validation.schema.unknownError";
 
-    private static final String ALLOF_FIELD = "allOf";
+    public static final String INVALID_JSON_KEY = "validation.schema.invalidJson";
 
     private final MessageResolver messages;
-    private final LoadingCache<JsonSchemaKey, JsonSchema> jsonSchemaCache;
-    private final ProcessingMessageConverter messageConverter;
-
-    private final ValidationConfiguration validationConfiguration;
-
+    private final LoadingCache<JsonSchemaKey, com.networknt.schema.Schema> jsonSchemaCache;
+    private final SchemaRegistry schemaRegistry;
     private final JsonNode definitions;
+    private final ValidationConfiguration validationConfiguration;
+    private final ValidationMessageConverter messageConverter;
 
-    private final JsonSchemaFactory schemaFactory;
+    /**
+     * Flag indicating whether the validator is operating in OpenAPI 3.0 mode.
+     * <p>
+     * This value is derived from the {@link OpenAPI#getSpecVersion()} of the provided API
+     * definition.
+     * <ul>
+     * <li>If {@code true}, the validator configures the underlying {@link DialectRegistry} to use
+     * {@link SpecificationVersion#DRAFT_4} (JSON Schema Draft 4) and the {@link OpenApi30} meta-schema.
+     * It also utilizes the standard {@link Json#mapper()} for JSON processing.</li>
+     * <li>If {@code false}, it assumes OpenAPI 3.1 context, configuring the factory for
+     * {@link SpecificationVersion#DRAFT_2020_12} (JSON Schema 2020-12) and the {@link OpenApi31} meta-schema.
+     * In this mode, {@link Json31#mapper()} is used to support 3.1 specific features.</li>
+     * </ul>
+     */
+    private final boolean isOpenApi30;
 
     /**
      * Transformations applied to the schema before validation.
      * <p>
      * Order is important here - the mutations from one transformation are passed through to the subsequent transformers.
      */
-    private final List<SchemaTransformer> transformers = asList(
-            SchemaDefinitionsInjectionTransformer.getInstance(),
-            SchemaRefInjectionTransformer.getInstance(),
-            AdditionalPropertiesInjectionTransformer.getInstance(),
-            RequiredFieldTransformer.getInstance()
-    );
+    private final List<SchemaTransformer> transformers;
 
     /**
      * Build a new validator for the given API specification.
      *
-     * @param api      The API to build the validator for.
+     * @param api The API to build the validator for.
      * @param messages The message resolver to use.
      */
     public SchemaValidator(final OpenAPI api,
-                           @Nonnull final MessageResolver messages) {
-        this(api, messages, SwaggerV20Library::schemaFactory, new ValidationConfiguration());
+        @Nonnull final MessageResolver messages) {
+        this(api, messages, new ValidationConfiguration());
     }
 
-    /**
-     * Build a new validator for the given API specification.
-     *
-     * @param api                   The API to build the validator for.
-     * @param messages              The message resolver to use.
-     * @param schemaFactorySupplier A supplier function to get JsonSchemaFactory.
-     */
-    public SchemaValidator(final OpenAPI api,
-                           @Nonnull final MessageResolver messages,
-                           @Nonnull final Supplier<JsonSchemaFactory> schemaFactorySupplier) {
-        this(api, messages, schemaFactorySupplier, new ValidationConfiguration());
-    }
+    public SchemaValidator(@Nonnull final OpenAPI api,
+                                  @Nonnull final MessageResolver messages,
+                                  @Nonnull final ValidationConfiguration validationConfiguration) {
+        this.messages = requireNonNull(messages);
+        this.validationConfiguration = requireNonNull(validationConfiguration);
+        this.messageConverter = new ValidationMessageConverter(messages);
 
-    /**
-     * Build a new validator for the given API specification.
-     *
-     * @param api                   The API to build the validator for.
-     * @param messages              The message resolver to use.
-     * @param schemaFactorySupplier A supplier function to get JsonSchemaFactory.
-     */
-    public SchemaValidator(final OpenAPI api,
-                           @Nonnull final MessageResolver messages,
-                           @Nonnull final Supplier<JsonSchemaFactory> schemaFactorySupplier,
-                           @Nonnull final ValidationConfiguration validationConfiguration) {
-        this.messages = requireNonNull(messages, "A message resolver is required");
-        this.validationConfiguration = validationConfiguration;
+        this.isOpenApi30 = api.getSpecVersion() == SpecVersion.V30;
 
-        definitions = Optional.ofNullable(api.getComponents())
+        final Dialect defaultDialect = isOpenApi30 ? Dialects.getOpenApi30() : Dialects.getOpenApi31();
+        this.schemaRegistry = SchemaRegistry.withDefaultDialect(dialectWithFormats(defaultDialect), builder -> {
+            final SchemaRegistryConfig config = SchemaRegistryConfig.builder()
+                    .formatAssertionsEnabled(true)
+                    .build();
+
+            builder.schemaRegistryConfig(config);
+        });
+
+        this.definitions = Optional.ofNullable(api.getComponents())
                 .map(Components::getSchemas)
-                .map(schemas -> Json.mapper().convertValue(schemas, JsonNode.class))
-                .orElseGet(() -> Json.mapper().createObjectNode());
-        schemaFactory = requireNonNull(schemaFactorySupplier.get(), "A JsonSchemaFactory is required");
+            .map(schemas -> isOpenApi30 ? Json.mapper().convertValue(schemas, JsonNode.class)
+                : Json31.mapper().convertValue(schemas, JsonNode.class))
+            .orElseGet(() -> isOpenApi30 ? Json.mapper().createObjectNode()
+                : Json31.mapper().createObjectNode());
+
+        final List<SchemaTransformer> transformers = Arrays.asList(
+            SchemaDefinitionsInjectionTransformer.getInstance(),
+            DiscriminatorMappingTransformer.getInstance(),
+            AdditionalPropertiesInjectionTransformer.getInstance(),
+            RequiredFieldTransformer.getInstance());
+        this.transformers = transformers;
+
         if (validationConfiguration.isCacheEnabled()) {
-            this.jsonSchemaCache = CacheBuilder.newBuilder()
+            this.jsonSchemaCache = Caffeine.newBuilder()
                     .maximumSize(validationConfiguration.getMaxCacheSize())
-                    .build(new CacheLoader<JsonSchemaKey, JsonSchema>() {
-                        @Override
-                        public JsonSchema load(final JsonSchemaKey key) throws ProcessingException {
-                            final JsonNode schemaObject = readAndTransformSchemaObject(key.schema,
-                                    key.forRequest, key.forResponse, definitions);
-                            return schemaFactory.getJsonSchema(schemaObject);
-                        }
+                    .build(key -> {
+                        final JsonNode schemaObject = readAndTransformSchemaObject(
+                                key.schema,
+                                key.forRequest,
+                                key.forResponse,
+                                definitions
+                        );
+                        return schemaRegistry.getSchema(schemaObject);
                     });
         } else {
             this.jsonSchemaCache = null;
         }
-        this.messageConverter = new ProcessingMessageConverter(messages);
+    }
+
+    private Dialect dialectWithFormats(final Dialect base) {
+        return Dialect.builder(base)
+            .format(new Int64Format())
+            .format(new Int32Format())
+            .format(new DoubleFormat())
+            .format(new FloatFormat())
+            .format(new Base64Format())
+            .build();
     }
 
     /**
@@ -150,9 +168,9 @@ public class SchemaValidator {
      */
     private boolean hasMultipartTypeSchema(@Nullable final Schema schema) {
         return schema != null
-                && schema.getType() == null
-                && schema.getTypes() != null
-                && schema.getTypes().size() > 0;
+            && schema.getType() == null
+            && schema.getTypes() != null
+            && schema.getTypes().size() > 0;
     }
 
     /**
@@ -168,14 +186,14 @@ public class SchemaValidator {
      */
     @Nonnull
     public ValidationReport validateMultiTypeSchema(@Nonnull final String value,
-                                                    @Nonnull final Schema schema,
-                                                    @Nullable final String keyPrefix) {
+        @Nonnull final Schema schema,
+        @Nullable final String keyPrefix) {
         log.debug("Validating multi value type schema");
         requireNonNull(schema, "A schema is required");
         ValidationReport finalReport = ValidationReport.empty();
         for (Object type : schema.getTypes()) {
             final ValidationReport report = validate(() -> readContent(value, schema, (String) type),
-                    schema, keyPrefix);
+                schema, keyPrefix);
             if (!report.hasErrors()) {
                 return report; // found 1 matching and valid type in the schema
             } else {
@@ -196,8 +214,8 @@ public class SchemaValidator {
      */
     @Nonnull
     public ValidationReport validate(@Nonnull final String value,
-                                     @Nullable final Schema schema,
-                                     @Nullable final String keyPrefix) {
+        @Nullable final Schema schema,
+        @Nullable final String keyPrefix) {
         requireNonNull(value, "A value is required");
         if (hasMultipartTypeSchema(schema)) {
             return validateMultiTypeSchema(value, schema, keyPrefix);
@@ -206,61 +224,39 @@ public class SchemaValidator {
         return validate(() -> readContent(value, schema, type), schema, keyPrefix);
     }
 
-    /**
-     * Validate the given value against the given property schema. If the schema is null then any json is valid.
-     *
-     * @param supplier  Supplies the JsonNode to validate
-     * @param schema    The schema to validate the value against
-     * @param keyPrefix A prefix to apply to validation messages emitted by the validator
-     * @return A validation report containing accumulated validation errors
-     */
+    @FunctionalInterface
+    public interface JsonNodeSupplier {
+        JsonNode get() throws IOException;
+    }
+
     @Nonnull
     public ValidationReport validate(@Nonnull final JsonNodeSupplier supplier,
-                                     @Nullable final Schema schema,
+                                     @Nullable final Schema<?> schema,
                                      @Nullable final String keyPrefix) {
         if (schema == null) {
             return ValidationReport.empty();
         }
 
         try {
-            final ListProcessingReport processingReport;
-            try {
-                final JsonNode content = supplier.get();
-
-                final JsonSchema jsonSchema = resolveJsonSchema(schema, keyPrefix);
-                processingReport = (ListProcessingReport) jsonSchema
-                        .validate(content, true);
-
-            } catch (final ProcessingException e) {
-                return messageConverter.toValidationReport(e.getProcessingMessage(), "processingError", keyPrefix);
-            } catch (final IOException e) {
-                return ValidationReport.singleton(
-                        messages.create(
-                                "validation." + keyPrefix + ".schema.invalidJson",
-                                messages.get(INVALID_JSON_KEY, e.getMessage()).getMessage()
-                        )
-                );
-            }
-
-            if (processingReport != null && !processingReport.isSuccess()) {
-                return stream(processingReport.spliterator(), false)
-                        .map(pm -> messageConverter.toValidationReport(pm, null, keyPrefix))
-                        .reduce(ValidationReport.empty(), ValidationReport::merge);
-            }
-            return ValidationReport.empty();
-        } catch (final RuntimeException e) {
-            log.debug("Error during schema validation", e);
+            final com.networknt.schema.Schema resolvedJsonSchema = resolveJsonSchema(schema, keyPrefix);
+            final List<Error> validationMessages = resolvedJsonSchema.validate(supplier.get());
+            return messageConverter.toValidationReport(validationMessages, keyPrefix);
+        } catch (final InvalidSchemaException e) {
+            return ValidationReport.singleton(
+                    messages.create("validation." + keyPrefix + ".schema.processingError", e.getMessage())
+            );
+        } catch (final IOException e) {
             return ValidationReport.singleton(
                     messages.create(
-                            "validation." + keyPrefix + ".schema.unknownError",
-                            messages.get(UNKNOWN_ERROR_KEY, e.getMessage()).getMessage()
+                            "validation." + keyPrefix + ".schema.invalidJson",
+                            messages.get(INVALID_JSON_KEY, e.getMessage()).getMessage()
                     )
             );
         }
     }
 
-    private JsonSchema resolveJsonSchema(final Schema schema,
-                                         @Nullable final String keyPrefix) throws ProcessingException {
+    private com.networknt.schema.Schema resolveJsonSchema(final Schema<?> schema,
+                                                          @Nullable final String keyPrefix) {
         final boolean forRequest = "request.body".equalsIgnoreCase(keyPrefix);
         final boolean forResponse = "response.body".equalsIgnoreCase(keyPrefix);
         final JsonSchemaKey jsonSchemaKey = new JsonSchemaKey(schema, forRequest, forResponse);
@@ -269,21 +265,20 @@ public class SchemaValidator {
                 return jsonSchemaCache.get(jsonSchemaKey);
             }
             final JsonNode schemaObject = readAndTransformSchemaObject(schema, forRequest, forResponse, definitions);
-            return schemaFactory.getJsonSchema(schemaObject);
-        } catch (final ExecutionException e) {
-            final List<Throwable> causalChain = Throwables.getCausalChain(e);
-            throw (ProcessingException) causalChain.stream()
-                    .filter(exception -> exception instanceof ProcessingException)
-                    .findFirst()
-                    .orElseGet(() -> new ProcessingException("JsonSchema creation failed.", Iterables.getLast(causalChain)));
+            return schemaRegistry.getSchema(schemaObject);
+        } catch (final Exception e) {
+            // TODO: Need to handle this exception
+            throw new RuntimeException("JsonSchema construction failed", e);
         }
     }
 
-    private JsonNode readAndTransformSchemaObject(final Schema schema,
+    private JsonNode readAndTransformSchemaObject(final Schema<?> schema,
                                                   final boolean forRequest,
                                                   final boolean forResponse,
                                                   final JsonNode definitions) {
-        final ObjectNode schemaObject = Json.mapper().convertValue(schema, ObjectNode.class);
+        final ObjectNode schemaObject =
+            isOpenApi30 ? Json.mapper().convertValue(schema, ObjectNode.class)
+                : Json31.mapper().convertValue(schema, ObjectNode.class);
         final SchemaTransformationContext transformationContext = SchemaTransformationContext.create()
                 .forRequest(forRequest)
                 .forResponse(forResponse)
@@ -292,28 +287,31 @@ public class SchemaValidator {
                 // in its validation process. On concurrent validations it might even lead to
                 // ConcurrentModificationException.
                 .withDefinitions(definitions.deepCopy())
+                .withIsOpenApi30(isOpenApi30)
                 .build();
 
         transformers.forEach(t -> t.apply(schemaObject, transformationContext));
-
-        checkForKnownGotchasAndLogMessage(schemaObject);
         return schemaObject;
     }
 
+    private boolean additionalPropertiesValidationEnabled() {
+        return !messages.isIgnored(ADDITIONAL_PROPERTIES_KEY);
+    }
+
     private JsonNode readContent(@Nonnull final String value,
-                                 @Nullable final Schema schema,
-                                 @Nullable final String type) throws IOException {
+        @Nullable final Schema schema,
+        @Nullable final String type) throws IOException {
         if ("string".equalsIgnoreCase(type)) {
             return createStringNode(value);
         }
         if ("null".equalsIgnoreCase(value)) {
-            return Json.mapper().readTree("null");
+            return isOpenApi30 ? Json.mapper().readTree("null") : Json31.mapper().readTree("null");
         }
         if (schema instanceof DateTimeSchema) {
             return createStringNode(normaliseDateTime(value));
         }
         if ("number".equalsIgnoreCase(type) ||
-                "integer".equalsIgnoreCase(type)) {
+            "integer".equalsIgnoreCase(type)) {
             return createNumericNode(value);
         }
         // If not all refs were resolved (ie resolveFully is set to false) then try and resolve it once
@@ -322,7 +320,7 @@ public class SchemaValidator {
             // Only try to resolve the ref once, as to avoid stack overflow with recursive schemas
             return readContent(value, null, referenceType.get());
         }
-        return Json.mapper().readTree(value);
+        return isOpenApi30 ? Json.mapper().readTree(value) : Json31.mapper().readTree(value);
     }
 
     private Optional<String> resolveReferenceType(@Nullable final Schema schema) {
@@ -364,31 +362,12 @@ public class SchemaValidator {
         }
     }
 
-    private boolean additionalPropertiesValidationEnabled() {
-        return !messages.isIgnored(ADDITIONAL_PROPERTIES_KEY);
-    }
-
-    private void checkForKnownGotchasAndLogMessage(final JsonNode schemaObject) {
-        if (additionalPropertiesValidationEnabled() && (schemaObject.has(ALLOF_FIELD))) {
-            log.info("Note: Schema uses the 'allOf' keyword. " +
-                    "Validation of 'additionalProperties' may fail with unexpected errors. " +
-                    "See the project README FAQ for more information.");
-        }
-    }
-
-    @FunctionalInterface
-    public interface JsonNodeSupplier {
-        JsonNode get() throws IOException;
-    }
-
     private static class JsonSchemaKey {
         private final Schema schema;
         private final boolean forRequest;
         private final boolean forResponse;
 
-        private JsonSchemaKey(final Schema schema,
-                              final boolean forRequest,
-                              final boolean forResponse) {
+        private JsonSchemaKey(final Schema schema, final boolean forRequest, final boolean forResponse) {
             this.schema = schema;
             this.forRequest = forRequest;
             this.forResponse = forResponse;

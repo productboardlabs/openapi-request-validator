@@ -3,7 +3,7 @@ package com.atlassian.oai.validator.interaction.request;
 import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.schema.SchemaValidator;
 import io.swagger.v3.oas.models.OpenAPI;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 

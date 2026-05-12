@@ -1,14 +1,15 @@
 package com.atlassian.oai.validator.schema;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class CustomDateTimeFormatterTest {
 
@@ -72,23 +73,23 @@ public class CustomDateTimeFormatterTest {
         
     }
     
-    @Test(expected=DateTimeParseException.class)
+    @Test
     public void parse_withoutSecond_shouldFail() {
-        dateTimeFormatter.parse("2017-05-31T23:45Z");
+        assertThrows(DateTimeParseException.class, () -> dateTimeFormatter.parse("2017-05-31T23:45Z"));
     }
-    
-    @Test(expected=DateTimeParseException.class)
+
+    @Test
     public void parse_withoutOffset_shouldFail() {
-        dateTimeFormatter.parse("2017-05-31T23:45:20.12345");
+        assertThrows(DateTimeParseException.class, () -> dateTimeFormatter.parse("2017-05-31T23:45:20.12345"));
     }
-    
-    @Test(expected=DateTimeParseException.class)
+
+    @Test
     public void parse_wrongDateTime_shouldFail() {
-        dateTimeFormatter.parse("2017:05:31T23:45:20.12345Z");
+        assertThrows(DateTimeParseException.class, () -> dateTimeFormatter.parse("2017:05:31T23:45:20.12345Z"));
     }
-    
-    @Test(expected=DateTimeParseException.class)
+
+    @Test
     public void parse_withTimeZone_shouldFail() {
-        dateTimeFormatter.parse("2017-05-31T23:45:20.123Z[Europe/Paris]");
+        assertThrows(DateTimeParseException.class, () -> dateTimeFormatter.parse("2017-05-31T23:45:20.123Z[Europe/Paris]"));
     }
 }

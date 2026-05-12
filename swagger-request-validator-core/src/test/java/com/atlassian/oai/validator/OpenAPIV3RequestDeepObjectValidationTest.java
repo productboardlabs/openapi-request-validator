@@ -7,7 +7,7 @@ import com.atlassian.oai.validator.model.Request;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.report.LevelResolver;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class OpenAPIV3RequestDeepObjectValidationTest {
 

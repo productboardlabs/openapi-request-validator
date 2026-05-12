@@ -1,7 +1,7 @@
 package com.atlassian.oai.validator.report;
 
 import com.atlassian.oai.validator.util.StringUtils;
-import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -65,7 +65,7 @@ class ImmutableMessage implements ValidationReport.Message {
     public ValidationReport.Message withAdditionalInfo(final String info) {
         return new ImmutableMessage(
                 key, level, message,
-                ImmutableList.<String>builder().addAll(additionalInfo).add(info).build(),
+                new ArrayList<>(additionalInfo) {{ add(info); }},
                 nestedMessages,
                 context
         );
@@ -77,7 +77,7 @@ class ImmutableMessage implements ValidationReport.Message {
         return new ImmutableMessage(
                 key, level, message,
                 additionalInfo,
-                ImmutableList.<ValidationReport.Message>builder().addAll(nestedMessages).addAll(newMessages).build(),
+                new ArrayList<>(nestedMessages) {{ addAll(newMessages); }},
                 context
         );
     }

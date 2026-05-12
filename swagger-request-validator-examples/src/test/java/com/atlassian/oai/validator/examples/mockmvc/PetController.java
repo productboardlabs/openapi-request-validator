@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class PetController {
     @RequestMapping(value = "/pet/{id}",
             method = RequestMethod.GET,
-            produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+            produces = MediaType.APPLICATION_JSON_VALUE)
     public String findPet(final @PathVariable(value = "id") String id) {
         return "{"
                 + "  \"id\": 1,"

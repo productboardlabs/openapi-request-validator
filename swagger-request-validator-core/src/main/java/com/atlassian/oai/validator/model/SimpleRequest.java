@@ -1,18 +1,18 @@
 package com.atlassian.oai.validator.model;
 
 import com.atlassian.oai.validator.util.ContentTypeUtils;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.MultimapBuilder;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -114,8 +114,8 @@ public class SimpleRequest implements Request {
 
         private final Method method;
         private final String path;
-        private final Multimap<String, String> headers;
-        private final Multimap<String, String> queryParams;
+        private final Map<String, List<String>> headers;
+        private final Map<String, List<String>> queryParams;
         private Body body;
         private String bodyAsStringFallback;
 
@@ -257,11 +257,12 @@ public class SimpleRequest implements Request {
          * @param queryParametersCaseSensitive flag if the query parameters are handled case sensitive or not
          */
         public Builder(final Method method, final String path, final boolean queryParametersCaseSensitive) {
+
             this.method = requireNonNull(method, "A method is required");
             this.path = requireNonNull(path, "A path is required");
 
-            headers = multimapBuilder(false /* header are always case insensitive */);
-            queryParams = multimapBuilder(queryParametersCaseSensitive);
+            headers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            queryParams = queryParametersCaseSensitive ? new LinkedHashMap<>() : new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         }
 
         /**
@@ -452,22 +453,17 @@ public class SimpleRequest implements Request {
                         .orElse(StandardCharsets.UTF_8);
                 this.body = new StringBody(bodyAsStringFallback, charset);
             }
-            return new SimpleRequest(method, path, headers.asMap(), queryParams.asMap(), body);
+            return new SimpleRequest(method, path, Collections.unmodifiableMap(headers), Collections.unmodifiableMap(queryParams), body);
         }
 
-        static Multimap<String, String> multimapBuilder(final boolean caseSensitive) {
-            return caseSensitive ? MultimapBuilder.hashKeys().arrayListValues().build() :
-                    MultimapBuilder.treeKeys(String.CASE_INSENSITIVE_ORDER).arrayListValues().build();
-        }
-
-        static void putValuesToMapOrDefault(final Multimap<String, String> map,
+        static void putValuesToMapOrDefault(final Map<String, List<String>> map,
                                             final String name,
                                             final List<String> values,
                                             final String defaultIfNotSet) {
             if (values == null || values.isEmpty()) {
-                map.put(name, defaultIfNotSet);
+                map.computeIfAbsent(name, k -> new ArrayList<>()).add(defaultIfNotSet);
             } else {
-                map.putAll(name, values);
+                map.computeIfAbsent(name, k -> new ArrayList<>()).addAll(values);
             }
         }
     }

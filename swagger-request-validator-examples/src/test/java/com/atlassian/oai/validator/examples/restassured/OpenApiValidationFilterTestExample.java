@@ -2,10 +2,12 @@ package com.atlassian.oai.validator.examples.restassured;
 
 import com.atlassian.oai.validator.restassured.OpenApiValidationFilter;
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
@@ -32,26 +34,28 @@ public class OpenApiValidationFilterTestExample {
     // Using wiremock to simulate a production service.
     // In a real-world use case you would call out to your service (e.g. in a Spring WebMVC test,
     // or to a service running in your TEST environment etc.)
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule(PORT);
+    @RegisterExtension
+    static final WireMockExtension WIRE_MOCK = WireMockExtension.newInstance()
+            .options(wireMockConfig().port(PORT))
+            .build();
 
-    @Before
+    @BeforeEach
     public void setup() {
-        wireMockRule.stubFor(
+        WIRE_MOCK.stubFor(
                 WireMock.get(urlEqualTo("/pet/1"))
                         .willReturn(aResponse()
                                 .withStatus(200)
                                 .withHeader("content-type", "application/json")
                                 .withBody("{\"name\":\"fido\", \"photoUrls\":[]}")));
 
-        wireMockRule.stubFor(
+        WIRE_MOCK.stubFor(
                 WireMock.get(urlEqualTo("/pet/2"))
                         .willReturn(aResponse()
                                 .withStatus(200)
                                 .withHeader("content-type", "application/json")
                                 .withBody("{\"name\":\"fido\"}"))); // Missing required 'photoUrls' field
 
-        wireMockRule.stubFor(
+        WIRE_MOCK.stubFor(
                 WireMock.get(urlEqualTo("/pet/fido")) // Invalid petId
                         .willReturn(aResponse()
                                 .withStatus(200)

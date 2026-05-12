@@ -1,7 +1,7 @@
 package com.atlassian.oai.validator.mockmvc;
 
 import com.atlassian.oai.validator.model.Request;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockServletConfig;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -12,9 +12,9 @@ import java.util.Collections;
 import java.util.Optional;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;

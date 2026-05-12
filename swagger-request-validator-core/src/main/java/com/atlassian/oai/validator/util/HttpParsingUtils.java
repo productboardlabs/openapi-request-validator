@@ -9,9 +9,10 @@ import com.fasterxml.jackson.databind.node.LongNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
-import com.google.common.base.Charsets;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -89,9 +90,9 @@ public class HttpParsingUtils {
      * @return parsed data
      */
     @Nonnull
-    public static Multimap<String, String> parseMultipartFormDataBody(@Nonnull final String multipartContentTypeWithBoundary,
+    public static Map<String, List<String>> parseMultipartFormDataBody(@Nonnull final String multipartContentTypeWithBoundary,
                                                                       @Nonnull final String httpBody) {
-        final Multimap<String, String> params = ArrayListMultimap.create();
+        final Map<String, List<String>> params = new LinkedHashMap<>();
 
         final Optional<String> maybeBoundary = extractMultipartBoundary(multipartContentTypeWithBoundary);
         if (!maybeBoundary.isPresent() && httpBody.isEmpty()) {
@@ -118,7 +119,8 @@ public class HttpParsingUtils {
             final Optional<String> maybeChunkName = extractFormDataName(headerBody[0]);
             maybeChunkName.ifPresent(chunkName ->
                     // Get rid of terminal boundary
-                    params.put(chunkName, headerBody[1].replace("\r\n--" + boundary + "--\r\n", ""))
+                    params.computeIfAbsent(chunkName, k -> new java.util.ArrayList<>())
+                            .add(headerBody[1].replace("\r\n--" + boundary + "--\r\n", ""))
             );
         }
         return params;
@@ -130,15 +132,15 @@ public class HttpParsingUtils {
      * @param httpBody the body of the HTTP request, e.g. "foo=bar&amp;baz=blah";
      */
     @Nonnull
-    public static Multimap<String, String> parseUrlEncodedFormDataBody(@Nonnull final String httpBody) {
-        final Multimap<String, String> params = ArrayListMultimap.create();
+    public static Map<String, List<String>> parseUrlEncodedFormDataBody(@Nonnull final String httpBody) {
+        final Map<String, List<String>> params = new LinkedHashMap<>();
         final String[] pairs = httpBody.split("&");
         try {
             for (final String pair : pairs) {
                 final String[] fields = pair.split("=");
-                final String name = URLDecoder.decode(fields[0], Charsets.UTF_8.name()).trim();
-                final String value = (fields.length > 1) ? URLDecoder.decode(fields[1], Charsets.UTF_8.name()) : null;
-                params.put(name, value);
+                final String name = URLDecoder.decode(fields[0], StandardCharsets.UTF_8.name()).trim();
+                final String value = (fields.length > 1) ? URLDecoder.decode(fields[1], StandardCharsets.UTF_8.name()) : null;
+                params.computeIfAbsent(name, k -> new java.util.ArrayList<>()).add(value);
             }
         } catch (final UnsupportedEncodingException ex) {
             throw new RuntimeException(ex);
@@ -170,9 +172,9 @@ public class HttpParsingUtils {
      */
     @Nonnull
     public static JsonNode parseUrlEncodedFormDataBodyAsJsonNode(@Nonnull final String httpBody) {
-        final Multimap<String, String> data = parseUrlEncodedFormDataBody(httpBody);
+        final Map<String, List<String>> data = parseUrlEncodedFormDataBody(httpBody);
         final ObjectNode root = new ObjectNode(JsonNodeFactory.instance);
-        data.asMap().forEach((key, values) -> root.set(key, toJsonObject(values)));
+        data.forEach((key, values) -> root.set(key, toJsonObject(values)));
         return root;
     }
 

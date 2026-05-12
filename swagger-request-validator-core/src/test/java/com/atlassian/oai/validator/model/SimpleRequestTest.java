@@ -1,7 +1,7 @@
 package com.atlassian.oai.validator.model;
 
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -11,11 +11,12 @@ import java.util.Arrays;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.text.IsEmptyString.isEmptyString;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 
 public class SimpleRequestTest {
@@ -348,14 +349,14 @@ public class SimpleRequestTest {
         assertThat(request.getRequestBody().get(), is(body));
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void method_isMandatory_1() {
-        new SimpleRequest.Builder((String) null, "/path");
+        assertThrows(NullPointerException.class, () -> new SimpleRequest.Builder((String) null, "/path"));
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void method_isMandatory_2() {
-        new SimpleRequest.Builder((Request.Method) null, "/path");
+        assertThrows(NullPointerException.class, () -> new SimpleRequest.Builder((Request.Method) null, "/path"));
     }
 
     @Test
@@ -387,9 +388,9 @@ public class SimpleRequestTest {
         });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void method_notSupportedHttpMethodsCanNotBeSet() {
-        new SimpleRequest.Builder("NOT", "/path");
+        assertThrows(IllegalArgumentException.class, () -> new SimpleRequest.Builder("NOT", "/path"));
     }
 
     @Test
@@ -412,9 +413,9 @@ public class SimpleRequestTest {
         ));
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void path_isMandatory() {
-        new SimpleRequest.Builder("GET", null);
+        assertThrows(NullPointerException.class, () -> new SimpleRequest.Builder("GET", null));
     }
 
     @Test
@@ -431,23 +432,23 @@ public class SimpleRequestTest {
         assertThat(request.getPath(), equalTo("/path/is/set"));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void getQueryParameterValues_isUnmodifiable() {
-        SimpleRequest.Builder.get("/path").build().getQueryParameterValues("foo").add("bar");
+        assertThrows(UnsupportedOperationException.class, () -> SimpleRequest.Builder.get("/path").build().getQueryParameterValues("foo").add("bar"));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void getQueryParameters_isUnmodifiable() {
-        SimpleRequest.Builder.get("/path").build().getQueryParameters().add("bar");
+        assertThrows(UnsupportedOperationException.class, () -> SimpleRequest.Builder.get("/path").build().getQueryParameters().add("bar"));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void getHeaders_isUnmodifiable() {
-        SimpleRequest.Builder.get("/path").build().getHeaders().put("foo", Arrays.asList("bar"));
+        assertThrows(UnsupportedOperationException.class, () -> SimpleRequest.Builder.get("/path").build().getHeaders().put("foo", Arrays.asList("bar")));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void getHeaderValues_isUnmodifiable() {
-        SimpleRequest.Builder.get("/path").build().getHeaderValues("foo").add("bar");
+        assertThrows(UnsupportedOperationException.class, () -> SimpleRequest.Builder.get("/path").build().getHeaderValues("foo").add("bar"));
     }
 }

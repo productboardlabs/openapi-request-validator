@@ -1,19 +1,19 @@
 package com.atlassian.oai.validator.report;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 
 public class LevelResolverTest {
 
     private LevelResolver classUnderTest;
 
-    @Before
+    @BeforeEach
     public void setup() {
         final Map<String, ValidationReport.Level> levels = new HashMap<>();
         levels.put("a.b.c.d", ValidationReport.Level.ERROR);

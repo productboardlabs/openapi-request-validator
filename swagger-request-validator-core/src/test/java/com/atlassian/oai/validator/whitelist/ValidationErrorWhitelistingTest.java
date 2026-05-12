@@ -9,11 +9,11 @@ import com.atlassian.oai.validator.whitelist.rule.WhitelistRules;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static com.atlassian.oai.validator.report.ValidationReport.Level.IGNORE;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
-import static org.junit.Assert.assertThat;
 
 public class ValidationErrorWhitelistingTest {
 
@@ -38,7 +38,8 @@ public class ValidationErrorWhitelistingTest {
                 .withContentType("application/json")
                 .build();
         final ValidationReport report2 = classUnderTest.validateRequest(usersRequest);
-        assertThat(report2.getMessages(), hasItem(whitelisted("Object has missing required properties", "Ignore NewUser entity errors")));
+        assertThat(report2.getMessages(), hasItem(whitelisted("required property 'email' not found", "Ignore NewUser entity errors")));
+        assertThat(report2.getMessages(), hasItem(whitelisted("required property 'name' not found", "Ignore NewUser entity errors")));
     }
 
     @Test
@@ -59,7 +60,7 @@ public class ValidationErrorWhitelistingTest {
                 SimpleResponse.Builder.ok().withHeader("Content-Type", "application/json").withBody("{}").build()
         );
         assertThat(report2.getMessages(), hasItem(
-                whitelisted("Instance type (object) does not match any allowed primitive type (allowed: [\"array\"])", "Ignore schema type"))
+                whitelisted("object found, array expected", "Ignore schema type"))
         );
     }
 

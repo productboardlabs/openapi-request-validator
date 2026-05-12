@@ -1,12 +1,11 @@
 package com.atlassian.oai.validator.example.async;
 
-import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
+import org.springframework.test.web.servlet.client.RestTestClient;
+import org.springframework.test.web.servlet.client.EntityExchangeResult;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -22,22 +21,22 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+@AutoConfigureRestTestClient
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = {"server.error.include-message=always"})
+        properties = {"spring.web.error.include-message=always"})
 public class RestRequestValidationTest {
 
     @Autowired
-    private TestRestTemplate restTemplate;
+    private RestTestClient restTestClient;
 
     @Test
     public void testGet_success() {
-        final Map<String, List<String>> additionalHeaders = ImmutableMap
-                .of("headerValue", singletonList("valueHeader"));
+        final Map<String, List<String>> additionalHeaders = Map.of("headerValue", singletonList("valueHeader"));
         final ResponseEntity<HashMap> response = restRequest("/spring/variablePath?requestParam=paramRequest",
                 HttpMethod.GET, null /* no body */, additionalHeaders);
 
         // then: 'the response contains the header, path variable and query parameter'
-        final Map<String, Object> expectedBody = ImmutableMap.of("headerValue", "valueHeader",
+        final Map<String, Object> expectedBody = Map.of("headerValue", "valueHeader",
                 "pathVariable", "variablePath",
                 "requestParam", "paramRequest");
         assertOkRequest(response, expectedBody);
@@ -45,13 +44,12 @@ public class RestRequestValidationTest {
 
     @Test
     public void testGet_timeout() {
-        final Map<String, List<String>> additionalHeaders = ImmutableMap
-                .of("headerValue", singletonList("valueHeader"));
+        final Map<String, List<String>> additionalHeaders = Map.of("headerValue", singletonList("valueHeader"));
         final ResponseEntity<HashMap> response = restRequest("/spring/timeout?requestParam=paramRequest",
                 HttpMethod.GET, null /* no body */, additionalHeaders);
 
         // then: 'the response contains the header, path variable and query parameter'
-        final Map<String, Object> expectedBody = ImmutableMap.of("headerValue", "timeout",
+        final Map<String, Object> expectedBody = Map.of("headerValue", "timeout",
                 "pathVariable", "timeout",
                 "requestParam", "timeout");
         assertOkRequest(response, expectedBody);
@@ -70,20 +68,23 @@ public class RestRequestValidationTest {
 
     @Test
     public void testGet_invalidResponse() {
-        final Map<String, List<String>> additionalHeaders = ImmutableMap
-                .of("headerValue", singletonList("valueHeader"));
+        final Map<String, List<String>> additionalHeaders = Map.of("headerValue", singletonList("valueHeader"));
         final ResponseEntity<HashMap> response = requestWithInvalidResponse("/spring/variablePath?requestParam=paramRequest",
                 HttpMethod.GET, null /* no body */, additionalHeaders);
 
         // then: 'invalid response, empty body'
         assertBadResponse(response,
-                "Object has missing required properties ([\\\"headerValue\\\",\\\"pathVariable\\\",\\\"requestParam\\\"])");
+                "required property 'headerValue' not found");
+        assertBadResponse(response,
+            "required property 'pathVariable' not found");
+        assertBadResponse(response,
+            "required property 'requestParam' not found");
     }
 
     @Test
     public void testPost_success() {
-        final Map<String, Object> sendBody = ImmutableMap.of("string", "text",
-                "integer", 1022, "object", ImmutableMap.of("boolean", true));
+        final Map<String, Object> sendBody = Map.of("string", "text",
+                "integer", 1022, "object", Map.of("boolean", true));
         final ResponseEntity<HashMap> response = restRequest(
                 "/spring", HttpMethod.POST, sendBody);
 
@@ -93,36 +94,44 @@ public class RestRequestValidationTest {
 
     @Test
     public void testPost_invalidRequest() {
-        final Map<String, Object> sendBody = ImmutableMap.of("integer", "noInteger");
+        final Map<String, Object> sendBody = Map.of("integer", "noInteger");
         final ResponseEntity<HashMap> response = restRequest("/spring",
                 HttpMethod.POST, sendBody);
 
         // then: 'invalid request, all required request fields are missing'
         assertBadRequest(response,
-                "Object has missing required properties ([\\\"object\\\",\\\"string\\\"])");
+                "string found, integer expected");
+        assertBadRequest(response,
+            "required property 'object' not found");
+        assertBadRequest(response,
+            "required property 'string' not found");
     }
 
     @Test
     public void testPost_invalidResponse() {
-        final Map<String, Object> sendBody = ImmutableMap.of("string", "text",
-                "integer", 1022, "object", ImmutableMap.of("boolean", true));
+        final Map<String, Object> sendBody = Map.of("string", "text",
+                "integer", 1022, "object", Map.of("boolean", true));
         final ResponseEntity<HashMap> response = requestWithInvalidResponse(
                 "/spring", HttpMethod.POST, sendBody, Collections.emptyMap());
 
         // then: 'invalid response, empty body'
         assertBadResponse(response,
-                "Object has missing required properties ([\\\"integer\\\",\\\"object\\\",\\\"string\\\"])");
+            "required property 'integer' not found");
+        assertBadResponse(response,
+            "required property 'object' not found");
+        assertBadResponse(response,
+            "required property 'string' not found");
     }
 
     @Test
     public void testPut_success() {
-        final Map<String, Object> sendBody = ImmutableMap.of("putValue", "valuePut");
+        final Map<String, Object> sendBody = Map.of("putValue", "valuePut");
         final ResponseEntity<HashMap> response = restRequest("/spring/variablePath",
                 HttpMethod.PUT, sendBody);
 
         // then: 'the response contains a copy of the request including the path parameter'
-        final Map<String, Object> expectedBody = ImmutableMap.<String, Object>builder()
-                .putAll(sendBody).put("pathVariable", "variablePath").build();
+        final Map<String, Object> expectedBody = new java.util.HashMap<>(sendBody);
+        ((java.util.HashMap<String, Object>) expectedBody).put("pathVariable", "variablePath");
         assertOkRequest(response, expectedBody);
     }
 
@@ -136,13 +145,15 @@ public class RestRequestValidationTest {
 
     @Test
     public void testPut_invalidResponse() {
-        final Map<String, Object> sendBody = ImmutableMap.of("putValue", "valuePut");
+        final Map<String, Object> sendBody = Map.of("putValue", "valuePut");
         final ResponseEntity<HashMap> response = requestWithInvalidResponse("/spring/variablePath",
                 HttpMethod.PUT, sendBody, Collections.emptyMap());
 
         // then: 'invalid response, empty body'
         assertBadResponse(response,
-                "Object has missing required properties ([\\\"pathVariable\\\",\\\"putValue\\\"])");
+                "required property 'pathVariable' not found");
+        assertBadResponse(response,
+            "required property 'putValue' not found");
     }
 
     @Test
@@ -159,7 +170,7 @@ public class RestRequestValidationTest {
 
         // then: 'invalid request, the path variable is no integer'
         assertBadRequest(response,
-                "Instance type (string) does not match any allowed primitive type (allowed: [\\\"integer\\\"])");
+                "string found, integer expected");
     }
 
     @Test
@@ -177,26 +188,38 @@ public class RestRequestValidationTest {
     }
 
     private ResponseEntity<HashMap> restRequest(final String uri, final HttpMethod method, final Object body) {
-        return restRequest(uri, method, body, ImmutableMap.of());
+        return restRequest(uri, method, body, Map.of());
     }
 
     private ResponseEntity<HashMap> restRequest(final String uri, final HttpMethod method, final Object body,
                                                 final Map<String, List<String>> additionalHeader) {
-        final HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(singletonList(MediaType.APPLICATION_JSON));
-        headers.putAll(additionalHeader);
-        final HttpEntity<Object> entity = new HttpEntity<>(body, headers);
-        return restTemplate.exchange(uri, method, entity, HashMap.class);
+        final EntityExchangeResult<HashMap> result = restTestClient
+                .method(method)
+                .uri(uri)
+                .accept(MediaType.APPLICATION_JSON)
+                .headers(headers -> additionalHeader.forEach((key, values) -> headers.addAll(key, values)))
+                .body(body != null ? body : "")
+                .exchange()
+                .expectBody(HashMap.class)
+                .returnResult();
+        return new ResponseEntity<>(result.getResponseBody(), result.getResponseHeaders(), result.getStatus());
     }
 
     private ResponseEntity<HashMap> requestWithInvalidResponse(final String uri, final HttpMethod method,
                                                                final Object body, final Map<String, List<String>> additionalHeader) {
-        final HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(singletonList(MediaType.APPLICATION_JSON));
-        headers.putAll(additionalHeader);
-        headers.put("invalidResponse", singletonList("true"));
-        final HttpEntity<Object> entity = new HttpEntity<>(body, headers);
-        return restTemplate.exchange(uri, method, entity, HashMap.class);
+        final EntityExchangeResult<HashMap> result = restTestClient
+                .method(method)
+                .uri(uri)
+                .accept(MediaType.APPLICATION_JSON)
+                .headers(headers -> {
+                    additionalHeader.forEach((key, values) -> headers.addAll(key, values));
+                    headers.add("invalidResponse", "true");
+                })
+                .body(body != null ? body : "")
+                .exchange()
+                .expectBody(HashMap.class)
+                .returnResult();
+        return new ResponseEntity<>(result.getResponseBody(), result.getResponseHeaders(), result.getStatus());
     }
 
     private void assertOkRequest(final ResponseEntity<HashMap> response, final Map<String, Object> body) {

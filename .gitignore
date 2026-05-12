@@ -9,3 +9,6 @@ release.properties
 .settings/
 .vscode/
 .DS_Store
+.specify
+.rovodev
+specs

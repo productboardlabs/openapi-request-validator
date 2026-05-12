@@ -9,8 +9,7 @@ import com.atlassian.oai.validator.model.Response;
 import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.ValidationReport;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterators;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
@@ -18,14 +17,11 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
+import org.springframework.test.web.servlet.client.RestTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.io.support.EncodedResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -71,12 +67,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+@AutoConfigureRestTestClient
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = {"server.contextPath=/v1", "server.error.include-message=always"})
+        properties = {"server.contextPath=/v1", "spring.web.error.include-message=always"})
 public class OpenApiValidationServiceTest {
 
     @Autowired
-    private TestRestTemplate restTemplate;
+    private RestTestClient restTestClient;
 
     private OpenApiValidationService classUnderTest;
 
@@ -90,7 +87,7 @@ public class OpenApiValidationServiceTest {
     }
 
     private static Enumeration<String> asEnumeration(final String... values) {
-        return Iterators.asEnumeration(Arrays.asList(values).iterator());
+        return Collections.enumeration(Arrays.asList(values));
     }
 
     @BeforeEach
@@ -302,7 +299,7 @@ public class OpenApiValidationServiceTest {
         // then:
         assertThat(result.getResponseBody().isPresent(), equalTo(true));
         assertThat(result.getStatus(), is(404));
-        assertThat(getHeadersFromResponse(result), equalTo(ImmutableMap.of(
+        assertThat(getHeadersFromResponse(result), equalTo(Map.of(
                 "header 1", asList("header value 1", "header value 2"),
                 "header 2", asList("header value 3"),
                 "Content-Type", asList("application/json")
@@ -419,24 +416,25 @@ public class OpenApiValidationServiceTest {
 
     @Test
     public void buildRequest_realServletRequestTest() {
-        // setup: prepare request
-        final HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-        headers.put("headerValue", Arrays.asList("header value"));
-        final HttpEntity<Object> entity = new HttpEntity<>(null, headers);
-
-        // when: send request
-        final ResponseEntity<Map> responseEntity = restTemplate
-                .exchange("/test controller/path variable?queryParam=query param", HttpMethod.GET, entity, Map.class);
+        // setup: prepare request and send
+        final Map responseBody = restTestClient
+                .get()
+                .uri("/test controller/path variable?queryParam=query param")
+                .accept(MediaType.APPLICATION_JSON)
+                .header("headerValue", "header value")
+                .exchange()
+                .expectBody(Map.class)
+                .returnResult()
+                .getResponseBody();
 
         // then: assert the values that spring has been set in the controller method
-        final Map springRequest = (Map) responseEntity.getBody().get("springRequest");
+        final Map springRequest = (Map) responseBody.get("springRequest");
         assertThat(springRequest.get("pathVariable"), is("path variable"));
         assertThat(springRequest.get("queryParam"), is("query param"));
         assertThat(springRequest.get("headerValue"), is("header value"));
 
         // and: assert the values that the validation service has been set from the servlet request
-        final Map validationRequest = (Map) responseEntity.getBody().get("validationRequest");
+        final Map validationRequest = (Map) responseBody.get("validationRequest");
         assertThat(validationRequest.get("path"), is("/test controller/path variable"));
         assertThat(validationRequest.get("queryParam"), is("query param"));
         assertThat(validationRequest.get("headerValue"), is("header value"));
@@ -514,22 +512,18 @@ public class OpenApiValidationServiceTest {
                     new UrlPathHelper());
             final ServletInputStream inputStream = servletRequest.getInputStream();
             final Request request = openApiValidationService.buildRequest(servletRequest, () -> new InputStreamBody(inputStream));
-            return new ImmutableMap.Builder()
-                    .put("springRequest",
-                            new ImmutableMap.Builder()
-                                    .put("pathVariable", pathVariable)
-                                    .put("queryParam", queryParam)
-                                    .put("headerValue", headerValue)
-                                    .build()
+            return Map.of(
+                    "springRequest", Map.of(
+                            "pathVariable", pathVariable,
+                            "queryParam", queryParam,
+                            "headerValue", headerValue
+                    ),
+                    "validationRequest", Map.of(
+                            "path", request.getPath(),
+                            "queryParam", request.getQueryParameterValues("queryParam").iterator().next(),
+                            "headerValue", request.getHeaderValue("headerValue")
                     )
-                    .put("validationRequest",
-                            new ImmutableMap.Builder()
-                                    .put("path", request.getPath())
-                                    .put("queryParam", request.getQueryParameterValues("queryParam").iterator().next())
-                                    .put("headerValue", request.getHeaderValue("headerValue"))
-                                    .build()
-                    )
-                    .build();
+            );
         }
     }
 }

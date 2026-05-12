@@ -1,6 +1,6 @@
 package com.atlassian.oai.validator.model;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -9,12 +9,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.isEmptyString;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class SimpleResponseTest {
 
@@ -197,8 +198,8 @@ public class SimpleResponseTest {
         assertThat(SimpleResponse.Builder.serverError().build().getStatus(), is(500));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void getHeaderValues_isUnmodifiable() {
-        SimpleResponse.Builder.ok().build().getHeaderValues("foo").add("bar");
+        assertThrows(UnsupportedOperationException.class, () -> SimpleResponse.Builder.ok().build().getHeaderValues("foo").add("bar"));
     }
 }

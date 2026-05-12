@@ -8,7 +8,7 @@ import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.whitelist.rule.WhitelistRule;
-import com.google.common.collect.ImmutableMap;
+
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.media.Content;
@@ -19,6 +19,7 @@ import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -106,7 +107,7 @@ public class OperationForWhitelisting {
         return this;
     }
 
-    public OperationForWhitelisting withRequestHeaders(final ImmutableMap<String, List<String>> headers) {
+    public OperationForWhitelisting withRequestHeaders(final Map<String, List<String>> headers) {
         final SimpleRequest.Builder request = new SimpleRequest.Builder(this.request.getMethod(), this.request.getPath());
         headers.forEach(request::withHeader);
         this.request = request.build();
@@ -120,7 +121,7 @@ public class OperationForWhitelisting {
         return this;
     }
 
-    public OperationForWhitelisting withResponseHeaders(final ImmutableMap<String, List<String>> headers) {
+    public OperationForWhitelisting withResponseHeaders(final Map<String, List<String>> headers) {
         final SimpleResponse.Builder response = new SimpleResponse.Builder(this.response.getStatus());
         headers.forEach(response::withHeader);
         this.response = response.build();

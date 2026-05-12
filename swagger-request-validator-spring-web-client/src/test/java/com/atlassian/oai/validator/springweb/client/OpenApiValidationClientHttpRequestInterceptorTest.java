@@ -1,7 +1,7 @@
 package com.atlassian.oai.validator.springweb.client;
 
 import com.atlassian.oai.validator.OpenApiInteractionValidator;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,6 +21,7 @@ import java.util.Collections;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class OpenApiValidationClientHttpRequestInterceptorTest {
 
@@ -28,19 +29,19 @@ public class OpenApiValidationClientHttpRequestInterceptorTest {
 
     private OpenApiValidationClientHttpRequestInterceptor classUnderTest = new OpenApiValidationClientHttpRequestInterceptor("api.json");
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void create_withNullString_throwsException() {
-        new OpenApiValidationClientHttpRequestInterceptor((String) null);
+        assertThrows(IllegalArgumentException.class, () -> new OpenApiValidationClientHttpRequestInterceptor((String) null));
     }
 
-    @Test(expected = NullPointerException.class)
-    public void create_withNullSwaggerRequestResponseValidator_throwsException() {
-        new OpenApiValidationClientHttpRequestInterceptor((OpenApiInteractionValidator) null);
+    @Test
+    public void create_withNullOpenApiInteractionValidator_throwsException() {
+        assertThrows(NullPointerException.class, () -> new OpenApiValidationClientHttpRequestInterceptor((OpenApiInteractionValidator) null));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void create_withEmpty_throwsException() {
-        new OpenApiValidationClientHttpRequestInterceptor("");
+        assertThrows(IllegalArgumentException.class, () -> new OpenApiValidationClientHttpRequestInterceptor(""));
     }
 
     @Test
@@ -50,10 +51,12 @@ public class OpenApiValidationClientHttpRequestInterceptorTest {
                 notNullValue());
     }
 
-    @Test(expected = OpenApiValidationClientHttpRequestInterceptor.OpenApiValidationException.class)
+    @Test
     public void filter_throwsException_ifValidationFails() throws IOException {
-        executeInterceptor(HttpMethod.GET, "/hello/bob", null,
-                response(HttpStatus.OK, "{\"msg\":\"Hello bob!\"}")); // Wrong field name
+        assertThrows(OpenApiValidationClientHttpRequestInterceptor.OpenApiValidationException.class, () ->
+                executeInterceptor(HttpMethod.GET, "/hello/bob", null,
+                        response(HttpStatus.OK, "{\"msg\":\"Hello bob!\"}")) // Wrong field name
+        );
     }
 
     @Test

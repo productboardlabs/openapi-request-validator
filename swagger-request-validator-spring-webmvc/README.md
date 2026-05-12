@@ -1,4 +1,4 @@
-# Swagger Request Validator - Spring Web MVC 6+ #
+# Swagger Request Validator - Spring Web MVC 7+ #
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/swagger-request-validator-spring-webvmvc/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/swagger-request-validator-spring-webmvc)
 
@@ -6,15 +6,14 @@ Integrations between the Swagger Request Validator and the
 [Spring Web MVC framework](https://docs.spring.io/spring/docs/current/spring-framework-reference/html/mvc.html).
 
 This module includes an `OpenApiValidationFilter` and an `OpenApiValidationInterceptor` that can be used to add request
-and / or response validation to a REST web service utilizing Spring WebMVC 6 or later, including Spring Boot Starter 
+and / or response validation to a REST web service utilizing Spring WebMVC 7 or later, including Spring Boot Starter
 applications utilizing Spring MVC (e.g. `spring-boot-starter-web-services` or `spring-boot-starter-web`).
 
 In case of invalid requests against the REST web service an `InvalidRequestException` is thrown containing the `ValidationReport`.  
 In case of invalid responses coming from the REST web service an `InvalidResponseException` is thrown containing 
 the `ValidationReport`.
 
-This module is compatible with Spring 6+, Spring Boot 3+ and the Jakarta namespace. For use with older versions of 
-Spring see [swagger-request-validator-springmvc](../swagger-request-validator-springmvc/README.md). 
+This module is compatible with Spring 7+, Spring Boot 4+ and the Jakarta namespace. For use with older versions, review past releases of this library.
 
 ## Usage ##
 
