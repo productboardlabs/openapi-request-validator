@@ -153,6 +153,6 @@ This ensures servlet request validation works despite stream limitations.
 
 ## References
 
-- Body interface: `swagger-request-validator-core/src/main/java/com/atlassian/oai/validator/model/Body.java`
+- Body interface: `openapi-request-validator-core/src/main/java/com/atlassian/oai/validator/model/Body.java`
 - Implementations: `StringBody.java`, `ByteArrayBody.java`, `InputStreamBody.java`
-- Servlet wrapper: `swagger-request-validator-spring-webmvc/src/main/java/com/atlassian/oai/validator/springmvc/ResettableRequestServletWrapper.java`
+- Servlet wrapper: `openapi-request-validator-spring-webmvc/src/main/java/com/atlassian/oai/validator/springmvc/ResettableRequestServletWrapper.java`

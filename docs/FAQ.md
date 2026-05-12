@@ -34,12 +34,12 @@ If you need more fine-grained control over validation behavior you can also use 
 much more control over when to ignore a specific validation error that can take into account the operation, path,
 parameter values etc.
 
-There are some examples of controlling validation behavior in the `swagger-request-validator-examples` module:
+There are some examples of controlling validation behavior in the `openapi-request-validator-examples` module:
 
-- [WhitelistingValidationErrorsTestExample](https://bitbucket.org/atlassian/swagger-request-validator/src/master/swagger-request-validator-examples/src/test/java/com/atlassian/oai/validator/examples/whitelist/WhitelistingValidationErrorsTestExample.java)
-- [ValidationControlExamplesTest](https://bitbucket.org/atlassian/swagger-request-validator/src/master/swagger-request-validator-examples/src/test/java/com/atlassian/oai/validator/examples/validationcontrol/ValidationControlExamplesTest.java)
+- [WhitelistingValidationErrorsTestExample](https://bitbucket.org/atlassian/openapi-request-validator/src/master/openapi-request-validator-examples/src/test/java/com/atlassian/oai/validator/examples/whitelist/WhitelistingValidationErrorsTestExample.java)
+- [ValidationControlExamplesTest](https://bitbucket.org/atlassian/openapi-request-validator/src/master/openapi-request-validator-examples/src/test/java/com/atlassian/oai/validator/examples/validationcontrol/ValidationControlExamplesTest.java)
 
-See the [Core README](../swagger-request-validator-core/README.md) for more details on controlling validation behavior.
+See the [Core README](../openapi-request-validator-core/README.md) for more details on controlling validation behavior.
 
 ### I use JSON schema composition with `allOf`, `anyOf` or `oneOf` and am getting unexpected validation errors. What's going on?
 
@@ -120,7 +120,7 @@ or via a `swagger-validator` config file
 validation.schema.additionalProperties=IGNORE
 ```
 
-See the [Core README](../swagger-request-validator-core/README.md) for more details on controlling validation behavior.
+See the [Core README](../openapi-request-validator-core/README.md) for more details on controlling validation behavior.
 
 ### I want to raise an error when I have an unexpected query parameter in my request
 
@@ -144,4 +144,4 @@ final OpenApiInteractionValidator validator = OpenApiInteractionValidator
 
 or via a `swagger-validator` config.
 
-See the [Core README](../swagger-request-validator-core/README.md) for more details on controlling validation behavior.
+See the [Core README](../openapi-request-validator-core/README.md) for more details on controlling validation behavior.

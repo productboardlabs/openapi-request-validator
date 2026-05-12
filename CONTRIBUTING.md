@@ -13,7 +13,7 @@ a remote branch, so either enable Pipelines for your fork or run the build local
 mvn clean verify javadoc:javadoc
 ```
 
-See the existing [issues](https://bitbucket.org/atlassian/swagger-request-validator/issues) for things to start
+See the existing [issues](https://bitbucket.org/atlassian/openapi-request-validator/issues) for things to start
 contributing. If you want to start working on an issue, please assign the ticket to yourself and mark it as `open`
 so others know it is in progress.
 

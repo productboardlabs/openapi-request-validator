@@ -27,7 +27,7 @@ The project needed a standardized way to:
 Framework integrations follow a **Maven module per framework** pattern:
 
 ```
-swagger-request-validator-{framework}/
+openapi-request-validator-{framework}/
 ├── src/main/java/
 │   └── com/atlassian/oai/validator/{framework}/
 │       ├── {Framework}Request.java          # Request implementation
@@ -40,7 +40,7 @@ swagger-request-validator-{framework}/
 ```
 
 Each adapter:
-1. Depends on `swagger-request-validator-core` (no circular dependencies)
+1. Depends on `openapi-request-validator-core` (no circular dependencies)
 2. Implements `Request` and/or `Response` interfaces
 3. Wraps framework-specific HTTP types
 4. Provides framework-idiomatic API (e.g., `OpenApiMatchers` for MockMVC, filters for REST Assured)
@@ -94,7 +94,7 @@ This architecture provides multiple benefits:
 ### Impact on Development
 
 **For Library Developers (Adding a New Framework):**
-1. Create `swagger-request-validator-{framework}` module
+1. Create `openapi-request-validator-{framework}` module
 2. Implement `Request` and `Response` interfaces
 3. Write framework-idiomatic facade (optional)
 4. Add framework-specific tests
@@ -108,7 +108,7 @@ This architecture provides multiple benefits:
 - Each adapter has clear success criteria
 
 **For Users:**
-- Maven coordinate: `com.atlassian.oai:swagger-request-validator-{framework}`
+- Maven coordinate: `com.atlassian.oai:openapi-request-validator-{framework}`
 - Import only adapters needed (smaller dependency footprint)
 - Framework-idiomatic usage: `@ValidateOpenApiRequest` in Spring, filters in REST Assured, etc.
 
@@ -116,14 +116,14 @@ This architecture provides multiple benefits:
 
 | Framework | Module | Primary Use |
 |---|---|---|
-| **Spring MockMVC** | `swagger-request-validator-mockmvc` | Testing Spring MVC controllers |
-| **Spring WebMVC** | `swagger-request-validator-spring-webmvc` | Runtime production validation |
-| **Spring WebClient** | `swagger-request-validator-spring-web-client` | HTTP client validation |
-| **REST Assured** | `swagger-request-validator-restassured` | Integration test validation |
-| **WireMock** | `swagger-request-validator-wiremock` | Mock validation (JUnit 4) |
-| **WireMock JUnit5** | `swagger-request-validator-wiremock-junit5` | Mock validation (JUnit 5) |
-| **Pact** | `swagger-request-validator-pact` | Consumer test validation |
-| **Ktor Client** | `swagger-request-validator-ktor-client` | Kotlin HTTP client validation |
+| **Spring MockMVC** | `openapi-request-validator-mockmvc` | Testing Spring MVC controllers |
+| **Spring WebMVC** | `openapi-request-validator-spring-webmvc` | Runtime production validation |
+| **Spring WebClient** | `openapi-request-validator-spring-web-client` | HTTP client validation |
+| **REST Assured** | `openapi-request-validator-restassured` | Integration test validation |
+| **WireMock** | `openapi-request-validator-wiremock` | Mock validation (JUnit 4) |
+| **WireMock JUnit5** | `openapi-request-validator-wiremock-junit5` | Mock validation (JUnit 5) |
+| **Pact** | `openapi-request-validator-pact` | Consumer test validation |
+| **Ktor Client** | `openapi-request-validator-ktor-client` | Kotlin HTTP client validation |
 
 ## Related ADRs
 
@@ -132,6 +132,6 @@ This architecture provides multiple benefits:
 
 ## References
 
-- Adapter modules: All `swagger-request-validator-{framework}` directories
-- Example: `swagger-request-validator-mockmvc/src/main/java/com/atlassian/oai/validator/mockmvc/`
+- Adapter modules: All `openapi-request-validator-{framework}` directories
+- Example: `openapi-request-validator-mockmvc/src/main/java/com/atlassian/oai/validator/mockmvc/`
 - Parent POM: `pom.xml` (modules section)

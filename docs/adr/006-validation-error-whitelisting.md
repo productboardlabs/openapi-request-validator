@@ -208,4 +208,4 @@ This allows:
 - `ValidationErrorsWhitelist.java`: Whitelist API implementation
 - `WhitelistRule.java`: Rule interface
 - `WhitelistRules.java`: Rule factory and builders
-- Example usage: `swagger-request-validator-examples/src/test/java/com/atlassian/oai/validator/examples/whitelist/`
+- Example usage: `openapi-request-validator-examples/src/test/java/com/atlassian/oai/validator/examples/whitelist/`

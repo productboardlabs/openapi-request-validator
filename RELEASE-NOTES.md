@@ -1,6 +1,17 @@
 # 3.0 Next
 
 **Breaking Changes**
+- All Maven artifact IDs have been renamed from `swagger-request-validator-*` to `openapi-request-validator-*`.
+  The root artifact is now `openapi-request-validator` (previously `swagger-request-validator`).
+  Update your dependency declarations accordingly:
+  ```xml
+  <!-- Before -->
+  <artifactId>swagger-request-validator-core</artifactId>
+  <!-- After -->
+  <artifactId>openapi-request-validator-core</artifactId>
+  ```
+
+
 - [Requests with no content type are now validated](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/502)
   - use the `missingRequestContentType` whitelist rule if you want to maintain previous behavior.
 

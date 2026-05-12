@@ -180,4 +180,4 @@ The validator handles this through:
 - OpenAPI 3.0 meta-schema: `com.networknt.schema.oas.OpenApi30`
 - OpenAPI 3.1 meta-schema: `com.networknt.schema.oas.OpenApi31`
 - Multi-type validation: `SchemaValidator.validateMultiTypeSchema()`
-- Test specs: `swagger-request-validator-core/src/test/resources/oai/v3/` and `oai/v31/`
+- Test specs: `openapi-request-validator-core/src/test/resources/oai/v3/` and `oai/v31/`
