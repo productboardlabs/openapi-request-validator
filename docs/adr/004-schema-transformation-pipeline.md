@@ -185,6 +185,6 @@ This ensures:
 
 ## References
 
-- Schema transformers: `swagger-request-validator-core/src/main/java/com/atlassian/oai/validator/schema/transform/`
+- Schema transformers: `openapi-request-validator-core/src/main/java/com/atlassian/oai/validator/schema/transform/`
 - `SchemaValidator.java`: Transformation pipeline implementation
 - `SchemaTransformationContext.java`: Context passed through transformers

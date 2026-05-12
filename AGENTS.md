@@ -1,8 +1,8 @@
-# Swagger Request Validator - Agent Development Guide
+# OpenAPI Request Validator - Agent Development Guide
 
 ## Project Overview
 
-**Swagger Request Validator** is a Java library for validating HTTP request/responses against OpenAPI/Swagger specifications. It's a production-ready, framework-agnostic library maintained by Atlassian with multiple adapter modules for popular testing and web frameworks.
+**OpenAPI Request Validator** is a Java library for validating HTTP request/responses against OpenAPI/Swagger specifications. It's a production-ready, framework-agnostic library maintained by Atlassian with multiple adapter modules for popular testing and web frameworks.
 
 ### Key Characteristics
 - **Purpose**: Validate HTTP interactions against OpenAPI v3 and Swagger v2 specifications
@@ -13,8 +13,8 @@
 ## Repository Structure
 
 ### Core Module
-- **swagger-request-validator-core**: Core validation engine with framework-agnostic Request/Response abstractions
-  - Located in `swagger-request-validator-core/src/main/java/com/atlassian/oai/validator/`
+- **openapi-request-validator-core**: Core validation engine with framework-agnostic Request/Response abstractions
+  - Located in `openapi-request-validator-core/src/main/java/com/atlassian/oai/validator/`
   - Key packages:
     - `interaction/`: Operation resolution, request/response validation
     - `model/`: Request/Response abstractions, Body types (String, ByteArray, InputStream)
@@ -24,17 +24,17 @@
     - `util/`: Helper utilities (content type, HTTP parsing, OpenAPI loading)
 
 ### Adapter Modules
-- **swagger-request-validator-pact**: Pact consumer testing integration
-- **swagger-request-validator-wiremock**: WireMock HTTP mocking validation
-- **swagger-request-validator-wiremock-junit5**: WireMock JUnit5 integration
-- **swagger-request-validator-restassured**: REST Assured testing framework integration
-- **swagger-request-validator-mockmvc**: Spring MockMVC integration
-- **swagger-request-validator-spring-webmvc**: Spring WebMVC runtime validation (production use)
-- **swagger-request-validator-spring-web-client**: Spring WebClient HTTP client validation
-- **swagger-request-validator-ktor-client**: Kotlin Ktor HTTP client validation
+- **openapi-request-validator-pact**: Pact consumer testing integration
+- **openapi-request-validator-wiremock**: WireMock HTTP mocking validation
+- **openapi-request-validator-wiremock-junit5**: WireMock JUnit5 integration
+- **openapi-request-validator-restassured**: REST Assured testing framework integration
+- **openapi-request-validator-mockmvc**: Spring MockMVC integration
+- **openapi-request-validator-spring-webmvc**: Spring WebMVC runtime validation (production use)
+- **openapi-request-validator-spring-web-client**: Spring WebClient HTTP client validation
+- **openapi-request-validator-ktor-client**: Kotlin Ktor HTTP client validation
 
 ### Examples & Documentation
-- **swagger-request-validator-examples**: Runnable examples for all adapters
+- **openapi-request-validator-examples**: Runnable examples for all adapters
 - **docs/**: Feature documentation, OpenAPI v3 and Swagger v2 guides
   - **docs/adr/**: Architecture Decision Records documenting key design choices and constraints
 
@@ -90,17 +90,17 @@ When making architectural decisions, refer to these ADRs and follow the [TEMPLAT
 ### Common Development Tasks
 
 **Adding Validation Logic**
-- Core validation lives in `swagger-request-validator-core/src/main/java/`
+- Core validation lives in `openapi-request-validator-core/src/main/java/`
 - Request validation: `interaction/request/` package
 - Response validation: `interaction/response/` package
 - Schema validation: `schema/` package
 - Add corresponding tests in mirrored `src/test/` structure
 
 **Adding Framework Support**
-- Create new adapter module following naming pattern: `swagger-request-validator-{framework}`
+- Create new adapter module following naming pattern: `openapi-request-validator-{framework}`
 - Implement `Request` and `Response` interfaces
 - Follow existing adapter patterns (e.g., MockMVC, REST Assured)
-- Add examples in `swagger-request-validator-examples`
+- Add examples in `openapi-request-validator-examples`
 
 **Updating OpenAPI Specs**
 - Test specs in `src/test/resources/oai/v2/` and `oai/v3/` and `oai/v31/`

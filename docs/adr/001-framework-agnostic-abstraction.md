@@ -93,7 +93,7 @@ This approach provides several key benefits:
 - Validation logic remains pure and testable
 
 **For Library Users:**
-- Depend on `swagger-request-validator-core` + the adapter for your framework
+- Depend on `openapi-request-validator-core` + the adapter for your framework
 - Cannot mix frameworks in a single validation instance (each has its adapter)
 - Custom implementations possible by implementing the interface contract
 
@@ -108,6 +108,6 @@ This approach provides several key benefits:
 
 ## References
 
-- Request interface: `swagger-request-validator-core/src/main/java/com/atlassian/oai/validator/model/Request.java`
-- Response interface: `swagger-request-validator-core/src/main/java/com/atlassian/oai/validator/model/Response.java`
+- Request interface: `openapi-request-validator-core/src/main/java/com/atlassian/oai/validator/model/Request.java`
+- Response interface: `openapi-request-validator-core/src/main/java/com/atlassian/oai/validator/model/Response.java`
 - Example implementations: `MockMvcRequest`, `RestAssuredRequest`, `PactRequest`, etc.
