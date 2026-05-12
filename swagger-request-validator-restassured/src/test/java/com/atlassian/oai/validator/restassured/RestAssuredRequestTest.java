@@ -151,6 +151,7 @@ public class RestAssuredRequestTest {
                 .statusCode(200);
 
         final Request classUnderTest = requestCaptor.getRequest();
+        assertThat(classUnderTest.getRequestBody().isPresent(), is(true));
         assertThat(classUnderTest.getRequestBody().get().toString(StandardCharsets.UTF_8), is("foo"));
     }
 
