@@ -9,7 +9,7 @@ Validator, and an `OpenApiValidationFilter` that can be used to add validation t
 
 ## Usage ##
 
-```
+```xml
 <dependency>
     <groupId>com.atlassian.oai</groupId>
     <artifactId>openapi-request-validator-restassured</artifactId>
@@ -17,13 +17,13 @@ Validator, and an `OpenApiValidationFilter` that can be used to add validation t
 </dependency>
 ```
 
-See the [examples module](https://bitbucket.org/atlassian/openapi-request-validator/src/master/openapi-request-validator-examples/?at=master)
+See the [examples module](../openapi-request-validator-examples/README.md)
 for running examples of how the REST Assured module can be used.
 
 ### OpenApiValidationFilter ###
 The simplest way to use the integration is to add the `OpenApiValidationFilter` to a REST Assured interaction.
 
-```
+```java
 private final OpenApiValidationFilter validationFilter = new OpenApiValidationFilter(API_SPEC_URL);
 
 ...

@@ -1,5 +1,7 @@
 # OpenAPI Request Validator - Ktor Client
 
+[![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/openapi-request-validator-ktor-client/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/openapi-request-validator-ktor-client)
+
 OpenAPI / Swagger validation plugin for Ktor Client requests and responses.
 
 ## Compatibility
@@ -12,7 +14,7 @@ OpenAPI / Swagger validation plugin for Ktor Client requests and responses.
 ### Gradle (Kotlin DSL)
 
 ```kotlin
-implementation("com.atlassian.oai:openapi-request-validator-ktor-client:3.0.0-SNAPSHOT")
+implementation("com.atlassian.oai:openapi-request-validator-ktor-client:${openapi-request-validator.version}")
 ```
 
 ### Maven
@@ -21,7 +23,7 @@ implementation("com.atlassian.oai:openapi-request-validator-ktor-client:3.0.0-SN
 <dependency>
     <groupId>com.atlassian.oai</groupId>
     <artifactId>openapi-request-validator-ktor-client</artifactId>
-    <version>3.0.0-SNAPSHOT</version>
+    <version>${openapi-request-validator.version}</version>
 </dependency>
 ```
 
@@ -47,3 +49,7 @@ val client = HttpClient(Java) {
 ```
 
 The plugin will automatically validate all outgoing requests and responses against your OpenAPI specification and throw exceptions if validation fails.
+
+## Examples ##
+
+See the [examples module](../openapi-request-validator-examples/README.md) for runnable examples.

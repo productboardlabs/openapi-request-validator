@@ -302,5 +302,5 @@ if (report.hasErrors()) {
 
 ## Examples ##
 
-See the [examples module](https://bitbucket.org/atlassian/openapi-request-validator/src/master/openapi-request-validator-examples/?at=master)
+See the [examples module](../openapi-request-validator-examples/README.md)
 for runnable examples of how this module can be used in practice.

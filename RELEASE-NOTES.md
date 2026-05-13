@@ -1,82 +1,279 @@
-# 3.0 Next
+# 3.0.0
 
-**Breaking Changes**
-- All Maven artifact IDs have been renamed from `swagger-request-validator-*` to `openapi-request-validator-*`.
-  The root artifact is now `openapi-request-validator` (previously `swagger-request-validator`).
-  Update your dependency declarations accordingly:
-  ```xml
-  <!-- Before -->
-  <artifactId>swagger-request-validator-core</artifactId>
-  <!-- After -->
-  <artifactId>openapi-request-validator-core</artifactId>
-  ```
+v3.0.0 is a major release that brings OpenAPI 3.1 support, a new Ktor client adapter, significant
+dependency and framework upgrades, and a clean break from legacy APIs accumulated since v1.
 
+See the [migration guide](#migration-guide-v2--v3) below for step-by-step upgrade instructions.
 
-- [Requests with no content type are now validated](https://bitbucket.org/atlassian/swagger-request-validator/pull-requests/502)
-  - use the `missingRequestContentType` whitelist rule if you want to maintain previous behavior.
+---
 
-**Improvements**
-- Remove JUnit4 (`junit:junit`) dependency from the examples module; all example tests now use JUnit5 (Jupiter)
+## Highlights
 
-**Dependency Changes**
-- Removed Guava (`com.google.guava:guava`) as a runtime dependency from `swagger-request-validator-core`.
-  All Guava usages have been replaced with JDK alternatives and Caffeine (`com.github.ben-manes.caffeine:caffeine`).
-  - Schema validation cache now uses Caffeine's `LoadingCache` (Guava `CacheBuilder` removed)
-  - Collection utilities replaced with JDK `TreeMap`, `LinkedHashMap`, `ArrayList`, `Map.of()`, `List.of()`
-  - `com.google.common.net.MediaType` replaced with a new internal `MediaType` utility class
-  - `@com.google.common.annotations.VisibleForTesting` replaced with a project-local `@VisibleForTesting` annotation
-    (`com.atlassian.oai.validator.util.VisibleForTesting`)
-- Added Caffeine `3.1.8` as a new compile-scope dependency in `swagger-request-validator-core`
+- **OpenAPI 3.1 support** — full validation against OAS 3.1 specs, including type unions, `const`,
+  `if/then/else`, `dependentRequired`, `prefixItems`, `unevaluatedProperties`, webhooks, and more
+- **New Ktor client adapter** — `openapi-request-validator-ktor-client` for Kotlin / Ktor 3.x
+- **Spring 7 / Spring Boot 4** — all Spring modules upgraded to Spring Framework 7+ and Spring Boot 4+
+  (Jakarta namespace)
+- **JDK 21 minimum** — build and runtime now require Java 21+
+- **Guava removed** — no longer a transitive dependency of the core module
+- **networknt schema validator upgraded** — from v1 to v2, enabling JSON Schema 2020-12 for OAS 3.1
+- **Artifact rename** — all artifacts renamed from `swagger-request-validator-*` to
+  `openapi-request-validator-*`
 
-**Pact Module (`swagger-request-validator-pact`) — JUnit 5 migration**
-- `ValidatedPactProviderRule` (JUnit 4 `@Rule`) has been replaced by `ValidatedPactConsumerTestExtension`
-  (JUnit 5 `@RegisterExtension`). The new extension wraps `PactConsumerTestExt` from `pact-jvm` and validates
-  each pact interaction against the OpenAPI / Swagger spec before the test body executes.
-- `@ValidatedPactConsumerTest` is a new convenience meta-annotation for `@ExtendWith(ValidatedPactConsumerTestExtension.class)`.
-- The Pact JUnit 5 library (`au.com.dius.pact.consumer:junit5`) is now used in place of the JUnit 4 library
-  (`au.com.dius.pact.consumer:junit`). Pact method signatures must now use `V4Pact` and `PactBuilder` instead
-  of `RequestResponsePact` and `PactDslWithProvider`.
+---
 
-**Migration Notes**
-- If you used `@com.google.common.annotations.VisibleForTesting` from Guava transitively, replace it with
-  `@com.atlassian.oai.validator.util.VisibleForTesting` or remove it.
-- Public API signatures that previously accepted `Multimap<String, Collection<String>>` now accept
-  `Map<String, Collection<String>>` (pure JDK types).
+## Breaking Changes
 
-**Migration Notes — Pact module**
-- Replace `ValidatedPactProviderRule` with `ValidatedPactConsumerTestExtension`:
+### 1. Artifact / Maven coordinate rename
 
-  ```java
-  // Before (JUnit 4)
-  @Rule
-  public final ValidatedPactProviderRule provider =
-          new ValidatedPactProviderRule("http://my-provider/api-spec.yaml", null, this);
+All Maven artifact IDs have been renamed from `swagger-request-validator-*` to
+`openapi-request-validator-*`. The group ID (`com.atlassian.oai`) is unchanged.
 
-  @Pact(provider = "MyProvider", consumer = "MyConsumer")
-  public RequestResponsePact myInteraction(final PactDslWithProvider builder) { ... }
+```xml
+<!-- Before -->
+<dependency>
+    <groupId>com.atlassian.oai</groupId>
+    <artifactId>swagger-request-validator-core</artifactId>
+    <version>2.x.x</version>
+</dependency>
 
-  @Test
-  @PactVerification(value = "MyProvider", fragment = "myInteraction")
-  public void myTest() { /* use provider.getMockServer().getUrl() */ }
+<!-- After -->
+<dependency>
+    <groupId>com.atlassian.oai</groupId>
+    <artifactId>openapi-request-validator-core</artifactId>
+    <version>3.0.0</version>
+</dependency>
+```
 
-  // After (JUnit 5)
-  @RegisterExtension
-  static final ValidatedPactConsumerTestExtension provider =
-          new ValidatedPactConsumerTestExtension("http://my-provider/api-spec.yaml", null);
+The full list of renamed artifacts:
 
-  @Pact(provider = "MyProvider", consumer = "MyConsumer")
-  public V4Pact myInteraction(final PactBuilder builder) {
-      return builder.usingLegacyDsl()...toPact(V4Pact.class);
-  }
+| Before (v2) | After (v3) |
+|---|---|
+| `swagger-request-validator` | `openapi-request-validator` |
+| `swagger-request-validator-core` | `openapi-request-validator-core` |
+| `swagger-request-validator-pact` | `openapi-request-validator-pact` |
+| `swagger-request-validator-restassured` | `openapi-request-validator-restassured` |
+| `swagger-request-validator-mockmvc` | `openapi-request-validator-mockmvc` |
+| `swagger-request-validator-mockmvc-legacy` | _Removed — see below_ |
+| `swagger-request-validator-wiremock` | _Removed — see below_ |
+| `swagger-request-validator-wiremock-junit5` | `openapi-request-validator-wiremock-junit5` |
+| `swagger-request-validator-spring-webmvc` | `openapi-request-validator-spring-webmvc` |
+| `swagger-request-validator-spring-web-client` | `openapi-request-validator-spring-web-client` |
 
-  @Test
-  @PactTestFor(pactMethod = "myInteraction")
-  public void myTest(final MockServer mockServer) { /* use mockServer.getUrl() */ }
-  ```
-- Replace the `au.com.dius.pact.consumer:junit` dependency with `au.com.dius.pact.consumer:junit5`.
-- Add `org.junit.jupiter:junit-jupiter` to your test dependencies if not already present.
-- `@IgnoreApiValidation` continues to work as before — annotate a test method to skip spec validation for that
-  specific interaction.
+### 2. Removed modules
+
+- **`swagger-request-validator-mockmvc-legacy`** — removed. Migrate to
+  `openapi-request-validator-mockmvc` which supports Spring MockMVC 7+.
+- **`swagger-request-validator-wiremock`** (JUnit 4 module) — removed. Migrate to
+  `openapi-request-validator-wiremock-junit5` which uses the non-deprecated `ServeEventListener`
+  API and supports JUnit 5.
+
+### 3. Removed deprecated classes and APIs
+
+The following classes that were deprecated in v2 have been removed:
+
+| Removed class | Replacement |
+|---|---|
+| `SwaggerRequestResponseValidator` | `OpenApiInteractionValidator` |
+| `SwaggerValidationFilter` (restassured) | `OpenApiValidationFilter` |
+| `SwaggerValidatorMatchers` (mockmvc) | `OpenApiValidationMatchers` |
+| `SwaggerMatchers` (mockmvc) | `OpenApiMatchers` |
+| `OpenApiValidator` (wiremock-junit5) | `OpenApiValidationListener` |
+
+### 4. Java version: minimum JDK 21
+
+The core library and all adapter modules now require **Java 21 or later** to build and run.
+(The Spring Web Client module requires Java 17+.)
+
+### 5. Spring Framework 7 / Spring Boot 4 (Jakarta namespace)
+
+All Spring-related modules (`spring-webmvc`, `mockmvc`, `spring-web-client`) have been upgraded to
+**Spring Framework 7** and **Spring Boot 4**, which use the `jakarta.*` namespace instead of `javax.*`.
+If you are on Spring Boot 3.x or earlier, remain on the v2.x releases of this library.
+
+### 6. Guava removed from core
+
+`com.google.guava:guava` is no longer a dependency of `openapi-request-validator-core`. If your code
+relied on Guava being available transitively through this library, you will need to add Guava directly to
+your own dependencies, or migrate to the JDK equivalents:
+
+- `Multimap<String, Collection<String>>` → `Map<String, Collection<String>>`
+- `@com.google.common.annotations.VisibleForTesting` → `@com.atlassian.oai.validator.util.VisibleForTesting`
+  or remove the annotation entirely
+
+Caffeine (`com.github.ben-manes.caffeine:caffeine`) is now used for the schema validation cache in place
+of Guava's `CacheBuilder`.
+
+### 7. Request content-type validation behaviour change
+
+Requests that do not include a `Content-Type` header are now validated against the spec. Previously,
+missing content types were silently ignored.
+
+If you need to restore the previous behaviour, add the `missingRequestContentType()` whitelist rule:
+
+```java
+OpenApiInteractionValidator.createForSpecificationUrl(specUrl)
+    .withWhitelist(ValidationErrorsWhitelist.create()
+        .withRule("Allow missing content type", WhitelistRules.missingRequestContentType()))
+    .build();
+```
+
+### 8. Pact module: JUnit 5 migration
+
+`ValidatedPactProviderRule` (JUnit 4 `@Rule`) has been removed and replaced by
+`ValidatedPactConsumerTestExtension` (JUnit 5 `@RegisterExtension`). The Pact JUnit 5 library
+(`au.com.dius.pact.consumer:junit5`) is now required in place of the JUnit 4 library
+(`au.com.dius.pact.consumer:junit`).
+
+### 9. WireMock module: listener API change
+
+The WireMock module now uses the non-deprecated `ServeEventListener` interface (replacing the old
+`RequestListener`-based approach). The recommended class is `OpenApiValidationListener`.
+
+---
+
+## New Features
+
+### OpenAPI 3.1 support
+
+OAS 3.1 specs are now fully supported, backed by JSON Schema 2020-12 via the upgraded networknt
+schema validator (v2). New keywords supported in 3.1 specs:
+
+- **Type unions** — `type: [string, integer]` and `type: [string, 'null']` for nullable fields
+- **`const`** — exact value matching
+- **`if` / `then` / `else`** — conditional schema application
+- **`dependentRequired`** / **`dependentSchemas`** — conditional required fields
+- **`prefixItems`** — tuple validation
+- **`unevaluatedProperties`** — strict object property validation
+- **Numeric `exclusiveMinimum` / `exclusiveMaximum`** — OAS 3.1 form (value, not boolean)
+- **`$ref` with sibling keywords** — allowed in 3.1 (previously prohibited)
+- **Webhooks** — validate webhook requests and responses using `validateWebhookRequest()`,
+  `validateWebhookResponse()`, and `validateWebhook()`
+
+### New adapter: Ktor client (`openapi-request-validator-ktor-client`)
+
+A new Kotlin adapter for [Ktor](https://ktor.io/) 3.x HTTP client. Install the `OpenAPIValidation`
+plugin on your Ktor `HttpClient` to automatically validate all outgoing requests and responses:
+
+```kotlin
+val client = HttpClient(Java) {
+    install(OpenAPIValidation) {
+        validator {
+            withApiSpecification("https://api.example.com/openapi.json")
+        }
+    }
+}
+```
+
+---
+
+## Dependency Changes
+
+| Dependency | v2 | v3 |
+|---|---|---|
+| Java | 8+ | **21+** |
+| Spring Framework | 5.x / 6.x | **7+** |
+| Spring Boot | 2.x / 3.x | **4+** |
+| networknt schema validator | 1.x | **2.x** |
+| Guava | Runtime dependency | **Removed** |
+| Caffeine | Not included | **Added** (cache) |
+| JUnit (test) | JUnit 4 | **JUnit 5 (Jupiter)** |
+| Pact consumer | `junit` (JUnit 4) | **`junit5`** |
+
+---
+
+## Migration Guide: v2 → v3
+
+### Step 1: Update artifact IDs
+
+Replace all `swagger-request-validator-*` artifact IDs with `openapi-request-validator-*` in your
+`pom.xml` / `build.gradle`, and update the version to `3.0.0`.
+
+### Step 2: Update Java version
+
+Ensure you are building and running on **Java 21 or later**.
+
+### Step 3: Update Spring dependencies (Spring users only)
+
+Upgrade to **Spring Framework 7** / **Spring Boot 4**. This requires migrating `javax.*` imports to
+`jakarta.*` across your application. See the
+[Spring Boot 4.0 Migration Guide](https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide)
+for details.
+
+### Step 4: Rename deprecated class references
+
+If you used any of the removed `Swagger*` classes, update to the `OpenApi*` equivalents:
+
+```java
+// Core
+SwaggerRequestResponseValidator  →  OpenApiInteractionValidator
+
+// REST Assured
+SwaggerValidationFilter          →  OpenApiValidationFilter
+
+// Spring MockMVC
+SwaggerValidatorMatchers         →  OpenApiValidationMatchers
+SwaggerMatchers                  →  OpenApiMatchers
+
+// WireMock
+OpenApiValidator                 →  OpenApiValidationListener
+```
+
+### Step 5: Migrate from the legacy MockMVC or JUnit 4 WireMock modules
+
+- **`swagger-request-validator-mockmvc-legacy`** users: migrate to `openapi-request-validator-mockmvc`
+  and update to Spring MockMVC 7+.
+- **`swagger-request-validator-wiremock`** (JUnit 4) users: migrate to
+  `openapi-request-validator-wiremock-junit5` and update your tests to JUnit 5. See the
+  [WireMock JUnit 5 README](./openapi-request-validator-wiremock-junit5/README.md) for examples.
+
+### Step 6: Migrate the Pact module (Pact users only)
+
+Replace `ValidatedPactProviderRule` with `ValidatedPactConsumerTestExtension`:
+
+```java
+// Before (JUnit 4)
+@Rule
+public final ValidatedPactProviderRule provider =
+        new ValidatedPactProviderRule("http://my-provider/api-spec.yaml", null, this);
+
+@Pact(provider = "MyProvider", consumer = "MyConsumer")
+public RequestResponsePact myInteraction(final PactDslWithProvider builder) { ... }
+
+@Test
+@PactVerification(value = "MyProvider", fragment = "myInteraction")
+public void myTest() { /* use provider.getMockServer().getUrl() */ }
+
+// After (JUnit 5)
+@RegisterExtension
+static final ValidatedPactConsumerTestExtension provider =
+        new ValidatedPactConsumerTestExtension("http://my-provider/api-spec.yaml", null);
+
+@Pact(provider = "MyProvider", consumer = "MyConsumer")
+public V4Pact myInteraction(final PactBuilder builder) {
+    return builder.usingLegacyDsl()...toPact(V4Pact.class);
+}
+
+@Test
+@PactTestFor(pactMethod = "myInteraction")
+public void myTest(final MockServer mockServer) { /* use mockServer.getUrl() */ }
+```
+
+Also:
+- Replace `au.com.dius.pact.consumer:junit` with `au.com.dius.pact.consumer:junit5`
+- Add `org.junit.jupiter:junit-jupiter` to your test dependencies if not already present
+- `@IgnoreApiValidation` continues to work as before
+
+### Step 7: Handle the missing content-type validation change
+
+If you have requests that legitimately omit `Content-Type` and were previously passing validation,
+add a whitelist rule to suppress the new error (see Breaking Change #7 above).
+
+### Step 8: Remove Guava if it was only a transitive dependency
+
+If Guava was only available in your project transitively through this library, either add it explicitly
+or migrate to JDK equivalents. If you used `@VisibleForTesting`, replace with
+`@com.atlassian.oai.validator.util.VisibleForTesting` or remove it.
 
 # 2.46.0
 * Bump dependencies:

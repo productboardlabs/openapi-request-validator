@@ -1,4 +1,5 @@
 # OpenAPI Request Validator #
+*(Formerly "Swagger Request Validator")*
 
 [![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/openapi-request-validator/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/openapi-request-validator)
 
@@ -17,6 +18,11 @@ in Pact tests etc.)
 * Support for [Swagger v2](./docs/SWAGGERv2.md) and [OpenAPI v3](./docs/OPENAPIv3.md) specifications
 
 See [Features](./docs/FEATURES.md) for more details.
+
+## IMPORTANT ##
+Prior to v3.0.0 this project was known as `swagger-request-validator` and used maven artifact IDs of the form 
+`swagger-request-validator-*`.
+This was changed in the v3.0.0 release to better align with the underlying OpenAPI/Swagger terminology.
 
 ## Usage ##
 
@@ -56,9 +62,9 @@ shortening the feedback loop when writing Consumer tests.
 Includes a JUnit rule that adds OpenAPI / Swagger validation to the [Pact-JVM](https://github.com/DiUS/pact-jvm) consumer 
 test execution.
 
-### openapi-request-validator-wiremock 
+### openapi-request-validator-wiremock-junit5 
 
-[![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/openapi-request-validator-wiremock/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/openapi-request-validator-wiremock)
+[![maven-central](https://maven-badges.herokuapp.com/maven-central/com.atlassian.oai/openapi-request-validator-wiremock-junit5/badge.svg)](http://mvnrepository.com/artifact/com.atlassian.oai/openapi-request-validator-wiremock-junit5)
 
 Adapters for validating [WireMock](http://wiremock.org/) HTTP mocks against an OpenAPI / Swagger specification.
 
