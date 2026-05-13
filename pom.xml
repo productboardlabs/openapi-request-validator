@@ -10,7 +10,7 @@
 
     <groupId>com.atlassian.oai</groupId>
     <artifactId>openapi-request-validator</artifactId>
-    <version>3.0.0</version>
+    <version>3.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>OpenAPI Request Validator</name>
