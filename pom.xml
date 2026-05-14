@@ -18,7 +18,7 @@
         Validation of request/responses against an OpenAPI / Swagger specification.
         Includes a standalone validator, as well as adapters for Pact and other mocking/http libraries.
     </description>
-    <url>https://bitbucket.org/atlassian/swagger-request-validator</url>
+    <url>https://github.com/atlassian/openapi-request-validator</url>
     <inceptionYear>2016</inceptionYear>
     <licenses>
         <license>
@@ -29,15 +29,14 @@
         </license>
     </licenses>
     <issueManagement>
-        <system>Bitbucket</system>
-        <url>https://bitbucket.org/atlassian/swagger-request-validator/issues</url>
+        <system>GitHub</system>
+        <url>https://github.com/atlassian/openapi-request-validator/issues</url>
     </issueManagement>
     <scm>
-        <connection>scm:git:ssh://git@bitbucket.org/atlassian/swagger-request-validator.git</connection>
-        <developerConnection>scm:git:ssh://git@bitbucket.org/atlassian/swagger-request-validator.git
-        </developerConnection>
+        <connection>scm:git:https://github.com/atlassian/openapi-request-validator.git</connection>
+        <developerConnection>scm:git:https://github.com/atlassian/openapi-request-validator.git</developerConnection>
         <tag>openapi-request-validator-3.0.0</tag>
-        <url>https://bitbucket.org/atlassian/swagger-request-validator</url>
+        <url>https://github.com/atlassian/openapi-request-validator</url>
     </scm>
 
     <developers>
