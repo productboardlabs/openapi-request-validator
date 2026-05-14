@@ -27,4 +27,8 @@ jobs:
         run: mvn --version
 
       - name: Build and verify
-        run: mvn clean verify javadoc:jar --settings ./bin/settings.xml
+        run: mvn clean verify javadoc:jar --settings ./bin/settings.xml --fail-at-end
+
+      - name: Publish Test Report
+        if: success() || failure()
+        uses: ScalableCapital/action-surefire-report@v2
