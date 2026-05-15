@@ -1,0 +1,32 @@
+# Workflow to test/validate the GPG signing config used during release
+# Mostly a way to validate the config without trying to run a full release
+# (which burns version numbers)
+name: GPG Sign
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sign-artifact:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+          cache: 'maven'
+
+      - name: Import GPG key
+        run: echo "${{ secrets.SIGNING_KEY }}" | base64 -d > /tmp/private.key
+
+      - name: Package and sign
+        run: mvn -B package gpg:sign -Dgpg.signer=bc -Dgpg.useagent=false -Dgpg.keyFilePath=/tmp/private.key -DskipTests
+
+      - name: Clean up GPG key
+        if: always()
+        run: rm -f /tmp/private.key

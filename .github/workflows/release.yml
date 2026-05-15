@@ -1,0 +1,68 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      releaseVersion:
+        description: 'Release version (e.g. 3.0.1)'
+        required: true
+      nextDevVersion:
+        description: 'Next development version (e.g. 3.0.2-SNAPSHOT)'
+        required: true
+
+jobs:
+  perform-release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+          cache: 'maven'
+
+      - name: Configure Git user
+        run: |
+          git config user.email "${{ secrets.GH_EMAIL }}"
+          git config user.name "${{ secrets.GH_USERNAME }}"
+
+      - name: Show Maven version
+        run: mvn --version
+
+      - name: Get Artifact Publish Token
+        id: publish-token
+        uses: atlassian-labs/artifact-publish-token@v1.0.1
+        with:
+          output-modes: environment
+
+      - name: Import GPG key
+        run: echo "${{ secrets.SIGNING_KEY }}" | base64 -d > /tmp/private.key
+
+      - name: Prepare release
+        run: |
+          mvn -B release:prepare \
+            -DreleaseVersion=${{ github.event.inputs.releaseVersion }} \
+            -DdevelopmentVersion=${{ github.event.inputs.nextDevVersion }} \
+            -DscmCommentPrefix="[skip ci] " \
+            -Dusername=${{ secrets.GH_USERNAME }} \
+            -Dpassword=${{ secrets.GH_ACCESS_TOKEN }}
+
+      - name: Perform release
+        run: |
+          mvn -B release:perform \
+            -DscmCommentPrefix="[skip ci] " \
+            -Darguments="-Dgpg.signer=bc -Dgpg.useagent=false -Dgpg.keyFilePath=/tmp/private.key"
+
+      - name: Clean up GPG key
+        if: always()
+        run: rm -f /tmp/private.key
