@@ -50,7 +50,7 @@ jobs:
 
       - name: Prepare release
         run: |
-          mvn -B release:prepare \
+          export MAVEN_GPG_PASSPHRASE="${{secrets.SIGNING_PASSPHRASE}}" && mvn -B release:prepare \
             -DreleaseVersion=${{ github.event.inputs.releaseVersion }} \
             -DdevelopmentVersion=${{ github.event.inputs.nextDevVersion }} \
             -DscmCommentPrefix="[skip ci] " \
