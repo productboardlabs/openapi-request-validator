@@ -512,8 +512,7 @@
                 </executions>
             </plugin>
             <!-- productboardlabs fork: publish to Maven Central via the Sonatype Central Portal
-                 under io.github.productboardlabs (server id `central` from ~/.m2/settings.xml).
-                 Mirrors the productboardlabs/jackson-kafka-avro-serializer release setup. -->
+                 under io.github.productboardlabs (server id `central` from ~/.m2/settings.xml). -->
             <plugin>
                 <groupId>org.sonatype.central</groupId>
                 <artifactId>central-publishing-maven-plugin</artifactId>
