@@ -8,9 +8,9 @@
         <version>8.0.31</version>
     </parent>
 
-    <groupId>com.atlassian.oai</groupId>
+    <groupId>io.github.productboardlabs</groupId>
     <artifactId>openapi-request-validator</artifactId>
-    <version>3.0.1-SNAPSHOT</version>
+    <version>3.0.1-pb.1</version>
     <packaging>pom</packaging>
 
     <name>OpenAPI Request Validator</name>
@@ -18,7 +18,7 @@
         Validation of request/responses against an OpenAPI / Swagger specification.
         Includes a standalone validator, as well as adapters for Pact and other mocking/http libraries.
     </description>
-    <url>https://github.com/atlassian/openapi-request-validator</url>
+    <url>https://github.com/productboardlabs/openapi-request-validator</url>
     <inceptionYear>2016</inceptionYear>
     <licenses>
         <license>
@@ -33,10 +33,10 @@
         <url>https://github.com/atlassian/openapi-request-validator/issues</url>
     </issueManagement>
     <scm>
-        <connection>scm:git:https://github.com/atlassian/openapi-request-validator.git</connection>
-        <developerConnection>scm:git:https://github.com/atlassian/openapi-request-validator.git</developerConnection>
-        <tag>openapi-request-validator-3.0.0</tag>
-        <url>https://github.com/atlassian/openapi-request-validator</url>
+        <connection>scm:git:https://github.com/productboardlabs/openapi-request-validator.git</connection>
+        <developerConnection>scm:git:https://github.com/productboardlabs/openapi-request-validator.git</developerConnection>
+        <tag>HEAD</tag>
+        <url>https://github.com/productboardlabs/openapi-request-validator</url>
     </scm>
 
     <developers>
@@ -142,42 +142,42 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>com.atlassian.oai</groupId>
+                <groupId>io.github.productboardlabs</groupId>
                 <artifactId>openapi-request-validator-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.atlassian.oai</groupId>
+                <groupId>io.github.productboardlabs</groupId>
                 <artifactId>openapi-request-validator-pact</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.atlassian.oai</groupId>
+                <groupId>io.github.productboardlabs</groupId>
                 <artifactId>openapi-request-validator-wiremock</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.atlassian.oai</groupId>
+                <groupId>io.github.productboardlabs</groupId>
                 <artifactId>openapi-request-validator-wiremock-junit5</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.atlassian.oai</groupId>
+                <groupId>io.github.productboardlabs</groupId>
                 <artifactId>openapi-request-validator-restassured</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.atlassian.oai</groupId>
+                <groupId>io.github.productboardlabs</groupId>
                 <artifactId>openapi-request-validator-mockmvc</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.atlassian.oai</groupId>
+                <groupId>io.github.productboardlabs</groupId>
                 <artifactId>openapi-request-validator-springmvc</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.atlassian.oai</groupId>
+                <groupId>io.github.productboardlabs</groupId>
                 <artifactId>openapi-request-validator-spring-web-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -510,6 +510,19 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <!-- productboardlabs fork: publish to Maven Central via the Sonatype Central Portal
+                 under io.github.productboardlabs (server id `central` from ~/.m2/settings.xml).
+                 Mirrors the productboardlabs/jackson-kafka-avro-serializer release setup. -->
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.9.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                    <autoPublish>true</autoPublish>
+                </configuration>
             </plugin>
         </plugins>
         <pluginManagement>
