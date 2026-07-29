@@ -95,16 +95,12 @@
         <maven.gpg.plugin.version>3.2.8</maven.gpg.plugin.version>
     </properties>
 
+    <!-- productboardlabs fork: only the modules pb-universe consumes are published.
+         spring-webmvc depends on core; the other upstream modules (pact, wiremock, restassured,
+         mockmvc, spring-web-client, ktor-client, examples) are dropped to keep the release footprint small. -->
     <modules>
         <module>openapi-request-validator-core</module>
-        <module>openapi-request-validator-pact</module>
-        <module>openapi-request-validator-wiremock-junit5</module>
-        <module>openapi-request-validator-restassured</module>
-        <module>openapi-request-validator-mockmvc</module>
         <module>openapi-request-validator-spring-webmvc</module>
-        <module>openapi-request-validator-spring-web-client</module>
-        <module>openapi-request-validator-ktor-client</module>
-        <module>openapi-request-validator-examples</module>
     </modules>
 
     <!--
@@ -507,6 +503,55 @@
                         <phase>process-sources</phase>
                         <goals>
                             <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- productboardlabs fork: attach sources, javadoc, and GPG signatures on every deploy.
+                 The Atlassian central-pom parent only wires these under its release profile (activated by
+                 `mvn release:perform`); a plain `mvn clean deploy` must declare them here or Central rejects
+                 the bundle ("Sources/Javadocs must be provided", "Missing signature"). -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${maven.javadoc.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <!-- Don't let strict doclint on a third-party codebase fail the release. -->
+                    <doclint>none</doclint>
+                    <failOnError>false</failOnError>
+                    <quiet>true</quiet>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
                         </goals>
                     </execution>
                 </executions>
